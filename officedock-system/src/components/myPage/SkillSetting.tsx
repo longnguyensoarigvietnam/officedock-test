@@ -98,13 +98,13 @@ export const SkillSetting = ({
         let strokeColor = '';
         switch (step) {
           case 1:
-            strokeColor = '#36ACDE';
+            strokeColor = '#3DC1E2';
             break;
           case 2:
-            strokeColor = '#0068B6';
+            strokeColor = '#228CDB';
             break;
           case 3:
-            strokeColor = '#424EC1';
+            strokeColor = '#355AC9';
             break;
         }
         if (stepCompleted) {
@@ -240,7 +240,7 @@ export const SkillSetting = ({
           }}
           className="w-[245px] min-w-[245px] h-[52px] bg-transparent border border-white rounded-[14px] hover:opacity-70 flex items-center cursor-pointer justify-center text-white text-center font-medium text-sm"
           onClick={() => setOpenSetSkillModal(true)}>
-          <p className='font-medium'>＋ スキルをセットできます</p>
+          <p className="font-medium">＋ スキルをセットできます</p>
         </div>
       ) : (
         <></>

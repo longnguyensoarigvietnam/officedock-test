@@ -63,7 +63,7 @@ const ActionsSkillMapDetailModal = ({
       className="font-primary bg-white w-[700px] !px-0 !rounded-l-[30px]"
       onClose={handleCloseModal}>
       <header
-        className="px-8 rounded-tl-[30px] h-[50px] flex items-center justify-between"
+        className="px-9 rounded-tl-[30px] h-[50px] flex items-center justify-between"
         style={{
           background: showModalHeaderBackgroundColorByTime(),
         }}>
@@ -84,9 +84,9 @@ const ActionsSkillMapDetailModal = ({
           />
         </div>
       </header>
-      <div className="px-8 pb-8 !h-[calc(100vh_-_130px)] overflow-y-auto flex flex-col gap-5">
-        <header className="sticky z-[100] top-[0px] py-5 gap-2 bg-white">
-          <div className="flex rounded-[20px] font-medium bg-[#EBF1F7] mb-8 px-[6px] py-[4px]">
+      <div className="px-9 pb-9 !h-[calc(100vh_-_130px)] overflow-y-auto flex flex-col gap-5">
+        <header className="sticky z-[100] top-[0px] pt-10 pb-5 gap-2 bg-white">
+          <div className="flex rounded-[20px] font-medium bg-[#EBF1F7] mb-8 p-[6px]">
             {SKILL_MAP_STEPS.map((step, index) => {
               const stepNumber = index + 1;
               const isActive = currentStep === stepNumber;
@@ -105,7 +105,7 @@ const ActionsSkillMapDetailModal = ({
                       ? { background: step.color, color: 'white' }
                       : { color: step.color, background: '#EBF1F7' }
                   }
-                  className={`w-1/3 text-center py-[4px] border-none !rounded-[20px]`}>
+                  className={`w-1/3 text-center !h-[30px] leading-none border-none !rounded-[20px]`}>
                   {step.label}
                 </Button>
               );
@@ -117,7 +117,7 @@ const ActionsSkillMapDetailModal = ({
             </p>
             <Button
               onClick={handleCloseModal}
-              className="h-[34px] w-[86px]"
+              className="h-[34px] w-[86px] !text-[13px]"
               variant="outline">
               閉じる
             </Button>
@@ -140,7 +140,7 @@ const ActionsSkillMapDetailModal = ({
                     {cate.map((item, cateIndex) => (
                       <>
                         <div className="w-[194px] h-[30px] truncate break-all rounded-md bg-[#EBF1F7] flex items-center justify-start px-2">
-                          <p className="w-full break-all truncate">
+                          <p className="w-full break-all truncate text-[13px]">
                             {item.name}
                           </p>
                         </div>
@@ -182,14 +182,14 @@ const ActionsSkillMapDetailModal = ({
 
               return (
                 <div key={level.id}>
-                  <p className="text-base text-primary font-medium mb-4 mt-[10px]">
-                    レベル{number - 1}→{number}
+                  <p className="text-base text-primary font-medium mb-5 mt-10 leading-none">
+                    レベル{number}
                   </p>
-                  <div className="text-[#77858F]">レベルアップ条件</div>
-                  <div className="font-normal mt-3">
+                  <div className="text-[#77858F] font-medium leading-none">レベルアップ条件</div>
+                  <div className="font-normal mt-[14px] leading-none">
                     振り返り回数・計測時間・期間
                   </div>
-                  <div className="flex gap-2 items-center mt-[10px]">
+                  <div className="flex gap-2 items-center mt-[14px] !text-[13px]">
                     <div className="w-[274px] h-[30px] rounded-md bg-[#EBF1F7] flex items-center justify-start px-2">
                       {level.measureCount
                         ? '対応タスクを'

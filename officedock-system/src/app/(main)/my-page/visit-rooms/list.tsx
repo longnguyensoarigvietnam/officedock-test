@@ -6,6 +6,8 @@ import { MemberListByOrganization } from '@components/visitRoom/MemberListByOrga
 import { RenderAccessories } from '@components/custom/UserCustomize';
 import BackToPage from '@components/custom/BackToPage';
 
+import { ScreenName } from '@constants/enums';
+
 import useMemberOrganizationList from '@hooks/userMemberOrganizationList';
 
 import { UserOrganization } from '@interfaces/user';
@@ -20,6 +22,7 @@ const RoomList = () => {
 
   useMemberOrganizationList({
     search: '',
+    currentScreen: ScreenName.CALENDAR,
     onSuccess: (data) => {
       setMemberListByOrganization(
         data.map((org) => {

@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 
 import Button from '@components/common/Button';
 
+import { SKILL_MAP_STEPS } from '@constants';
+
 export const SkillInfoPopup = ({
   skillName,
   skillInfo,
@@ -25,11 +27,6 @@ export const SkillInfoPopup = ({
   const [isReady, setIsReady] = useState(false);
   const infoPopupRef = useRef<HTMLDivElement | null>(null);
   const skillNameRef = useRef<HTMLParagraphElement | null>(null);
-  const steps = [
-    { label: 'STEP 1', color: '#36ACDE' },
-    { label: 'STEP 2', color: '#0068B6' },
-    { label: 'STEP 3', color: '#424EC1' },
-  ];
   const [currentStep, setCurrentStep] = useState<number>(1);
 
   const renderSkillDetail = (
@@ -61,7 +58,7 @@ export const SkillInfoPopup = ({
           boxShadow: '0px 2px 8px 0px #0000001A',
         }}>
         <div className="flex w-full rounded-[20px] font-medium bg-[#EBF1F7] px-[6px] py-[4px]">
-          {steps.map((step, index) => {
+          {SKILL_MAP_STEPS.map((step, index) => {
             const stepNumber = index + 1;
             const isActive = currentStep === stepNumber;
             return (

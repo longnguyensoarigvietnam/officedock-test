@@ -421,13 +421,13 @@ export const SkillMapByOrganizationPanel = ({
                   let strokeColor = '';
                   switch (step) {
                     case 1:
-                      strokeColor = '#36ACDE';
+                      strokeColor = '#3DC1E2';
                       break;
                     case 2:
-                      strokeColor = '#0068B6';
+                      strokeColor = '#228CDB';
                       break;
                     case 3:
-                      strokeColor = '#424EC1';
+                      strokeColor = '#355AC9';
                       break;
                   }
                   if (stepCompleted) {
@@ -626,7 +626,7 @@ export const SkillMapByOrganizationPanel = ({
                                 ? '#FFF'
                                 : idx === 0
                                   ? 'linear-gradient(90deg, #36ACDE 0%, #0068B6 100%)'
-                                  : 'linear-gradient(90deg, #0068B6 0%, #424EC1 100%)',
+                                  : 'linear-gradient(90deg, #0068B6 0%, #355AC9 100%)',
                           }}
                           className="h-[10px] w-[30px]"></div>
                       )}

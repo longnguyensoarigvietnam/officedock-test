@@ -693,9 +693,9 @@ const ActionsSkillMapModal = ({
         return (
           <div className="flex gap-2 items-center w-full">
             <p className="text-[13px] font-normal">振り返りの期間</p>{' '}
-            <div className="w-[50px]">
+            <div className="w-[36px]">
               <Input
-                className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-[50px] mr-3 focus:!shadow-none focus:border !border-[1px] rounded-md
+                className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-[36px] focus:!shadow-none focus:border !border-[1px] rounded-md
                   ${
                     !get(
                       errors,
@@ -806,8 +806,8 @@ const ActionsSkillMapModal = ({
 
     return (
       <div>
-        <p className="text-primary text-md font-medium mt-3">{levelTitle}</p>
-        <p className="text-sm font-medium mt-3">レベルアップ条件</p>
+        <p className="text-primary text-md font-medium leading-none">{levelTitle}</p>
+        <p className="text-sm font-medium mt-5 leading-none">レベルアップ条件</p>
         <div className="flex gap-3 items-center mt-3">
           {' '}
           <RadioButton
@@ -849,7 +849,7 @@ const ActionsSkillMapModal = ({
             isChecked={levelUpConditionBy == LevelUpConditionBy.PERIOD}
           />
         </div>
-        <div className="my-3">
+        <div className="mt-[14px]">
           {renderConditionByRadioButton(
             levelUpConditionBy,
             currentStep,
@@ -857,13 +857,13 @@ const ActionsSkillMapModal = ({
           )}
         </div>
         <div>
-          <p className="text-sm font-medium my-3">振り返り項目</p>
-          <div className="w-full flex flex-col gap-1 items-start ">
+          <p className="text-sm font-medium mb-[14px] mt-5 leading-none">振り返り項目</p>
+          <div className="w-full flex flex-col gap-[6px] items-start ">
             {fields.map((field, index) => (
               <div
                 className="flex gap-2 relative w-full items-center"
                 key={field.id}>
-                <div className="w-1 h-1 rounded-full bg-black ml-2"></div>
+                <div className="w-1 h-1 rounded-full bg-black mx-2"></div>
                 <div className="w-full">
                   <Input
                     register={register(
@@ -884,7 +884,7 @@ const ActionsSkillMapModal = ({
                 </div>
               </div>
             ))}
-            <div className="flex justify-center items-center w-full mt-4">
+            <div className="flex justify-center items-center w-full">
               <Button
                 sz="sm"
                 variant="outline"
@@ -959,7 +959,7 @@ const ActionsSkillMapModal = ({
       className="font-primary bg-white w-[700px] !px-0 !rounded-l-[30px]"
       onClose={handleCloseModal}>
       <header
-        className="px-8 rounded-tl-[30px] h-[50px] flex items-center justify-between"
+        className="px-9 rounded-tl-[30px] h-[50px] flex items-center justify-between"
         style={{
           background: showModalHeaderBackgroundColorByTime(),
         }}>
@@ -992,9 +992,9 @@ const ActionsSkillMapModal = ({
       </header>
       <form
         onSubmit={handleSubmit(onSubmitData)}
-        className="px-8 pb-8 !h-[calc(100vh_-_130px)] overflow-y-auto flex flex-col gap-5">
-        <header className="sticky z-[100] top-[0px] py-5 gap-2 bg-white">
-          <div className="flex rounded-[20px] font-medium bg-[#EBF1F7] mb-8 px-[6px] py-[4px]">
+        className="px-9 pb-9 !h-[calc(100vh_-_130px)] overflow-y-auto flex flex-col gap-10">
+        <header className="sticky z-[100] top-[0px] pt-10 gap-2 bg-white">
+          <div className="flex rounded-[20px] font-medium bg-[#EBF1F7] mb-8 p-[6px]">
             {SKILL_MAP_STEPS.map((step, index) => {
               const stepNumber = index + 1;
               const isActive = currentStep === stepNumber;
@@ -1017,16 +1017,16 @@ const ActionsSkillMapModal = ({
                       ? { background: step.color, color: 'white' }
                       : { color: step.color, background: '#EBF1F7' }
                   }
-                  className={`w-1/3 text-center py-[4px] border-none !rounded-[20px]`}>
+                  className={`w-1/3 text-center !h-[30px] leading-none border-none !rounded-[20px]`}>
                   {step.label}
                 </Button>
               );
             })}
           </div>
-          <div className="flex items-center gap-2 justify-between">
+          <div className="flex items-center gap-5 justify-between">
             <div className="w-full">
               <Input
-                className={`shadow-none text-2xl leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[46px] focus:!shadow-none focus:border !border-[1px] rounded-md ${
+                className={`shadow-none text-[22px] leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[42px] focus:!shadow-none focus:border !border-[1px] rounded-md ${
                   !get(errors, getStepField(currentStep as 1 | 2 | 3, 'name'))
                     ? '!border-[#77858F]'
                     : '!border-error'
@@ -1045,12 +1045,12 @@ const ActionsSkillMapModal = ({
                 )}
               />
             </div>
-            <div className="flex gap-2 items-center">
+            <div className="flex gap-[10px] items-center">
               {!isDisabled && (
                 <Button
                   type="submit"
                   disabled={action == ActionsModal.EDIT && !isFormTouched}
-                  className="w-[82px] h-[36px] !text-[12px] !px-2">
+                  className="w-[86px] h-[36px] !text-[12px] !px-2">
                   保存
                 </Button>
               )}
@@ -1058,14 +1058,14 @@ const ActionsSkillMapModal = ({
                 variant="outline"
                 type="button"
                 onClick={onClose}
-                className="w-[82px] !rounded-md  h-[34px] !text-[12px] !px-2">
+                className="!rounded-md  w-[86px] h-[36px] !text-[12px] !px-2">
                 キャンセル
               </Button>
             </div>
           </div>
         </header>
         <div>
-          <p className="text-sm font-medium mb-3">スキルの定義</p>
+          <p className="text-sm font-medium mb-[14px]">スキルの定義</p>
           <Input
             className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md`}
             value={
@@ -1105,7 +1105,7 @@ const ActionsSkillMapModal = ({
           action={action}
         />
 
-        {['レベル0→1', 'レベル1→2', 'レベル2→3'].map((levelTitle, idx) => {
+        {['レベル1', 'レベル2', 'レベル3'].map((levelTitle, idx) => {
           return (
             <LevelUpConditions
               key={idx}
@@ -1124,7 +1124,8 @@ const ActionsSkillMapModal = ({
             <Button
               type="submit"
               disabled={action == ActionsModal.EDIT && !isFormTouched}
-              className="w-[200px] h-[46px] !text-[15px]">
+              style={{ boxShadow: '0px 1px 5px 0px #00000033' }}
+              className="w-[200px] h-[46px] !text-[14px] border-none">
               保存
             </Button>
           </div>

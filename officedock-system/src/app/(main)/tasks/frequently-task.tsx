@@ -32,7 +32,9 @@ const FrequentlyTask = ({
   return (
     <div className={`w-fit`}>
       <div className={`${isExtendCalendar && 'overflow-y-hidden'} `}>
-        <div className="flex gap-0 min-w-[130px]">
+        <div
+          className="flex gap-0 min-w-[130px] hover:cursor-pointer"
+          onClick={() => setShowFrequentlyTasks(!showFrequentlyTasks)}>
           <p className="text-gray-500 text-xs break-all min-w-[95px]">
             マイテンプレート
           </p>
@@ -43,8 +45,7 @@ const FrequentlyTask = ({
               <ImageRound
                 name="Filter extend icon"
                 src={'/icons/arrow-down.svg'}
-                className={`w-4 h-4 hover:cursor-pointer ${showFrequentlyTasks && 'rotate-180'}`}
-                onClick={() => setShowFrequentlyTasks(!showFrequentlyTasks)}
+                className={`w-4 h-4 ${showFrequentlyTasks && 'rotate-180'}`}
               />
             </div>
           </DynamicTooltip>

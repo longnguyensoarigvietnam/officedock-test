@@ -916,7 +916,7 @@ const ActionsEventModal = ({
       className="font-primary bg-white w-[700px] !px-0 !rounded-l-[30px]"
       onClose={handleCloseModal}>
       <header
-        className="px-8 rounded-tl-[30px] h-[50px] flex items-center justify-between"
+        className="px-9 rounded-tl-[30px] h-[50px] flex items-center justify-between"
         style={{
           background: showModalHeaderBackgroundColorByTime(),
         }}>
@@ -960,12 +960,12 @@ const ActionsEventModal = ({
       </header>
       <form
         onSubmit={handleSubmit(onSubmitData)}
-        className="px-8 pb-8 max-h-[calc(100vh_-_150px)] overflow-y-auto">
-        <header className="flex sticky z-[100] top-[0px] py-5 items-center gap-2 justify-between bg-white">
+        className="px-9 pb-9 max-h-[calc(100vh_-_150px)] overflow-y-auto">
+        <header className="flex sticky z-[100] top-[0px] pt-10 pb-[35px] items-center gap-5 justify-between bg-white">
           <div className="w-full">
             <Input
               autoCompleteInput
-              className="shadow-none text-2xl  leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[46px] focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md"
+              className="shadow-none text-[22px] leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[42px] focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md"
               register={register('title', {
                 required: watch('title') !== null ? true : false,
                 maxLength: {
@@ -978,7 +978,7 @@ const ActionsEventModal = ({
               disabled={isDisabled}
             />
           </div>
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-[10px] items-center">
             {session?.user.permissions &&
               !isEditDisabled &&
               action === ActionsEvent.EDIT &&
@@ -1002,7 +1002,7 @@ const ActionsEventModal = ({
               ) && (
                 <Button
                   type="submit"
-                  className="w-[82px] h-[36px] !text-[12px] !px-2">
+                  className="w-[86px] h-[36px] !text-[13px] !p-0">
                   {action == ActionsEvent.CREATE ? '予定を作成' : '予定を複製'}
                 </Button>
               )}
@@ -1010,12 +1010,12 @@ const ActionsEventModal = ({
               variant="outline"
               type="button"
               onClick={onClose}
-              className="w-[82px] !rounded-md  h-[34px] !text-[12px] !px-2">
+              className="w-[86px] h-[36px] !rounded-md !text-[13px] !p-0">
               キャンセル
             </Button>
           </div>
         </header>
-        <div className="text-xs font-normal flex flex-col gap-4 !overflow-y-auto">
+        <div className="text-xs font-normal flex flex-col gap-[35px] !overflow-y-auto">
           {/* Plan date */}
           <div className="flex items-start">
             <div className="w-full max-w-[116px] font-medium text-[14px] mt-2">
@@ -1138,13 +1138,17 @@ const ActionsEventModal = ({
                             </div>
                           )}
                         </div>
-                        <ErrorMessage
-                          error={errors.startDate?.message}
-                          className="mt-[5px] mb-[5px] text-xs"
-                        />
+                        {errors.startDate?.message ? (
+                          <ErrorMessage
+                            error={errors.startDate?.message}
+                            className="mt-[5px] mb-[5px] text-xs"
+                          />
+                        ) : (
+                          <></>
+                        )}
                       </div>
 
-                      <div className="h-8 flex items-center">〜</div>
+                      <div className="h-[34px] flex items-center">〜</div>
                       <div
                         className={`${watch('isAllDay') ? 'min-w-[140px]' : 'max-w-[220px]'}`}>
                         <div className="flex gap-1">
@@ -1288,12 +1292,16 @@ const ActionsEventModal = ({
                             </div>
                           )}
                         </div>
-                        <ErrorMessage
-                          error={
-                            errors.endDate?.message || errors.endTime?.message
-                          }
-                          className="mt-[5px] mb-[5px] text-xs"
-                        />
+                        {errors.endDate?.message || errors.endTime?.message ? (
+                          <ErrorMessage
+                            error={
+                              errors.endDate?.message || errors.endTime?.message
+                            }
+                            className="mt-[5px] mb-[5px] text-xs"
+                          />
+                        ) : (
+                          <></>
+                        )}
                       </div>
                     </div>
                     <Button
@@ -1313,13 +1321,14 @@ const ActionsEventModal = ({
                   </div>
                 )}
 
-              <div className="flex gap-2 items-center !w-full mt-2">
+              <div className="flex gap-2 items-center !w-full mt-4">
                 {watch('repeatType') &&
                   (watch('repeatType') as OptionDropdownType)?.label ==
                     TaskRepetitiveType.ONCE && (
-                    <div className="!w-[68px] mr-5">
+                    <div className="!w-[68px] mr-[22px]">
                       <Checkbox
                         label="終日"
+                        boxLabelClass="!ml-[6px]"
                         onChange={(state) => {
                           setValue('isAllDay', state, { shouldDirty: true });
                           handleConfirmCheckOverlappingLocation();
@@ -1820,80 +1829,82 @@ const ActionsEventModal = ({
           {/* Event category */}
           <div className="flex justify-between items-center">
             <p className="w-fit font-medium text-[14px]">予定カテゴリー</p>
-            <div className="w-[513px] space-y-2">
-              <p className="text-[#7F8991] font-medium text-sm h-[32px] flex items-end leading-none">
+            <div className="w-[518px]">
+              <p className="text-[#7F8991] mb-[14px] font-medium text-sm flex items-end leading-none">
                 カレンダー
               </p>
-              <Controller
-                control={control}
-                name={'largeCategory'}
-                render={({ field: { value, onChange } }) => (
-                  <Dropdown
-                    className="h-8 !py-1 text-xs !border-[1px] !border-[#77858F]"
-                    classNameTextData="!text-xs"
-                    classNameOption="!text-xs"
-                    options={[...dataOptionsCategoryLarge]}
-                    selectedOption={[...dataOptionsCategoryLarge].find(
-                      (element) =>
-                        element.value == (value as OptionDropdownType)?.value,
-                    )}
-                    placeholder={'大カテゴリー'}
-                    onChange={(e) => {
-                      if (e.value != watch('largeCategory.value')) {
-                        setValue(
-                          'mediumCategory',
-                          { label: '', value: '' },
-                          { shouldDirty: true },
+              <div className="space-y-2">
+                <Controller
+                  control={control}
+                  name={'largeCategory'}
+                  render={({ field: { value, onChange } }) => (
+                    <Dropdown
+                      className="h-[34px] !py-1 text-xs !border-[1px] !border-[#77858F]"
+                      classNameTextData="!text-xs"
+                      classNameOption="!text-xs"
+                      options={[...dataOptionsCategoryLarge]}
+                      selectedOption={[...dataOptionsCategoryLarge].find(
+                        (element) =>
+                          element.value == (value as OptionDropdownType)?.value,
+                      )}
+                      placeholder={'大カテゴリー'}
+                      onChange={(e) => {
+                        if (e.value != watch('largeCategory.value')) {
+                          setValue(
+                            'mediumCategory',
+                            { label: '', value: '' },
+                            { shouldDirty: true },
+                          );
+                        }
+                        onChange(e);
+                      }}
+                      disabled={isDisabled}
+                    />
+                  )}
+                />
+                {watch('largeCategory')?.value && (
+                  <div className="mb-2">
+                    <Controller
+                      control={control}
+                      name={'mediumCategory'}
+                      render={({ field: { value, onChange } }) => {
+                        return (
+                          <Dropdown
+                            className="h-[34px] !py-1 text-xs !border-[1px] !border-[#77858F]"
+                            classNameTextData="!text-xs"
+                            classNameOption="!text-xs"
+                            options={[...dataOptionsCategoryMedium]}
+                            selectedOption={[...dataOptionsCategoryMedium].find(
+                              (element) =>
+                                element.value ==
+                                (value as OptionDropdownType)?.value,
+                            )}
+                            placeholder={'中カテゴリ'}
+                            onChange={(e) => {
+                              onChange(e);
+                            }}
+                            disabled={isDisabled}
+                          />
                         );
-                      }
-                      onChange(e);
-                    }}
-                    disabled={isDisabled}
-                  />
+                      }}
+                    />
+                  </div>
                 )}
-              />
-              {watch('largeCategory')?.value && (
-                <div className="mb-2">
-                  <Controller
-                    control={control}
-                    name={'mediumCategory'}
-                    render={({ field: { value, onChange } }) => {
-                      return (
-                        <Dropdown
-                          className="h-8 !py-1 text-xs !border-[1px] !border-[#77858F]"
-                          classNameTextData="!text-xs"
-                          classNameOption="!text-xs"
-                          options={[...dataOptionsCategoryMedium]}
-                          selectedOption={[...dataOptionsCategoryMedium].find(
-                            (element) =>
-                              element.value ==
-                              (value as OptionDropdownType)?.value,
-                          )}
-                          placeholder={'中カテゴリ'}
-                          onChange={(e) => {
-                            onChange(e);
-                          }}
-                          disabled={isDisabled}
-                        />
-                      );
-                    }}
-                  />
-                </div>
-              )}
+              </div>
             </div>
           </div>
           {/* Tag */}
-          <div className="flex gap-6 items-start">
-            <div className="w-full max-w-32 font-medium text-[14px]">タグ</div>
-            <div className="w-full max-w-[518px]">
-              <div className="flex gap-2 max-w-[518px]">
-                <div className="w-[457px]">
+          <div>
+            <div className="flex justify-between items-center">
+              <div className="w-fit font-medium text-[14px]">タグ</div>
+              <div className="w-full max-w-[518px]">
+                <div className="w-[518px]">
                   <MultiSelectDropdown
                     className="!h-[34px]"
                     disabled={isDisabled}
                     valueClassName="!border-[1px] !border-[#77858F]"
                     options={dataOptionsTags}
-                    optionClassName="!border-[1px] !border-[#77858F] max-w-[513px]"
+                    optionClassName="!border-[1px] !border-[#77858F] max-w-[518px]"
                     customLabel={
                       (watch('tagIds') ?? []).filter((tag) => tag.value)
                         .length > 0
@@ -1919,70 +1930,62 @@ const ActionsEventModal = ({
                       setValue('tagIds', updatedTagIds, { shouldDirty: true });
                     }}
                   />
-                  <div className="flex flex-wrap  gap-2 mt-2">
-                    {watch('tagIds')?.filter((tag) => tag.value) &&
-                      watch('tagIds')
-                        ?.filter((tag) => !!tag.value)
-                        ?.map((tag) => {
-                          return (
-                            <div
-                              key={tag.value}
-                              className="rounded-xl bg-[#EBF2F7] px-2.5 py-1.5 flex gap-2">
-                              <p>{tag.label}</p>
-                              <button
-                                type="button"
-                                className="text-gray-700 hover:text-gray-900"
-                                onClick={() => {
-                                  const currentTagIds =
-                                    getValues('tagIds') || [];
-
-                                  const updatedTagIds = [
-                                    ...currentTagIds,
-                                  ].filter(
-                                    (item) =>
-                                      Number(item.value) != Number(tag.value),
-                                  );
-
-                                  setValue('tagIds', updatedTagIds, {
-                                    shouldDirty: true,
-                                  });
-                                }}>
-                                ✕
-                              </button>
-                            </div>
-                          );
-                        })}
-                  </div>
-                </div>
-                <div className="mb-[2.5px] w-12">
-                  <Button
-                    sz="sm"
-                    variant="outline"
-                    className="w-12 h-[34px] hover:opacity-70 !border-none !px-0 !rounded-md text-[13px] !bg-[#EBF1F7]"
-                    type="button"
-                    name="Remove TagId"
-                    disabled={isDisabled}
-                    onClick={() => {
-                      setValue('tagIds', [], { shouldDirty: true });
-                    }}>
-                    削除
-                  </Button>
                 </div>
               </div>
             </div>
+            <div
+              className={`flex flex-wrap gap-[10px] ml-[100px] ${
+                watch('tagIds')?.filter((tag) => !!tag.value)?.length &&
+                'mt-[14px]'
+              }`}>
+              {watch('tagIds')
+                ?.filter((tag) => !!tag.value)
+                ?.map((tag) => {
+                  return (
+                    <div
+                      key={tag.value}
+                      className="rounded-[20px] bg-[#EBF2F7] px-2.5 py-[7.5px] flex gap-[6px] items-center">
+                      <p className="text-black text-xs font-medium leading-[1]">
+                        {tag.label}
+                      </p>
+                      <button
+                        type="button"
+                        className=""
+                        onClick={() => {
+                          const currentTagIds = getValues('tagIds') || [];
+
+                          const updatedTagIds = [...currentTagIds].filter(
+                            (item) => Number(item.value) != Number(tag.value),
+                          );
+
+                          setValue('tagIds', updatedTagIds, {
+                            shouldDirty: true,
+                          });
+                        }}>
+                        <ImageRound
+                          src={`/icons/close.svg`}
+                          name="Close icon"
+                          className="w-3 h-3"
+                        />
+                      </button>
+                    </div>
+                  );
+                })}
+            </div>
           </div>
+
           {/* Location */}
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center mb-[9px]">
             <p className="w-fit font-medium text-[14px]">場所</p>
-            <div className="w-[513px]">
+            <div className="w-[518px]">
               <Controller
                 control={control}
                 name={'location'}
                 render={({ field: { value, onChange } }) => (
                   <Dropdown
-                    className="h-8 !py-1 text-xs max-w-[513px] !border-[1px] !border-[#77858F] !rounded-md"
+                    className="h-[34px] !py-1 text-xs max-w-[518px] !border-[1px] !border-[#77858F] !rounded-md"
                     classNameTextData="!text-xs"
-                    classNameOption="!text-xs w-[513px]"
+                    classNameOption="!text-xs w-[518px]"
                     classNameError="!text-xs"
                     placeholder="選択してください"
                     disabled={isDisabled}
@@ -2019,15 +2022,15 @@ const ActionsEventModal = ({
           </div>
           {/* Participants */}
           <div className="flex flex-col">
-            <div className="flex justify-between items-start mb-3">
-              <p className="w-fit font-medium text-[14px] mt-3">
+            <div className="flex justify-between items-start mb-[9px]">
+              <p className="w-fit font-medium text-[14px] mt-3 leading-none">
                 メンバーを追加
               </p>
               <div>
                 <div className="relative">
                   <Input
                     placeholder="名前を検索"
-                    className={`!w-[513px] h-[34px] pl-9 focus:!shadow-none !border-[1px] !border-[#77858F] !rounded-md`}
+                    className={`!w-[518px] h-[34px] pl-9 focus:!shadow-none !border-[1px] !border-[#77858F] !rounded-md`}
                     onChange={(e) => setSearchName(e.target.value)}
                     disabled={isDisabled}
                   />
@@ -2038,14 +2041,14 @@ const ActionsEventModal = ({
                   />
                 </div>
 
-                <div className="flex justify-between items-center my-3">
+                <div className="flex justify-between items-center my-5">
                   <p
-                    className="text-[#77858F] font-medium text-[11px] hover:cursor-pointer"
+                    className="text-[#77858F] font-medium text-[12px] hover:cursor-pointer leading-none"
                     onClick={handleGetAllSelectedMembers}>
                     全てをチェック
                   </p>
                   <p
-                    className="text-[#77858F] font-medium text-[12px] hover:cursor-pointer"
+                    className="text-[#77858F] font-medium text-[12px] hover:cursor-pointer leading-none"
                     onClick={handleRemoveAllSelectedMembers}>
                     全てのチェックをクリア
                   </p>
@@ -2105,13 +2108,14 @@ const ActionsEventModal = ({
                     .map((member) => {
                       return (
                         <div
-                          className={`flex gap-2 items-center px-3 py-2.5 hover:cursor-pointer ${
+                          className={`flex items-center px-5 py-2 hover:cursor-pointer ${
                             checkIsParticipantSelected(member) && 'bg-[#EBF1F7]'
                           }`}
                           key={member.id}>
                           <div>
                             <Checkbox
                               isChecked={checkIsParticipantSelected(member)}
+                              boxLabelClass="ml-[14px]"
                               disable={isDisabled}
                               onChange={() => {
                                 handleSelectEventParticipant(member);
@@ -2138,7 +2142,7 @@ const ActionsEventModal = ({
                             </>
                           )}
                           <p
-                            className={`text-[15px] truncate max-w-[350px] text-black leading-normal ${member.type == EventParticipantType.ORGANIZATION && 'ml-1'}`}>
+                            className={`text-[15px] truncate max-w-[385px] text-black leading-normal ml-[10px]`}>
                             {member.fullName}
                           </p>
                         </div>
@@ -2147,7 +2151,8 @@ const ActionsEventModal = ({
                 </div>
                 <Checkbox
                   label="自分をメンバーから外す"
-                  className="px-3 mt-5"
+                  boxLabelClass="ml-[14px]"
+                  className="px-5 mt-[10px]"
                   onChange={(state) => {
                     setRemoveMyselfOption(state);
                     const currentParticipantList =
@@ -2219,13 +2224,14 @@ const ActionsEventModal = ({
             <TextArea
               register={register('memo')}
               label="予定についてのメモ"
-              labelClassName="text-black text-[14px] font-medium mb-2"
+              wrapperClassName="!mt-0"
+              labelClassName="text-black text-[14px] font-medium mb-5 !leading-none"
               disabled={isDisabled}
               className="resize-none !border-1 !border-[#77858F] !h-[160px]"
             />
           </div>
         </div>
-        <div className="flex justify-center mt-8">
+        <div className="flex justify-center mt-11">
           {session?.user.permissions &&
             ((action === ActionsEvent.EDIT &&
               !isEditDisabled &&
@@ -2240,7 +2246,8 @@ const ActionsEventModal = ({
                 ))) && (
               <Button
                 type="submit"
-                className="w-[200px] h-[46px] !text-[15px]"
+                className="w-[200px] h-[46px] !text-[14px] !font-medium !border-none"
+                style={{ boxShadow: '0px 1px 5px 0px #00000033' }}
                 disabled={
                   action === ActionsEvent.EDIT && !backToEditing && !isDirty
                 }>

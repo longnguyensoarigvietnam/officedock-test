@@ -50,7 +50,8 @@
 }
 
 .react-datepicker-popper {
-  top: 55px !important;
+  z-index: 50 !important;
+  top: 40px !important;
   left: 50% !important;
   transform: translate(-50%, 0) !important;
 }

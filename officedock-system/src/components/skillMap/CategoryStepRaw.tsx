@@ -189,7 +189,7 @@ const CategoryStepRaw = ({
 
   return (
     <div>
-      <p className="text-base text-primary font-medium mb-3 ">対応カテゴリー</p>
+      <p className="text-base text-black font-medium mb-[14px] leading-none">対応カテゴリー</p>
       <div className="flex gap-[10px] flex-col">
         {outerFields.map((field, index) => (
           <div key={field.id} className="flex gap-2 items-center h-[30px]">

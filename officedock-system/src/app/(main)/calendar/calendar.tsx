@@ -1102,7 +1102,7 @@ const EventCalendar = () => {
             eventContent.event.extendedProps.type == EventCalendarType.HOLIDAY
           ) {
             return (
-              <div className="rounded-sm hover:cursor-pointer mb-1 overflow-hidden">
+              <div className="rounded-sm hover:cursor-pointer mb-[1px] overflow-hidden">
                 <p
                   className={`truncate max-w-[calc(100%)] mt-0.5 pt-0.5 h-[25px] text-[#E95062] font-semibold px-1 text-[12px]`}>
                   {eventContent.event.title != 'null'
@@ -1192,7 +1192,7 @@ const EventCalendar = () => {
             eventContent.event.extendedProps.type == EventCalendarType.HOLIDAY
           ) {
             return (
-              <div className="rounded-sm hover:cursor-pointer mb-1 overflow-hidden">
+              <div className="rounded-sm hover:cursor-pointer mb-[1px] overflow-hidden">
                 <p
                   className={`truncate max-w-[calc(100%)] mt-0.5 pt-0.5 h-[25px] text-[#E95062] font-semibold px-1 text-[12px]`}>
                   {eventContent.event.title != 'null'
@@ -1205,7 +1205,7 @@ const EventCalendar = () => {
 
           return (
             <div
-              className={`fc-daygrid-event mb-1 ${eventContent.event.id == selectedEventInfo?.repeatScheduleId && 'selected-all-day-event'} ${eventContent.event.allDay && 'hover:cursor-pointer'}`}>
+              className={`fc-daygrid-event mb-[1px] ${eventContent.event.id == selectedEventInfo?.repeatScheduleId && 'selected-all-day-event'} ${eventContent.event.allDay && 'hover:cursor-pointer'}`}>
               <div
                 className={`text-black bg-white overflow-hidden !w-[calc(100%_-_1px)] py-0.5 !rounded-[8px] text-[12px] font-normal px-1`}
                 style={{ boxShadow: '0px 2px 8px 0px #0000001A' }}>
@@ -1241,7 +1241,7 @@ const EventCalendar = () => {
         }
         return (
           <div
-            className={`  rounded-sm hover:cursor-pointer mb-1 overflow-hidden`}>
+            className={`  rounded-sm hover:cursor-pointer mb-[1px] overflow-hidden`}>
             <div className="flex items-center gap-1">
               <div
                 className={`text-black py-0.5 flex items-center gap-1 font-normal text-[12px]`}>
@@ -2686,14 +2686,14 @@ const EventCalendar = () => {
         <div
           className={`${showSidebar ? 'w-[calc(100%_-_320px)] pr-5' : 'w-full'} pt-[18px]`}>
           <div className="flex items-center justify-between mb-3 pl-10">
-            <div className="flex items-center ml-[-20px] gap-4">
+            <div className="flex items-center ml-[-20px]">
               <ImageRound
                 name="Chevron left"
                 src={'/icons/chevron-left-calendar.svg'}
                 onClick={handlePrev}
                 className="!w-[8px] !h-[10px] hover:cursor-pointer"
               />
-              <div className="flex items-baseline font-normal gap-[6px]">
+              <div className="ml-4 flex items-baseline font-normal gap-[6px]">
                 {searchParams.get('view') != ViewOptions.DAY && (
                   <p
                     className={`${
@@ -2732,9 +2732,9 @@ const EventCalendar = () => {
                 name="Chevron right"
                 src={'/icons/chevron-left-calendar.svg'}
                 onClick={handleNext}
-                className="!w-[8px] !h-[10px] rotate-180 hover:cursor-pointer"
+                className="ml-4 !w-[8px] !h-[10px] rotate-180 hover:cursor-pointer"
               />
-              <div className="mt-5 z-20">
+              <div className="ml-[29px] z-20">
                 <DatePicker
                   className="z-50"
                   isShowInput={false}
@@ -2744,7 +2744,7 @@ const EventCalendar = () => {
                       : new Date()
                   }
                   tooltipMsg="カレンダーから日付を選択"
-                  iconClassName="!static !w-10 !h-5"
+                  size="!w-[18px] !h-[18px]"
                   onChange={(e) => {
                     handleNavigateToSpecificDay(e as Date);
                   }}
@@ -2757,7 +2757,7 @@ const EventCalendar = () => {
                   <Button
                     type="button"
                     variant="secondary"
-                    className="!self-center !text-primary !bg-white !w-[48px] !h-[34px] !rounded-[6px] !text-[14px] !font-medium !p-[8px] !border-none"
+                    className="!self-center ml-[11px] !text-primary !bg-white !w-[48px] !h-[34px] !rounded-[6px] !text-[14px] !font-medium !p-[8px] !border-none"
                     onClick={handleNavigateToTodayView}>
                     {showCurrentViewButtonContent()}
                   </Button>
@@ -2912,6 +2912,10 @@ const EventCalendar = () => {
                     style={{
                       fontWeight: '600',
                       fontSize: '12px',
+                      marginLeft: '7px',
+                      marginRight: '7px',
+                      marginTop: '4px',
+                      marginBottom: '4px',
                     }}>
                     {'他' + args.num + '件'}
                   </div>

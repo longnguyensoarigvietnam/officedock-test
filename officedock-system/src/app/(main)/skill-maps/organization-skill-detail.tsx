@@ -18,6 +18,7 @@ import { Table } from '@components/common/Table';
 import {
   ActionsModal,
   PermissionsSystem,
+  ScreenName,
   SkillMapLookBackType,
   SkillMapTypeInterval,
 } from '@constants/enums';
@@ -240,7 +241,7 @@ export const OrganizationSkillDetail = ({
   const handleEditSkillMap = async (data: OrganizationDefineSteps) => {
     setIsLoading(true);
     return await api.post(
-      apiRouters.ORGANIZATION_DEFINE_STEPS(orgSkillDetail.id),
+      `${apiRouters.ORGANIZATION_DEFINE_STEPS(orgSkillDetail.id)}?screen_name=${ScreenName.SKILL_MAP_MANAGEMENT}`,
       data,
     );
   };
@@ -309,7 +310,7 @@ export const OrganizationSkillDetail = ({
           ref={stepDefinitionBoxRef}>
           <div className="flex gap-5 w-[calc(100%_-_34px)]">
             <div className="flex gap-2 items-center w-1/3">
-              <p className="bg-[#36ACDE] text-white rounded-[20px] w-[70px] h-[24px] flex items-center justify-center text-xs">
+              <p className="bg-[#3DC1E2] text-white rounded-[20px] w-[70px] h-[24px] flex items-center justify-center text-xs">
                 STEP 1
               </p>
               <div className="!w-full">
@@ -333,7 +334,7 @@ export const OrganizationSkillDetail = ({
               </div>
             </div>
             <div className="flex gap-2 items-center w-1/3">
-              <p className="bg-[#424EC1] text-white rounded-[20px] w-[70px] h-[24px] flex items-center justify-center text-xs">
+              <p className="bg-[#355AC9] text-white rounded-[20px] w-[70px] h-[24px] flex items-center justify-center text-xs">
                 STEP 3
               </p>
               <div className="!w-full">
@@ -364,7 +365,7 @@ export const OrganizationSkillDetail = ({
         <div className="border-[1px] border-[#D2DBE1] bg-white flex w-full py-[15px] pl-[14px] pr-[19px] mb-7 gap-5 items-center rounded-[6px]">
           <div className="flex gap-5 w-[calc(100%_-_34px)]">
             <div className="flex gap-2 items-center max-w-[33.3%] min-w-0">
-              <p className="bg-[#36ACDE] text-white rounded-[20px] w-[70px] h-[24px] flex items-center justify-center text-xs">
+              <p className="bg-[#3DC1E2] text-white rounded-[20px] w-[70px] h-[24px] flex items-center justify-center text-xs">
                 STEP 1
               </p>
               <p className="text-sm font-normal max-w-[calc(100%_-_70px)] break-all">
@@ -380,7 +381,7 @@ export const OrganizationSkillDetail = ({
               </p>
             </div>
             <div className="flex gap-2 items-center max-w-[33.3%] min-w-0">
-              <p className="bg-[#424EC1] text-white rounded-[20px] w-[70px] h-[24px] flex items-center justify-center text-xs">
+              <p className="bg-[#355AC9] text-white rounded-[20px] w-[70px] h-[24px] flex items-center justify-center text-xs">
                 STEP 3
               </p>
               <p className="text-sm font-normal max-w-[calc(100%_-_70px)] break-all">
@@ -458,7 +459,9 @@ export const OrganizationSkillDetail = ({
       </div>
 
       {/* Step information */}
-      <Table className="w-full h-full bg-white !rounded-[10px]" classCustom="!p-0">
+      <Table
+        className="w-full h-full bg-white !rounded-[10px]"
+        classCustom="!p-0">
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
