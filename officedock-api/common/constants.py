@@ -16,6 +16,7 @@ BASE_DATETIME_FORMAT = "%Y-%m-%d %H:%M"
 ORGANIZATION_ICON_FOLDER_UPLOAD = (
     "organizations/icons"  # Folder for organization icons
 )
+CHAT_AVATAR_FOLDER_UPLOAD = "chats/avatars"  # Folder for chat avatars
 USER_AVATAR_FOLDER_UPLOAD = "users/avatars"  # Folder for user avatars
 CROP_ITEM_FOLDER_UPLOAD = (
     "items/crop_items"  # Folder for crop item in shop items
