@@ -258,7 +258,7 @@
 .calendar-custom.week .fc-theme-standard th:first-child {
   border-right: none !important;
 }
-.fc-timegrid-divider.fc-cell-shaded {
+.calendar-custom .fc-timegrid-divider.fc-cell-shaded {
   visibility: hidden;
 }
 .calendar-custom .fc-theme-standard .fc-scrollgrid {

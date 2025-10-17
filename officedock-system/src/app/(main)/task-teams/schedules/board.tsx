@@ -1013,7 +1013,7 @@ const ScheduleTeamBoard = () => {
                 onClick={handleNext}
                 className="!w-[8px] !h-[10px] rotate-180 hover:cursor-pointer"
               />
-              <div className="mt-5 z-20">
+              <div className="ml-[10px] z-20">
                 <DatePicker
                   className="z-50"
                   isShowInput={false}
@@ -1023,7 +1023,7 @@ const ScheduleTeamBoard = () => {
                       : new Date()
                   }
                   tooltipMsg="カレンダーから日付を選択"
-                  iconClassName="!static !w-10 !h-5"
+                  size="!w-[18px] !h-[18px]"
                   onChange={(e) => {
                     handleNavigateToSpecificDay(e as Date);
                   }}
