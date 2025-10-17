@@ -557,6 +557,7 @@ class TaskBoardSerializer(TaskCommonSerializer):
             "pin_at",
             "type",
             "categories",
+            "completed_at",
         ]
 
     def to_representation(self, instance):
@@ -1047,3 +1048,27 @@ class TaskTeamdockSerializer(BaseUserSerializer):
             )
 
         return results
+
+
+class TaskArchiveSerializer(TaskCommonSerializer):
+    """
+    Serializer for the Task model.
+    """
+
+    categories = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = Task
+        fields = [
+            "id",
+            "title",
+            "status",
+            "type",
+            "categories",
+            "is_archived",
+            "completed_at",
+        ]
+
+    def get_categories(self, obj):
+        """Handle retrieving categories of a Task."""
+        return get_common_categories(obj.categories.first(), obj)

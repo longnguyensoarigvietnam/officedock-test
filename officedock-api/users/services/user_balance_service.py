@@ -97,11 +97,21 @@ class UserService:
             return False
         company_status = user.company.status
         # Just allow user have permission access to Payment Management page when company suspended
-        if company_status == CompanyStatus.SUSPENDED.value:
-            return user.roles.filter(
+        if (
+            company_status == CompanyStatus.SUSPENDED.value
+            or company_status == CompanyStatus.RETRY_PAYMENT.value
+        ):
+            is_accept_login = user.roles.filter(
                 permissions__name__startswith=Screens.PAYMENT_MANAGEMENT.value,
                 role_details__selection_result=SelectionResultOptions.ALLOWED.value,
             ).exists()
+            if company_status == CompanyStatus.RETRY_PAYMENT.value:
+                return (
+                    is_accept_login
+                    if user.company.company_plan.stripe_subscription_id == None
+                    else True
+                )
+            return is_accept_login
         return company_status not in [
             CompanyStatus.SUSPENDED.value,
             CompanyStatus.CONTRACT_TERMINATED.value,

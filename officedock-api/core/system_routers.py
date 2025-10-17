@@ -23,9 +23,9 @@ from statistics.apis import (
 )
 from submit_levels.apis import SubmitLevelViewSet
 from tasks.apis import (
+    TaskArchiveViewSet,
     TaskBoardViewSet,
     TaskCalendarViewSet,
-    TaskScheduleViewSet,
     TaskTeamdockViewSet,
     TaskViewSet,
     TodoListViewSet,
@@ -91,10 +91,10 @@ api_router.register(
 api_router.register(
     "tasks/calendar", TaskCalendarViewSet, basename="tasks_calendar"
 )
-api_router.register("tasks/board", TaskBoardViewSet, basename="tasks_board")
 api_router.register(
-    "tasks/schedules", TaskScheduleViewSet, basename="task_schedule"
+    "tasks/archive", TaskArchiveViewSet, basename="tasks_archive"
 )
+api_router.register("tasks/board", TaskBoardViewSet, basename="tasks_board")
 api_router.register(
     "tasks/teamdock", TaskTeamdockViewSet, basename="task_teamdock"
 )

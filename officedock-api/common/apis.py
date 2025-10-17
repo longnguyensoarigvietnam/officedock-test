@@ -25,7 +25,6 @@ from common.constants import (
     THE_FIRST_RETRY_FAILED,
     THE_LAST_RETRY_FAILED,
     InvoiceStatus,
-    SubscriptionStatus,
 )
 from common.helpers import (
     get_all_organizations,
@@ -846,8 +845,15 @@ class WebhookView(BaseAPIViewSet):
                 invoice = stripe.Invoice.retrieve(transaction.stripe_invoice_id)
                 # Set the finalize of invoice
                 self.stripe_service.update_invoice_finalize(invoice, company)
-
-            print(f"✅ Company {company.id} cancel subscription")
+            company.company_plan.stripe_subscription_id = None
+            company.company_plan.save(update_fields=["stripe_subscription_id"])
+            # Update company status
+            self.company_service.change_status_of_company(
+                company, CompanyStatus.CONTRACT_TERMINATED.value
+            )
+            print(
+                f"✅ Terminated contract and delete subscription of companyId {company.id}"
+            )
 
     def handle_update_the_last_invoice(self, invoice):
         """
@@ -865,14 +871,11 @@ class WebhookView(BaseAPIViewSet):
         company_plan = CompanyPlan.objects.filter(
             company=transaction.company
         ).first()
-        subscription = self.stripe_service.retrieve_subscription(
-            company_plan.stripe_subscription_id
-        )
         if (
             transaction
             and invoice.status == InvoiceStatus.DRAFT.value
             and not invoice.automatically_finalizes_at
-            and subscription.status == SubscriptionStatus.CANCELED.value
+            and company_plan.stripe_subscription_id == None
         ):
             invoice = stripe.Invoice.retrieve(transaction.stripe_invoice_id)
             # Get the company's default payment method
