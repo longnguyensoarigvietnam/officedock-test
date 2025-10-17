@@ -75,21 +75,26 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         "user_count": "user_count",
     }
     filterset_class = OrganizationFilter
-    screen_name = Screens.ORGANIZATION.value
+    screen_name = None
     lookup_field = "uuid"
 
     def get_permissions(self):
         """
         Switch screen name by query params
         """
-        if current_screen := self.request.query_params.get("current_screen"):
-            self.screen_name = current_screen
-        else:
-            has_statistic_categories = self.request.query_params.get(
-                "has_statistic_categories"
-            )
-            if has_statistic_categories and has_statistic_categories != "false":
-                self.screen_name = Screens.CATEGORY_HIERARCHY.value
+        screen_name = self.request.query_params.get(
+            "current_screen", Screens.ORGANIZATION.value
+        )
+        if screen_name and to_camel_case(screen_name) in [
+            to_camel_case(item.value) for item in Screens
+        ]:
+            self.screen_name = to_snake_case(screen_name)
+
+        has_statistic_categories = self.request.query_params.get(
+            "has_statistic_categories"
+        )
+        if has_statistic_categories and has_statistic_categories != "false":
+            self.screen_name = Screens.CATEGORY_HIERARCHY.value
 
         return super().get_permissions()
 

@@ -705,10 +705,7 @@ class WebhookView(BaseAPIViewSet):
             company = Company.objects.filter(
                 stripe_customer_id=invoice.customer,
                 contract__next_renewal_at__lte=invoice_start_date,
-                status__in=[
-                    CompanyStatus.ACTIVE_CONTRACT.value,
-                    CompanyStatus.TEMPORARY_USAGE.value,
-                ],
+                contract__cancel_at__isnull=True,
             ).first()
             if company:
                 self.company_service.handle_contract_renewal(
