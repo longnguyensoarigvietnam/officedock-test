@@ -620,14 +620,18 @@ class CronJobViewSet(BaseAPIViewSet):
         # 2. Iterate over all companies to handle closing logic
         self.cronjob_service.iterate_over_all_companies_to_closing(today)
 
-        # 3. Send mail notify renewal contract
+        # 3.
         if today.day == 1:
+            # Send mail notify renewal contract
             self.cronjob_service.handle_send_email_renewal_company_contract(
                 today
             )
+            # Handle downgrade plan after renewal contract
             self.cronjob_service.handle_downgrade_plan_after_renewal_contract(
                 today
             )
+            # Handle terminate contract
+            self.cronjob_service.handle_terminate_contract_over_period(today)
 
         # 4. Get company have status Temporary Usage and void the invoice before auto pay
         if today.day == 5:
@@ -847,10 +851,11 @@ class WebhookView(BaseAPIViewSet):
                 self.stripe_service.update_invoice_finalize(invoice, company)
             company.company_plan.stripe_subscription_id = None
             company.company_plan.save(update_fields=["stripe_subscription_id"])
-            # Update company status
-            self.company_service.change_status_of_company(
-                company, CompanyStatus.CONTRACT_TERMINATED.value
-            )
+            if company.status != CompanyStatus.CONTRACT_TERMINATED.value:
+                # Update company status
+                self.company_service.change_status_of_company(
+                    company, CompanyStatus.CONTRACT_TERMINATED.value
+                )
             print(
                 f"✅ Terminated contract and delete subscription of companyId {company.id}"
             )
@@ -1029,6 +1034,7 @@ class TestingViewset(BaseAPIViewSet):
             self.cronjob_service.handle_downgrade_plan_after_renewal_contract(
                 today
             )
+            self.cronjob_service.handle_terminate_contract_over_period(today)
 
         # 4. Get company have status Temporary Usage and void the invoice before auto pay
         if today.day == 5:

@@ -1,5 +1,6 @@
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
+from django.db.models import Q
 from common.services import stripe_service
 from common.services.transaction_service import TransactionService
 from common.utils import calculate_company_dates, format_date
@@ -213,3 +214,20 @@ class CronJobService:
         if companies:
             for company in companies:
                 CompanyService().downgrade_plan(company, today)
+
+    def handle_terminate_contract_over_period(self, today):
+        """
+        Automatically terminate contracts that have reached their end date.
+        Args:
+        today (datetime.date, optional): The current date used for comparison`.
+        """
+        yesterday = today - relativedelta(days=1)
+        companies = Company.objects.filter(
+            Q(contract__end_date=yesterday)
+            & Q(contract__cancel_at__isnull=False)
+            & ~Q(status=CompanyStatus.CONTRACT_TERMINATED.value)
+        ).all()
+        for company in companies:
+            CompanyService().change_status_of_company(
+                company, status=CompanyStatus.CONTRACT_TERMINATED.value
+            )
