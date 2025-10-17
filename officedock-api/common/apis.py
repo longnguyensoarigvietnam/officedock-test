@@ -13,6 +13,7 @@ import stripe
 
 from base.apis import BaseAPIViewSet
 from base.permissions import ActionPermission, IsCronJob
+from base.paginations import CustomCursorPagination
 from calendars.constants import (
     ScheduleTypes,
     CalendarTypes,
@@ -96,6 +97,7 @@ from .utils import (
     check_task_overtime,
     format_date,
     send_web_socket_event,
+    split_id_from_string,
     to_camel_case,
     to_datetime,
     to_snake_case,
@@ -112,6 +114,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
 
     filter_backends = [FilterByPermission]
     permission_classes = [IsAuthenticated]
+    ordering = ["-created_at"]
 
     def get_permissions(self):
         """
@@ -300,8 +303,8 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
 
     @extend_schema(
         parameters=[
+            OpenApiParameter("cursor", type=str, required=False),
             OpenApiParameter("page_size", type=int, required=False),
-            OpenApiParameter("page", type=int, required=False),
             OpenApiParameter("search", type=str, required=False),
             OpenApiParameter("user_ids", type=str, required=False),
             OpenApiParameter("chat_room_code", type=str, required=False),
@@ -317,6 +320,9 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         """
         Get task list of the option
         """
+
+        # Ordering for Cursor paginate
+        self.ordering = ["-created_at"]
 
         tasks = (
             Task.objects.filter(deleted_at__isnull=True)
@@ -336,13 +342,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
 
         # Get list of tasks by user ids
         elif user_ids := request.query_params.get("user_ids"):
-            ids = []
-            for id in user_ids.split(","):
-                try:
-                    ids.append(int(id))
-                except ValueError:
-                    continue
-            if ids:
+            if ids := split_id_from_string(user_ids):
                 tasks = tasks.filter(
                     Q(people_in_charge__id__in=ids) | Q(created_by_id__in=ids)
                 )
@@ -359,7 +359,10 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             tasks = tasks.filter(title__icontains=search_query)
 
         return self.response_pagination(
-            request, tasks.distinct(), CreationDataTaskListSerializer
+            request,
+            tasks.distinct(),
+            CreationDataTaskListSerializer,
+            CustomCursorPagination,
         )
 
 
