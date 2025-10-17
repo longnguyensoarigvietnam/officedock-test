@@ -1,8 +1,8 @@
 import MainLayout from '@components/layouts/MainLayout';
+import BoardSkillUser from './board';
 
 import { pageRouters } from '@constants/routers';
 import { PermissionsSystem } from '@constants/enums';
-import BoardSkillUser from './board';
 
 const SkillMapTeamDetailPage = () => {
   return (

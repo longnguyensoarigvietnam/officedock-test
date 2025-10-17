@@ -69,8 +69,9 @@ export const SkillMapBanner = ({
       {hasNavigateOtherSkillMap ? (
         <>
           <div
-            className={`absolute z-20 top-1/2 -translate-y-1/2 left-[-16px] h-[30px] w-[30px] flex items-center justify-center rounded-full bg-white
+            className={`absolute z-20 top-1/2 -translate-y-1/2 left-[-16px] h-[40px] w-[40px] flex items-center justify-center rounded-full bg-white
               ${skillMapInfo?.prevUser ? 'hover:cursor-pointer' : 'hover:cursor-not-allowed'}`}
+            style={{ boxShadow: '0px 2px 8px 0px #0000000F' }}
             onClick={() =>
               handleNavigateUser && handleNavigateUser(skillMapInfo?.prevUser)
             }>
@@ -81,8 +82,9 @@ export const SkillMapBanner = ({
             />
           </div>
           <div
-            className={`absolute z-20 top-1/2 -translate-y-1/2 rotate-180 right-[-16px] h-[30px] w-[30px] flex items-center justify-center rounded-full bg-white
+            className={`absolute z-20 top-1/2 -translate-y-1/2 rotate-180 right-[-16px] h-[40px] w-[40px] flex items-center justify-center rounded-full bg-white
               ${skillMapInfo?.nextUser ? 'hover:cursor-pointer' : 'hover:cursor-not-allowed'}`}
+            style={{ boxShadow: '0px 2px 8px 0px #0000000F' }}
             onClick={() =>
               handleNavigateUser && handleNavigateUser(skillMapInfo?.nextUser)
             }>
