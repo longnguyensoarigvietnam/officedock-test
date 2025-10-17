@@ -203,6 +203,23 @@ const ScheduleTeamBoard = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [organizationId]);
 
+  const scrollToNowIndicator = () => {
+    setTimeout(() => {
+      const nowIndicator = document.querySelector(
+        '.fc-timegrid-now-indicator-arrow',
+      );
+
+      if (nowIndicator) {
+        nowIndicator.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+        });
+
+        window.scrollBy({ top: 800, behavior: 'smooth' });
+      }
+    }, 500);
+  };
+
   useEffect(() => {
     if (
       dataActualAddSchedule &&
@@ -649,6 +666,7 @@ const ScheduleTeamBoard = () => {
           setEvents(() => {
             return [...newEvents];
           });
+          scrollToNowIndicator();
         }
       },
       onError: () => {
@@ -750,6 +768,7 @@ const ScheduleTeamBoard = () => {
           setEvents(() => {
             return [...newEvents];
           });
+          scrollToNowIndicator();
         }
       },
       onError: () => {
@@ -1181,6 +1200,7 @@ const ScheduleTeamBoard = () => {
                                   | 'category_ids',
                                 item.value,
                               );
+                              scrollToNowIndicator();
                             }}
                             className=" h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#DAE2EB]">
                             <span className="min-w-[71px] truncate">
@@ -1209,7 +1229,10 @@ const ScheduleTeamBoard = () => {
                       <ActionFilterTaskTeam
                         handleClose={() => setIsOpenModalFilter(false)}
                         listMemberTeam={listMemberTeam}
-                        handleReadyToFetch={() => {}}
+                        handleReadyToFetch={() => {
+                          scrollToNowIndicator();
+                        }}
+                        handleScroll={() => scrollToNowIndicator()}
                       />
                     </PopoverPanel>
                   </Transition>
@@ -1367,6 +1390,7 @@ const ScheduleTeamBoard = () => {
 
             setSlotHeight(calculatedHeight);
             setIsOptionZoomSchedule(calculatedDuration);
+            scrollToNowIndicator();
           }}
         />
       </div>

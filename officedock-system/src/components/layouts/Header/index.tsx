@@ -238,6 +238,8 @@ const Header = ({ className }: HeaderProps) => {
   const companyItems = updateCurrent(companySettingItemsClone, pathname);
 
   const handleUpdatePermissions = async (newPermissions: string[]) => {
+    queryClient.refetchQueries(['getCreationDataCommon']);
+
     await update({
       user: { permissions: newPermissions },
     });
