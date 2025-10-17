@@ -2041,22 +2041,19 @@ const DailyReportDetailBoard = () => {
     return { slotMinTime, slotMaxTime };
   };
 
-  const handleNextUser = () => {
-    if (dataStatistic?.nextUser && organization) {
-      router.push(
-        `${pageRouters.DAILY_REPORT_TEAM_DETAIL.href(String(dataStatistic?.nextUser))}?organization=${organization}`,
-        { scroll: false },
-      );
-    }
+  const handleNavigateUser = (userId: string | number | null) => {
+    if (!userId) return;
+
+    const params = new URLSearchParams(searchParams.toString());
+    const newUrl = `/daily-report-team/${userId}?${params.toString()}`;
+
+    router.push(newUrl, { scroll: false });
   };
-  const handlePrevUser = () => {
-    if (dataStatistic?.prevUser && organization) {
-      router.push(
-        `${pageRouters.DAILY_REPORT_TEAM_DETAIL.href(String(dataStatistic?.prevUser))}?organization=${organization}`,
-        { scroll: false },
-      );
-    }
-  };
+
+  const handleNextUser = () =>
+    dataStatistic?.nextUser && handleNavigateUser(dataStatistic?.nextUser);
+  const handlePrevUser = () =>
+    dataStatistic?.prevUser && handleNavigateUser(dataStatistic?.prevUser);
 
   const detailDateInfo = getDateInfoFull(dataDatePicker);
 

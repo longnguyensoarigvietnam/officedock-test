@@ -17,6 +17,7 @@ type ActionTaskFilterProp = {
   }[];
   handleClose: () => void;
   handleReadyToFetch: () => void;
+  handleScroll?: () => void;
 };
 
 const ActionFilterTaskTeam = ({
@@ -24,6 +25,7 @@ const ActionFilterTaskTeam = ({
   isLoadingDataTask,
   handleClose,
   handleReadyToFetch,
+  handleScroll,
 }: ActionTaskFilterProp) => {
   const boxListRef = useRef<HTMLDivElement | null>(null);
 
@@ -218,6 +220,7 @@ const ActionFilterTaskTeam = ({
       user_ids: getValues('userIds'),
     });
     handleClose();
+    handleScroll && handleScroll();
   };
   const handleReset = () => {
     handleReadyToFetch();
