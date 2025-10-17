@@ -78,6 +78,7 @@ import {
 import {
   hasPermissionInArray,
   showModalHeaderBackgroundColorByTime,
+  sortChatParticipants,
 } from '@utils';
 
 import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
@@ -2063,91 +2064,71 @@ const ActionsEventModal = ({
                       {NO_OPTIONS}
                     </p>
                   )}
-                  {dataOptionsParticipants
-                    ?.filter((member) =>
-                      member.fullName
-                        .toLowerCase()
-                        .includes(searchName.toLowerCase()),
-                    )
-                    .sort((prev: EventParticipant, next: EventParticipant) => {
-                      const prevSelected = checkIsParticipantSelected(prev);
-                      const nextSelected = checkIsParticipantSelected(next);
-
-                      // 1. Checked participants first
-                      if (prevSelected !== nextSelected) {
-                        return prevSelected ? -1 : 1;
-                      }
-
-                      // 2. Current user (only if user, not org)
-                      if (
-                        prev.id === session?.user.id &&
-                        prev.type === EventParticipantType.USER
+                  <div className="flex flex-col">
+                    {dataOptionsParticipants
+                      ?.filter((member) =>
+                        member.fullName
+                          .toLowerCase()
+                          .includes(searchName.toLowerCase()),
                       )
-                        return -1;
-                      if (
-                        next.id === session?.user.id &&
-                        next.type === EventParticipantType.USER
+                      .sort(
+                        (prev: EventParticipant, next: EventParticipant) => {
+                          return sortChatParticipants(
+                            prev,
+                            next,
+                            Number(session?.user.id),
+                          );
+                        },
                       )
-                        return 1;
-
-                      // 3. Organizations before users
-                      if (
-                        prev.type === EventParticipantType.ORGANIZATION &&
-                        next.type === EventParticipantType.USER
-                      )
-                        return -1;
-                      if (
-                        prev.type === EventParticipantType.USER &&
-                        next.type === EventParticipantType.ORGANIZATION
-                      )
-                        return 1;
-
-                      // 4. Alphabetical
-                      return prev.fullName.localeCompare(next.fullName);
-                    })
-                    .map((member) => {
-                      return (
-                        <div
-                          className={`flex items-center px-5 py-2 hover:cursor-pointer ${
-                            checkIsParticipantSelected(member) && 'bg-[#EBF1F7]'
-                          }`}
-                          key={member.id}>
-                          <div>
-                            <Checkbox
-                              isChecked={checkIsParticipantSelected(member)}
-                              boxLabelClass="ml-[14px]"
-                              disable={isDisabled}
-                              onChange={() => {
-                                handleSelectEventParticipant(member);
-                              }}
-                            />
+                      .map((member) => {
+                        return (
+                          <div
+                            className={`flex items-center px-5 py-2 hover:cursor-pointer ${
+                              checkIsParticipantSelected(member) &&
+                              'bg-[#EBF1F7]'
+                            }`}
+                            style={{
+                              order: checkIsParticipantSelected(member) ? 0 : 1, // Sort checked user/org first
+                            }}
+                            key={member.id}>
+                            <div>
+                              <Checkbox
+                                isChecked={checkIsParticipantSelected(member)}
+                                boxLabelClass="ml-[14px]"
+                                disable={isDisabled}
+                                onChange={() => {
+                                  handleSelectEventParticipant(member);
+                                }}
+                              />
+                            </div>
+                            {member.type == EventParticipantType.USER && (
+                              <>{renderAvatar(String(member.id))}</>
+                            )}
+                            {member.type ==
+                              EventParticipantType.ORGANIZATION && (
+                              <>
+                                {member.avatarUrl ? (
+                                  <CustomUserAvatar
+                                    avatarUrl={member?.avatarUrl || ''}
+                                    avatarColor={member?.color || ''}
+                                    size={30}
+                                  />
+                                ) : (
+                                  <GroupIconWithDynamicColor
+                                    color={member.color || '#228CDB'}
+                                    size={30}
+                                  />
+                                )}
+                              </>
+                            )}
+                            <p
+                              className={`text-[15px] truncate max-w-[385px] text-black leading-normal ml-[10px]`}>
+                              {member.fullName}
+                            </p>
                           </div>
-                          {member.type == EventParticipantType.USER && (
-                            <>{renderAvatar(String(member.id))}</>
-                          )}
-                          {member.type == EventParticipantType.ORGANIZATION && (
-                            <>
-                              {member.avatarUrl ? (
-                                <CustomUserAvatar
-                                  avatarUrl={member?.avatarUrl || ''}
-                                  avatarColor={member?.color || ''}
-                                  size={30}
-                                />
-                              ) : (
-                                <GroupIconWithDynamicColor
-                                  color={member.color || '#228CDB'}
-                                  size={30}
-                                />
-                              )}
-                            </>
-                          )}
-                          <p
-                            className={`text-[15px] truncate max-w-[385px] text-black leading-normal ml-[10px]`}>
-                            {member.fullName}
-                          </p>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                  </div>
                 </div>
                 <Checkbox
                   label="自分をメンバーから外す"

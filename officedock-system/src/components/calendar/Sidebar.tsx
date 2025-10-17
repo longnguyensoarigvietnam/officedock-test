@@ -12,6 +12,7 @@ import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { EventParticipant } from '@interfaces/calendar';
+import { Profile } from '@interfaces/user';
 
 import { EventParticipantType } from '@constants/enums';
 import { NO_DATA_AVAILABLE } from '@constants';
@@ -20,7 +21,7 @@ import {
   formatQueryEndDateForCalendar,
   formatQueryStartDateForCalendar,
 } from '@utils/date';
-import { Profile } from '@interfaces/user';
+import { sortChatParticipants } from '@utils';
 
 export type CalendarSidebarProps = {
   calendarRef: MutableRefObject<FullCalendar | null>;
@@ -191,106 +192,82 @@ export const CalendarSidebar = ({
                 {NO_DATA_AVAILABLE}
               </p>
             )}
-          {dataOptionsParticipants &&
-            dataOptionsParticipants
-              .filter((member) =>
-                member.fullName
-                  .toLowerCase()
-                  .includes(searchName.toLowerCase()),
-              )
-              .filter(
-                (member) =>
-                  !removeMyselfOption || member.id != session?.user.id,
-              )
-              .sort((prev: EventParticipant, next: EventParticipant) => {
-                const prevSelected = checkIsParticipantSelected(prev);
-                const nextSelected = checkIsParticipantSelected(next);
-
-                // 1. Checked participants first
-                if (prevSelected !== nextSelected) {
-                  return prevSelected ? -1 : 1;
-                }
-
-                // 2. Current user (only if user, not org)
-                if (
-                  prev.id === session?.user.id &&
-                  prev.type === EventParticipantType.USER
+          <div className="flex flex-col">
+            {dataOptionsParticipants &&
+              dataOptionsParticipants
+                .filter((member) =>
+                  member.fullName
+                    .toLowerCase()
+                    .includes(searchName.toLowerCase()),
                 )
-                  return -1;
-                if (
-                  next.id === session?.user.id &&
-                  next.type === EventParticipantType.USER
+                .filter(
+                  (member) =>
+                    !removeMyselfOption || member.id != session?.user.id,
                 )
-                  return 1;
-
-                // 3. Organizations before users
-                if (
-                  prev.type === EventParticipantType.ORGANIZATION &&
-                  next.type === EventParticipantType.USER
-                )
-                  return -1;
-                if (
-                  prev.type === EventParticipantType.USER &&
-                  next.type === EventParticipantType.ORGANIZATION
-                )
-                  return 1;
-
-                // 4. Alphabetical
-                return prev.fullName.localeCompare(next.fullName);
-              })
-              .map((member) => {
-                return (
-                  <div
-                    key={member.id}
-                    className={`flex items-center gap-[14px] px-3 ${
-                      checkIsParticipantSelected(member) && 'bg-[#EBF1F7]'
-                    }`}>
-                    <div className="w-4">
-                      <Checkbox
-                        label=""
-                        className="mr-2"
-                        isChecked={checkIsParticipantSelected(member)}
-                        onChange={() =>
-                          handleFilterScheduleByUserIds(
-                            member,
-                            dataOptionsParticipants,
-                          )
-                        }
-                      />
-                    </div>
+                .sort((prev: EventParticipant, next: EventParticipant) => {
+                  return sortChatParticipants(
+                    prev,
+                    next,
+                    Number(session?.user.id),
+                  );
+                })
+                .map((member) => {
+                  return (
                     <div
-                      className={`flex flex-1 gap-[10px] items-center p-2 pl-0 hover:cursor-pointer !w-full`}>
-                      {member.type == EventParticipantType.USER && (
-                        <>{renderAvatar(String(member.id))}</>
-                      )}
-                      {member.type == EventParticipantType.ORGANIZATION && (
-                        <div className='w-[30px]'>
-                          {member.avatarUrl ? (
-                            <CustomUserAvatar
-                              avatarUrl={member?.avatarUrl || ''}
-                              avatarColor={member?.color || ''}
-                              size={30}
-                            />
-                          ) : (
-                            <GroupIconWithDynamicColor
-                              color={member.color || '#0068B6'}
-                              size={30}
-                            />
-                          )}
+                      key={member.id}
+                      className={`flex items-center gap-[14px] px-3 ${
+                        checkIsParticipantSelected(member) && 'bg-[#EBF1F7]'
+                      }`}
+                      style={{
+                        order: checkIsParticipantSelected(member) ? 0 : 1, // Sort checked user/org first
+                      }}>
+                      <div className="w-4">
+                        <Checkbox
+                          label=""
+                          className="mr-2"
+                          isChecked={checkIsParticipantSelected(member)}
+                          onChange={() =>
+                            handleFilterScheduleByUserIds(
+                              member,
+                              dataOptionsParticipants,
+                            )
+                          }
+                        />
+                      </div>
+                      <div
+                        className={`flex flex-1 gap-[10px] items-center p-2 pl-0 hover:cursor-pointer !w-full`}>
+                        {member.type == EventParticipantType.USER && (
+                          <>{renderAvatar(String(member.id))}</>
+                        )}
+                        {member.type == EventParticipantType.ORGANIZATION && (
+                          <div className="w-[30px]">
+                            {member.avatarUrl ? (
+                              <CustomUserAvatar
+                                avatarUrl={member?.avatarUrl || ''}
+                                avatarColor={member?.color || ''}
+                                size={30}
+                              />
+                            ) : (
+                              <GroupIconWithDynamicColor
+                                color={member.color || '#0068B6'}
+                                size={30}
+                              />
+                            )}
+                          </div>
+                        )}
+                        <div className="!w-full">
+                          <p className="line-clamp-3 break-all font-medium leading-none text-[15px] text-black">
+                            {member.fullName}
+                            <span className="text-[#77858F] text-xs ml-1">
+                              {member.mainOrganization}
+                            </span>
+                          </p>
                         </div>
-                      )}
-                      <div className="!w-full">
-                        <p className="line-clamp-3 break-all font-medium leading-none text-[15px] text-black">
-                          {member.fullName}
-                          <span className="text-[#77858F] text-xs ml-1">
-                            {member.mainOrganization}
-                          </span>
-                        </p>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+          </div>
         </div>
       </div>
       <div className="ml-[13px]">

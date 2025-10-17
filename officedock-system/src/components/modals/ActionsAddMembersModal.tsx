@@ -414,87 +414,96 @@ const ActionsAddMembersModal = memo(
             ).length === 0 && (
               <p className="text-gray-500 text-center text-sm">{NO_OPTIONS}</p>
             )}
-            {dataOptionsParticipants
-              ?.filter((member) =>
-                member.fullName
-                  .toLowerCase()
-                  .includes(searchName.toLowerCase()),
-              )
-              .sort((prev: ChatParticipant, next: ChatParticipant) => {
-                return sortChatParticipants(
-                  prev,
-                  next,
-                  Number(session?.user.id),
-                  watch('members').filter(Boolean) ?? [],
-                  watch('organizations').filter(Boolean) ?? [],
-                );
-              })
-              .map((member) => {
-                return (
-                  <div
-                    className={`flex gap-[10px] items-center py-2 px-5 hover:cursor-pointer ${
-                      checkIsParticipantSelected(
-                        member,
-                        watch('members').filter(Boolean) ?? [],
-                        watch('organizations').filter(Boolean) ?? [],
-                      ) && 'bg-[#EBF1F7]'
-                    }`}
-                    key={member.id}>
-                    <div>
-                      <Controller
-                        control={control}
-                        name="members"
-                        render={() => (
-                          <Checkbox
-                            isChecked={checkIsParticipantSelected(
-                              member,
-                              watch('members').filter(Boolean) ?? [],
-                              watch('organizations').filter(Boolean) ?? [],
-                            )}
-                            boxLabelClass="!ml-[4px]"
-                            onChange={() =>
-                              handleSelectChatParticipant(
+            <div className="flex flex-col">
+              {dataOptionsParticipants
+                ?.filter((member) =>
+                  member.fullName
+                    .toLowerCase()
+                    .includes(searchName.toLowerCase()),
+                )
+                .sort((prev: ChatParticipant, next: ChatParticipant) => {
+                  return sortChatParticipants(
+                    prev,
+                    next,
+                    Number(session?.user.id),
+                  );
+                })
+                .map((member) => {
+                  return (
+                    <div
+                      className={`flex gap-[10px] items-center py-2 px-5 hover:cursor-pointer ${
+                        checkIsParticipantSelected(
+                          member,
+                          watch('members').filter(Boolean) ?? [],
+                          watch('organizations').filter(Boolean) ?? [],
+                        ) && 'bg-[#EBF1F7]'
+                      }`}
+                      key={member.id}
+                      style={{
+                        order: checkIsParticipantSelected(
+                          member,
+                          watch('members').filter(Boolean) ?? [],
+                          watch('organizations').filter(Boolean) ?? [],
+                        )
+                          ? 0
+                          : 1, // Sort checked user/org first
+                      }}>
+                      <div>
+                        <Controller
+                          control={control}
+                          name="members"
+                          render={() => (
+                            <Checkbox
+                              isChecked={checkIsParticipantSelected(
                                 member,
-                                dataOptionsParticipants,
-                              )
-                            }
-                          />
-                        )}
-                      />
-                    </div>
+                                watch('members').filter(Boolean) ?? [],
+                                watch('organizations').filter(Boolean) ?? [],
+                              )}
+                              boxLabelClass="!ml-[4px]"
+                              onChange={() =>
+                                handleSelectChatParticipant(
+                                  member,
+                                  dataOptionsParticipants,
+                                )
+                              }
+                            />
+                          )}
+                        />
+                      </div>
 
-                    {member.type == ChatParticipantType.USER && (
-                      <>{renderAvatar(member.id as string)}</>
-                    )}
-                    {member.type == ChatParticipantType.ORGANIZATION && (
-                      <>
-                        {member.avatarUrl ? (
-                          <CustomUserAvatar
-                            avatarUrl={member?.avatarUrl || ''}
-                            avatarColor={member?.color || ''}
-                            size={30}
-                          />
-                        ) : (
-                          <GroupIconWithDynamicColor
-                            color={member.color || '#228CDB'}
-                            size={30}
-                          />
-                        )}
-                      </>
-                    )}
-                    <p
-                      className={`break-all font-medium text-[15px] max-w-[430px] text-black`}>
-                      <span className="text-[15px] text-black">
-                        {member.fullName}
-                      </span>
-                      <span className="text-xs text-[#77858F] ml-[6px]">
-                        {member.type == ChatParticipantType.USER &&
-                          member?.mainOrganization}
-                      </span>
-                    </p>
-                  </div>
-                );
-              })}
+                      {member.type == ChatParticipantType.USER && (
+                        <>{renderAvatar(member.id as string)}</>
+                      )}
+                      {member.type == ChatParticipantType.ORGANIZATION && (
+                        <>
+                          {member.avatarUrl ? (
+                            <CustomUserAvatar
+                              avatarUrl={member?.avatarUrl || ''}
+                              avatarColor={member?.color || ''}
+                              size={30}
+                            />
+                          ) : (
+                            <GroupIconWithDynamicColor
+                              color={member.color || '#228CDB'}
+                              size={30}
+                            />
+                          )}
+                        </>
+                      )}
+                      <p
+                        className={`break-all font-medium text-[15px] max-w-[430px] text-black`}>
+                        <span className="text-[15px] text-black">
+                          {member.fullName}
+                        </span>
+                        <span className="text-xs text-[#77858F] ml-[6px]">
+                          {member.type == ChatParticipantType.USER &&
+                            member?.mainOrganization}
+                        </span>
+                      </p>
+                    </div>
+                  );
+                })}
+            </div>
           </div>
         </div>
         <div className="flex justify-center gap-[10px] mb-[30px] items-center">
@@ -505,7 +514,10 @@ const ActionsAddMembersModal = memo(
             disabled={isSaveButtonDisabled}>
             作成する
           </Button>
-          <Button variant="outline" onClick={onClose} className="w-[100px] !h-[36px] !p-0">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            className="w-[100px] !h-[36px] !p-0">
             キャンセル
           </Button>
         </div>
