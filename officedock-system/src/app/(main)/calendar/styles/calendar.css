@@ -329,9 +329,9 @@
 }
 /* Month */
 .calendar-custom.month .fc-daygrid-event {
-  padding-left: 2px !important;
-  padding-right: 2px !important;
-  padding-bottom: 2px !important;
+  padding-left: 1px !important;
+  padding-right: 1px !important;
+  padding-bottom: 1px !important;
 }
 .calendar-custom.month .fc .fc-daygrid-event-harness {
   padding-left: 10px !important;

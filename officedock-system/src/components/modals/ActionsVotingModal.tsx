@@ -35,7 +35,7 @@ import {
   formatTimeInputCustom,
   getFilteredTimeOptions,
 } from '@utils/date';
-import { showModalHeaderBackgroundColorByTime } from '@utils';
+import { showModalHeaderBackgroundColorByTime, sortChatParticipants } from '@utils';
 
 import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
@@ -529,99 +529,74 @@ const ActionsVotingModal = ({
                   {NO_OPTIONS}
                 </p>
               )}
-
-              {dataOptionsParticipants
-                ?.filter((member) =>
-                  member.fullName
-                    .toLowerCase()
-                    .includes(searchName.toLowerCase()),
-                )
-                ?.filter((member) =>
-                  activeTab == EventParticipantType.ORGANIZATION
-                    ? member.type == EventParticipantType.ORGANIZATION
-                    : member.type == EventParticipantType.USER,
-                )
-                .sort((prev: EventParticipant, next: EventParticipant) => {
-                  const prevSelected = checkIsParticipantSelected(prev);
-                  const nextSelected = checkIsParticipantSelected(next);
-
-                  // 1. Checked participants first
-                  if (prevSelected !== nextSelected) {
-                    return prevSelected ? -1 : 1;
-                  }
-
-                  // 2. Current user (only if user, not org)
-                  if (
-                    prev.id === session?.user.id &&
-                    prev.type === EventParticipantType.USER
+              <div className="flex flex-col">
+                {dataOptionsParticipants
+                  ?.filter((member) =>
+                    member.fullName
+                      .toLowerCase()
+                      .includes(searchName.toLowerCase()),
                   )
-                    return -1;
-                  if (
-                    next.id === session?.user.id &&
-                    next.type === EventParticipantType.USER
+                  ?.filter((member) =>
+                    activeTab == EventParticipantType.ORGANIZATION
+                      ? member.type == EventParticipantType.ORGANIZATION
+                      : member.type == EventParticipantType.USER,
                   )
-                    return 1;
-
-                  // 3. Organizations before users
-                  if (
-                    prev.type === EventParticipantType.ORGANIZATION &&
-                    next.type === EventParticipantType.USER
-                  )
-                    return -1;
-                  if (
-                    prev.type === EventParticipantType.USER &&
-                    next.type === EventParticipantType.ORGANIZATION
-                  )
-                    return 1;
-
-                  // 4. Alphabetical
-                  return prev.fullName.localeCompare(next.fullName);
-                })
-                .map((member) => {
-                  return (
-                    <div
-                      className={`flex gap-2 items-center px-3 py-2.5 hover:cursor-pointer ${
-                        checkIsParticipantSelected(member) && 'bg-[#EBF1F7]'
-                      }`}
-                      key={member.id}>
-                      <div>
-                        <Checkbox
-                          isChecked={checkIsParticipantSelected(member)}
-                          onChange={() => {
-                            handleSelectEventParticipant(member);
-                          }}
-                        />
-                      </div>
-                      {member.type == EventParticipantType.USER && (
-                        <>{renderAvatar(String(member.id))}</>
-                      )}
-                      {member.type == EventParticipantType.ORGANIZATION && (
-                        <div className='w-[30px]'>
-                          {member.avatarUrl ? (
-                            <CustomUserAvatar
-                              avatarUrl={member?.avatarUrl || ''}
-                              avatarColor={member?.color || ''}
-                              size={30}
-                            />
-                          ) : (
-                            <GroupIconWithDynamicColor
-                              color={member.color || '#228CDB'}
-                              size={30}
-                            />
-                          )}
+                  .sort((prev: EventParticipant, next: EventParticipant) => {
+                    return sortChatParticipants(
+                      prev,
+                      next,
+                      Number(session?.user.id),
+                    );
+                  })
+                  .map((member) => {
+                    return (
+                      <div
+                        className={`flex gap-2 items-center px-3 py-2.5 hover:cursor-pointer ${
+                          checkIsParticipantSelected(member) && 'bg-[#EBF1F7]'
+                        }`}
+                        key={member.id}
+                        style={{
+                          order: checkIsParticipantSelected(member) ? 0 : 1, // Sort checked user/org first
+                        }}>
+                        <div>
+                          <Checkbox
+                            isChecked={checkIsParticipantSelected(member)}
+                            onChange={() => {
+                              handleSelectEventParticipant(member);
+                            }}
+                          />
                         </div>
-                      )}
-                      <div className="!w-full">
-                        <p className="line-clamp-3 break-all font-medium text-[15px] text-black">
-                          {member.fullName}
-                          <span className="text-[#77858F] text-xs ml-1">
-                            {member.mainOrganization}
-                          </span>
-                        </p>
+                        {member.type == EventParticipantType.USER && (
+                          <>{renderAvatar(String(member.id))}</>
+                        )}
+                        {member.type == EventParticipantType.ORGANIZATION && (
+                          <div className="w-[30px]">
+                            {member.avatarUrl ? (
+                              <CustomUserAvatar
+                                avatarUrl={member?.avatarUrl || ''}
+                                avatarColor={member?.color || ''}
+                                size={30}
+                              />
+                            ) : (
+                              <GroupIconWithDynamicColor
+                                color={member.color || '#228CDB'}
+                                size={30}
+                              />
+                            )}
+                          </div>
+                        )}
+                        <div className="!w-full">
+                          <p className="line-clamp-3 break-all font-medium text-[15px] text-black">
+                            {member.fullName}
+                            <span className="text-[#77858F] text-xs ml-1">
+                              {member.mainOrganization}
+                            </span>
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+              </div>
             </div>
             {showMembersErrorMessage ? (
               <ErrorMessage

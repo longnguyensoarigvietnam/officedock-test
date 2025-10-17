@@ -69,6 +69,8 @@ import {
 } from '@interfaces/chat';
 import { ConditionByMap } from '@interfaces/skill-map';
 import { Candidate } from '@interfaces/mvp';
+import { AvatarItemUser } from '@interfaces/shop';
+import { EventParticipant } from '@interfaces/calendar';
 
 import {
   convertTimeToDecimal,
@@ -80,7 +82,6 @@ import {
   getJapaneseWeekDay,
   sumDurationsChart,
 } from './date';
-import { AvatarItemUser } from '@interfaces/shop';
 
 export function hasPermissionInArray(
   requiredPermissions: PermissionsSystem[],
@@ -2292,25 +2293,15 @@ export const checkIsParticipantSelected = (
 };
 
 export const sortChatParticipants = (
-  prev: ChatParticipant,
-  next: ChatParticipant,
+  prev: ChatParticipant | EventParticipant,
+  next: ChatParticipant | EventParticipant,
   userId: number,
-  userIds: number[],
-  orgIds: number[],
 ) => {
-  const prevSelected = checkIsParticipantSelected(prev, userIds, orgIds);
-  const nextSelected = checkIsParticipantSelected(next, userIds, orgIds);
-
-  // 1. Checked participants first
-  if (prevSelected !== nextSelected) {
-    return prevSelected ? -1 : 1;
-  }
-
-  // 2. Current user (only if user, not org)
+  // 1. Current user (only if user, not org)
   if (prev.id == userId && prev.type == ChatParticipantType.USER) return -1;
   if (next.id == userId && next.type == ChatParticipantType.USER) return 1;
 
-  // 3. Organizations before users
+  // 2. Organizations before users
   if (
     prev.type == ChatParticipantType.ORGANIZATION &&
     next.type == ChatParticipantType.USER
@@ -2322,7 +2313,7 @@ export const sortChatParticipants = (
   )
     return 1;
 
-  // 4. Alphabetical
+  // 3. Alphabetical
   return prev.fullName.localeCompare(next.fullName);
 };
 export function generateVerticalGradient(hexColor: string): string {
