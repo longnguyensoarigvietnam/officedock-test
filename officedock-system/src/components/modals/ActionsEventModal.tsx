@@ -990,7 +990,7 @@ const ActionsEventModal = ({
                 <Button
                   type="submit"
                   disabled={!backToEditing && !isDirty}
-                  className="w-[82px] h-[36px] !text-[12px] !px-2">
+                  className="w-[86px] h-[36px] !text-[13px] !p-0 !border-none">
                   予定を編集
                 </Button>
               )}
@@ -1003,7 +1003,7 @@ const ActionsEventModal = ({
               ) && (
                 <Button
                   type="submit"
-                  className="w-[86px] h-[36px] !text-[13px] !p-0">
+                  className="w-[86px] h-[36px] !text-[13px] !p-0 !border-none">
                   {action == ActionsEvent.CREATE ? '予定を作成' : '予定を複製'}
                 </Button>
               )}
@@ -1011,7 +1011,7 @@ const ActionsEventModal = ({
               variant="outline"
               type="button"
               onClick={onClose}
-              className="w-[86px] h-[36px] !rounded-md !text-[13px] !p-0">
+              className="w-[86px] h-[36px] !text-[13px] !p-0">
               キャンセル
             </Button>
           </div>
@@ -1912,8 +1912,8 @@ const ActionsEventModal = ({
                         ? `${(watch('tagIds') ?? []).filter((tag) => tag.value).length}件選択中`
                         : UNREGISTERED
                     }
-                    noDataClass="w-[461px]"
-                    labelOptionClass="break-words w-[410px]"
+                    noDataClass="w-[518px]"
+                    labelOptionClass="break-words w-[465px]"
                     selectedOptions={watch('tagIds') ?? []}
                     onChange={(selected) => {
                       let updatedTagIds = [];
@@ -1946,12 +1946,11 @@ const ActionsEventModal = ({
                     <div
                       key={tag.value}
                       className="rounded-[20px] bg-[#EBF2F7] px-2.5 py-[7.5px] flex gap-[6px] items-center">
-                      <p className="text-black text-xs font-medium leading-[1]">
+                      <p className="text-black text-xs font-medium leading-[1] w-full break-all">
                         {tag.label}
                       </p>
                       <button
                         type="button"
-                        className=""
                         onClick={() => {
                           const currentTagIds = getValues('tagIds') || [];
 

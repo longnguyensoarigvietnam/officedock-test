@@ -421,66 +421,67 @@ const ActionsUserModal = ({
         </div>
       </header>
       <form
-        className="w-full flex flex-col gap-4 pb-8  px-9 py-10  h-[calc(100vh_-_150px)] overflow-y-auto"
+        className="w-full px-9 pb-9 h-[calc(100vh_-_150px)] overflow-y-auto"
         onSubmit={handleSubmit(onSubmit)}>
-        <div>
-          <div className="flex items-center gap-5 bg-white">
-            <div className="text-lg font-normal w-[426px]">
-              <Input
-                name="name"
-                required
-                placeholder="入力してください"
-                register={register('name', {
-                  required: NAME_REQUIRED_MESSAGE,
-                  maxLength: {
-                    value: 255,
-                    message: ERROR_LONG_FIELD_MESSAGE,
-                  },
-                  onChange: () => {
-                    setErrorMessages((prev) => {
-                      return {
-                        ...prev,
-                        fullName: '',
-                      };
-                    });
-                  },
-                })}
-                className={`h-[42px] !border-[#77858F] rounded-md !w-[426px] ${errors?.name?.message || errorMessages?.fullName ? '!border-error' : '!border-[#77858F]'}`}
-              />
-            </div>
-
-            <div className="flex gap-2 items-center">
-              <Button
-                type="submit"
-                disabled={action == ActionsEvent.EDIT && !isDirty}
-                className="w-[86px] h-[34px] !text-[12px] !px-2">
-                保存
-              </Button>
-              <Button
-                variant="outline"
-                type="button"
-                onClick={onClose}
-                className="w-[86px] !rounded-md  h-[34px] !text-[12px] !px-2">
-                キャンセル
-              </Button>
-            </div>
+        <header className="flex sticky z-[100] top-[0px] pt-10 pb-[35px] items-center gap-5 justify-between bg-white">
+          <div className="w-full">
+            <Input
+              name="name"
+              required
+              placeholder="入力してください"
+              register={register('name', {
+                required: NAME_REQUIRED_MESSAGE,
+                maxLength: {
+                  value: 255,
+                  message: ERROR_LONG_FIELD_MESSAGE,
+                },
+                onChange: () => {
+                  setErrorMessages((prev) => {
+                    return {
+                      ...prev,
+                      fullName: '',
+                    };
+                  });
+                },
+              })}
+              className={`shadow-none text-[22px] leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[42px] focus:!shadow-none focus:border border-[1px] ${errors?.name?.message || errorMessages?.fullName ? '!border-error' : '!border-[#77858F]'} rounded-md`}
+            />
           </div>
-          {errorMessages?.fullName ? (
-            <ErrorMessage
-              error={errorMessages.fullName}
-              className="mt-[5px] mb-[5px] text-xs"
-            />
-          ) : errors?.name ? (
-            <ErrorMessage
-              error={errors?.name.message}
-              className="mt-[5px] mb-[5px] text-xs"
-            />
-          ) : (
-            <></>
-          )}
 
+          <div className="flex gap-[10px] items-center">
+            <Button
+              type="submit"
+              disabled={action == ActionsEvent.EDIT && !isDirty}
+              className="w-[86px] h-[36px] !text-[13px] !p-0 !border-none">
+              保存
+            </Button>
+            <Button
+              variant="outline"
+              type="button"
+              onClick={onClose}
+              className="w-[86px] h-[36px] !text-[13px] !p-0">
+              キャンセル
+            </Button>
+          </div>
+        </header>
+
+        {errorMessages?.fullName ? (
+          <ErrorMessage
+            error={errorMessages.fullName}
+            className="mt-[5px] mb-[5px] text-xs"
+          />
+        ) : errors?.name ? (
+          <ErrorMessage
+            error={errors?.name.message}
+            className="mt-[5px] mb-[5px] text-xs"
+          />
+        ) : (
+          <></>
+        )}
+
+        <div className=" flex flex-col gap-[35px] text-sm font-medium text-black">
           {/* Options */}
-          <div className="flex gap-5 mt-[38px]">
+          <div className="flex gap-5">
             <div
               className={`flex items-center gap-2 w-[164px] ${action == ActionsEvent.EDIT && !isOptionEmail && 'opacity-40'}`}>
               <RadioButton
@@ -493,7 +494,7 @@ const ActionsUserModal = ({
                   const currentTitle = getValues('name');
                   if (action == ActionsEvent.CREATE) {
                     reset();
-                    setSelectedRoleOptions([])
+                    setSelectedRoleOptions([]);
                     setValue('name', currentTitle);
                     setSelectedOrganizationOptions([]);
                     setOptionEmail(true);
@@ -514,7 +515,7 @@ const ActionsUserModal = ({
 
                   if (action == ActionsEvent.CREATE) {
                     reset();
-                    setSelectedRoleOptions([])
+                    setSelectedRoleOptions([]);
                     setValue('name', currentTitle);
                     setSelectedOrganizationOptions([]);
                     setOptionEmail(false);
@@ -523,57 +524,144 @@ const ActionsUserModal = ({
               />
             </div>
           </div>
-          <div className=" flex flex-col gap-[35px] mt-[35px] text-sm font-medium text-black">
-            {/* Change option form */}
-            {!isOptionEmail && (
-              <div className="flex gap-[10px]">
-                <div className="w-full max-w-[110px] text-[14px] font-medium">
-                  ID <span className="text-error font-bold">{`*`}</span>
-                </div>
-                <div className="flex flex-col w-full h-[50px]">
-                  <Input
-                    name="id"
-                    required
-                    placeholder="123456"
-                    disabled={action == ActionsEvent.EDIT}
-                    register={register('username', {
-                      required: ID_REQUIRED_MESSAGE,
-                      maxLength: {
-                        value: 255,
-                        message: ERROR_LONG_FIELD_MESSAGE,
-                      },
-                      onChange: () => {
-                        setErrorMessages((prev) => {
-                          return {
-                            ...prev,
-                            username: '',
-                          };
-                        });
-                      },
-                    })}
-                    className={`h-[34px] !border-[#77858F] !w-full text-sm rounded-md !py-0 ${errors?.username?.message || errorMessages.username ? '!border-error' : '!border-[#77858F]'}`}
-                  />
-                  <ErrorMessage
-                    error={errors?.username?.message || errorMessages.username}
-                    className="mt-[5px] mb-[5px] text-xs"
-                  />
-                </div>
+          {/* Change option form */}
+          {!isOptionEmail && (
+            <div className="flex gap-[10px]">
+              <div className="w-full max-w-[110px] text-[14px] font-medium">
+                ID <span className="text-error font-bold">{`*`}</span>
               </div>
-            )}
-            {/* Change option form */}
-            {isOptionEmail && (
+              <div className="flex flex-col w-full h-[50px]">
+                <Input
+                  name="id"
+                  required
+                  placeholder="123456"
+                  disabled={action == ActionsEvent.EDIT}
+                  register={register('username', {
+                    required: ID_REQUIRED_MESSAGE,
+                    maxLength: {
+                      value: 255,
+                      message: ERROR_LONG_FIELD_MESSAGE,
+                    },
+                    onChange: () => {
+                      setErrorMessages((prev) => {
+                        return {
+                          ...prev,
+                          username: '',
+                        };
+                      });
+                    },
+                  })}
+                  className={`h-[34px] !border-[#77858F] !w-full text-sm !font-normal rounded-md !px-[10px] !py-0 ${errors?.username?.message || errorMessages.username ? '!border-error' : '!border-[#77858F]'}`}
+                />
+                <ErrorMessage
+                  error={errors?.username?.message || errorMessages.username}
+                  className="mt-[5px] mb-[5px] text-xs"
+                />
+              </div>
+            </div>
+          )}
+          {/* Change option form */}
+          {isOptionEmail && (
+            <div className="flex gap-[10px]">
+              <div className="w-full max-w-[110px] text-[14px] mt-1 font-medium">
+                メールアドレス{' '}
+                <span className="text-error font-bold">{`*`}</span>
+              </div>
+              <div className="flex flex-col w-full h-fit">
+                <Input
+                  name="email"
+                  required
+                  placeholder="入力してください"
+                  register={register('email', {
+                    ...emailRules(true),
+                    maxLength: {
+                      value: 255,
+                      message: ERROR_LONG_FIELD_MESSAGE,
+                    },
+                    onChange: () => {
+                      setErrorMessages((prev) => {
+                        return {
+                          ...prev,
+                          email: '',
+                        };
+                      });
+                    },
+                  })}
+                  disabled={action == ActionsEvent.EDIT}
+                  className={`h-[34px] !border-[#77858F] !font-normal !w-full rounded-md !text-sm !px-[10px] !py-0 ${errors?.email?.message || errorMessages?.email ? '!border-error' : '!border-[#77858F]'}`}
+                />
+                <ErrorMessage
+                  error={errors?.email?.message || errorMessages?.email}
+                  className="mt-[5px] mb-[5px] text-xs"
+                />
+              </div>
+            </div>
+          )}
+          {isTwoFA ? (
+            <div className="flex gap-[10px]">
+              <div className="w-full max-w-[110px] text-[14px] font-medium">
+                認証ための <span className="text-error font-bold">{`*`}</span>
+                <br />
+                メールアドレス
+              </div>
+              <div className="flex flex-col w-full h-fit">
+                <Input
+                  required
+                  placeholder="入力してください"
+                  register={register('twoFactorAuthEmailRequired', {
+                    ...emailRules(true),
+                    onChange: () => {
+                      clearErrors('twoFactorAuthEmailRequired');
+                    },
+                  })}
+                  className={`h-[34px] !border-[#77858F] !font-normal rounded-md !text-sm !px-[10px] !py-0 ${!errors?.twoFactorAuthEmailRequired ? '!border-[#77858F]' : '!border-error'}`}
+                />
+                <ErrorMessage
+                  error={errors?.twoFactorAuthEmailRequired?.message}
+                  className="mt-[5px] mb-[5px] text-xs"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="flex  gap-[10px] items-center">
+              <div className="w-full max-w-[110px] text-[14px] font-medium">
+                認証ための
+                <br />
+                メールアドレス
+              </div>
+              <div className="flex grow">
+                <Input
+                  required={false}
+                  placeholder="入力してください"
+                  register={register('twoFactorAuthEmail', {
+                    ...emailRules(false),
+                    maxLength: {
+                      value: 255,
+                      message: ERROR_LONG_FIELD_MESSAGE,
+                    },
+                    onChange: () => {
+                      clearErrors('twoFactorAuthEmail');
+                    },
+                  })}
+                  className={`h-[34px] !border-[#77858F] !font-normal rounded-md !text-sm !px-[10px] !py-0 ${!errors?.twoFactorAuthEmail ? '!border-[#77858F]' : '!border-error'}`}
+                />
+              </div>
+            </div>
+          )}
+          {action === ActionsEvent.EDIT && (
+            <div className={``}>
               <div className="flex gap-[10px]">
                 <div className="w-full max-w-[110px] text-[14px] mt-1 font-medium">
-                  メールアドレス{' '}
-                  <span className="text-error font-bold">{`*`}</span>
+                  パスワード
                 </div>
-                <div className="flex flex-col w-full h-fit">
+                <div className="flex flex-col w-full fit">
                   <Input
-                    name="email"
-                    required
-                    placeholder="入力してください"
-                    register={register('email', {
-                      ...emailRules(true),
+                    type={isTypePassword === '' ? 'text' : 'password'}
+                    placeholder="パスワードを入力"
+                    autoCompleteInput={false}
+                    autoComplete="new-password"
+                    register={register('password', {
+                      ...passwordRegisterRules(false),
                       maxLength: {
                         value: 255,
                         message: ERROR_LONG_FIELD_MESSAGE,
@@ -582,136 +670,112 @@ const ActionsUserModal = ({
                         setErrorMessages((prev) => {
                           return {
                             ...prev,
-                            email: '',
+                            password: '',
                           };
                         });
                       },
                     })}
-                    disabled={action == ActionsEvent.EDIT}
-                    className={`h-[34px] !border-[#77858F] !w-full rounded-md !text-sm !py-0 ${errors?.email?.message || errorMessages?.email ? '!border-error' : '!border-[#77858F]'}`}
+                    className={`h-[34px] w-full !font-normal leading-[34px] !text-sm ${!errorMessages?.password && !errors?.password?.message ? '!border-[#77858F]' : '!border-error'} rounded-md !pl-[10px] pr-5 custom-password-mask`}
                   />
                   <ErrorMessage
-                    error={errors?.email?.message || errorMessages?.email}
+                    error={errors?.password?.message || errorMessages.password}
                     className="mt-[5px] mb-[5px] text-xs"
                   />
                 </div>
               </div>
-            )}
-            {isTwoFA ? (
-              <div className="flex gap-[10px]">
-                <div className="w-full max-w-[110px] text-[14px] font-medium">
-                  認証ための <span className="text-error font-bold">{`*`}</span>
-                  <br />
-                  メールアドレス
-                </div>
-                <div className="flex flex-col w-full h-fit">
-                  <Input
-                    required
-                    placeholder="入力してください"
-                    register={register('twoFactorAuthEmailRequired', {
-                      ...emailRules(true),
-                      onChange: () => {
-                        clearErrors('twoFactorAuthEmailRequired');
-                      },
-                    })}
-                    className={`h-[34px] !border-[#77858F] rounded-md !text-sm !py-0 ${!errors?.twoFactorAuthEmailRequired ? '!border-[#77858F]' : '!border-error'}`}
-                  />
-                  <ErrorMessage
-                    error={errors?.twoFactorAuthEmailRequired?.message}
-                    className="mt-[5px] mb-[5px] text-xs"
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="flex  gap-[10px] items-center">
-                <div className="w-full max-w-[110px] text-[14px] font-medium">
-                  認証ための
-                  <br />
-                  メールアドレス
-                </div>
-                <div className="flex grow">
-                  <Input
-                    required={false}
-                    placeholder="入力してください"
-                    register={register('twoFactorAuthEmail', {
-                      ...emailRules(false),
-                      maxLength: {
-                        value: 255,
-                        message: ERROR_LONG_FIELD_MESSAGE,
-                      },
-                      onChange: () => {
-                        clearErrors('twoFactorAuthEmail');
-                      },
-                    })}
-                    className={`h-[34px] !border-[#77858F] rounded-md !text-sm !py-0 ${!errors?.twoFactorAuthEmail ? '!border-[#77858F]' : '!border-error'}`}
-                  />
-                </div>
-              </div>
-            )}
-            {action === ActionsEvent.EDIT && (
-              <div className={``}>
-                <div className="flex gap-[10px]">
-                  <div className="w-full max-w-[110px] text-[14px] mt-1 font-medium">
-                    パスワード
-                  </div>
-                  <div className="flex flex-col w-full fit">
-                    <Input
-                      type={isTypePassword === '' ? 'text' : 'password'}
-                      placeholder="パスワードを入力"
-                      autoCompleteInput={false}
-                      autoComplete="new-password"
-                      register={register('password', {
-                        ...passwordRegisterRules(false),
-                        maxLength: {
-                          value: 255,
-                          message: ERROR_LONG_FIELD_MESSAGE,
-                        },
-                        onChange: () => {
-                          setErrorMessages((prev) => {
-                            return {
-                              ...prev,
-                              password: '',
-                            };
-                          });
-                        },
-                      })}
-                      className={`h-[34px] w-full leading-[34px] !text-sm ${!errorMessages?.password && !errors?.password?.message ? '!border-[#77858F]' : '!border-error'} rounded-md px-2 custom-password-mask`}
-                    />
-                    <ErrorMessage
-                      error={
-                        errors?.password?.message || errorMessages.password
-                      }
-                      className="mt-[5px] mb-[5px] text-xs"
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-            <div>
-              <Controller
-                control={control}
-                name="isTwoFactorAuth"
-                render={({ field: { value, onChange } }) => (
-                  <Checkbox
-                    id="isDraftCustomer"
-                    label="2段階認証を有効にする"
-                    isChecked={value}
-                    className="cursor-pointer"
-                    onChange={onChange}
-                    boxLabelClass="!ml-2"
-                  />
-                )}
-              />
             </div>
-            {/* Main team */}
-            <div className="flex  gap-[10px] items-start">
-              <div className="w-full max-w-[110px] mt-[6px]">メインチーム</div>
-              <div className="w-full">
-                <div className="flex gap-2">
+          )}
+          <div>
+            <Controller
+              control={control}
+              name="isTwoFactorAuth"
+              render={({ field: { value, onChange } }) => (
+                <Checkbox
+                  id="isDraftCustomer"
+                  label="2段階認証を有効にする"
+                  isChecked={value}
+                  className="cursor-pointer"
+                  onChange={onChange}
+                  boxLabelClass="!ml-2"
+                />
+              )}
+            />
+          </div>
+          {/* Main team */}
+          <div className="flex  gap-[10px] items-start">
+            <div className="w-full max-w-[110px] mt-[6px]">メインチーム</div>
+            <div className="w-full">
+              <div className="flex gap-2">
+                <div className="w-full">
+                  <Controller
+                    control={control}
+                    name={`mainOrganization`}
+                    render={({ field: { value, onChange } }) => {
+                      return (
+                        <div className="max-w-[441px] w-[441px]">
+                          <Dropdown
+                            options={unSelectedOrganizationOptions}
+                            selectedOption={originalOrganizationOptions.find(
+                              (element) =>
+                                element.value == value?.value &&
+                                value.type == OrganizationType.MAIN,
+                            )}
+                            onChange={(option: OptionDropdownType) => {
+                              onChange({
+                                ...option,
+                                type: OrganizationType.MAIN,
+                              });
+                              handleSelectedMainOrganization({
+                                ...option,
+                                type: OrganizationType.MAIN,
+                              });
+                            }}
+                            placeholderClass="!text-black text-sm font-normal"
+                            className="!h-[34px] w-[441px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] "
+                            labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                            classNameOption="!text-sm w-[441px]"
+                          />
+                        </div>
+                      );
+                    }}
+                  />
+                </div>
+                <div className="w-12">
+                  <Button
+                    sz="sm"
+                    variant="outline"
+                    className="w-12 h-[34px] hover:opacity-70 !border-none !px-0 !rounded-md text-[13px] !bg-[#EBF1F7]"
+                    type="button"
+                    name="Remove TagId"
+                    onClick={() => {
+                      setSelectedOrganizationOptions((prevState) =>
+                        prevState.filter(
+                          (item) =>
+                            item.value != watch('mainOrganization')?.value,
+                        ),
+                      );
+                      setValue('mainOrganization', undefined, {
+                        shouldDirty: true,
+                      });
+                    }}>
+                    削除
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+          {/* Sub teams */}
+          <div className="flex gap-[10px] items-start">
+            <div className="w-full max-w-[110px] mt-2 text-[14px] font-medium">
+              サブチーム
+            </div>
+            <div className="w-full flex flex-col gap-4 items-start">
+              {fields.map((field, index) => (
+                <div className="flex items-center gap-2 relative w-full" key={field.id}>
                   <div className="w-full">
                     <Controller
                       control={control}
-                      name={`mainOrganization`}
+                      name={`organizations.${index}`}
                       render={({ field: { value, onChange } }) => {
                         return (
                           <div className="max-w-[441px] w-[441px]">
@@ -720,16 +784,16 @@ const ActionsUserModal = ({
                               selectedOption={originalOrganizationOptions.find(
                                 (element) =>
                                   element.value == value?.value &&
-                                  value.type == OrganizationType.MAIN,
+                                  value.type == OrganizationType.SUB,
                               )}
                               onChange={(option: OptionDropdownType) => {
                                 onChange({
                                   ...option,
-                                  type: OrganizationType.MAIN,
+                                  type: OrganizationType.SUB,
                                 });
-                                handleSelectedMainOrganization({
+                                handleSelectedOrganization(index, {
                                   ...option,
-                                  type: OrganizationType.MAIN,
+                                  type: OrganizationType.SUB,
                                 });
                               }}
                               placeholderClass="!text-black text-sm font-normal"
@@ -742,74 +806,85 @@ const ActionsUserModal = ({
                       }}
                     />
                   </div>
-                  <div className="mb-[2.5px] w-12">
+
+                  <div className="w-12">
                     <Button
                       sz="sm"
                       variant="outline"
                       className="w-12 h-[34px] hover:opacity-70 !border-none !px-0 !rounded-md text-[13px] !bg-[#EBF1F7]"
                       type="button"
-                      name="Remove TagId"
-                      onClick={() => {
-                        setSelectedOrganizationOptions((prevState) =>
-                          prevState.filter(
-                            (item) =>
-                              item.value != watch('mainOrganization')?.value,
-                          ),
-                        );
-                        setValue('mainOrganization', undefined, {
-                          shouldDirty: true,
-                        });
-                      }}>
+                      name="Remove organization"
+                      onClick={() =>
+                        handleRemoveSelectedOrganization(
+                          watch(`organizations.${index}`),
+                          index,
+                        )
+                      }>
                       削除
                     </Button>
                   </div>
                 </div>
+              ))}
+              <div className="text-right flex justify-center w-full mt-4">
+                <Button
+                  sz="sm"
+                  variant="outline"
+                  className="w-6 h-6 mr-[54px] text-xs !py-0 !px-0 border-none !rounded-full !bg-[#ECF0F2] hover:opacity-70"
+                  type="button"
+                  onClick={async () => {
+                    append({ label: '', value: '' });
+                    setSelectedOrganizationOptions((prevState) => [
+                      ...prevState,
+                      {
+                        label: '',
+                        value: '',
+                        type: OrganizationType.SUB,
+                      },
+                    ]);
+                  }}>
+                  <ImageRound
+                    src="/icons/plus.svg"
+                    name="Add organization"
+                    className="h-3 w-3"
+                  />
+                </Button>
               </div>
             </div>
-            {/* Sub teams */}
-            <div className="flex gap-[10px] items-start">
-              <div className="w-full max-w-[110px] mt-2 text-[14px] font-medium">
-                サブチーム
-              </div>
-              <div className="w-full flex flex-col gap-1 items-start ">
-                {fields.map((field, index) => (
-                  <div className="flex gap-2 relative w-full" key={field.id}>
-                    <div className="w-full">
-                      <Controller
-                        control={control}
-                        name={`organizations.${index}`}
-                        render={({ field: { value, onChange } }) => {
-                          return (
-                            <div className="max-w-[441px] w-[441px]">
-                              <Dropdown
-                                options={unSelectedOrganizationOptions}
-                                selectedOption={originalOrganizationOptions.find(
-                                  (element) =>
-                                    element.value == value?.value &&
-                                    value.type == OrganizationType.SUB,
-                                )}
-                                onChange={(option: OptionDropdownType) => {
-                                  onChange({
-                                    ...option,
-                                    type: OrganizationType.SUB,
-                                  });
-                                  handleSelectedOrganization(index, {
-                                    ...option,
-                                    type: OrganizationType.SUB,
-                                  });
-                                }}
-                                placeholderClass="!text-black text-sm font-normal"
-                                className="!h-[34px] w-[441px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] "
-                                labelTextClass="!text-[#77858F] !text-xs !font-medium"
-                                classNameOption="!text-sm w-[441px]"
-                              />
-                            </div>
-                          );
-                        }}
-                      />
-                    </div>
-
-                    <div className="mt-[2.5px] w-12">
+          </div>
+          {/* Role */}
+          <div className="flex gap-[10px] items-start">
+            <div className="w-full max-w-[110px] mt-2 text-[14px] font-medium">
+              権限 <span className="text-error font-bold">{`*`}</span>
+            </div>
+            <div className="flex flex-col gap-4 items-start w-full">
+              {fieldsRole.map((field, index) => (
+                <div className="flex gap-3 w-[500px]" key={field.id}>
+                  <div className="w-[440px]">
+                    <Controller
+                      control={control}
+                      name={`roles.${index}`}
+                      rules={{ required: ROLE_REQUIRED_MESSAGE }}
+                      render={({ field: { value, onChange } }) => (
+                        <Dropdown
+                          options={unSelectedRoleOptions}
+                          selectedOption={roleUserOptions.find(
+                            (element) => element.value === value?.value,
+                          )}
+                          onChange={(option: OptionDropdownType) => {
+                            clearErrors('roles');
+                            onChange(option);
+                            handleSelectedRole(index, option);
+                          }}
+                          placeholderClass="!text-black text-sm font-normal"
+                          className={`!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] ${!errors?.roles ? '!border-[#77858F]' : '!border-error'}`}
+                          labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                          classNameOption="!text-sm"
+                        />
+                      )}
+                    />
+                  </div>
+                  {fieldsRole.length > 1 && (
+                    <div>
                       <Button
                         sz="sm"
                         variant="outline"
@@ -817,135 +892,63 @@ const ActionsUserModal = ({
                         type="button"
                         name="Remove organization"
                         onClick={() =>
-                          handleRemoveSelectedOrganization(
-                            watch(`organizations.${index}`),
+                          handleRemoveSelectedRole(
+                            watch(`roles.${index}`),
                             index,
                           )
                         }>
                         削除
                       </Button>
                     </div>
-                  </div>
-                ))}
-                <div className="text-right flex justify-center w-full mt-4 ">
-                  <Button
-                    sz="sm"
-                    variant="outline"
-                    className="w-6 h-6 mr-[54px] text-xs !py-0 !px-0 border-none !rounded-full !bg-[#ECF0F2] hover:opacity-70"
-                    type="button"
-                    onClick={async () => {
-                      append({ label: '', value: '' });
-                      setSelectedOrganizationOptions((prevState) => [
-                        ...prevState,
-                        {
-                          label: '',
-                          value: '',
-                          type: OrganizationType.SUB,
-                        },
-                      ]);
-                    }}>
-                    <ImageRound
-                      src="/icons/plus.svg"
-                      name="Add organization"
-                      className="h-3 w-3"
-                    />
-                  </Button>
+                  )}
                 </div>
-              </div>
-            </div>
-            {/* Role */}
-            <div className="flex gap-[10px] items-start">
-              <div className="w-full max-w-[110px] mt-2 text-[14px] font-medium">
-                権限 <span className="text-error font-bold">{`*`}</span>
-              </div>
-              <div className="flex flex-col gap-1 items-start w-full">
-                {fieldsRole.map((field, index) => (
-                  <div className="flex gap-3 w-[500px]" key={field.id}>
-                    <div className="w-[440px]">
-                      <Controller
-                        control={control}
-                        name={`roles.${index}`}
-                        rules={{ required: ROLE_REQUIRED_MESSAGE }}
-                        render={({ field: { value, onChange } }) => (
-                          <Dropdown
-                            options={unSelectedRoleOptions}
-                            selectedOption={roleUserOptions.find(
-                              (element) => element.value === value?.value,
-                            )}
-                            onChange={(option: OptionDropdownType) => {
-                              clearErrors('roles');
-                              onChange(option);
-                              handleSelectedRole(index, option);
-                            }}
-                            placeholderClass="!text-black text-sm font-normal"
-                            className={`!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F] ${!errors?.roles ? '!border-[#77858F]' : '!border-error'}`}
-                            labelTextClass="!text-[#77858F] !text-xs !font-medium"
-                            classNameOption="!text-sm"
-                          />
-                        )}
-                      />
-                    </div>
-                    {fieldsRole.length > 1 && (
-                      <div className="mt-[2.5px]">
-                        <Button
-                          sz="sm"
-                          variant="outline"
-                          className="w-12 h-[34px] hover:opacity-70 !border-none !px-0 !rounded-md text-[13px] !bg-[#EBF1F7]"
-                          type="button"
-                          name="Remove organization"
-                          onClick={() =>
-                            handleRemoveSelectedRole(
-                              watch(`roles.${index}`),
-                              index,
-                            )
-                          }>
-                          削除
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                ))}
+              ))}
+              {errors?.roles ? (
                 <ErrorMessage
                   error={errors?.roles ? errors.roles.root?.message : ''}
                   className="mt-[5px] mb-[5px] text-xs"
                 />
-                <div className="text-right flex justify-center w-full mt-4 ">
-                  <Button
-                    sz="sm"
-                    variant="outline"
-                    className="w-6 h-6 mr-[54px] text-xs !py-0 !px-0 border-none !rounded-full !bg-[#ECF0F2] hover:opacity-70"
-                    type="button"
-                    onClick={() => appendRole({ label: '', value: '' })}>
-                    <ImageRound
-                      src="/icons/plus.svg"
-                      name="Add organization"
-                      className="h-3 w-3"
-                    />
-                  </Button>
-                </div>
+              ) : (
+                <></>
+              )}
+
+              <div className="text-right flex justify-center w-full mt-4 ">
+                <Button
+                  sz="sm"
+                  variant="outline"
+                  className="w-6 h-6 mr-[54px] text-xs !py-0 !px-0 border-none !rounded-full !bg-[#ECF0F2] hover:opacity-70"
+                  type="button"
+                  onClick={() => appendRole({ label: '', value: '' })}>
+                  <ImageRound
+                    src="/icons/plus.svg"
+                    name="Add organization"
+                    className="h-3 w-3"
+                  />
+                </Button>
               </div>
             </div>
           </div>
-          <div className="flex justify-center mt-8">
-            {session?.user.permissions &&
-              ((action === ActionsEvent.EDIT &&
+        </div>
+        <div className="flex justify-center mt-11">
+          {session?.user.permissions &&
+            ((action === ActionsEvent.EDIT &&
+              hasPermissionInArray(
+                session?.user.permissions,
+                PermissionsSystem.USER_UPDATE,
+              )) ||
+              (action === ActionsEvent.CREATE &&
                 hasPermissionInArray(
                   session?.user.permissions,
-                  PermissionsSystem.USER_UPDATE,
-                )) ||
-                (action === ActionsEvent.CREATE &&
-                  hasPermissionInArray(
-                    session?.user.permissions,
-                    PermissionsSystem.USER_ADD,
-                  ))) && (
-                <Button
-                  type="submit"
-                  disabled={action == ActionsEvent.EDIT && !isDirty}
-                  className="w-[200px] h-[46px] !text-[15px]">
-                  保存
-                </Button>
-              )}
-          </div>
+                  PermissionsSystem.USER_ADD,
+                ))) && (
+              <Button
+                type="submit"
+                disabled={action == ActionsEvent.EDIT && !isDirty}
+                className="w-[200px] h-[46px] !text-[14px] !font-medium !border-none"
+                style={{ boxShadow: '0px 1px 5px 0px #00000033' }}>
+                保存
+              </Button>
+            )}
         </div>
       </form>
     </Drawer>

@@ -123,7 +123,7 @@ const ActionsTagModal = ({
       className="font-primary bg-white w-[700px] !px-0 !rounded-l-[30px]"
       onClose={handleCloseModal}>
       <header
-        className="px-8 rounded-tl-[30px] h-[50px] flex items-center justify-between"
+        className="px-9 rounded-tl-[30px] h-[50px] flex items-center justify-between"
         style={{
           background: showModalHeaderBackgroundColorByTime(),
         }}>
@@ -166,11 +166,11 @@ const ActionsTagModal = ({
       </header>
       <form
         onSubmit={handleSubmit(onSubmitData)}
-        className="px-8 pb-8 !h-screen overflow-y-auto">
-        <header className="flex sticky z-[100] top-[0px] py-5 items-center gap-2 justify-between bg-white">
+        className="px-9 pb-9 !h-screen overflow-y-auto">
+        <header className="flex sticky z-[100] top-[0px] pt-10 pb-[35px] items-center gap-5 justify-between bg-white">
           <div className="w-full">
             <Input
-              className="shadow-none text-2xl leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[46px] focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md"
+              className="shadow-none text-[22px] leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[42px] focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md"
               register={register('name', {
                 required: watch('name') !== null ? true : false,
                 maxLength: {
@@ -183,7 +183,7 @@ const ActionsTagModal = ({
               disabled={isDisabled || dataTag?.actions?.updateName === false}
             />
           </div>
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-[10px] items-center">
             {session?.user.permissions &&
               ((action === ActionsEvent.EDIT &&
                 hasPermissionInArray(
@@ -198,7 +198,7 @@ const ActionsTagModal = ({
                 <Button
                   type="submit"
                   disabled={action === ActionsEvent.EDIT && !isDirty}
-                  className="w-[82px] h-[36px] !text-[12px] !px-2">
+                  className="w-[86px] h-[36px] !text-[13px] !p-0 !border-none">
                   保存
                 </Button>
               )}
@@ -206,17 +206,17 @@ const ActionsTagModal = ({
               variant="outline"
               type="button"
               onClick={onClose}
-              className="w-[82px] !rounded-md  h-[34px] !text-[12px] !px-2">
+              className="w-[86px] h-[36px] !text-[13px] !p-0">
               キャンセル
             </Button>
           </div>
         </header>
-        <div className="font-normal flex flex-col gap-5 mb-5">
-          <div className="flex gap-3 items-center">
-            <p className="!w-[120px] font-medium text-[14px] whitespace-nowrap">
+        <div className="font-normal flex flex-col gap-[35px]">
+          <div className="flex gap-2 items-center">
+            <p className="!w-[112px] font-medium text-[14px] whitespace-nowrap">
               表示するチーム
             </p>
-            <div className="w-[calc(100%_-_132px)]">
+            <div className="w-[calc(100%_-_120px)]">
               <MultiSelectDropdown
                 className="!h-[34px]"
                 disabled={isDisabled}
@@ -252,8 +252,8 @@ const ActionsTagModal = ({
               />
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <p className="!w-[120px] font-medium text-[14px] whitespace-nowrap">
+          <div className="flex items-center gap-2">
+            <p className="!w-[112px] font-medium text-[14px] whitespace-nowrap">
               カレンダーで使用
             </p>
             <Checkbox
@@ -269,7 +269,7 @@ const ActionsTagModal = ({
           </div>
         </div>
 
-        <div className="flex justify-center mt-8">
+        <div className="flex justify-center mt-[50px]">
           {session?.user.permissions &&
             ((action === ActionsEvent.EDIT &&
               hasPermissionInArray(
@@ -283,8 +283,9 @@ const ActionsTagModal = ({
                 ))) && (
               <Button
                 type="submit"
+                style={{ boxShadow: '0px 1px 5px 0px #00000033' }}
                 disabled={action === ActionsEvent.EDIT && !isDirty}
-                className="w-[200px] h-[46px] !text-[15px]">
+                className="w-[200px] h-[46px] !text-[14px] !font-medium !border-none">
                 保存
               </Button>
             )}

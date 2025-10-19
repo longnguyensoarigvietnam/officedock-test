@@ -1050,7 +1050,7 @@ const ActionsSkillMapModal = ({
                 <Button
                   type="submit"
                   disabled={action == ActionsModal.EDIT && !isFormTouched}
-                  className="w-[86px] h-[36px] !text-[12px] !px-2">
+                  className="w-[86px] h-[36px] !text-[13px] !px-2 !border-none">
                   保存
                 </Button>
               )}
@@ -1058,7 +1058,7 @@ const ActionsSkillMapModal = ({
                 variant="outline"
                 type="button"
                 onClick={onClose}
-                className="!rounded-md  w-[86px] h-[36px] !text-[12px] !px-2">
+                className="w-[86px] h-[36px] !text-[13px] !px-2">
                 キャンセル
               </Button>
             </div>

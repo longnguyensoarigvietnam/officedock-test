@@ -1289,7 +1289,7 @@ const ActionsTaskModal = ({
             </div>
             <div className="w-full max-w-[518px]">
               <div className="flex gap-2 max-w-[518px]">
-                <div className="w-[461px]">
+                <div className="w-[454px]">
                   <MultiSelectDropdown
                     className="!h-[34px]"
                     labelClass="!min-h-0 !text-sm"
@@ -1304,7 +1304,7 @@ const ActionsTaskModal = ({
                         ? `${(watch('tagIds') ?? []).filter((tag) => tag.value).length}件選択中`
                         : UNREGISTERED
                     }
-                    noDataClass="w-[461px]"
+                    noDataClass="w-[454px]"
                     labelOptionClass="break-words !text-sm w-[410px]"
                     selectedOptions={watch('tagIds') ?? []}
                     onChange={(selected) => {
@@ -1324,7 +1324,7 @@ const ActionsTaskModal = ({
                       setValue('tagIds', updatedTagIds);
                     }}
                   />
-                  <div className="flex flex-wrap  gap-2 mt-2">
+                  <div className="flex flex-wrap gap-[10px] mt-2">
                     {watch('tagIds')?.filter((tag) => tag.value) &&
                       watch('tagIds')
                         ?.filter((tag) => !!tag.value)
@@ -1332,11 +1332,12 @@ const ActionsTaskModal = ({
                           return (
                             <div
                               key={tag.value}
-                              className="rounded-xl max-w-[525px] bg-[#EBF2F7] px-2.5 py-1.5 flex gap-2">
-                              <p className="w-full break-all">{tag.label}</p>
+                              className="rounded-[20px] bg-[#EBF2F7] px-2.5 py-[7.5px] flex gap-[6px] items-center">
+                              <p className="text-black text-xs font-medium leading-[1] w-full break-all">
+                                {tag.label}
+                              </p>
                               <button
                                 type="button"
-                                className="text-gray-700 hover:text-gray-900"
                                 onClick={() => {
                                   const currentTagIds =
                                     getValues('tagIds') || [];
@@ -1351,7 +1352,11 @@ const ActionsTaskModal = ({
 
                                   setValue('tagIds', updatedTagIds);
                                 }}>
-                                ✕
+                                <ImageRound
+                                  src={`/icons/close.svg`}
+                                  name="Close icon"
+                                  className="w-3 h-3"
+                                />
                               </button>
                             </div>
                           );
