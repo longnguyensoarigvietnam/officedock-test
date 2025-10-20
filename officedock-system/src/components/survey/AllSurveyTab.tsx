@@ -85,14 +85,16 @@ const AllSurveyTab = ({ handleAnswer, handleDelete }: AllSurveyTabProp) => {
         {/* Table */}
         <div
           ref={resultsContainerRef}
-          className="h-full max-h-[calc(100%_-_90px)]  pr-[10px]  overflow-y-auto   mt-[14px]">
-          <div className="w-full bg-white h-full py-[14px] rounded-[14px]">
-            {isLoadingList && (
+          className={`overflow-y-auto overflow-x-hidden h-full max-h-[calc(100%_-_90px)] w-full mt-[14px] ${!isLoadingList && !surveyList.length ? 'bg-white h-full w-full' : 'customized-scrollbar'}`}>
+          <div className={`w-full ${isLoadingList ? '' : 'bg-white h-full py-[14px] rounded-[14px]'} `}>
+            {isLoadingList ? (
               <div>
-                <RowSkeleton numberOfRows={5} className="h-[90px]" />
+                <RowSkeleton
+                  numberOfRows={6}
+                  className="h-[125px] !rounded-[14px] w-[calc(100%)]"
+                />
               </div>
-            )}
-            {!isLoadingList &&
+            ) : (
               surveyList.map((item, index) => {
                 return (
                   <>
@@ -222,10 +224,14 @@ const AllSurveyTab = ({ handleAnswer, handleDelete }: AllSurveyTabProp) => {
                     )}
                   </>
                 );
-              })}
+              })
+            )}
             {isFetchingNextPage && (
               <div className="mt-2">
-                <RowSkeleton numberOfRows={2} className="h-[60px]" />
+                <RowSkeleton
+                  numberOfRows={2}
+                  className="h-[125px] !rounded-[14px] w-[calc(100%)]"
+                />
               </div>
             )}
           </div>

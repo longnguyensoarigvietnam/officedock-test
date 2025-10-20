@@ -181,9 +181,9 @@ const ChatUploadingFilesModal = memo(
       <Modal
         open={open}
         isOutSideAction={false}
-        className="font-primary !rounded-xl text-gray-700 !p-0 w-[600px] "
+        className="font-primary !rounded-[20px] text-gray-700 !p-0 w-[600px] "
         titleClassName="!text-[14px] !text-[#5B6770] !font-medium"
-        headerClassName="bg-[#EBF1F7] !rounded-t-xl !rounded-b-none px-5 !py-[10px]"
+        headerClassName="bg-[#EBF1F7] !rounded-t-[20px] !rounded-b-none px-5 !py-[10px]"
         closeIconClassName="!bg-white !rounded-full !p-[7px] !hover:cursor-pointer !shadow-sm"
         closeClassName="!mt-0 !w-4 !h-4 !hover:cursor-pointer"
         contentClass="!w-[600px]"
