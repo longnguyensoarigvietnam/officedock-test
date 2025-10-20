@@ -1,3 +1,4 @@
+'use client';
 import { Pie } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -8,6 +9,7 @@ import {
   ChartOptions,
 } from 'chart.js';
 import ChartDataLabels, { Context } from 'chartjs-plugin-datalabels';
+import { useEffect } from 'react';
 
 ChartJS.register(ArcElement, Tooltip, Legend, ChartDataLabels);
 
@@ -178,6 +180,16 @@ const PieChart = ({
       mode: undefined,
     },
   };
+
+  useEffect(() => {
+    return () => {
+      const tooltipEl = document.getElementById('custom-tooltip');
+      if (tooltipEl) {
+        tooltipEl.style.opacity = '0';
+        tooltipEl.remove();
+      }
+    };
+  }, []);
 
   return (
     <div id={id} className={`w-96 h-96 my-0 mx-auto ${className}`}>
