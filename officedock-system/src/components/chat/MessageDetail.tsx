@@ -217,14 +217,14 @@ export const MessageDetail = ({
       }
     }
     if (messageDetail.chatFiles.length > 0) {
-      const preserveFiles = messageDetail.chatFiles.map((file) => {
-        return {
+      const preserveFiles = messageDetail.chatFiles
+        .map((file) => ({
           uuid: file.uuid,
           file: {
             name: file.fileName,
           },
-        };
-      });
+        }))
+        .filter((item) => uuidListMain.includes(item.uuid));
       setPreserveFiles(preserveFiles);
       setUploadFiles([]);
       setOpenUploadFilesModal(true);

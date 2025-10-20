@@ -761,6 +761,7 @@ const ChatDetail = ({
         }),
       ],
       content: message,
+
       onUpdate: ({ editor }: { editor: Editor }) => {
         setMessage(editor.getHTML());
       },
@@ -1483,6 +1484,33 @@ const ChatDetail = ({
           mentionMember.id == null &&
           mentionMember.fullName == MENTION_ALL_MEMBERS,
       );
+      const newMsg = trimUnnecessaryLineBreaks(message) as string;
+
+      const chatUploadFiles = uploadFiles.map((file) => {
+        const newFile = new File([file.file], file.file.name, {
+          type: file.file.type,
+        });
+        const fileUrl = URL.createObjectURL(newFile);
+        return {
+          compressedFile: fileUrl,
+          fileName: file.file.name,
+          fileType: file.file.type,
+          fileSize: file.file.size,
+          uuid: file.uuid,
+        };
+      });
+
+      const { filterMsg } = extractAndRemoveMsgQuotes(newMsg);
+      const dataMsgQuote = getRootPSpanData(filterMsg);
+
+      const listFiles = [
+        ...chatUploadFiles.map((item) => item.uuid),
+        ...preserveFiles.map((file) => file.uuid),
+      ];
+
+      const newFilterMsg = attachUuidToAllP(filterMsg, listFiles);
+      const dataUuidQuote = collectAllUuids(dataMsgQuote.data);
+
       if (isMentionAllMembers) {
         mentionIds = [...chatRoomMemberIds];
       } else {
@@ -1497,13 +1525,14 @@ const ChatDetail = ({
         setIsChatFilesUploading(true);
       }
       handleUpdateMsgChat({
-        message: trimUnnecessaryLineBreaks(`${message}`) as string,
+        message: newFilterMsg,
         uuid: uuid,
         mentionIds,
         files: uploadFiles.map((file) => file.file),
         fileUuids: [
           ...uploadFiles.map((file) => file.uuid),
           ...preserveFiles.map((file) => file.uuid),
+          ...dataUuidQuote,
         ],
       });
     }
