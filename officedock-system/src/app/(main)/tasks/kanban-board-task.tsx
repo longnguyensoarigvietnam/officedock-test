@@ -3383,7 +3383,10 @@ const KanbanBoardTask = () => {
                                   type: ItemStartType.TASK,
                                 });
                               }}
-                              className="flex gap-2 !h-[34px] !rounded-lg !p-[10px]">
+                              style={{
+                                boxShadow: '0px 1px 5px 0px #00000033',
+                              }}
+                              className="flex gap-2 !h-[34px] !rounded-lg !p-[10px] !border-none">
                               <div
                                 style={{
                                   padding: '4px',

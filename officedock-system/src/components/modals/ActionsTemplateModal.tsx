@@ -746,66 +746,32 @@ const ActionsTemplateModal = ({
           </div>
         </header>
         <div className="text-xs font-normal flex flex-col gap-[35px]">
-          {/* Organization */}
-          <div className="flex gap-[10px] items-center">
-            <div className="w-full max-w-[100px]"></div>
-            <div className="w-full max-w-[515px]">
-              <Controller
-                control={control}
-                name={'organization'}
-                render={({ field: { value, onChange } }) => (
-                  <Dropdown
-                    className="h-[34px] !py-1 text-sm max-w-[515px] border-[#77858F] rounded-md !border-none !shadow-none !w-fit !pl-0"
-                    classNameTextData="!text-sm !w-fit"
-                    classNameOption="!text-sm !w-fit max-w-[515px]"
-                    classNameError="!text-xs !w-fit"
-                    placeholder="選択してください"
-                    disabled={isCheckActionPermission}
-                    options={dataOptionsOrganizations}
-                    selectedOption={dataOptionsOrganizations.find(
-                      (element) => element.value === value?.value,
-                    )}
-                    onChange={(e) => {
-                      if (e.value != watch('organization.value')) {
-                        setValue('categories.LARGE', { label: '', value: '' });
-                        setValue('categories.MEDIUM', { label: '', value: '' });
-                        setValue('categories.SMALL', { label: '', value: '' });
-                        setDataOptionsCategoryLarge([]);
-                        setDataOptionsCategorySmall([]);
-                        setDataOptionsCategoryMedium([]);
-                        setValue('tagIds', []);
-                      }
-                      setIsFormTouched(true);
-                      onChange(e);
-                    }}
-                  />
-                )}
-              />
-            </div>
-          </div>
-          {/* Category */}
-          <div className="flex  gap-[10px] items-start">
-            <div className="w-full max-w-[100px] mt-2">業務の種類</div>
-            <div className="w-full max-w-[515px] flex flex-col gap-2">
-              {/* Category large */}
-              <Controller
-                control={control}
-                name={'categories.LARGE'}
-                render={({ field: { value, onChange } }) => {
-                  return (
+          <div className="flex flex-col gap-[10px]">
+            {/* Organization */}
+            <div className="flex gap-[10px] items-center">
+              <div className="w-full max-w-[100px]"></div>
+              <div className="w-full max-w-[515px]">
+                <Controller
+                  control={control}
+                  name={'organization'}
+                  render={({ field: { value, onChange } }) => (
                     <Dropdown
-                      placeholder="大カテゴリ"
-                      className="h-[34px] !py-1 text-sm !border-[#77858F] rounded-md !shadow-none"
-                      classNameTextData="!text-sm"
-                      classNameOption="!text-sm"
-                      classNameError="!text-xs"
+                      className="h-[34px] !py-1 text-sm max-w-[515px] border-[#77858F] rounded-md !border-none !shadow-none !w-fit !pl-0"
+                      classNameTextData="!text-sm !w-fit"
+                      classNameOption="!text-sm !w-fit max-w-[515px]"
+                      classNameError="!text-xs !w-fit"
+                      placeholder="選択してください"
                       disabled={isCheckActionPermission}
-                      options={removeDuplicateOptions(dataOptionsCategoryLarge)}
-                      selectedOption={dataOptionsCategoryLarge.find(
+                      options={dataOptionsOrganizations}
+                      selectedOption={dataOptionsOrganizations.find(
                         (element) => element.value === value?.value,
                       )}
                       onChange={(e) => {
-                        if (e.value != watch('categories.LARGE.value')) {
+                        if (e.value != watch('organization.value')) {
+                          setValue('categories.LARGE', {
+                            label: '',
+                            value: '',
+                          });
                           setValue('categories.MEDIUM', {
                             label: '',
                             value: '',
@@ -814,82 +780,129 @@ const ActionsTemplateModal = ({
                             label: '',
                             value: '',
                           });
+                          setDataOptionsCategoryLarge([]);
+                          setDataOptionsCategorySmall([]);
+                          setDataOptionsCategoryMedium([]);
+                          setValue('tagIds', []);
                         }
                         setIsFormTouched(true);
                         onChange(e);
                       }}
-                      error={errors.categories?.LARGE?.message}
                     />
-                  );
-                }}
-              />
-              {/* Category medium */}
-              {watch('organization')?.value &&
-                watch('categories.LARGE')?.value && (
-                  <Controller
-                    control={control}
-                    name={'categories.MEDIUM'}
-                    render={({ field: { value, onChange } }) => {
-                      return (
+                  )}
+                />
+              </div>
+            </div>
+            {/* Category */}
+            <div className="flex  gap-[10px] items-start">
+              <div className="w-full max-w-[100px] mt-2">業務の種類</div>
+              <div className="w-full max-w-[515px] flex flex-col gap-2">
+                {/* Category large */}
+                <Controller
+                  control={control}
+                  name={'categories.LARGE'}
+                  render={({ field: { value, onChange } }) => {
+                    return (
+                      <Dropdown
+                        placeholder="大カテゴリ"
+                        className="h-[34px] !py-1 text-sm !border-[#77858F] rounded-md !shadow-none"
+                        classNameTextData="!text-sm"
+                        classNameOption="!text-sm"
+                        classNameError="!text-xs"
+                        disabled={isCheckActionPermission}
+                        options={removeDuplicateOptions(
+                          dataOptionsCategoryLarge,
+                        )}
+                        selectedOption={dataOptionsCategoryLarge.find(
+                          (element) => element.value === value?.value,
+                        )}
+                        onChange={(e) => {
+                          if (e.value != watch('categories.LARGE.value')) {
+                            setValue('categories.MEDIUM', {
+                              label: '',
+                              value: '',
+                            });
+                            setValue('categories.SMALL', {
+                              label: '',
+                              value: '',
+                            });
+                          }
+                          setIsFormTouched(true);
+                          onChange(e);
+                        }}
+                        error={errors.categories?.LARGE?.message}
+                      />
+                    );
+                  }}
+                />
+                {/* Category medium */}
+                {watch('organization')?.value &&
+                  watch('categories.LARGE')?.value && (
+                    <Controller
+                      control={control}
+                      name={'categories.MEDIUM'}
+                      render={({ field: { value, onChange } }) => {
+                        return (
+                          <Dropdown
+                            placeholder="中カテゴリ"
+                            className="h-[34px] !py-1 text-sm !shadow-none"
+                            classNameTextData="!text-sm"
+                            classNameOption="!text-sm"
+                            classNameError="!text-xs"
+                            disabled={isCheckActionPermission}
+                            options={removeDuplicateOptions(
+                              dataOptionsCategoryMedium,
+                            )}
+                            selectedOption={dataOptionsCategoryMedium.find(
+                              (element) => element.value === value?.value,
+                            )}
+                            onChange={(e) => {
+                              if (e.value != watch('categories.MEDIUM.value')) {
+                                setValue('categories.SMALL', {
+                                  label: '',
+                                  value: '',
+                                });
+                              }
+                              setIsFormTouched(true);
+                              onChange(e);
+                            }}
+                            error={errors.categories?.MEDIUM?.message}
+                          />
+                        );
+                      }}
+                    />
+                  )}
+
+                {/* Category small */}
+                {watch('organization')?.value &&
+                  watch('categories.MEDIUM')?.value && (
+                    <Controller
+                      control={control}
+                      name={'categories.SMALL'}
+                      render={({ field: { value, onChange } }) => (
                         <Dropdown
-                          placeholder="中カテゴリ"
                           className="h-[34px] !py-1 text-sm !shadow-none"
                           classNameTextData="!text-sm"
                           classNameOption="!text-sm"
                           classNameError="!text-xs"
                           disabled={isCheckActionPermission}
                           options={removeDuplicateOptions(
-                            dataOptionsCategoryMedium,
+                            dataOptionsCategorySmall,
                           )}
-                          selectedOption={dataOptionsCategoryMedium.find(
+                          selectedOption={dataOptionsCategorySmall.find(
                             (element) => element.value === value?.value,
                           )}
+                          placeholder="小カテゴリ"
                           onChange={(e) => {
-                            if (e.value != watch('categories.MEDIUM.value')) {
-                              setValue('categories.SMALL', {
-                                label: '',
-                                value: '',
-                              });
-                            }
                             setIsFormTouched(true);
                             onChange(e);
                           }}
-                          error={errors.categories?.MEDIUM?.message}
+                          error={errors.categories?.SMALL?.message}
                         />
-                      );
-                    }}
-                  />
-                )}
-
-              {/* Category small */}
-              {watch('organization')?.value &&
-                watch('categories.MEDIUM')?.value && (
-                  <Controller
-                    control={control}
-                    name={'categories.SMALL'}
-                    render={({ field: { value, onChange } }) => (
-                      <Dropdown
-                        className="h-[34px] !py-1 text-sm !shadow-none"
-                        classNameTextData="!text-sm"
-                        classNameOption="!text-sm"
-                        classNameError="!text-xs"
-                        disabled={isCheckActionPermission}
-                        options={removeDuplicateOptions(
-                          dataOptionsCategorySmall,
-                        )}
-                        selectedOption={dataOptionsCategorySmall.find(
-                          (element) => element.value === value?.value,
-                        )}
-                        placeholder="小カテゴリ"
-                        onChange={(e) => {
-                          setIsFormTouched(true);
-                          onChange(e);
-                        }}
-                        error={errors.categories?.SMALL?.message}
-                      />
-                    )}
-                  />
-                )}
+                      )}
+                    />
+                  )}
+              </div>
             </div>
           </div>
           {/* Tag */}
