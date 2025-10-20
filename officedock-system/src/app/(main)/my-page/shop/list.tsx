@@ -10,7 +10,6 @@ import RowSkeleton from '@components/skeleton/RowSkeleton';
 import ConfirmBuyItemUserModal from '@components/modals/ConfirmBuyItemUserModal';
 import { RenderAccessoriesPreview } from '@components/custom/UserCustomizePreview';
 import ActionModalSuccessItem from '@components/modals/ActionModalSuccessItem';
-import { TwinklingIcon } from '@components/common/TwinklingIcon';
 import BackToPage from '@components/custom/BackToPage';
 
 import { apiRouters, pageRouters } from '@constants/routers';
@@ -86,25 +85,24 @@ const ShopItemPage = () => {
 
   const resultsContainerRef = useRef<HTMLDivElement | null>(null);
 
-  const { isFetchingCreationDataCommon, refetchCreationDataCommon } =
-    useCreationDataCommon({
-      options: {
-        get_balances_of_user: true,
-        get_items_of_user: true,
-      },
-      onSuccess: (data) => {
-        setTotalPearl(data?.balancesOfUser?.pearl || 0);
-        if (data.itemsOfUser) {
-          const updates = data.itemsOfUser.map((item) => ({
-            type: item.itemType,
-            url: item.fullFile,
-          }));
+  const { refetchCreationDataCommon } = useCreationDataCommon({
+    options: {
+      get_balances_of_user: true,
+      get_items_of_user: true,
+    },
+    onSuccess: (data) => {
+      setTotalPearl(data?.balancesOfUser?.pearl || 0);
+      if (data.itemsOfUser) {
+        const updates = data.itemsOfUser.map((item) => ({
+          type: item.itemType,
+          url: item.fullFile,
+        }));
 
-          const merged = updateAvatarUrl(itemsPreview, updates);
-          setItemsPreview(merged);
-        }
-      },
-    });
+        const merged = updateAvatarUrl(itemsPreview, updates);
+        setItemsPreview(merged);
+      }
+    },
+  });
 
   useEffect(() => {
     const handleScroll = () => {
@@ -298,171 +296,9 @@ const ShopItemPage = () => {
               <div className="h-[424px] w-[336px] mt-20 ml-20  relative">
                 <RenderAccessoriesPreview
                   itemsPreview={itemsPreview}
-                  isFetchingCreationDataCommon={isFetchingCreationDataCommon}
+                  setItemsPreview={setItemsPreview}
+                  selectedItemType={selectedItemType}
                 />
-
-                <div className="">
-                  {selectedItemType == ItemAvatarType.HAT && (
-                    <>
-                      {/* RIGHT 1 */}
-                      <TwinklingIcon
-                        className="absolute top-[-10px] left-[-10px] !w-8 !h-8"
-                        delay={0}
-                        iconUrl="/icons/star-new.svg"
-                      />
-                      {/* RIGHT 2 */}
-                      <TwinklingIcon
-                        className="absolute top-[35px] left-[-55px] !w-8 !h-8"
-                        delay={1.2}
-                        iconUrl="/icons/star-new-main.svg"
-                      />
-                      {/* RIGHT 3 */}
-                      <TwinklingIcon
-                        className="absolute top-[95px] left-[-25px] !w-8 !h-8"
-                        delay={1}
-                        iconUrl="/icons/star-new.svg"
-                      />
-                      {/* LEFT 1 */}
-                      <TwinklingIcon
-                        className="absolute top-[-10px] right-[15px] !w-8 !h-8"
-                        delay={0.8}
-                        iconUrl="/icons/star-new.svg"
-                      />
-                      {/* LEFT 2 */}
-                      <TwinklingIcon
-                        className="absolute top-[35px] right-[-30px] !w-8 !h-8"
-                        delay={0.5}
-                        iconUrl="/icons/star-new-main.svg"
-                      />
-                      {/* LEFT 3 */}
-                      <TwinklingIcon
-                        className="absolute top-[95px] right-[0px] !w-8 !h-8"
-                        delay={1.5}
-                        iconUrl="/icons/star-new.svg"
-                      />
-                    </>
-                  )}
-                  {selectedItemType == ItemAvatarType.BODY && (
-                    <>
-                      {/* RIGHT 1 */}
-                      <TwinklingIcon
-                        className="absolute top-[180px] left-[-10px] !w-8 !h-8"
-                        delay={0}
-                        iconUrl="/icons/star-new.svg"
-                      />
-                      {/* RIGHT 2 */}
-                      <TwinklingIcon
-                        className="absolute top-[250px] left-[-55px] !w-8 !h-8"
-                        delay={1.2}
-                        iconUrl="/icons/star-new-main.svg"
-                      />
-                      {/* RIGHT 3 */}
-                      <TwinklingIcon
-                        className="absolute top-[320px] left-[-25px] !w-8 !h-8"
-                        delay={1}
-                        iconUrl="/icons/star-new.svg"
-                      />
-                      {/* LEFT 1 */}
-                      <TwinklingIcon
-                        className="absolute top-[180px] right-[15px] !w-8 !h-8"
-                        delay={0.8}
-                        iconUrl="/icons/star-new.svg"
-                      />
-                      {/* LEFT 2 */}
-                      <TwinklingIcon
-                        className="absolute top-[250px] right-[-30px] !w-8 !h-8"
-                        delay={0.5}
-                        iconUrl="/icons/star-new-main.svg"
-                      />
-                      {/* LEFT 3 */}
-                      <TwinklingIcon
-                        className="absolute top-[320px] right-[0px] !w-8 !h-8"
-                        delay={1.5}
-                        iconUrl="/icons/star-new.svg"
-                      />
-                    </>
-                  )}
-                  {selectedItemType == ItemAvatarType.BODY && (
-                    <>
-                      {/* RIGHT 1 */}
-                      <TwinklingIcon
-                        className="absolute top-[180px] left-[-10px] !w-8 !h-8"
-                        delay={0}
-                        iconUrl="/icons/star-new.svg"
-                      />
-                      {/* RIGHT 2 */}
-                      <TwinklingIcon
-                        className="absolute top-[250px] left-[-55px] !w-8 !h-8"
-                        delay={1.2}
-                        iconUrl="/icons/star-new-main.svg"
-                      />
-                      {/* RIGHT 3 */}
-                      <TwinklingIcon
-                        className="absolute top-[320px] left-[-25px] !w-8 !h-8"
-                        delay={1}
-                        iconUrl="/icons/star-new.svg"
-                      />
-                      {/* LEFT 1 */}
-                      <TwinklingIcon
-                        className="absolute top-[180px] right-[15px] !w-8 !h-8"
-                        delay={0.8}
-                        iconUrl="/icons/star-new.svg"
-                      />
-                      {/* LEFT 2 */}
-                      <TwinklingIcon
-                        className="absolute top-[250px] right-[-30px] !w-8 !h-8"
-                        delay={0.5}
-                        iconUrl="/icons/star-new-main.svg"
-                      />
-                      {/* LEFT 3 */}
-                      <TwinklingIcon
-                        className="absolute top-[320px] right-[0px] !w-8 !h-8"
-                        delay={1.5}
-                        iconUrl="/icons/star-new.svg"
-                      />
-                    </>
-                  )}{' '}
-                  {selectedItemType == ItemAvatarType.SHOES && (
-                    <>
-                      {/* RIGHT 1 */}
-                      <TwinklingIcon
-                        className="absolute bottom-[50px] left-[25px] !w-8 !h-8"
-                        delay={0}
-                        iconUrl="/icons/star-new.svg"
-                      />
-                      {/* RIGHT 2 */}
-                      <TwinklingIcon
-                        className="absolute bottom-[5px] left-[5px] !w-8 !h-8"
-                        delay={1.2}
-                        iconUrl="/icons/star-new-main.svg"
-                      />
-                      {/* RIGHT 3 */}
-                      <TwinklingIcon
-                        className="absolute bottom-[-45px] left-[55px] !w-8 !h-8"
-                        delay={1}
-                        iconUrl="/icons/star-new.svg"
-                      />
-                      {/* LEFT 1 */}
-                      <TwinklingIcon
-                        className="absolute bottom-[50px] right-[55px] !w-8 !h-8"
-                        delay={0.8}
-                        iconUrl="/icons/star-new.svg"
-                      />
-                      {/* LEFT 2 */}
-                      <TwinklingIcon
-                        className="absolute bottom-[5px] right-[35px] !w-8 !h-8"
-                        delay={0.5}
-                        iconUrl="/icons/star-new-main.svg"
-                      />
-                      {/* LEFT 3 */}
-                      <TwinklingIcon
-                        className="absolute bottom-[-45px] right-[95px] !w-8 !h-8"
-                        delay={1.5}
-                        iconUrl="/icons/star-new.svg"
-                      />
-                    </>
-                  )}
-                </div>
               </div>
             </div>
             {/* Customize */}

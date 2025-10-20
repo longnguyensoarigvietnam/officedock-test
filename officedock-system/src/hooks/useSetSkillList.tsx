@@ -18,9 +18,11 @@ interface FilterProps {
 
 const useSetSkillList = ({
   filter,
+  isLoading = true,
   onError,
 }: {
   filter?: FilterProps;
+  isLoading?: boolean;
   onError?: (error: AxiosError) => void;
 }) => {
   const { data: session } = useSessionCache();
@@ -30,7 +32,7 @@ const useSetSkillList = ({
 
   // Handle call API get set skill list
   const getSetSkillList = async () => {
-    setIsLoading(true);
+    if (isLoading) setIsLoading(true);
 
     // TODO: Confirm with BE about how many and how to use param
     const apiUrl = `${apiRouters.SET_SKILL_LIST}?user_id=${filter?.userId}`;

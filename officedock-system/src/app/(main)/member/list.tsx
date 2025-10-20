@@ -13,7 +13,6 @@ import useMemberOrganizationList from '@hooks/userMemberOrganizationList';
 import useDebounceText from '@hooks/useDebounceText';
 import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
-
 const ListMember = () => {
   const [searchData, setSearchData] = useState<string>('');
   const searchTermDebounce = useDebounceText(searchData, 1000);

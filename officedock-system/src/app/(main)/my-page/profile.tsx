@@ -56,6 +56,9 @@ const MyPage = () => {
   const { setIsLoading } = useContext(LoadingContext);
   const router = useRouter();
 
+  // State
+  const [isShowMike, setIsShowMike] = useState(false);
+
   // Set skills
   const [openSetSkillModal, setOpenSetSkillModal] = useState<boolean>(false);
   const [openConfirmDeleteSkillModal, setOpenConfirmDeleteSkillModal] =
@@ -213,6 +216,7 @@ const MyPage = () => {
 
   // Get set skill list
   const { myPageSkillList, refetchSetSkillList } = useSetSkillList({
+    isLoading: false,
     filter: {
       userId: session?.user.id,
     },
@@ -390,27 +394,29 @@ const MyPage = () => {
         <div className="relative ml-[30px] mb-[40px] flex items-end flex-grow">
           <div className="flex-grow">
             <div className="h-[424px] w-[336px] ml-[337px] relative">
-              <RenderAccessories />
+              <RenderAccessories handleShowData={() => setIsShowMike(true)} />
             </div>
 
             {/* Message user */}
-            <>
-              <div
-                style={{
-                  background:
-                    'linear-gradient(180deg, #355AC9 0%, #5282FC 100%)',
-                  boxShadow: '0px 4px 0px 0px #355AC940',
-                }}
-                className="absolute top-[calc(100%_-_531px)] left-[555px] p-[10px] rounded-[14px] w-[258px] h-fit ">
-                <p className="text-white text-[13px] font-bold">マイルくん</p>
-                <div className="mt-[10px] w-full bg-white rounded-[5px] p-3 text-[13px] font-semibold text-black">
-                  {receivedThanksMessageList?.length
-                    ? '新しいサンクスメッセージが届いているよ！'
-                    : 'ポイントが貯まると、素敵な商品と交換できるよ！'}
+            {isShowMike && (
+              <>
+                <div
+                  style={{
+                    background:
+                      'linear-gradient(180deg, #355AC9 0%, #5282FC 100%)',
+                    boxShadow: '0px 4px 0px 0px #355AC940',
+                  }}
+                  className="absolute top-[calc(100%_-_531px)] left-[555px] p-[10px] rounded-[14px] w-[258px] h-fit ">
+                  <p className="text-white text-[13px] font-bold">マイルくん</p>
+                  <div className="mt-[10px] w-full bg-white rounded-[5px] p-3 text-[13px] font-semibold text-black">
+                    {receivedThanksMessageList?.length
+                      ? '新しいサンクスメッセージが届いているよ！'
+                      : 'ポイントが貯まると、素敵な商品と交換できるよ！'}
+                  </div>
                 </div>
-              </div>
-              <div className="bg-[#5282FB] rotate-[20deg] absolute clip-diagonal-left h-[25px] w-[22px] top-[calc(100%_-_425px)] left-[585px]"></div>
-            </>
+                <div className="bg-[#5282FB] rotate-[20deg] absolute clip-diagonal-left h-[25px] w-[22px] top-[calc(100%_-_425px)] left-[585px]"></div>
+              </>
+            )}
             {/* Seagull icon */}
             {receivedThanksMessageList?.length ? (
               <div className="absolute bottom-0 left-[620px]">

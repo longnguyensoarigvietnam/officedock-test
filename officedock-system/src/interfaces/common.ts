@@ -35,6 +35,7 @@ export interface BasePagination<T> {
   totalDuration?: string;
   next?: string | null;
   previous?: string | null;
+  total?: number;
 }
 
 export interface OptionTabType {
