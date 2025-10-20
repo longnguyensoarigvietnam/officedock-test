@@ -71,5 +71,7 @@ class BaseAPIViewSet(viewsets.GenericViewSet):
         context = {"request": request, **extra_context}
 
         serializer = serializer(page, many=True, context=context)
-
-        return self.get_paginated_response(serializer.data)
+        response = self.get_paginated_response(serializer.data)
+        # Inject total at the top level
+        response.data["total"] = queryset.count()
+        return response
