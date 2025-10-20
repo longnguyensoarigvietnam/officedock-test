@@ -27,12 +27,12 @@ const ViewProfileModal = memo(
       <Modal
         open={open}
         isOutSideAction={false}
-        className="font-primary !rounded-[20px] text-gray-700 !p-0 w-[700px] "
+        className="font-primary !rounded-[20px] text-black !p-0 w-[700px]"
         titleClassName="!text-[14px] !text-[#5B6770] !font-medium"
-        headerClassName="bg-[#EBF1F7] !rounded-t-[20px] !rounded-b-none px-6 py-4"
-        closeIconClassName="!bg-white !rounded-full !p-2 !hover:cursor-pointer !shadow-sm"
-        closeClassName="!mt-0 opacity-70 !w-4 !h-4 !hover:cursor-pointer"
-        contentClass="!w-[700px] !rounded-[20px]"
+        contentClass="!rounded-[20px]"
+        headerClassName="bg-[#EBF1F7] !rounded-t-[20px] !rounded-b-none px-5 !py-[10px]"
+        closeIconClassName="!bg-white !rounded-full !p-[7px] !hover:cursor-pointer"
+        closeClassName="!mt-0 !w-4 !h-4 !hover:cursor-pointer"
         onClose={() => {
           onClose();
         }}
@@ -58,7 +58,7 @@ const ViewProfileModal = memo(
         ) : (
           <div className="mx-8 mb-5">
             <div className="flex justify-between items-center mb-5">
-              <div className="flex items-center gap-3 max-w-[calc(100%_-_100px)]">
+              <div className="flex items-center gap-5 max-w-[calc(100%_-_100px)]">
                 <div className="min-w-[70px]">
                   {authenticatedUser ? (
                     <CustomUserAvatar
@@ -76,7 +76,7 @@ const ViewProfileModal = memo(
                   )}
                 </div>
 
-                <div className="flex gap-3 items-center pr-3 border-r-[1px] border-r-[#D2DBE1]">
+                <div className="flex gap-[10px] items-center pr-5 border-r-[1px] border-r-[#D2DBE1]">
                   <p className="text-[#77858F] text-sm font-medium whitespace-nowrap">
                     名前
                   </p>
@@ -84,7 +84,7 @@ const ViewProfileModal = memo(
                     {authenticatedUser?.profile?.fullName || ''}
                   </p>
                 </div>
-                <div className="flex gap-2 items-center">
+                <div className="flex gap-[10px] items-center">
                   <p className="text-[#77858F] text-sm font-medium">ID</p>
                   <p className="text-black text-[16px] font-medium">
                     {authenticatedUser?.id || ''}
@@ -92,13 +92,13 @@ const ViewProfileModal = memo(
                 </div>
               </div>
               <Button
-                className="w-[56px] min-w-[56px] !py-2 !px-0"
+                className="w-[56px] min-w-[56px] !h-[30px] !py-2 !px-0"
                 onClick={openEditModal}>
                 編集
               </Button>
             </div>
 
-            <div className="flex gap-3 items-center pb-3 mb-3 border-b-[1px] border-b-[#D2DBE1]">
+            <div className="flex gap-3 items-center pb-5 mb-5 border-b-[1px] border-b-[#D2DBE1] leading-[1]">
               <p className="text-[#77858F] text-sm font-medium w-[130px] text-left">
                 ID｜メールアドレス
               </p>
@@ -106,7 +106,7 @@ const ViewProfileModal = memo(
                 {authenticatedUser?.email || authenticatedUser?.username || ''}
               </p>
             </div>
-            <div className="flex gap-3 items-center pb-3 mb-3 border-b-[1px] border-b-[#D2DBE1]">
+            <div className="flex gap-3 items-center pb-5 mb-5 border-b-[1px] border-b-[#D2DBE1] leading-[1]">
               <p className="text-[#77858F] text-sm font-medium w-[130px] text-left">
                 パスワード
               </p>
@@ -114,7 +114,7 @@ const ViewProfileModal = memo(
                 ********
               </p>
             </div>
-            <div className="flex gap-3 items-center pb-3 mb-3 border-b-[1px] border-b-[#D2DBE1]">
+            <div className="flex gap-3 items-center pb-5 mb-5 border-b-[1px] border-b-[#D2DBE1] leading-[1]">
               <p className="text-[#77858F] text-sm font-medium w-[130px] text-left">
                 メインチーム
               </p>
@@ -123,7 +123,7 @@ const ViewProfileModal = memo(
                   ?.name || ''}
               </p>
             </div>
-            <div className="flex gap-3 items-center pb-3">
+            <div className="flex gap-3 items-center pb-1 leading-[1]">
               <p className="text-[#77858F] text-sm font-medium w-[130px] text-left">
                 サブチーム
               </p>

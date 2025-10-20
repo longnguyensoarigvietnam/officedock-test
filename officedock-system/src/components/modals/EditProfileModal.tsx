@@ -116,18 +116,18 @@ const EditProfileModal = memo(
       <Modal
         open={open}
         isOutSideAction={false}
-        className="font-primary !rounded-xl text-gray-700 !p-0 w-[700px] "
+        className="font-primary !rounded-[20px] text-black !p-0 w-[700px]"
         titleClassName="!text-[14px] !text-[#5B6770] !font-medium"
-        headerClassName="bg-[#EBF1F7] !rounded-t-xl !rounded-b-none px-6 py-4"
-        closeIconClassName="!bg-white !rounded-full !p-2 !hover:cursor-pointer !shadow-sm"
-        closeClassName="!mt-0 opacity-70 !w-4 !h-4 !hover:cursor-pointer"
-        contentClass="!w-[700px]"
+        contentClass="!rounded-[20px]"
+        headerClassName="bg-[#EBF1F7] !rounded-t-[20px] !rounded-b-none px-5 !py-[10px]"
+        closeIconClassName="!bg-white !rounded-full !p-[7px] !hover:cursor-pointer"
+        closeClassName="!mt-0 !w-4 !h-4 !hover:cursor-pointer"
         onClose={() => {
           onClose();
         }}
-        title="プロフィール 編集">
+        title="プロフィール">
         <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="mx-8 mb-5">
+          <div className="mx-[30px]">
             <div className="flex items-center mb-5">
               <div className="w-[170px]">
                 <input
@@ -155,7 +155,7 @@ const EditProfileModal = memo(
                 </div>
               </div>
               <div className="!w-full">
-                <p className="text-sm font-medium mb-2">名前</p>
+                <p className="text-sm font-medium mb-3 leading-none">名前</p>
                 <Input
                   className={`shadow-none text-[22px] leading-[56px] font-medium !pl-3 flex items-center !py-0 h-[42px] focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md ${editProfileErrorMessages.fullName && '!border-error'}`}
                   register={register('fullName', {
@@ -183,7 +183,7 @@ const EditProfileModal = memo(
               </div>
             </div>
 
-            <div className="flex items-center pb-3 mb-3">
+            <div className="flex items-center mb-5">
               <p className="text-sm font-medium w-[170px] text-left whitespace-nowrap">
                 ID｜メールアドレス
               </p>
@@ -193,7 +193,7 @@ const EditProfileModal = memo(
                 disabled={true}
               />
             </div>
-            <div className="flex items-center pb-3 mb-3">
+            <div className="flex items-center">
               <p className="text-sm font-medium w-[170px] text-left">
                 パスワード
               </p>
@@ -212,21 +212,29 @@ const EditProfileModal = memo(
                     },
                   })}
                 />
-                <ErrorMessage
-                  error={
-                    errors?.password?.message ||
-                    editProfileErrorMessages.password
-                  }
-                  className="mt-[5px] mb-[5px] !text-xs"
-                />
+                {errors?.password?.message ||
+                editProfileErrorMessages.password ? (
+                  <ErrorMessage
+                    error={
+                      errors?.password?.message ||
+                      editProfileErrorMessages.password
+                    }
+                    className="mt-[5px] mb-[5px] !text-xs"
+                  />
+                ) : (
+                  <></>
+                )}
               </div>
             </div>
-            <div className="flex justify-center gap-3 my-7 items-center">
-              <Button variant="outline" onClick={onClose} className="w-[110px]">
+            <div className="flex justify-center gap-[10px] my-[30px] items-center">
+              <Button
+                variant="outline"
+                onClick={onClose}
+                className="!w-[100px] !h-[36px] !p-0 !text-sm !font-medium">
                 キャンセル
               </Button>
               <Button
-                className="w-[110px] !py-2 !px-0"
+                className="!w-[100px] !h-[36px] !p-0 !border-none !text-sm !font-medium"
                 type="submit"
                 disabled={!isDirty && !isAvatarChanged}>
                 保存する

@@ -1871,7 +1871,7 @@ const ActionsEventModal = ({
                       render={({ field: { value, onChange } }) => {
                         return (
                           <Dropdown
-                            className="h-[34px] !py-1 text-xs !border-[1px] !border-[#77858F]"
+                            className="h-[34px] !py-1 text-xs"
                             classNameTextData="!text-xs"
                             classNameOption="!text-xs"
                             options={[...dataOptionsCategoryMedium]}

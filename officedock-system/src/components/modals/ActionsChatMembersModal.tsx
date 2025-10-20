@@ -366,7 +366,7 @@ const ActionsChatMembersModal = memo(
         className="font-primary !rounded-[20px] text-black !p-0 w-[500px]"
         titleClassName="!text-[14px] !text-[#5B6770] !font-medium"
         contentClass="!rounded-[20px]"
-        headerClassName="bg-[#EBF1F7] !rounded-t-xl !rounded-b-none px-5 !py-[10px]"
+        headerClassName="bg-[#EBF1F7] !rounded-t-[20px] !rounded-b-none px-5 !py-[10px]"
         closeIconClassName="!bg-white !rounded-full !p-[7px] !hover:cursor-pointer"
         closeClassName="!mt-0 !w-4 !h-4 !hover:cursor-pointer"
         onClose={() => {

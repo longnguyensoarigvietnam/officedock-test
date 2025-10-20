@@ -1,16 +1,13 @@
 import { MenuItem, MyPageMenuItem, SettingMenuItem } from '@interfaces/menu';
+
 import { pageRouters } from './routers';
+
 import { PermissionsSystem, TabTypeSurvey } from './enums';
 
 export const SETTING_MENU: SettingMenuItem[] = [
   {
     name: 'プロフィール',
     showModal: true,
-  },
-  {
-    name: '設定',
-    href: pageRouters.SETTING.href,
-    disable: true,
   },
   {
     name: 'ログアウト',
