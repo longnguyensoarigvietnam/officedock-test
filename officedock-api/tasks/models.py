@@ -74,7 +74,7 @@ class Task(BaseModel):
         super().save(*args, **kwargs)
 
     def update_completed_time(self, time):
-        """"""
+        """Set completed at field"""
         self.completed_at = time
         self.save(update_fields=["completed_at"])
 
