@@ -610,12 +610,12 @@ const ListTags = () => {
                 タグ名
               </span>
             </th>
-            <th className="w-[calc(100%_-_600px)] text-left">
+            <th className="w-[calc(100%_-_550px)] text-left">
               <span className="text-[#77858F] text-[12px] font-medium">
                 表示するチーム
               </span>
             </th>
-            <th className="w-[100px] max-w-[100px]"></th>
+            <th className="w-[50px] max-w-[50px]"></th>
           </TableHeader>
           <TableBody>
             {dataTags && dataTags.length ? (
@@ -623,7 +623,7 @@ const ListTags = () => {
                 <tr key={index}>
                   <td className="w-[500px] text-black max-w-[500px] border-r-[1px] border-r-[#D2DBE1]">
                     <div className="flex justify-between items-center">
-                      <p className="text-left max-w-[350px] truncate text-[16px] font-medium">
+                      <p className="text-left max-w-[calc(100%_-_50px)] break-all text-[16px] font-medium">
                         {element.name}
                       </p>
                       <div className="flex gap-2 justify-end">
@@ -672,14 +672,14 @@ const ListTags = () => {
                       </div>
                     </div>
                   </td>
-                  <td className="!w-[calc(100%_-_600px)] text-black !break-all text-left text-[14px] font-medium">
+                  <td className="!w-[calc(100%_-_550px)] text-black !break-all text-left text-[14px] font-medium">
                     {element?.organizations &&
                       element?.organizations
                         .map((org: Organizations) => org.name)
                         .join('/ ')}
                   </td>
-                  <td className="w-[100px] max-w-[100px]">
-                    <div className="flex justify-end px-3">
+                  <td className="w-[50px] max-w-[50px]">
+                    <div className="flex justify-end pr-[10px]">
                       {element.isCalendarOrganizationCheck && (
                         <ImageRound
                           className={`w-4 h-4 hover:cursor-pointer`}

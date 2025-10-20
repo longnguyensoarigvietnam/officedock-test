@@ -327,7 +327,7 @@ const ActionsVotingModal = ({
       className="font-primary bg-white w-[700px] !px-0 !rounded-l-[30px]"
       onClose={handleCloseModal}>
       <header
-        className="px-8 rounded-tl-[30px] h-[50px] flex items-center justify-between"
+        className="px-9 rounded-tl-[30px] h-[50px] flex items-center justify-between"
         style={{
           background: showModalHeaderBackgroundColorByTime(),
         }}>
@@ -360,11 +360,11 @@ const ActionsVotingModal = ({
       </header>
       <form
         onSubmit={handleSubmit(onSubmitData)}
-        className="px-8 pb-8 !h-[calc(100vh_-_150px)] overflow-y-auto">
-        <header className="flex sticky z-[100] top-[0px] py-5 items-start gap-2 justify-between bg-white !w-full">
+        className="px-9 pb-9 !h-[calc(100vh_-_150px)] overflow-y-auto">
+        <header className="flex sticky z-[100] top-[0px] pt-10 pb-[29px] items-start gap-5 justify-between bg-white !w-full">
           <div className="w-full">
             <Input
-              className={`shadow-none !w-[calc(100%)] text-2xl leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[42px] focus:!shadow-none focus:border ${errors.title ? '!border-error' : '!border-[#77858F]'}  !border-[1px] rounded-md`}
+              className={`shadow-none !w-[calc(100%)] text-[22px] leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[42px] focus:!shadow-none focus:border ${errors.title ? '!border-error' : '!border-[#77858F]'}  !border-[1px] rounded-md`}
               register={register('title', {
                 maxLength: VOTING_TITLE_MAX_LENGTH,
               })}
@@ -372,37 +372,37 @@ const ActionsVotingModal = ({
               error={errors.title?.message}
             />
             <p
-              className={`text-[13px] mt-[6px] flex justify-end ${Number(watch('title')?.trim()?.length) > VOTING_TITLE_MAX_LENGTH ? 'text-error' : 'text-black'}`}>
+              className={`text-[13px] mt-[6px] leading-[1] flex justify-end ${Number(watch('title')?.trim()?.length) > VOTING_TITLE_MAX_LENGTH ? 'text-error' : 'text-black'}`}>
               {watch('title')?.trim()?.length || 0}/{VOTING_TITLE_MAX_LENGTH}字
             </p>
           </div>
-          <div className="flex gap-2 items-center mt-[3px]">
+          <div className="flex gap-[10px] items-center mt-[3px]">
             <Button
               type="submit"
               disabled={
                 (action === ActionsModal.EDIT && !isDirty) ||
                 Number(watch('title')?.trim()?.length) > VOTING_TITLE_MAX_LENGTH
               }
-              className="w-[82px] h-[36px] !text-[12px] !px-2">
+              className="w-[86px] h-[36px] !text-[13px] !p-0">
               保存
             </Button>
             <Button
               variant="outline"
               type="button"
               onClick={onClose}
-              className="w-[82px] !rounded-md  h-[34px] !text-[12px] !px-2">
+              className="w-[86px] h-[36px] !text-[13px] !p-0">
               キャンセル
             </Button>
           </div>
         </header>
         {/* Candidate */}
-        <div className="flex justify-between items-start mb-[30px]">
-          <p className="w-fit font-medium text-[14px] mt-3">候補メンバー</p>
-          <div className="w-[513px]">
+        <div className="flex justify-between items-start mb-[29px]">
+          <p className="w-fit font-medium text-[14px] leading-none mt-3">候補メンバー</p>
+          <div className="w-[518px]">
             <div className="relative">
               <Input
                 placeholder="名前を検索"
-                className={`!w-[513px] h-[34px] pl-9 focus:!shadow-none !border-[1px] !border-[#77858F] !rounded-md`}
+                className={`!w-[518px] h-[36px] !text-sm !font-normal pl-9 focus:!shadow-none !border-[1px] !border-[#77858F] !rounded-md !placeholder:font-normal !placeholder-[#BABABA]`}
                 onChange={(e) => setSearchName(e.target.value)}
               />
               <ImageRound
@@ -412,7 +412,7 @@ const ActionsVotingModal = ({
               />
             </div>
 
-            <div className="flex gap-6 items-center my-[10px] py-[10px]">
+            <div className="flex gap-6 items-center my-5">
               <p
                 className="text-[#77858F] font-medium text-xs hover:cursor-pointer"
                 onClick={() => {
@@ -503,18 +503,18 @@ const ActionsVotingModal = ({
                 全てのチェックをクリア
               </p>
             </div>
-            <div className="w-[513px] flex gap-2 bg-[#EBF1F7] px-[6px] py-[4px] rounded-[20px] mb-[10px]">
+            <div className="w-[518px] flex gap-2 bg-[#EBF1F7] px-[6px] py-[4px] rounded-[20px] mb-[10px]">
               <Button
                 type="button"
                 variant={`${activeTab == EventParticipantType.ORGANIZATION ? 'secondary' : 'outline'}`}
-                className={`w-[253px] !p-0 text-xs h-[24px] !font-bold ${activeTab == EventParticipantType.ORGANIZATION ? 'text-white !bg-[#3CABF3]' : '!text-[#77858F] !bg-[#EBF1F7]'} border-none !rounded-[20px]`}
+                className={`w-[253px] !p-0 text-xs h-[24px] !font-medium ${activeTab == EventParticipantType.ORGANIZATION ? 'text-white !bg-[#3CABF3]' : '!text-[#77858F] !bg-[#EBF1F7]'} border-none !rounded-[20px]`}
                 onClick={() => setActiveTab(EventParticipantType.ORGANIZATION)}>
                 チーム
               </Button>
               <Button
                 type="button"
                 variant={`${activeTab == EventParticipantType.USER ? 'secondary' : 'outline'}`}
-                className={`w-[253px] !p-0 text-xs h-[24px] !font-bold ${activeTab == EventParticipantType.USER ? 'text-white !bg-[#3CABF3]' : '!text-[#77858F] !bg-[#EBF1F7]'} border-none !rounded-[20px]`}
+                className={`w-[253px] !p-0 text-xs h-[24px] !font-medium ${activeTab == EventParticipantType.USER ? 'text-white !bg-[#3CABF3]' : '!text-[#77858F] !bg-[#EBF1F7]'} border-none !rounded-[20px]`}
                 onClick={() => setActiveTab(EventParticipantType.USER)}>
                 メンバー
               </Button>
@@ -551,7 +551,7 @@ const ActionsVotingModal = ({
                   .map((member) => {
                     return (
                       <div
-                        className={`flex gap-2 items-center px-3 py-2.5 hover:cursor-pointer ${
+                        className={`flex items-center px-5 py-2 hover:cursor-pointer ${
                           checkIsParticipantSelected(member) && 'bg-[#EBF1F7]'
                         }`}
                         key={member.id}
@@ -561,6 +561,7 @@ const ActionsVotingModal = ({
                         <div>
                           <Checkbox
                             isChecked={checkIsParticipantSelected(member)}
+                            boxLabelClass="ml-[14px]"
                             onChange={() => {
                               handleSelectEventParticipant(member);
                             }}
@@ -585,7 +586,7 @@ const ActionsVotingModal = ({
                             )}
                           </div>
                         )}
-                        <div className="!w-full">
+                        <div className="!w-full ml-[10px]">
                           <p className="line-clamp-3 break-all font-medium text-[15px] text-black">
                             {member.fullName}
                             <span className="text-[#77858F] text-xs ml-1">
@@ -610,9 +611,9 @@ const ActionsVotingModal = ({
         </div>
 
         {/* Bonus point */}
-        <div className="flex justify-between items-center mb-[30px]">
+        <div className="flex justify-between items-center mb-[29px]">
           <p className="w-fit font-medium text-[14px]">贈呈コイン</p>
-          <div className="w-[513px]">
+          <div className="w-[518px]">
             <p className="text-sm">{VOTING_BONUS_POINT}</p>
           </div>
         </div>
@@ -620,8 +621,8 @@ const ActionsVotingModal = ({
         {/* End date */}
         <div className="flex justify-between items-center mb-[44px]">
           <p className="w-fit font-medium text-[14px]">終了日時</p>
-          <div className="w-[513px]">
-            <div className="flex items-center gap-2 w-[513px]">
+          <div className="w-[518px]">
+            <div className="flex items-center gap-[10px] w-[518px]">
               <div className="w-[156px]">
                 <Controller
                   control={control}
@@ -689,11 +690,12 @@ const ActionsVotingModal = ({
         <div className="flex justify-center mb-[50px]">
           <Button
             type="submit"
+            style={{ boxShadow: '0px 1px 5px 0px #00000033' }}
             disabled={
               (action === ActionsModal.EDIT && !isDirty) ||
               Number(watch('title')?.trim()?.length) > VOTING_TITLE_MAX_LENGTH
             }
-            className="w-[200px] h-[46px] !text-[15px]">
+            className="w-[200px] h-[46px] !text-[14px] !font-medium !border-none">
             保存
           </Button>
         </div>
