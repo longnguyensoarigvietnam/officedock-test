@@ -96,13 +96,16 @@ from .serializers import (
     TaskIndexForCreationSerializer,
     TaskIndexPinAtSerializer,
     TaskIndexSerializer,
+    TaskScheduleForCreationMultipleSerializer,
+    TaskScheduleForCreationSerializer,
+    TaskScheduleSerializer,
     TaskSerializer,
     TaskTeamdockSerializer,
     TaskTemplateSerializer,
     TeamTaskIndexSerializer,
     TodoListSerializer,
 )
-from .filters import TaskBoardFilter, TaskCalendarFilter
+from .filters import TaskBoardFilter, TaskCalendarFilter, TaskScheduleFilter
 
 
 @extend_schema(tags=["System > Task"])
@@ -1493,6 +1496,121 @@ class TaskCalendarViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             ).distinct()
 
         return queryset.filter(company_id=user.company_id)
+
+
+@extend_schema(tags=["System > Task"])
+class TaskScheduleViewSet(
+    BaseAPIViewSet,
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+):
+    """
+    API endpoint to show Tasks to the Calendar.
+    """
+
+    queryset = TaskSchedule.objects.order_by("plan_start_date").all()
+    serializer_class = TaskScheduleSerializer
+    permission_classes = [ActionPermission]
+    filter_backends = [
+        DjangoFilterBackend,
+    ]
+    filterset_class = TaskScheduleFilter
+    pagination_class = None
+    lookup_field = "uuid"
+    screen_name = Screens.MY_TASK.value
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user_id = self.request.query_params.get("user_id")
+
+        if not user_id:
+            queryset = queryset.filter(
+                task__people_in_charge__id=self.request.user.id
+            )
+
+        if self.action == "list":
+            queryset = queryset.filter(
+                plan_start_date__gte=datetime.combine(
+                    datetime.now().date(), time.min
+                )
+            ).distinct()
+
+        return queryset
+
+    def get_serializer_class(self):
+        if self.action == "create":
+            return TaskScheduleForCreationSerializer
+
+        return super().get_serializer_class()
+
+    def _check_overtime(self, task_schedule):
+        """
+        Check overtime of task schedule
+        """
+        start_of_today = datetime.combine(timezone.now().date(), time.min)
+        task_duration = TaskDuration.objects.filter(
+            started_at__gte=start_of_today,
+            paused_at__isnull=True,
+            task=task_schedule.task,
+        ).first()
+        if task_duration:
+            is_send_sk, is_over_estimate = check_task_overtime(
+                task_schedule.task, task_duration
+            )
+            for user in task_schedule.task.people_in_charge.all():
+                send_web_socket_event(
+                    {
+                        "id": task_schedule.task.id,
+                        "task_duration_running_uuid": str(task_duration.uuid),
+                        "is_over_estimate": is_over_estimate,
+                        "action": WebSocketEventType.DURATION_OVERTIME_WARNING.value,
+                        "type": CalendarTypes.TASK.value,
+                    },
+                    user=user,
+                )
+
+    def perform_create(self, serializer):
+        """
+        Handle create task schedule
+        """
+        task_schedule = serializer.save()
+        self._check_overtime(task_schedule)
+
+    def perform_update(self, serializer):
+        """
+        Handle update task schedule
+        """
+        task_schedule = serializer.save()
+        self._check_overtime(task_schedule)
+
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="multiple",
+        serializer_class=TaskScheduleForCreationMultipleSerializer,
+    )
+    @transaction.atomic()
+    def update_multiple_schedules(self, request):
+        """
+        Handle update multiple task schedules
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer_data = serializer.validated_data
+        task_schedules = serializer_data.get("task_schedules")
+        for data in task_schedules:
+            if uuid := data.get("uuid"):
+                task_schedule, _ = TaskSchedule.objects.update_or_create(
+                    uuid=uuid,
+                    defaults={
+                        "task": data.get("task"),
+                        "plan_start_date": data.get("plan_start_date"),
+                        "plan_end_date": data.get("plan_end_date"),
+                    },
+                )
+                self._check_overtime(task_schedule)
+        return self.response_ok()
 
 
 @extend_schema(tags=["System > Task"])
