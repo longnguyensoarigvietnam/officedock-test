@@ -1,5 +1,14 @@
 'use client';
-import { memo, useContext, useEffect, useState } from 'react';
+import {
+  ChangeEvent,
+  Dispatch,
+  memo,
+  SetStateAction,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useMutation } from 'react-query';
 import { AxiosError } from 'axios';
@@ -12,14 +21,20 @@ import TableDropdown from '@components/common/Dropdown/TableDropdown';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import Input from '@components/common/Input';
+import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 
 import { apiRouters } from '@constants/routers';
-import { NO_OPTIONS } from '@constants';
+import {
+  ALLOWED_IMAGE_TYPES,
+  MAX_AVATAR_IMAGE_FILE_SIZE,
+  NO_OPTIONS,
+} from '@constants';
 import { ChatRoomType, PermissionsSystem } from '@constants/enums';
 import {
   ERROR_LONG_FIELD_MESSAGE,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
+  UPLOAD_AVATAR_FILE_MAXIMUM_SIZE,
 } from '@constants/message';
 
 import { ChatParticipant, ChatRoomDetail } from '@interfaces/chat';
@@ -41,6 +56,12 @@ export type ChatSettingModalProps = {
   chatRoomDetail: ChatRoomDetail | undefined;
   code: string;
   dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
+  setOpenErrorUploadFileModal: Dispatch<
+    SetStateAction<{
+      status: boolean;
+      message: string;
+    }>
+  >;
   onClose: () => void;
   openAddMemberModal: () => void;
   openConfirmRemoveModal: (id: number) => void;
@@ -52,12 +73,19 @@ const ChatSettingModal = memo(
     chatRoomDetail,
     code,
     dashboardMemberList,
+    setOpenErrorUploadFileModal,
     onClose,
     openAddMemberModal,
     openConfirmRemoveModal,
   }: ChatSettingModalProps) => {
     const { data: session } = useSessionCache();
 
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+    const [previewAvatarUrl, setPreviewAvatarUrl] = useState<string | null>(
+      chatRoomDetail?.avatar || null,
+    );
+    const [avatarImgFile, setAvatarImgFile] = useState<File | null>(null);
     const [searchName, setSearchName] = useState<string>('');
     const { showToast } = useToast();
     const showErrorToast = useErrorToast();
@@ -85,11 +113,15 @@ const ChatSettingModal = memo(
       },
     ];
 
-    const handleUpdateGroupDetail = async (groupName: string) => {
+    const handleUpdateGroupDetail = async (data: {
+      name: string;
+      avatar: File | null;
+    }) => {
       setIsLoading(true);
-      const response = await api.patch(apiRouters.CHAT_DETAIL(code), {
-        name: groupName,
-      });
+      const formData = new FormData();
+      formData.append('name', data.name);
+      if (data.avatar) formData.append('avatar', data.avatar);
+      const response = await api.patch(apiRouters.CHAT_DETAIL(code), formData);
       return response;
     };
 
@@ -113,8 +145,10 @@ const ChatSettingModal = memo(
     );
 
     const handleConfirmUpdateGroupDetail = () => {
-      const groupName = watch('groupName') as string;
-      updateGroupDetail(groupName);
+      updateGroupDetail({
+        name: watch('groupName') as string,
+        avatar: avatarImgFile,
+      });
     };
 
     useEffect(() => {
@@ -133,23 +167,37 @@ const ChatSettingModal = memo(
           <CustomUserAvatar
             avatarUrl={memberInfo?.avatar || ''}
             avatarColor={memberInfo?.avatarColor || ''}
-            size={33}
+            size={30}
           />
         </div>
       );
     };
 
-    const showRoomAvatar = (type: string) => {
-      switch (type) {
-        case ChatRoomType.GROUP:
-          return '/icons/multi-users.svg';
-        case ChatRoomType.TASK:
-          return '/icons/document.svg';
-        case ChatRoomType.SKILL:
-          return '/icons/skill-room.svg';
-        case ChatRoomType.CALENDAR:
-          return '/icons/calendar-room.svg';
+    const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        e.target.value = '';
+        return;
       }
+
+      if (file.size > MAX_AVATAR_IMAGE_FILE_SIZE) {
+        setOpenErrorUploadFileModal({
+          status: true,
+          message: UPLOAD_AVATAR_FILE_MAXIMUM_SIZE,
+        });
+        return;
+      }
+
+      const newFile = new File([file], file.name, {
+        type: file.type,
+      });
+
+      setAvatarImgFile(newFile);
+
+      const url = URL.createObjectURL(newFile);
+      setPreviewAvatarUrl(url);
     };
 
     return (
@@ -168,12 +216,38 @@ const ChatSettingModal = memo(
         title="グループチャットの編集">
         <div className="text-sm text-black px-5">
           <div className="flex gap-5 items-center mb-5">
-            <ImageRound
-              className="w-[70px] h-[70px]"
-              src={`${showRoomAvatar(chatRoomDetail?.type || '')}`}
-              border="full"
-              name="Multi users"
-            />
+            <div className="w-[70px] min-w-[70px] h-[70px] relative">
+              <input
+                type="file"
+                accept={ALLOWED_IMAGE_TYPES.join(',')}
+                ref={fileInputRef}
+                className="hidden"
+                onChange={(e) => {
+                  handleFileChange(e);
+                }}
+              />
+              {previewAvatarUrl ? (
+                <CustomUserAvatar
+                  avatarUrl={previewAvatarUrl || ''}
+                  avatarColor={chatRoomDetail?.avatarColor || ''}
+                  size={70}
+                />
+              ) : (
+                <GroupIconWithDynamicColor
+                  color={chatRoomDetail?.avatarColor || '#228CDB'}
+                  size={70}
+                />
+              )}
+
+              <div
+                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white text-xs bg-[#77858F] w-[36px] h-5 flex items-center justify-center rounded-[3px] hover:cursor-pointer"
+                onClick={() => {
+                  fileInputRef.current?.click();
+                }}>
+                変更
+              </div>
+            </div>
+
             <div className="!w-full">
               <p className="text-[#77858F] font-medium text-[12px] mb-[10px] leading-none">
                 グループ名

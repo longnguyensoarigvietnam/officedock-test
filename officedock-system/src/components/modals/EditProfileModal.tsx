@@ -146,7 +146,7 @@ const EditProfileModal = memo(
                     size={70}
                   />
                   <div
-                    className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white text-xs bg-[#77858F] w-[36px] flex items-center justify-center py-1 rounded-[3px] hover:cursor-pointer"
+                    className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white text-xs bg-[#77858F] w-[36px] h-5 flex items-center justify-center rounded-[3px] hover:cursor-pointer"
                     onClick={() => {
                       fileInputRef.current?.click();
                     }}>

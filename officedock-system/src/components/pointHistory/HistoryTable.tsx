@@ -89,7 +89,7 @@ export const HistoryTable = ({
         background: 'rgba(53, 153, 216, 0.8)',
         boxShadow: '0px 4px 10px 0px #0000000D',
       }}
-      className={`w-[720px] h-[90%] p-[30px] absolute top-1/2 -translate-y-1/2 font-medium text-white border border-white rounded-3xl`}>
+      className={`w-[720px] h-[calc(100%_-_60px)] p-[30px] absolute top-1/2 -translate-y-1/2 font-medium text-white border border-white rounded-3xl`}>
       {/* Title */}
       <div className="flex items-center gap-3 mb-[25px]">
         <ImageRound

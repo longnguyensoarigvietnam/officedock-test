@@ -20,8 +20,9 @@ const RoomList = () => {
     }[]
   >([]);
 
-  useMemberOrganizationList({
+  const { isLoadingListMemberOrganization } = useMemberOrganizationList({
     search: '',
+    showLoading: false,
     currentScreen: ScreenName.CALENDAR,
     onSuccess: (data) => {
       setMemberListByOrganization(
@@ -75,6 +76,7 @@ const RoomList = () => {
             <MemberListByOrganization
               memberListByOrganization={memberListByOrganization}
               setMemberListByOrganization={setMemberListByOrganization}
+              isLoadingList={isLoadingListMemberOrganization}
             />
           </div>
         </div>
