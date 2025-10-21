@@ -1770,7 +1770,7 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         queryset = self.filter_queryset(self.get_queryset())
         task_status = TaskStatusModel.objects.filter(id=status_id).first()
         if task_status and task_status.name == TaskStatus.COMPLETED.value:
-            queryset = queryset.filter(is_archived=False)
+            queryset = queryset.filter(archived_at__isnull=True)
 
         if ordering:
             if not (
@@ -2086,8 +2086,10 @@ class TaskArchiveViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         Handle get list tasks archive
         """
         # Task queryset
-        queryset = self.filter_queryset(self.get_queryset()).filter(
-            is_archived=True
+        queryset = (
+            self.filter_queryset(self.get_queryset())
+            .filter(archived_at__isnull=False)
+            .order_by("-archived_at")
         )
 
         return self.response_pagination(

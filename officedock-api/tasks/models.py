@@ -63,7 +63,7 @@ class Task(BaseModel):
     )
     recurring = models.JSONField(null=True, blank=True)
     completed_at = models.DateTimeField(null=True, blank=True)
-    is_archived = models.BooleanField(default=False)
+    archived_at = models.DateTimeField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
         """
