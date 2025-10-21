@@ -354,6 +354,10 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 user,
             )
 
+        # Delete chat room if no participants
+        if instance.chat_rooms_participants.count() <= 0:
+            instance.delete()
+
         return self.response_ok(
             self.serializer_class(chat_room, context={"request": request}).data
         )
@@ -878,6 +882,11 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             user,
         )
         participant.delete()
+
+        # Delete chat room if no participants
+        if instance.chat_rooms_participants.count() <= 0:
+            instance.delete()
+
         return self.response_ok()
 
     def perform_destroy(self, instance):
