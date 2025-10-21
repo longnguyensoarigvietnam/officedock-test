@@ -543,9 +543,11 @@ def update_completed_time_and_archive_old_task(task):
     task.update_completed_time(now())
     for user in task.people_in_charge.all():
         task_completes = Task.objects.filter(
-            people_in_charge=user, completed_at__isnull=False, is_archived=False
+            people_in_charge=user,
+            completed_at__isnull=False,
+            archived_at__isnull=True,
         ).order_by("completed_at")
         if task_completes.count() > 10:
             old_task_completed = task_completes.first()
-            old_task_completed.is_archived = True
-            old_task_completed.save(update_fields=["is_archived"])
+            old_task_completed.archived_at = now()
+            old_task_completed.save(update_fields=["archived_at"])

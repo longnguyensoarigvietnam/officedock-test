@@ -792,7 +792,9 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         # Fetch tasks and schedules
         tasks = (
             Task.objects.filter(
-                people_in_charge=user_id, deleted_at__isnull=True
+                people_in_charge=user_id,
+                deleted_at__isnull=True,
+                archived_at__isnull=False,
             )
             .values("id", "title", "created_at")
             .annotate(

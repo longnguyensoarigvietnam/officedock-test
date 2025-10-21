@@ -400,6 +400,7 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
             "task_schedule_end_date",
             "show_deadline_time",
             "deleted_at",
+            "archived_at",
         ]
 
         read_only_fields = ["id", "is_start", "is_my_task", "created_at"]
@@ -1065,7 +1066,7 @@ class TaskArchiveSerializer(TaskCommonSerializer):
             "status",
             "type",
             "categories",
-            "is_archived",
+            "archived_at",
             "completed_at",
         ]
 
