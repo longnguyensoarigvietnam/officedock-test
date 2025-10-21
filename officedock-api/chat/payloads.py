@@ -36,6 +36,10 @@ def build_chat_participant_payload(
         "code": chat_room.code,
         "name": room_name,
         "type": chat_room.type,
+        "avatar": get_signed_url(
+            chat_room.avatar, AVATAR_GCS_EXPIRATION_SECONDS
+        ),
+        "avatar_color": chat_room.avatar_color,
         "unread_messages": participant.unread_messages,
         "pin_at": participant.pin_at,
         "last_message_at": last_message_at.isoformat()
