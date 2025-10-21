@@ -681,28 +681,21 @@ class ChatRoomsParticipantsSerializer(serializers.ModelSerializer):
 
         avatar = chat_room.avatar
         avatar_color = chat_room.avatar_color
-        room_name = chat_room.name
 
         match chat_room.type:
             case ChatRoomTypes.SELF.value:
-                room_name = obj.user.profile.full_name
                 avatar = obj.user.avatar
                 avatar_color = obj.user.avatar_color
             case ChatRoomTypes.PRIVATE.value:
                 receive_user = chat_room.participants.exclude(
                     id=obj.user.id
                 ).first()
-                room_name = (
-                    receive_user.profile.full_name if receive_user else None
+                avatar = receive_user.avatar if receive_user else None
+                avatar_color = (
+                    receive_user.avatar_color if receive_user else None
                 )
-                avatar = receive_user.avatar
-                avatar_color = receive_user.avatar_color
 
         return {
-            "id": chat_room.id,
-            "code": chat_room.code,
-            "type": chat_room.type,
-            "name": room_name,
             "avatar": get_signed_url(avatar, AVATAR_GCS_EXPIRATION_SECONDS)
             if avatar
             else None,
