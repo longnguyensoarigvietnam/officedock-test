@@ -301,7 +301,6 @@ const ScheduleTeamBoard = () => {
           <div>
             <div
               style={{
-                boxShadow: '0px 2px 8px 0px #0000001A',
                 borderLeftColor:
                   selectedOptionShow === ItemScheduleTitleType.PLANS
                     ? largeColor || 'white'
@@ -344,17 +343,17 @@ const ScheduleTeamBoard = () => {
                   : largeColor
                     ? generateVerticalGradient(largeColor)
                     : '#A7B9C2',
-              boxShadow: '0px 2px 8px 0px #0000001A',
             }}
             className={`h-full mx-1 ${eventContent.event.extendedProps.isStart && selectedOptionShow === ItemScheduleTitleType.ACTUAL && '!bg-custom-gradient'} px-[10px]   ${selectedOptionShow === ItemScheduleTitleType.PLANS ? 'border-l-2 text-black' : 'text-white'} rounded-tr-[14px] rounded-br-[14px] rounded-tl-[14px] rounded-bl-[14px] `}>
             <div className="overflow-hidden">
               <div
                 className={`  font-medium px-1 pt-1 text-[14px] flex gap-[6px]`}>
-                {selectedOptionShow !== ItemScheduleTitleType.ACTUAL && (
-                  <div
-                    style={{ backgroundColor: largeColor || 'white' }}
-                    className="w-2 h-2 rounded-full mt-[7px] flex-shrink-0"></div>
-                )}
+                {selectedOptionShow !== ItemScheduleTitleType.ACTUAL &&
+                  largeColor && (
+                    <div
+                      style={{ backgroundColor: largeColor || 'white' }}
+                      className="w-2 h-2 rounded-full mt-[7px] flex-shrink-0"></div>
+                  )}
                 <p
                   className={`truncate max-w-[calc(100%)] font-semibold min-h-5 ${eventContent.event.extendedProps.type !== ItemStartType.TASK && '!text-primary'}`}>
                   {eventContent.event.extendedProps.isCrossTeamTask

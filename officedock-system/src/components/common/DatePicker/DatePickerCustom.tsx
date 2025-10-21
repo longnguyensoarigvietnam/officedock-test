@@ -119,7 +119,7 @@ const DatePickerCustom = ({
           onChange={(date) => handleChange(date)}
           locale={customLocale}
           dateFormat={DATE_TEXT_FORMAT}
-          className={`w-full pl-8 py-2.5 ${size === ComponentSize.SMALL && ComponentSize.HIDDEN} leading-5.5 placeholder-gray-300 border rounded-lg focus:outline-none focus:shadow-sm focus:border-focus focus:ring-0 ${errorClasses} ${className}`}
+          className={`w-full pl-8 py-2.5 ${size === ComponentSize.SMALL && ComponentSize.HIDDEN} leading-5.5 placeholder-gray-300 border disabled:opacity-55 rounded-lg focus:outline-none focus:shadow-sm focus:border-focus focus:ring-0 ${errorClasses} ${className}`}
           placeholderText={placeholder}
           todayButton="今日"
           wrapperClassName="w-full"

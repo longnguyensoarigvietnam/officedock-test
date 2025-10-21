@@ -2327,6 +2327,7 @@ export function generateVerticalGradient(hexColor: string): string {
     '#FFCC40': '#FFC1A7',
     '#86DA91': '#B7E085',
     '#82C5F1': '#A8D7F7',
+    '#B0B8F2': '#CDD3FE',
   };
 
   // --- Helper functions ---

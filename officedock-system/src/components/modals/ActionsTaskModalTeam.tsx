@@ -1575,7 +1575,8 @@ const ActionsTaskModalTeam = ({
                           : false) ||
                         (dataTask
                           ? dataTask.status?.id === StatusValueTask.COMPLETED
-                          : false)
+                          : false) ||
+                        !!dataTask?.archivedAt
                       }
                       options={
                         dataTask?.status?.id !== StatusValueTask.COMPLETED

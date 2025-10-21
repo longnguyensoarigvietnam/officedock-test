@@ -177,6 +177,7 @@ export interface Task {
   hasActualDuration?: boolean;
   isCrossTeamTask?: boolean;
   completedAt?: string;
+  archivedAt?: string;
 }
 export interface TaskRunningType {
   id: number;
@@ -476,6 +477,6 @@ export interface TaskArchive {
     color: string;
   }[];
   type: string;
-  isArchived: boolean;
+  archivedAt: string;
   completedAt: string;
 }

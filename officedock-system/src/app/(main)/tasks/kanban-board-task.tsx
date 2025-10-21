@@ -113,6 +113,7 @@ import {
 } from '@utils/date';
 import { compareItems } from '@utils';
 import api from '@base/api';
+import { useUpdateTaskArchiveCache } from '@hooks/CacheQuery/useUpdateTaskArchiveCache';
 
 const createStatusTaskObjectFromArray = (
   array: StatusTask[],
@@ -242,6 +243,9 @@ const KanbanBoardTask = () => {
   // Archive task
   const [isArchiveTaskView, setIsArchiveTaskView] = useState(false);
   const [isSortComplete, setIsSortComplete] = useState(false);
+  const [idTaskArchiveDelete, setIdTaskArchiveDelete] = useState<null | number>(
+    null,
+  );
 
   // Data kanban board
   const [dataItemDrop, setDataItemDrop] = useState<DropResult>();
@@ -2808,6 +2812,13 @@ const KanbanBoardTask = () => {
 
       return;
     }
+    if (idTaskArchiveDelete) {
+      setIsLoading(true);
+      deleteTask(String(idTaskArchiveDelete));
+      setDataTaskEdit(null);
+
+      return;
+    }
   };
 
   const handleConfirmDeleteTemplate = () => {
@@ -2818,6 +2829,9 @@ const KanbanBoardTask = () => {
       return;
     }
   };
+
+  // Cache task Archive
+  const { removeTaskFromCache } = useUpdateTaskArchiveCache();
 
   // Handle delete task
   const handleDeleteTask = async (id: string) => {
@@ -2840,6 +2854,10 @@ const KanbanBoardTask = () => {
         description: SUCCESS_DELETE_MESSAGE,
       });
       queryClient.refetchQueries(['getTaskDurationDetail']);
+      if (idTaskArchiveDelete) {
+        setIdTaskArchiveDelete(null);
+        removeTaskFromCache(idTaskArchiveDelete);
+      }
       setOpenConfirmDeleteTaskModal(false);
       const updatedFrequentlyTaskList = frequentlyTasks.filter(
         (item) => `${item.id}` !== type,
@@ -3504,7 +3522,14 @@ const KanbanBoardTask = () => {
                   </div>
                 )}
                 {isArchiveTaskView ? (
-                  <ArchiveTaskBoard ordering={isSortComplete} />
+                  <ArchiveTaskBoard
+                    ordering={isSortComplete}
+                    handleActionEditTask={handleActionEditTask}
+                    handleActionDelete={(id: number) => {
+                      setIdTaskArchiveDelete(id);
+                      setOpenConfirmDeleteTaskModal(true);
+                    }}
+                  />
                 ) : !isListView ? (
                   <div
                     style={{
