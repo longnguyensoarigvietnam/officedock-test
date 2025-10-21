@@ -33,7 +33,11 @@ import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import { AllChatRoomSearchMessagesModal } from '@components/modals/AllChatRoomSearchMessagesModal';
 import Spinner from '@components/common/Spinner';
 import ErrorUploadFileValidationModal from '@components/modals/ErrorUploadFileValidationModal';
-import { UPLOAD_AVATAR_FILE_MAXIMUM_SIZE } from '@constants/message';
+import {
+  ERROR_CREATE_MESSAGE,
+  SUCCESS_CREATE_MESSAGE,
+  UPLOAD_AVATAR_FILE_MAXIMUM_SIZE,
+} from '@constants/message';
 import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 
 import { apiRouters } from '@constants/routers';
@@ -52,6 +56,7 @@ import { ChatContext } from '@providers/ChatProvider';
 import { useWebSocket } from '@providers/WebSocketProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
+import { useToast } from '@providers/ToastProvider';
 
 import {
   ChatMessageResponse,
@@ -124,6 +129,7 @@ const ListChatUsers = ({
 
   const { data: session } = useSessionCache();
   const { setIsLoading } = useContext(LoadingContext);
+  const { showToast } = useToast();
 
   // Load items
   const [hasMoreSearch, setHasMoreSearch] = useState<boolean>(true);
@@ -700,7 +706,8 @@ const ListChatUsers = ({
     data.participantIds.forEach((id) =>
       formData.append('participantIds', id.toString()),
     );
-    formData.append('selectOrganizations', data.selectOrganizations);
+    data.selectOrganizations &&
+      formData.append('selectOrganizations', data.selectOrganizations);
     if (data.avatar) formData.append('avatar', data.avatar);
 
     const response = await api.post(apiRouters.CHAT_LIST, formData);
@@ -711,6 +718,18 @@ const ListChatUsers = ({
     mutationFn: createChat,
     onSettled: () => {
       setIsLoading(false);
+    },
+    onSuccess: () => {
+      showToast({
+        variant: 'success',
+        description: SUCCESS_CREATE_MESSAGE,
+      });
+    },
+    onError: () => {
+      showToast({
+        variant: 'error',
+        description: ERROR_CREATE_MESSAGE,
+      });
     },
   });
 
