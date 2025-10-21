@@ -129,6 +129,7 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         company = user.company
         validated_data = serializer.validated_data
         participants = validated_data.pop("participant_ids", [])
+        select_organizations = validated_data.get("select_organizations", None)
         avatar = validated_data.get("avatar", None)
 
         if avatar:
@@ -141,7 +142,9 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         # Determine chat room type based on the number of unique participants
         chat_room_type = ChatRoomTypes.GROUP.value
-        if len(unique_participants) == 1:
+        if select_organizations:
+            chat_room_type = ChatRoomTypes.GROUP.value
+        elif len(unique_participants) == 1:
             if user in unique_participants:
                 chat_room_type = ChatRoomTypes.SELF.value
             else:
@@ -357,6 +360,7 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         # Delete chat room if no participants
         if instance.chat_rooms_participants.count() <= 0:
             instance.delete()
+            return self.response_ok()
 
         return self.response_ok(
             self.serializer_class(chat_room, context={"request": request}).data
