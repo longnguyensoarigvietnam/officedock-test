@@ -15,11 +15,19 @@ import { EventWorkCategory } from '@constants/enums';
 
 interface Props {
   ordering: boolean;
+  handleActionEditTask: (id: number, type?: string) => void;
+  handleActionDelete: (id: number) => void;
 }
 
-const ArchiveTaskBoard = ({ ordering }: Props) => {
+const ArchiveTaskBoard = ({
+  ordering,
+  handleActionEditTask,
+  handleActionDelete,
+}: Props) => {
   const { expanded } = useContext(GlobalStateContext);
   const { orderingOptions } = useContext(TaskContext);
+
+  const [isClicked, setIsClicked] = useState(false);
   const [extendTask, setExtendTask] = useState(true);
   const [totalData, setTotalData] = useState(0);
   const {
@@ -30,7 +38,7 @@ const ArchiveTaskBoard = ({ ordering }: Props) => {
     isFetchingNextPage,
   } = useTaskArchiveList({
     orderingOptions,
-    ordering: ordering ? 'completed_at' : undefined,
+    ordering: ordering ? '-completed_at' : '-archived_at',
     onSuccess: (data) => {
       setTotalData(data.total || 0);
     },
@@ -64,6 +72,15 @@ const ArchiveTaskBoard = ({ ordering }: Props) => {
       }
     };
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  const handleClick = (id: number) => {
+    if (isClicked) return;
+
+    setIsClicked(true);
+    handleActionEditTask(id);
+
+    setTimeout(() => setIsClicked(false), 2000);
+  };
 
   return (
     <div className={`${expanded ? 'min-w-[720px]' : 'min-w-[793px]'}`}>
@@ -123,6 +140,9 @@ const ArchiveTaskBoard = ({ ordering }: Props) => {
                   style={{
                     boxShadow: '0px 2px 8px 0px #0000001A',
                   }}
+                  onClick={() => {
+                    handleClick(task.id);
+                  }}
                   className={`relative ml-1 mt-1 group border border-transparent no-show hover:border hover:border-[#BEC9CE]  hover:border-solid   bg-white rounded-[10px] text-xs flex flex-col gap-2 mb-1`}>
                   <div className="flex items-center py-2.5  w-full">
                     <div className="flex items-center gap-4 w-[46.2%] pl-[18px] flex-shrink-0">
@@ -151,6 +171,12 @@ const ArchiveTaskBoard = ({ ordering }: Props) => {
                       <div className="flex-grow max-w-20 h-[30px] rounded flex items-center justify-center flex-shrink-0">
                         <Button
                           variant="outline"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            // Prevent event click
+                            e.stopPropagation();
+                            handleActionDelete(task.id);
+                          }}
                           className="w-[56px] !px-0 !py-0 h-[30px]">
                           削除
                         </Button>

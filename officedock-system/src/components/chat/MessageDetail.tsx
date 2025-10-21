@@ -919,7 +919,7 @@ export const MessageDetail = ({
                                     data-id={messageDetail.uuid}
                                     className="font-semibold text-black max-w-full break-all">
                                     {messageDetail.sender.fullName}{' '}
-                                    {EVENT_CREATED}111
+                                    {EVENT_CREATED}
                                   </p>
                                   <p
                                     data-id={messageDetail.uuid}

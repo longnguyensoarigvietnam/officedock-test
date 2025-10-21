@@ -1411,7 +1411,9 @@ const ActionsTaskModal = ({
                       classNameTextData="!text-sm"
                       classNameOption="!text-sm"
                       classNameError="!text-xs"
-                      disabled={isCheckActionPermission}
+                      disabled={
+                        isCheckActionPermission || !!dataTask?.archivedAt
+                      }
                       options={
                         !columnId && action == ActionTask.CREATE
                           ? dataOptionsStatus
@@ -1742,7 +1744,10 @@ const ActionsTaskModal = ({
                                                 `plans.${index}.planStartDate`,
                                               )
                                         }
-                                        disabled={isCheckActionPermission}
+                                        disabled={
+                                          isCheckActionPermission ||
+                                          !!dataTask?.archivedAt
+                                        }
                                         onChange={(e) => {
                                           setIsFormTouched(true);
                                           onChange(e);
@@ -1784,7 +1789,10 @@ const ActionsTaskModal = ({
                                 <Input
                                   isShowClockIcon={true}
                                   autoFocus={false}
-                                  disabled={isCheckActionPermission}
+                                  disabled={
+                                    isCheckActionPermission ||
+                                    !!dataTask?.archivedAt
+                                  }
                                   valueInput={watch(
                                     `plans.${index}.planStartTime`,
                                   )}
@@ -1894,7 +1902,10 @@ const ActionsTaskModal = ({
                                           ? new Date(value)
                                           : watch(`plans.${index}.planEndDate`)
                                       }
-                                      disabled={isCheckActionPermission}
+                                      disabled={
+                                        isCheckActionPermission ||
+                                        !!dataTask?.archivedAt
+                                      }
                                       minDate={
                                         watch(`plans.${index}.planStartDate`) ||
                                         minDatePlans[index]
@@ -1922,7 +1933,10 @@ const ActionsTaskModal = ({
                               <div className="w-[72px] relative">
                                 <Input
                                   isShowClockIcon={true}
-                                  disabled={isCheckActionPermission}
+                                  disabled={
+                                    isCheckActionPermission ||
+                                    !!dataTask?.archivedAt
+                                  }
                                   valueInput={watch(
                                     `plans.${index}.planEndTime`,
                                   )}
@@ -2119,25 +2133,26 @@ const ActionsTaskModal = ({
                             />
                           </div>
                           <div>
-                            {!isCheckActionPermission && (
-                              <Button
-                                sz="sm"
-                                variant="outline"
-                                className="w-[48px] h-[34px] hover:opacity-70 !border-none !px-0 !rounded-md text-[13px] !bg-[#EBF1F7]"
-                                type="button"
-                                name="Remove plan"
-                                onClick={() => {
-                                  setIsFormTouched(true);
-                                  removePlanField(index);
-                                }}>
-                                削除
-                              </Button>
-                            )}
+                            {!isCheckActionPermission &&
+                              !dataTask?.archivedAt && (
+                                <Button
+                                  sz="sm"
+                                  variant="outline"
+                                  className="w-[48px] h-[34px] hover:opacity-70 !border-none !px-0 !rounded-md text-[13px] !bg-[#EBF1F7]"
+                                  type="button"
+                                  name="Remove plan"
+                                  onClick={() => {
+                                    setIsFormTouched(true);
+                                    removePlanField(index);
+                                  }}>
+                                  削除
+                                </Button>
+                              )}
                           </div>
                         </div>
                       );
                     })}
-                    {!isCheckActionPermission && (
+                    {!isCheckActionPermission && !dataTask?.archivedAt && (
                       <div className="text-right flex justify-center w-full mt-2 ">
                         <Button
                           sz="sm"

@@ -260,7 +260,7 @@ const MultiDatePickerCustom = ({
           }
           locale={customLocale}
           dateFormat={dateFormat}
-          className={`w-full px-3.5 py-2.5 ${size === ComponentSize.SMALL && ComponentSize.HIDDEN} leading-5.5 placeholder-gray-300 border rounded-lg focus:outline-none focus:shadow-sm focus:border-focus focus:ring-0 ${errorClasses} ${className}`}
+          className={`w-full px-3.5 py-2.5 ${size === ComponentSize.SMALL && ComponentSize.HIDDEN} leading-5.5 placeholder-gray-300 border rounded-lg disabled:opacity-55 focus:outline-none focus:shadow-sm focus:border-focus focus:ring-0 ${errorClasses} ${className}`}
           placeholderText={placeholder}
           todayButton="今日"
           wrapperClassName="w-full"

@@ -14,7 +14,6 @@ import useTaskUserChat from '@hooks/useTaskUserChat';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
-import { TaskUserListChat } from '@interfaces/chat';
 import useDebounceText from '@hooks/useDebounceText';
 import { NO_DATA_AVAILABLE } from '@constants';
 
@@ -48,121 +47,56 @@ const ListTaskUserChat = ({
 
   const room = searchParams.get('room');
   const [page, setPage] = useState<number>(1);
-  const [pageSearch, setPageSearch] = useState<number>(1);
 
   const [isShowList, setIsShowList] = useState(false);
-  const listTaskUerRef = useRef<HTMLDivElement | null>(null);
-  const listTaskUerSearchRef = useRef<HTMLDivElement | null>(null);
 
   const boxListRef = useRef<HTMLDivElement | null>(null);
   const [isMyTask, setIsMyTask] = useState(true);
-
-  const [hasNext, setHasNext] = useState(false);
-
-  const [dataTaskList, setDataTaskList] = useState<TaskUserListChat[]>([]);
-  const [dataTaskSearch, setDataTaskSearch] = useState<TaskUserListChat[]>([]);
 
   const [searchTask, setSearchTask] = useState<string>('');
 
   const searchTaskDebounce = useDebounceText(searchTask, 1000);
 
-  useTaskUserChat({
-    page: searchTaskDebounce ? pageSearch : page,
+  const {
+    taskUserChatList,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoadingList,
+  } = useTaskUserChat({
     roomCode: isMyTask ? '' : (room as string),
     search: searchTaskDebounce,
-    isShowList: true,
-    onSuccess: (data) => {
-      if (searchTaskDebounce) {
-        if (pageSearch > 1) {
-          setDataTaskSearch((prev) => {
-            const newMessages = data.results.filter(
-              (newMsg) =>
-                !(prev || []).some(
-                  (existingMsg) => existingMsg.id === newMsg.id,
-                ),
-            );
-            return [...(prev || []), ...newMessages];
-          });
-        } else {
-          setDataTaskSearch(data.results);
-        }
-      } else {
-        setDataTaskList((prev) => {
-          const newMessages = data.results.filter(
-            (newMsg) =>
-              !(prev || []).some((existingMsg) => existingMsg.id === newMsg.id),
-          );
-          return [...(prev || []), ...newMessages];
-        });
-      }
-      setHasNext(data.hasNext as boolean);
-    },
   });
 
-  useEffect(() => {
-    if (!isShowList) {
-      setDataTaskSearch([]);
-      setSearchTask('');
-      setPageSearch(1);
-      setPage(1);
-      setQuoteTaskList([]);
-    }
-  }, [isShowList]);
+  const resultsContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
-      const chatContainer = listTaskUerRef.current;
-
+      const archiveTaskContainer = resultsContainerRef.current;
       if (
-        chatContainer &&
-        hasNext &&
-        chatContainer.scrollTop + chatContainer.clientHeight ===
-          chatContainer.scrollHeight
+        archiveTaskContainer &&
+        hasNextPage &&
+        !isFetchingNextPage &&
+        archiveTaskContainer.clientHeight +
+          Math.abs(archiveTaskContainer.scrollTop) >=
+          archiveTaskContainer.scrollHeight - 10
       ) {
-        setPage((prevPage) => prevPage + 1);
+        fetchNextPage();
       }
     };
 
-    const chatContainer = listTaskUerRef.current;
+    const archiveTaskContainer = resultsContainerRef.current;
 
-    if (chatContainer) {
-      chatContainer.addEventListener('scroll', handleScroll);
+    if (archiveTaskContainer) {
+      archiveTaskContainer.addEventListener('scroll', handleScroll);
     }
 
     return () => {
-      if (chatContainer) {
-        chatContainer.removeEventListener('scroll', handleScroll);
+      if (archiveTaskContainer) {
+        archiveTaskContainer.removeEventListener('scroll', handleScroll);
       }
     };
-  }, [hasNext, isShowList]);
-
-  // Scroll Search
-  useEffect(() => {
-    const handleScroll = () => {
-      const chatContainer = listTaskUerSearchRef.current;
-
-      if (
-        chatContainer &&
-        hasNext &&
-        chatContainer.scrollTop + chatContainer.clientHeight ===
-          chatContainer.scrollHeight
-      ) {
-        setPageSearch((prevPage) => prevPage + 1);
-      }
-    };
-
-    const chatContainer = listTaskUerSearchRef.current;
-
-    if (chatContainer) {
-      chatContainer.addEventListener('scroll', handleScroll);
-    }
-
-    return () => {
-      if (chatContainer) {
-        chatContainer.removeEventListener('scroll', handleScroll);
-      }
-    };
-  }, [hasNext, isShowList, searchTaskDebounce]);
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleClosePopover = (event: MouseEvent) => {
@@ -170,7 +104,6 @@ const ListTaskUserChat = ({
       boxListRef.current &&
       !boxListRef.current.contains(event.target as Node)
     ) {
-      setDataTaskSearch([]);
       setIsShowList(false);
       setSearchTask('');
     }
@@ -221,7 +154,6 @@ const ListTaskUserChat = ({
             onClick={() => {
               if (!isMyTask) {
                 setPage(1);
-                setDataTaskList([]);
                 setIsMyTask(true);
               }
             }}
@@ -246,17 +178,21 @@ const ListTaskUserChat = ({
               if (page !== 1) {
                 setPage(1);
               }
-              setPageSearch(1);
               setSearchTask(e.target.value);
             }}
           />
         </div>
-        {searchTask && (
-          <div
-            ref={listTaskUerSearchRef}
-            className="h-[calc(100vh_-_679px)] min-h-[135px] overflow-y-auto scroll-smooth flex flex-col gap-[6px]">
-            {dataTaskSearch.length > 0
-              ? dataTaskSearch.map((item) => {
+
+        <div
+          ref={resultsContainerRef}
+          className="h-[calc(100vh_-_679px)] min-h-[135px] overflow-y-auto scroll-smooth flex flex-col gap-[6px]">
+          {isLoadingList && (
+            <RowSkeleton numberOfRows={2} className="!h-[50px]" />
+          )}
+          {!isLoadingList && (
+            <>
+              {taskUserChatList.length > 0 ? (
+                taskUserChatList.map((item) => {
                   const isSelected = quoteTaskList.some(
                     (selected) => selected.id === item.id,
                   );
@@ -272,59 +208,23 @@ const ListTaskUserChat = ({
                     </p>
                   );
                 })
-              : !hasNext && <p className="text-center">{NO_DATA_AVAILABLE}</p>}
-            <div>
-              {hasNext ? (
-                <RowSkeleton
-                  numberOfRows={pageSearch > 1 ? 6 : 2}
-                  className="!h-[50px]"
-                />
               ) : (
-                <div className="w-full"></div>
+                <p className="text-center">{NO_DATA_AVAILABLE}</p>
               )}
+            </>
+          )}
+          {isFetchingNextPage && (
+            <div className="mt-2">
+              <RowSkeleton numberOfRows={2} className="h-[50px]" />
             </div>
-          </div>
-        )}
-        {!searchTask && (
-          <div
-            ref={listTaskUerRef}
-            className="h-[calc(100vh_-_679px)] min-h-[135px] overflow-y-auto scroll-smooth flex flex-col gap-[6px]">
-            {dataTaskList.length > 0 ? (
-              dataTaskList.map((item) => {
-                const isSelected = quoteTaskList.some(
-                  (selected) => selected.id === item.id,
-                );
-
-                return (
-                  <p
-                    key={item.id}
-                    onClick={() => handleToggleSelect(item.id, item.title)}
-                    className={`${
-                      isSelected ? 'border !border-[#0068B6]' : ' '
-                    } px-4 break-all py-[11px] border border-transparent text-sm text-black font-medium rounded-md bg-[#EBF1F7]`}>
-                    {item.title}
-                  </p>
-                );
-              })
-            ) : (
-              <p className="text-center">{NO_DATA_AVAILABLE}</p>
-            )}
-            <div>
-              {hasNext ? (
-                <RowSkeleton numberOfRows={2} className="!h-[50px]" />
-              ) : (
-                <div className="w-full"></div>
-              )}
-            </div>
-          </div>
-        )}
+          )}
+        </div>
 
         <div className="flex items-center mt-[10px] justify-center">
           <Button
             onClick={() => {
               handleQuoteTaskUser(quoteTaskList);
               setQuoteTaskList([]);
-              setDataTaskSearch([]);
               setIsShowList(false);
               setSearchTask('');
             }}

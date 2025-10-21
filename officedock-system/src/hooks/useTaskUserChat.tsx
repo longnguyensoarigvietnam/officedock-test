@@ -1,8 +1,7 @@
 'use client';
-import { useQuery } from 'react-query';
-import { useSessionCache } from '@providers/SessionCacheProvider';
-
 import { AxiosError } from 'axios';
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import api from '@base/api';
 import { apiRouters } from '@constants/routers';
@@ -11,9 +10,7 @@ import { BasePagination } from '@interfaces/common';
 import { TaskUserListChat } from '@interfaces/chat';
 
 interface UseTaskUserChatHooksProps {
-  page: number;
   roomCode: string;
-  isShowList: boolean;
   search?: string;
   onSuccess?: (success: BasePagination<TaskUserListChat[]>) => void;
   onError?: (error: AxiosError) => void;
@@ -21,10 +18,8 @@ interface UseTaskUserChatHooksProps {
 }
 
 const useTaskUserChat = ({
-  page,
   roomCode,
   search,
-  isShowList,
   onSuccess,
   onError,
   onSettled,
@@ -32,41 +27,77 @@ const useTaskUserChat = ({
   const { data: session } = useSessionCache();
   const token = session?.accessToken;
 
-  // Handle call API get task user chat
-  const getTaskUserChat = async () => {
-    const apiUrl = `${apiRouters.TASK_LIST_CHAT}?page_size=${PAGINATION_PAGE_SIZE_MEDIUM}&page=${page}${search && `&search=${encodeURIComponent(search)}`}${roomCode ? `&chat_room_code=${roomCode}` : ''}`;
+  const getTaskUserChatList = async ({
+    pageParam,
+    signal,
+  }: {
+    pageParam?: number | string;
+    signal?: AbortSignal;
+  }) => {
+    let apiUrl: string;
 
-    const { data } = await api.get<BasePagination<TaskUserListChat[]>>(apiUrl);
-    return data;
+    if (typeof pageParam === 'string') {
+      apiUrl = pageParam;
+    } else {
+      const params = new URLSearchParams({
+        page: String(pageParam ?? 1),
+        page_size: String(PAGINATION_PAGE_SIZE_MEDIUM),
+        ...(search ? { search: encodeURIComponent(search) } : {}),
+        ...(roomCode ? { chat_room_code: roomCode } : {}),
+      });
+
+      apiUrl = `${apiRouters.TASK_LIST_CHAT}?${params.toString()}`;
+    }
+
+    const { data } = await api.get<BasePagination<TaskUserListChat[]>>(apiUrl, {
+      signal,
+    });
+
+    return {
+      ...data,
+      currentUrl: apiUrl,
+    };
   };
 
-  // Handle API get task user chat
   const {
-    data: taskUserChat,
-    refetch: refetchTaskUserChat,
-    isFetched: isFetchedTaskUserChat,
-  } = useQuery({
-    queryKey: ['getTaskUserChat', page, search, roomCode, isShowList],
-    queryFn: getTaskUserChat,
-    retry: 0,
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isFetched,
+    isLoading,
+  } = useInfiniteQuery({
+    queryKey: ['getTaskUserChat', roomCode, search],
+    queryFn: ({ pageParam, signal }) =>
+      getTaskUserChatList({ pageParam, signal }),
     enabled: !!token,
+    retry: 0,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
-    onSuccess: (response: BasePagination<TaskUserListChat[]>) => {
-      onSuccess && onSuccess(response);
+    getNextPageParam: (lastPage) => {
+      return lastPage?.next
+        ? `${apiRouters.TASK_LIST_CHAT}${lastPage.next}`
+        : undefined;
+    },
+    onSuccess: (allPages) => {
+      const lastPage = allPages.pages[allPages.pages.length - 1];
+      if (lastPage) onSuccess?.(lastPage);
     },
     onError: (error: AxiosError) => {
-      onError && onError(error);
+      onError?.(error);
     },
     onSettled: () => {
-      onSettled && onSettled();
+      onSettled?.();
     },
   });
 
   return {
-    taskUserChat,
-    refetchTaskUserChat,
-    isFetchedTaskUserChat,
+    taskUserChatList: data?.pages?.flatMap((p) => p?.results ?? []) ?? [],
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isFetched,
+    isLoadingList: isLoading,
   };
 };
 
