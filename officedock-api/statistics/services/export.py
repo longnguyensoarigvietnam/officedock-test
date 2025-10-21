@@ -3,13 +3,16 @@ from io import BytesIO, StringIO
 from pathlib import Path
 import csv
 
+from django.db.models import Case, When
 from openpyxl import load_workbook
 from openpyxl.styles import Alignment, Border, Side
 
 from users.models import User
 from statistics.constants import ExportType, PeriodClassification
 from tags.models import Tag
+from organizations.models import Organization
 from skills.models import StatisticCategory
+from stat_data.constants import ALL_TEAM
 
 
 class ExportTaskService:
@@ -48,10 +51,12 @@ class ExportTaskService:
             t for t in q.get("tag_ids", "").split(",") if t and str(t).isdigit()
         ]
         self.user_id = q.get("user_id")
+        self.organization_ids = q.get("organization_ids")
         self.period = q.get("period_classification")
 
         # Preload all needed info
         self.user = self._get_user()
+        self.organization_name = self._get_organization_name()
         self.full_name = getattr(self.user, "full_name", "")
         self.period_classification = (
             PeriodClassification.COMPARISON.value
@@ -64,6 +69,16 @@ class ExportTaskService:
     # ------------------------------------------------------------------ #
     # Internal helpers
     # ------------------------------------------------------------------ #
+    def _get_organization_name(self):
+        if self.organization_ids == ALL_TEAM:
+            return ALL_TEAM
+
+        if self.organization_ids and str(self.organization_ids).isdigit():
+            org = Organization.objects.filter(id=self.organization_ids).first()
+            return org.name if org else ""
+
+        return ""
+
     def _get_user(self):
         if self.user_id and str(self.user_id).isdigit():
             return (
@@ -74,10 +89,18 @@ class ExportTaskService:
 
     def _get_tag_filter_names(self):
         if not self.tag_ids:
-            return "-"
-        tag_names = Tag.objects.filter(id__in=self.tag_ids).values_list(
-            "name", flat=True
+            return ""
+
+        preserved = Case(
+            *[When(id=pk, then=pos) for pos, pk in enumerate(self.tag_ids)]
         )
+
+        tag_names = (
+            Tag.objects.filter(id__in=self.tag_ids)
+            .order_by(preserved)
+            .values_list("name", flat=True)
+        )
+
         return " ".join(f"#{name}" for name in tag_names)
 
     def _get_category_names(self):
@@ -179,7 +202,7 @@ class ExportTaskService:
         ws["B6"] = self.full_name
         ws[
             "B7"
-        ] = f"{self.category_names['large']} > {self.category_names['medium']} > {self.category_names['small']}"
+        ] = f"{self.organization_name} > {self.category_names['large']} > {self.category_names['medium']} > {self.category_names['small']}"
         ws["B8"] = self.tag_names_filter
         ws["B9"] = self.sum_total_duration
 
@@ -253,7 +276,7 @@ class ExportTaskService:
             self.end_date,
             self.period_classification,
             self.full_name,
-            f"{self.category_names['large']} > {self.category_names['medium']} > {self.category_names['small']}",
+            f"{self.organization_name} > {self.category_names['large']} > {self.category_names['medium']} > {self.category_names['small']}",
             self.tag_names_filter,
             idx,
             title,
