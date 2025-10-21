@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useState } from 'react';
+import { ChangeEvent, Dispatch, memo, SetStateAction, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { UseMutationResult } from 'react-query';
 
@@ -17,7 +17,11 @@ import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { ERROR_LONG_FIELD_MESSAGE } from '@constants/message';
 import { ChatParticipantType } from '@constants/enums';
-import { NO_OPTIONS } from '@constants';
+import {
+  ALLOWED_IMAGE_TYPES,
+  MAX_AVATAR_IMAGE_FILE_SIZE,
+  NO_OPTIONS,
+} from '@constants';
 
 import { Profile } from '@interfaces/user';
 import { ChatParticipant, ChatRoomItem } from '@interfaces/chat';
@@ -29,11 +33,13 @@ export type ActionsAddMembersModalProps = {
   dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
   dataOptionsParticipants: ChatParticipant[];
   onClose: () => void;
+  setOpenErrorUploadFileModal: Dispatch<SetStateAction<boolean>>
   createChatMutation: UseMutationResult<
     ChatRoomItem,
     unknown,
     {
       name: string;
+      avatar?: File | null | undefined
       participantIds: number[];
       selectOrganizations: string;
     },
@@ -46,10 +52,17 @@ const ActionsAddMembersModal = memo(
     open,
     dashboardMemberList,
     dataOptionsParticipants,
+    setOpenErrorUploadFileModal,
     onClose,
     createChatMutation,
   }: ActionsAddMembersModalProps) => {
     const { data: session } = useSessionCache();
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+    const [previewAvatarUrl, setPreviewAvatarUrl] = useState<string | null>(
+      null,
+    );
+    const [avatarImgFile, setAvatarImgFile] = useState<File | null>(null);
 
     const [searchName, setSearchName] = useState<string>('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -90,12 +103,14 @@ const ActionsAddMembersModal = memo(
             name: groupName,
             participantIds,
             selectOrganizations,
+            avatar: avatarImgFile,
           });
         } else if (isSelfChat) {
           await createChatMutation.mutateAsync({
             name: session?.user.profile.fullName,
             participantIds: [session?.user.id],
             selectOrganizations,
+            avatar: avatarImgFile,
           });
         } else if (isSingleOther) {
           const participantId = memberList[0];
@@ -108,6 +123,7 @@ const ActionsAddMembersModal = memo(
             name: participantName,
             participantIds: [participantId],
             selectOrganizations,
+            avatar: avatarImgFile,
           });
         }
       } finally {
@@ -325,6 +341,30 @@ const ActionsAddMembersModal = memo(
       setValue('organizations', filteredOrganizationIds);
     };
 
+    const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        e.target.value = '';
+        return;
+      }
+
+      if (file.size > MAX_AVATAR_IMAGE_FILE_SIZE) {
+        setOpenErrorUploadFileModal(true);
+        return;
+      }
+
+      const newFile = new File([file], file.name, {
+        type: file.type,
+      });
+
+      setAvatarImgFile(newFile);
+
+      const url = URL.createObjectURL(newFile);
+      setPreviewAvatarUrl(url);
+    };
+
     return (
       <Modal
         open={open}
@@ -343,12 +383,40 @@ const ActionsAddMembersModal = memo(
           {watch('members').length >= 2 || watch('organizations').length ? (
             <div className="text-sm text-black">
               <div className="flex gap-5 items-center pb-3">
-                <ImageRound
-                  className="w-[70px] h-[70px]"
-                  src="/icons/multi-users.svg"
-                  border="full"
-                  name="Multi users"
-                />
+                <div className="w-[70px] h-[70px] relative">
+                  <input
+                    type="file"
+                    accept={ALLOWED_IMAGE_TYPES.join(',')}
+                    ref={fileInputRef}
+                    className="hidden"
+                    onChange={(e) => {
+                      handleFileChange(e);
+                    }}
+                  />
+                  {previewAvatarUrl ? (
+                    <CustomUserAvatar
+                      avatarUrl={previewAvatarUrl || ''}
+                      avatarColor={''}
+                      size={70}
+                    />
+                  ) : (
+                    <ImageRound
+                      className="w-[70px] min-w-[70px] h-[70px]"
+                      src="/icons/multi-users.svg"
+                      border="full"
+                      name="Multi users"
+                    />
+                  )}
+
+                  <div
+                    className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white text-xs bg-[#77858F] w-[36px] h-5 flex items-center justify-center rounded-[3px] hover:cursor-pointer"
+                    onClick={() => {
+                      fileInputRef.current?.click();
+                    }}>
+                    変更
+                  </div>
+                </div>
+
                 <div className="!w-full">
                   <p className="text-[#77858F] font-medium text-[12px] mb-[10px] leading-none">
                     グループ名

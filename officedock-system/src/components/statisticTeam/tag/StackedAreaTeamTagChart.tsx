@@ -1248,7 +1248,7 @@ const StackedAreaTeamTagChart = ({
         startDate: duration?.startDate || null,
         endDate: duration?.endDate || null,
         percentPerRange: duration?.percentPerRange || 0,
-        duration: duration.duration,
+        duration: duration?.duration || '',
       };
     });
   };

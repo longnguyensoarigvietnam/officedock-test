@@ -13,6 +13,7 @@ import { CurrentMVPVotingDetail } from '@interfaces/mvp';
 import api from '@base/api';
 
 interface UseMVPVotingDetailHooksProps {
+  showLoading?: boolean
   condition?: boolean[];
   onSuccess?: (success: CurrentMVPVotingDetail) => void;
   onError?: (error: AxiosError) => void;
@@ -20,6 +21,7 @@ interface UseMVPVotingDetailHooksProps {
 }
 
 const useMVPVotingDetail = ({
+  showLoading = true,
   condition,
   onSuccess,
   onError,
@@ -31,7 +33,7 @@ const useMVPVotingDetail = ({
 
   // Handle call API get current mvp voting detail
   const getCurrentMVPVotingDetail = async () => {
-    setIsLoading(true);
+    showLoading && setIsLoading(true);
     const apiUrl = apiRouters.CURRENT_MVP_VOTING;
 
     const { data } = await api.get<CurrentMVPVotingDetail>(apiUrl);
@@ -43,6 +45,7 @@ const useMVPVotingDetail = ({
     data: currentMVPVotingDetail,
     refetch: refetchMVPVotingDetail,
     isFetched: isFetchedMVPVotingDetail,
+    isLoading: isLoadingMVPVotingDetail,
   } = useQuery({
     queryKey: ['getCurrentMVPVotingDetail'],
     queryFn: getCurrentMVPVotingDetail,
@@ -66,6 +69,7 @@ const useMVPVotingDetail = ({
     currentMVPVotingDetail,
     refetchMVPVotingDetail,
     isFetchedMVPVotingDetail,
+    isLoadingMVPVotingDetail
   };
 };
 

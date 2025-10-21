@@ -182,6 +182,8 @@ export interface ChatRoomDetail {
   memo: string;
   unreadMessages: number;
   isMuted: boolean;
+  avatarColor?: string;
+  avatar?: string | null;
 }
 
 export interface ChatRoomItem {
@@ -195,13 +197,20 @@ export interface ChatRoomItem {
   participants: ChatParticipant[];
   isExisted?: boolean;
   isMuted: boolean;
+  chatRoom: {
+    avatar: string | null;
+    avatarColor: string;
+  };
 }
 
 export interface WebSocketMessageData extends DataSkillReward {
   id?: number;
   action: string;
   clientId: string | null;
-  chatRoom: ChatRoomItem;
+  chatRoom: ChatRoomItem & {
+    avatar: string | null;
+    avatarColor: string;
+  };
   chatMessage: ChatMessageResponse;
   total?: number;
   isChangeRole?: boolean;

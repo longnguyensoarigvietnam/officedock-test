@@ -422,6 +422,7 @@ const BoardChat = () => {
           clientId={clientId}
           lastItemId={lastItemId}
           dataChatList={dataChatList}
+          filteredChatList={filteredChatList}
           hasMoreDetail={hasMoreDetail}
           chatRoomCode={chatRoomCode}
           organizationMain={organizationMain}

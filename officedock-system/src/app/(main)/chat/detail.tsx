@@ -59,6 +59,8 @@ import { MsgReply } from '@components/chat/CustomMsgReply';
 import FilePreview from '@components/custom/FilePreview';
 import ActionMuteChatModal from '@components/modals/ActionMuteChatModal';
 import { MsgQuoteText } from '@components/chat/CustomMsgQuoteText';
+import ConfirmLeaveGroupModal from '@components/modals/ConfirmLeaveGroupModal';
+import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 
 import { apiRouters } from '@constants/routers';
 import {
@@ -120,12 +122,12 @@ import { useToast } from '@providers/ToastProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 import api from '@base/api';
-import ConfirmLeaveGroupModal from '@components/modals/ConfirmLeaveGroupModal';
 
 interface dataProps {
   chatRoomCode: string;
   organizationMain: Organizations | null;
   dataChatList: ChatRoomItem[];
+  filteredChatList: ChatRoomItem[];
   searchChatMsg: string;
   clientId: string;
   lastItemId: number | null | undefined;
@@ -149,6 +151,7 @@ const ChatDetail = ({
   lastItemId,
   organizationMain,
   dataChatList,
+  filteredChatList,
   hasMoreDetail,
   chatRoomCode,
   dashboardMemberList,
@@ -198,15 +201,8 @@ const ChatDetail = ({
     useState<number>();
 
   // Context
-  const {
-    chatList,
-    chatRoomNameEditing,
-    chatRoomParticipantsEditing,
-    chatRoomNotifications,
-    setChatRoomParticipantsEditing,
-    setChatRoomNameEditing,
-    setChatRoomNotifications,
-  } = useContext(ChatContext);
+  const { chatList, chatRoomNotifications, setChatRoomNotifications } =
+    useContext(ChatContext);
   const { setIsLoading } = useContext(LoadingContext);
   const {
     abortChatSendingMessageControllerRef,
@@ -286,8 +282,13 @@ const ChatDetail = ({
       }
     >
   >({});
-  const [openErrorUploadFileModal, setOpenErrorUploadFileModal] =
-    useState(false);
+  const [openErrorUploadFileModal, setOpenErrorUploadFileModal] = useState<{
+    status: boolean;
+    message: string;
+  }>({
+    status: false,
+    message: '',
+  });
 
   // Search
   const [openSearchMessagesModal, setOpenSearchMessagesModal] = useState(false);
@@ -912,73 +913,72 @@ const ChatDetail = ({
 
   // Update group (local)
   const handleUpdateGroupLocal = useCallback(
-    (data: WebSocketMessageData, dataChatList: ChatRoomItem[]) => {
-      setChatRoomNameEditing((prevChatRoomNameEditing) => {
-        const updatedChatRoomNameEditing = [...(prevChatRoomNameEditing ?? [])];
-        const chatRoomNameEditingIndex = updatedChatRoomNameEditing.findIndex(
-          (room) => room.roomCode === data.chatRoom.code,
-        );
-        if (chatRoomNameEditingIndex !== -1) {
-          // Update chatRoomNameEditing item if it exists
-          updatedChatRoomNameEditing[chatRoomNameEditingIndex] = {
-            roomName: data.chatRoom.name,
-            roomCode: data.chatRoom.code,
-          };
-          return updatedChatRoomNameEditing;
-        } else {
-          // Push new chatRoomNameEditing item if it does not exist
-          return [
-            ...updatedChatRoomNameEditing,
-            {
-              roomName: data.chatRoom.name,
-              roomCode: data.chatRoom.code,
-            },
-          ];
-        }
-      });
-      const list = [] as number[];
-      data.chatRoom.participants.map((member) => list.push(Number(member.id)));
-      setChatRoomParticipantsEditing((prevChatRoomParticipantsEditing) => {
-        const updatedChatRoomParticipantsEditing = [
-          ...(prevChatRoomParticipantsEditing ?? []),
-        ];
-        const chatRoomParticipantsEditingIndex =
-          updatedChatRoomParticipantsEditing.findIndex(
-            (room) => room.roomCode === data.chatRoom.code,
-          );
-        if (chatRoomParticipantsEditingIndex !== -1) {
-          // Update chatRoomParticipantsEditing item if it exists
-          updatedChatRoomParticipantsEditing[chatRoomParticipantsEditingIndex] =
-            {
-              participantsList: list,
-              roomCode: data.chatRoom.code,
-            };
-          return updatedChatRoomParticipantsEditing;
-        } else {
-          // Push new chatRoomParticipantsEditing item if it does not exist
-          return [
-            ...updatedChatRoomParticipantsEditing,
-            {
-              participantsList: list,
-              roomCode: data.chatRoom.code,
-            },
-          ];
-        }
-      });
+    (
+      data: WebSocketMessageData,
+      dataChatList: ChatRoomItem[],
+      filteredChatList: ChatRoomItem[],
+    ) => {
+      // Update chat room list
+      const updatedDataChatList = [...dataChatList];
+      const chatRoomIndex = updatedDataChatList.findIndex(
+        (room) => room.code == data.chatRoom.code,
+      );
+      if (chatRoomIndex != -1) {
+        updatedDataChatList[chatRoomIndex] = {
+          ...updatedDataChatList[chatRoomIndex],
+          chatRoom: {
+            avatar:
+              data.chatRoom?.chatRoom?.avatar || data.chatRoom?.avatar || '',
+            avatarColor:
+              data.chatRoom?.chatRoom?.avatarColor ||
+              data.chatRoom?.avatarColor ||
+              '',
+          },
+          name: data.chatRoom.name,
+          participants: data.chatRoom.participants,
+        };
+        setDataChatList(updatedDataChatList);
+      }
+      // Update filtered chat room list
+      const updatedFilteredDataChatList = [...filteredChatList];
+      const filteredChatRoomIndex = updatedFilteredDataChatList.findIndex(
+        (room) => room.code == data.chatRoom.code,
+      );
+      if (filteredChatRoomIndex != -1) {
+        updatedFilteredDataChatList[filteredChatRoomIndex] = {
+          ...updatedFilteredDataChatList[filteredChatRoomIndex],
+          chatRoom: {
+            avatar:
+              data.chatRoom?.chatRoom?.avatar || data.chatRoom?.avatar || '',
+            avatarColor:
+              data.chatRoom?.chatRoom?.avatarColor ||
+              data.chatRoom?.avatarColor ||
+              '',
+          },
+          name: data.chatRoom.name,
+          participants: data.chatRoom.participants,
+        };
+        setFilteredChatList(updatedFilteredDataChatList);
+      }
       if (data.chatRoom.code == chatRoomCode) {
-        const updatedDataChatList = [...dataChatList];
-        const chatRoomIndex = updatedDataChatList.findIndex(
-          (room) => room.code == chatRoomCode,
-        );
-        if (chatRoomIndex != -1) {
-          updatedDataChatList[chatRoomIndex].unreadMessages =
-            data.chatRoom.unreadMessages;
-          setDataChatList(updatedDataChatList);
-        }
+        // Update chat room detail
+        setChatRoomDetail((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            name: data.chatRoom.name,
+            participants: data.chatRoom.participants,
+            avatar:
+              data.chatRoom?.chatRoom?.avatar || data.chatRoom?.avatar || '',
+            avatarColor:
+              data.chatRoom?.chatRoom?.avatarColor ||
+              data.chatRoom?.avatarColor ||
+              '',
+          };
+        });
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [setChatRoomNameEditing, setChatRoomParticipantsEditing, setDataChatList],
+    [setDataChatList, setFilteredChatList, chatRoomCode],
   );
 
   // Remove participants (local)
@@ -992,11 +992,24 @@ const ChatDetail = ({
         );
         return updatedDataChatList;
       });
+      // Update filteredChatList if user is removed from participants list
+      setFilteredChatList((prevDataChatList) => {
+        let updatedDataChatList = [...prevDataChatList];
+        updatedDataChatList = updatedDataChatList.filter(
+          (chatRoom) => chatRoom.code !== data.chatRoom.code,
+        );
+        return updatedDataChatList;
+      });
       if (data.chatRoom.code === chatRoomCode) {
         handleRemoveChatRoomParam();
       }
     },
-    [setDataChatList, handleRemoveChatRoomParam, chatRoomCode],
+    [
+      setDataChatList,
+      setFilteredChatList,
+      handleRemoveChatRoomParam,
+      chatRoomCode,
+    ],
   );
 
   // Update list file if has new data from socket
@@ -1088,7 +1101,7 @@ const ChatDetail = ({
           }
           break;
         case SocketActions.UPDATE_CHAT_ROOM:
-          handleUpdateGroupLocal(data, dataChatList);
+          handleUpdateGroupLocal(data, dataChatList, filteredChatList);
           break;
         case SocketActions.REMOVE_PARTICIPANT:
           handleRemoveParticipantsLocal(data);
@@ -1112,6 +1125,8 @@ const ChatDetail = ({
     handleRemoveParticipantsLocal,
     handleDeleteTaskLocal,
     clientId,
+    dataChatList,
+    filteredChatList,
   ]);
 
   // Create message
@@ -1594,17 +1609,27 @@ const ChatDetail = ({
   };
 
   // Render avatar
-  const renderImageRound = (type = '', participants: ChatParticipant[]) => {
-    switch (type) {
+  const renderImageRound = (chatRoomDetail: ChatRoomDetail) => {
+    switch (chatRoomDetail.type) {
       case ChatRoomType.GROUP:
         return (
           <div className="rounded-full w-[36px] h-[36px] border-[2px] border-white flex items-center justify-center overflow-hidden">
-            <ImageRound
-              className="w-[36px] h-[36px] rounded-full"
-              src="/icons/multi-users.svg"
-              border="full"
-              name="Multi users"
-            />
+            {chatRoomDetail ? (
+              chatRoomDetail?.avatar ? (
+                <CustomUserAvatar
+                  avatarUrl={chatRoomDetail?.avatar || ''}
+                  avatarColor={chatRoomDetail?.avatarColor || ''}
+                  size={36}
+                />
+              ) : (
+                <GroupIconWithDynamicColor
+                  color={chatRoomDetail?.avatarColor || '#228CDB'}
+                  size={36}
+                />
+              )
+            ) : (
+              <></>
+            )}
           </div>
         );
       case ChatRoomType.TASK:
@@ -1640,30 +1665,31 @@ const ChatDetail = ({
             />
           </div>
         );
-    }
+      case ChatRoomType.PRIVATE: {
+        const memberInfo = dashboardMemberList.find((member) => {
+          if (chatRoomDetail.type === ChatRoomType.PRIVATE) {
+            return (
+              member.id ===
+              chatRoomDetail.participants.find(
+                (participant) => participant.id !== session?.user.id,
+              )?.id
+            );
+          }
+          return member.id === session?.user.id;
+        });
 
-    const memberInfo = dashboardMemberList.find((member) => {
-      if (type === ChatRoomType.PRIVATE) {
         return (
-          member.id ===
-          participants.find(
-            (participant) => participant.id !== session?.user.id,
-          )?.id
+          <div className="rounded-full w-[36px] h-[36px] border-[2px] border-white flex items-center justify-center overflow-hidden">
+            <CustomUserAvatar
+              avatarUrl={memberInfo?.avatar || ''}
+              avatarColor={memberInfo?.avatarColor || ''}
+              size={36}
+              customClassName={`${!memberInfo?.avatar && 'mt-0.5 ml-0.5'}`}
+            />
+          </div>
         );
       }
-      return member.id === session?.user.id;
-    });
-
-    return (
-      <div className="rounded-full w-[36px] h-[36px] border-[2px] border-white flex items-center justify-center overflow-hidden">
-        <CustomUserAvatar
-          avatarUrl={memberInfo?.avatar || ''}
-          avatarColor={memberInfo?.avatarColor || ''}
-          size={36}
-          customClassName={`${!memberInfo?.avatar && 'mt-0.5 ml-0.5'}`}
-        />
-      </div>
-    );
+    }
   };
 
   // Get room avatar
@@ -1747,21 +1773,10 @@ const ChatDetail = ({
           id: null,
           fullName: MENTION_ALL_MEMBERS,
         },
-        ...(chatRoomParticipantsEditing.find(
-          (room) => room.roomCode === chatRoomDetail.code,
-        )
-          ? chatRoomParticipantsEditing
-              .find((room) => room.roomCode === chatRoomDetail.code)
-              ?.participantsList.map((participantId) => {
-                const member = dashboardMemberList.find(
-                  (member) => member.id === participantId,
-                );
-                return {
-                  id: participantId,
-                  fullName: member?.fullName || '',
-                };
-              }) || []
-          : chatRoomDetail?.participants || []),
+        ...(chatRoomDetail?.participants.map((participant) => ({
+          id: participant.id,
+          fullName: participant?.fullName || '',
+        })) || []),
       ]
     : [];
 
@@ -2065,7 +2080,10 @@ const ChatDetail = ({
         0,
       ) + file.size;
     if (totalSize > MAX_FILE_SIZE) {
-      setOpenErrorUploadFileModal(true);
+      setOpenErrorUploadFileModal({
+        status: true,
+        message: UPLOAD_CHAT_FILE_MAXIMUM_SIZE,
+      });
       return;
     }
     const newFile = new File([file], file.name, {
@@ -2098,7 +2116,10 @@ const ChatDetail = ({
       );
 
       if (totalDroppedFilesSize + totalPreviousFilesSize > MAX_FILE_SIZE) {
-        setOpenErrorUploadFileModal(true);
+        setOpenErrorUploadFileModal({
+          status: true,
+          message: UPLOAD_CHAT_FILE_MAXIMUM_SIZE,
+        });
         return;
       }
 
@@ -2350,10 +2371,7 @@ const ChatDetail = ({
                 {chatRoomDetail && (
                   <>
                     <div className="!min-w-[36px] mr-[10px]">
-                      {renderImageRound(
-                        chatRoomDetail?.type,
-                        chatRoomDetail?.participants || [],
-                      )}
+                      {renderImageRound(chatRoomDetail)}
                     </div>
                     <p
                       className={`text-[20px] font-bold text-ellipsis break-all overflow-hidden ${chatRoomDetail?.type != ChatRoomType.GROUP ? 'w-fit max-w-[100%]' : 'max-w-[calc(100%_-_380px)]'}`}
@@ -2362,23 +2380,7 @@ const ChatDetail = ({
                         WebkitLineClamp: 2,
                         WebkitBoxOrient: 'vertical',
                       }}>
-                      {chatRoomDetail
-                        ? chatRoomCode &&
-                          chatRoomNameEditing.find(
-                            (room) => room.roomCode === chatRoomCode,
-                          )
-                          ? chatRoomNameEditing.find(
-                              (room) => room.roomCode === chatRoomCode,
-                            )?.roomName
-                          : chatRoomDetail?.name
-                        : chatRoomCode &&
-                            chatRoomNameEditing.find(
-                              (room) => room.roomCode === chatRoomCode,
-                            )
-                          ? chatRoomNameEditing.find(
-                              (room) => room.roomCode === chatRoomCode,
-                            )?.roomName
-                          : ''}
+                      {chatRoomDetail?.name || ''}
                     </p>
                   </>
                 )}
@@ -2393,35 +2395,18 @@ const ChatDetail = ({
                       <div className="flex gap-3 items-center">
                         <p className="text-[13px] text-[#FFFFFFB2] text-nowrap">
                           メンバー
-                          {chatRoomDetail &&
-                          chatRoomParticipantsEditing.find(
-                            (room) => room.roomCode === chatRoomDetail.code,
-                          )
-                            ? chatRoomParticipantsEditing.find(
-                                (room) => room.roomCode === chatRoomDetail.code,
-                              )?.participantsList.length
-                            : chatRoomDetail?.participants?.length}
-                          人
+                          {chatRoomDetail?.participants?.length || 0}人
                         </p>
                         <DynamicTooltip
                           content={'グループのメンバーを見る'}
                           placement="top">
                           <div className="flex">
-                            {chatRoomDetail &&
-                            chatRoomParticipantsEditing.find(
-                              (room) => room.roomCode === chatRoomDetail.code,
-                            )
+                            {chatRoomDetail
                               ? getParticipantAvatars(
-                                  chatRoomParticipantsEditing.find(
-                                    (room) =>
-                                      room.roomCode === chatRoomDetail.code,
-                                  )?.participantsList || [],
-                                  true,
-                                )
-                              : getParticipantAvatars(
                                   chatRoomDetail?.participants || [],
                                   false,
-                                )}
+                                )
+                              : []}
                           </div>
                         </DynamicTooltip>
 
@@ -2546,14 +2531,12 @@ const ChatDetail = ({
                                             ? 'w-[150px]'
                                             : 'w-[122px]'
                                         }`}>
-                                        {chatRoomDetail?.type !=
-                                          ChatRoomType.PRIVATE && (
+                                        {chatRoomDetail?.type ==
+                                          ChatRoomType.GROUP && (
                                           <div
                                             className="p-[12px] hover:bg-[#7D8A94] leading-none rounded-[6px] hover:cursor-pointer"
                                             onClick={() => {
                                               setOpenSettingBox(true);
-                                              // Refetch to get the latest room name
-                                              refetchChatRoomDetail();
                                             }}>
                                             編集
                                           </div>
@@ -3085,12 +3068,15 @@ const ChatDetail = ({
           </div>
         </>
       )}
-      {openErrorUploadFileModal && (
+      {openErrorUploadFileModal.status && (
         <ErrorUploadFileValidationModal
           open={true}
           message={UPLOAD_CHAT_FILE_MAXIMUM_SIZE}
           onClose={() => {
-            setOpenErrorUploadFileModal(false);
+            setOpenErrorUploadFileModal({
+              status: false,
+              message: '',
+            });
           }}
         />
       )}
@@ -3153,6 +3139,7 @@ const ChatDetail = ({
           chatRoomDetail={chatRoomDetail}
           code={`${chatRoomCode}`}
           dashboardMemberList={dashboardMemberList}
+          setOpenErrorUploadFileModal={setOpenErrorUploadFileModal}
           openAddMemberModal={() => {
             setOpenSettingBox(false);
             setOpenAddMembersBox(true);
@@ -3192,20 +3179,15 @@ const ChatDetail = ({
           dashboardMemberList={dashboardMemberList}
           dataOptionsParticipants={dataOptionsParticipants}
           participantsList={
-            chatRoomCode &&
-            chatRoomParticipantsEditing.find(
-              (room) => room.roomCode === chatRoomCode,
-            )
-              ? chatRoomParticipantsEditing.find(
-                  (room) => room.roomCode === chatRoomCode,
-                )?.participantsList
-              : getChatParticipantIds(
+            chatRoomCode
+              ? getChatParticipantIds(
                   chatRoomDetail ? chatRoomDetail.participants : [],
                 )
+              : []
           }
           selectedOrganizations={
             chatRoomDetail?.selectOrganizations
-              ? chatRoomDetail?.selectOrganizations
+              ? String(chatRoomDetail.selectOrganizations)
                   .split(',')
                   .filter(Boolean)
                   .map((orgId) => Number(orgId))

@@ -46,8 +46,9 @@ const ThanksMessageListPage = () => {
   );
   const hasReadAllMessages = useRef(false);
 
-  useMemberOrganizationList({
+  const { isLoadingListMemberOrganization } = useMemberOrganizationList({
     search: '',
+    showLoading: false,
     currentScreen: ScreenName.CALENDAR,
     onSuccess: (data) => {
       setMemberListByOrganization(
@@ -180,6 +181,7 @@ const ThanksMessageListPage = () => {
 
             {openSendThanksMessageTable ? (
               <SendThanksMessageList
+                isLoadingListMemberOrganization={isLoadingListMemberOrganization}
                 memberListByOrganization={memberListByOrganization}
                 remainingQuota={remainingQuota}
                 setMemberListByOrganization={setMemberListByOrganization}

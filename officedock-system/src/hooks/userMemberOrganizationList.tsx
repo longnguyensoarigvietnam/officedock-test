@@ -11,6 +11,7 @@ import { LoadingContext } from '@providers/LoadingProvider';
 import { UserOrganization } from '@interfaces/user';
 
 interface UseMemberOrganizationListHooksProps {
+  showLoading?: boolean
   conditions?: boolean[];
   search?: string;
   currentScreen?: string;
@@ -20,6 +21,7 @@ interface UseMemberOrganizationListHooksProps {
 }
 
 const useMemberOrganizationList = ({
+  showLoading = true,
   conditions,
   search,
   currentScreen,
@@ -34,7 +36,7 @@ const useMemberOrganizationList = ({
 
   // Handle call API get list member organization
   const getListMemberOrganization = async () => {
-    setIsLoading(true);
+    showLoading && setIsLoading(true);
     const params = new URLSearchParams();
 
     if (search) {
@@ -55,6 +57,7 @@ const useMemberOrganizationList = ({
     data: listMemberOrganization,
     refetch: refetchListMemberOrganization,
     isFetched: isFetchedListMemberOrganization,
+    isLoading: isLoadingListMemberOrganization
   } = useQuery({
     queryKey: ['getListMemberOrganization', search],
     queryFn: getListMemberOrganization,
@@ -78,6 +81,7 @@ const useMemberOrganizationList = ({
     listMemberOrganization,
     refetchListMemberOrganization,
     isFetchedListMemberOrganization,
+    isLoadingListMemberOrganization
   };
 };
 

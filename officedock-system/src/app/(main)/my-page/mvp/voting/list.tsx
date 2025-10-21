@@ -87,8 +87,9 @@ export const VotingListPage = () => {
   });
 
   // Get current MVP voting info (title, start date, end date, members)
-  const { currentMVPVotingDetail, refetchMVPVotingDetail } = useMVPVotingDetail(
+  const { isLoadingMVPVotingDetail, currentMVPVotingDetail, refetchMVPVotingDetail } = useMVPVotingDetail(
     {
+      showLoading: false,
       onSuccess: (data) => {
         const organizationList = data?.organizations?.length
           ? data.organizations.map((org) => ({
@@ -174,7 +175,7 @@ export const VotingListPage = () => {
                 <p className="text-white text-[13px] font-bold leading-none">
                   マイルくん
                 </p>
-                <div className="mt-[10px] w-full h-[151px] bg-white rounded-[5px] py-[17px] pl-[15px] text-[13px] font-semibold text-black space-y-[6px]">
+                <div className="mt-[10px] w-full h-[155px] bg-white rounded-[5px] py-[17px] pl-[15px] text-[13px] font-semibold text-black space-y-[6px]">
                   <p className="text-sm leading-none"> 今回のMVPテーマは、</p>
                   <p className="text-lg text-[#B58F42] leading-none">
                     {currentMVPVotingDetail.title}{' '}
@@ -229,6 +230,7 @@ export const VotingListPage = () => {
       <VotingCandidateList
         memberListByOrganization={memberListByOrganization}
         currentMVPVotingDetail={currentMVPVotingDetail}
+        isLoadingMVPVotingDetail={isLoadingMVPVotingDetail}
         setOpenVotingCommentModal={setOpenVotingCommentModal}
         setMemberListByOrganization={setMemberListByOrganization}
         setOpenVotingReasonForm={setOpenVotingReasonForm}

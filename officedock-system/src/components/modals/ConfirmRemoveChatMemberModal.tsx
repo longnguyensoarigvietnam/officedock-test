@@ -12,7 +12,7 @@ export type ConfirmDeleteModalProps = {
   open: boolean;
   onConfirm: (memberIds: number[]) => void;
   onClose: () => void;
-  dashboardMemberList: Omit<Profile, "birthday" | "gender">[]
+  dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
   selectedRemoveMemberId: number | undefined;
   code: string;
 };
@@ -40,7 +40,7 @@ const ConfirmRemoveChatMemberModal = memo(
           <CustomUserAvatar
             avatarUrl={memberInfo?.avatar || ''}
             avatarColor={memberInfo?.avatarColor || ''}
-            size={36}
+            size={30}
           />
         </div>
       );
@@ -49,32 +49,41 @@ const ConfirmRemoveChatMemberModal = memo(
     return (
       <Modal
         open={open}
-        className="font-primary bg-white w-[515px] !rounded-xl py-4"
+        className="font-primary !rounded-[20px] text-black !py-[30px] w-[500px]"
+        titleClassName="!text-[14px] !text-[#5B6770] !font-medium"
+        contentClass="!rounded-[20px]"
         isOutSideAction={false}
         onClose={onClose}>
-        <div className="mb-5 flex gap-2 justify-center items-center">
+        <div className="mb-[30px] flex gap-[10px] justify-center items-center">
           {selectedRemoveMemberId && renderAvatar(selectedRemoveMemberId)}
           <p className="text-black text-[15px] font-medium max-w-full break-all">
             {
               dashboardMemberList.find((member) => {
                 return member.id == selectedRemoveMemberId;
               })?.fullName
-            }
+            }{' '}
+            <span className="ml-[6px] text-xs text-[#77858F]">
+              {
+                dashboardMemberList.find((member) => {
+                  return member.id == selectedRemoveMemberId;
+                })?.organizations?.name
+              }
+            </span>
           </p>
         </div>
-        <p className="text-[#000000] font-normal text-[14px] text-center">
-          このメンバーを本当に退会させますか？
+        <p className="text-[#000000] font-normal text-[14px] text-center leading-none">
+          このメンバーを本当に退室させますか？
         </p>
-        <p className="text-[#77858F] font-normal text-[13px] text-center">
-          退会したメンバーに通知されます。
-        </p>
-        <div className="flex justify-center gap-3 my-3 items-center">
-          <Button variant="outline" onClick={onClose} className="w-[110px]">
+        <div className="flex justify-center gap-[10px] mt-10 items-center">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            className="!w-[100px] !h-[36px] !p-0">
             キャンセル
           </Button>
           <Button
             variant="primary"
-            className="w-[110px]"
+            className="!w-[100px] !h-[36px] !p-0 !border-none"
             onClick={() => {
               const participantList = chatRoomDetail
                 ? chatRoomDetail.participants

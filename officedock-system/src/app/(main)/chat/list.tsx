@@ -32,6 +32,9 @@ import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import { AllChatRoomSearchMessagesModal } from '@components/modals/AllChatRoomSearchMessagesModal';
 import Spinner from '@components/common/Spinner';
+import ErrorUploadFileValidationModal from '@components/modals/ErrorUploadFileValidationModal';
+import { UPLOAD_AVATAR_FILE_MAXIMUM_SIZE } from '@constants/message';
+import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 
 import { apiRouters } from '@constants/routers';
 import {
@@ -157,13 +160,13 @@ const ListChatUsers = ({
   const [pendingRoomChange, setPendingRoomChange] =
     useState<ChatRoomItem | null>(null);
 
+  // Upload file
+  const [openErrorUploadFileModal, setOpenErrorUploadFileModal] =
+    useState(false);
+
   // Context
-  const {
-    setChatList,
-    chatRoomNameEditing,
-    setIsReload,
-    setChatRoomNotifications,
-  } = useContext(ChatContext);
+  const { setChatList, setIsReload, setChatRoomNotifications } =
+    useContext(ChatContext);
   const { expanded, isChatFilesUploading, cancelUploadChatFiles } =
     useContext(GlobalStateContext);
 
@@ -526,7 +529,11 @@ const ListChatUsers = ({
           const unpinnedItems = prevDataChatList.filter(
             (item) => item.pinAt === null,
           );
-          const items = [data.chatRoom, ...unpinnedItems];
+          // Remove duplicates before merging
+          const items = [data.chatRoom, ...unpinnedItems].filter(
+            (item, index, self) =>
+              index === self.findIndex((room) => room.code === item.code),
+          );
           items.sort((currentItem, nextItem) => {
             const currentItemDate = currentItem.lastMessageAt
               ? new Date(currentItem.lastMessageAt)
@@ -683,11 +690,20 @@ const ListChatUsers = ({
   // Handle create chat
   const createChat = async (data: {
     name: string;
+    avatar?: File | null;
     participantIds: number[];
     selectOrganizations: string;
   }): Promise<ChatRoomItem> => {
     setIsLoading(true);
-    const response = await api.post(apiRouters.CHAT_LIST, data);
+    const formData = new FormData();
+    formData.append('name', data.name);
+    data.participantIds.forEach((id) =>
+      formData.append('participantIds', id.toString()),
+    );
+    formData.append('selectOrganizations', data.selectOrganizations);
+    if (data.avatar) formData.append('avatar', data.avatar);
+
+    const response = await api.post(apiRouters.CHAT_LIST, formData);
     return response.data;
   };
 
@@ -891,71 +907,62 @@ const ListChatUsers = ({
   const renderAvatar = (item: ChatRoomItem) => {
     if (!item) return null;
 
-    if (item.type === AvatarChat.GROUP) {
-      return (
-        <ImageRound
-          className="w-[30px] h-[30px]"
-          src="/icons/multi-users.svg"
-          border="full"
-          name="Avatar user"
-        />
-      );
-    }
-
-    if (item.type === AvatarChat.TASK) {
-      return (
-        <ImageRound
-          className="w-[30px] h-[30px]"
-          src="/icons/document.svg"
-          border="full"
-          name="Task"
-        />
-      );
-    }
-
-    if (item.type === AvatarChat.SKILL) {
-      return (
-        <ImageRound
-          className="w-[30px] h-[30px]"
-          src="/icons/skill-room.svg"
-          border="full"
-          name="Skill"
-        />
-      );
-    }
-
-    if (item.type === AvatarChat.CALENDAR) {
-      return (
-        <ImageRound
-          className="w-[30px] h-[30px]"
-          src="/icons/calendar-room.svg"
-          border="full"
-          name="Calendar"
-        />
-      );
-    }
-
-    const memberInfo = dashboardMemberList.find((member) => {
-      if (item.type === AvatarChat.PRIVATE) {
-        return (
-          member.id ===
-          item.participants.find(
-            (participant) => participant.id !== session?.user.id,
-          )?.id
+    switch (item.type) {
+      case AvatarChat.GROUP:
+        return item.chatRoom?.avatar ? (
+          <CustomUserAvatar
+            avatarUrl={item.chatRoom?.avatar || ''}
+            avatarColor={item.chatRoom?.avatarColor || ''}
+            size={30}
+          />
+        ) : (
+          <GroupIconWithDynamicColor
+            color={item.chatRoom?.avatarColor || '#228CDB'}
+            size={30}
+          />
         );
-      }
-      return member.id === item.participants[0].id;
-    });
 
-    return (
-      <div className="h-[30px]">
-        <CustomUserAvatar
-          avatarUrl={memberInfo?.avatar || ''}
-          avatarColor={memberInfo?.avatarColor || ''}
-          size={30}
-        />
-      </div>
-    );
+      case AvatarChat.TASK:
+        return (
+          <ImageRound
+            className="w-[30px] h-[30px]"
+            src="/icons/document.svg"
+            border="full"
+            name="Task"
+          />
+        );
+
+      case AvatarChat.SKILL:
+        return (
+          <ImageRound
+            className="w-[30px] h-[30px]"
+            src="/icons/skill-room.svg"
+            border="full"
+            name="Skill"
+          />
+        );
+
+      case AvatarChat.CALENDAR:
+        return (
+          <ImageRound
+            className="w-[30px] h-[30px]"
+            src="/icons/calendar-room.svg"
+            border="full"
+            name="Calendar"
+          />
+        );
+
+      default:
+        return (
+          <div className="w-[30px] h-[30px]">
+            <CustomUserAvatar
+              avatarUrl={item.chatRoom?.avatar || ''}
+              avatarColor={item.chatRoom?.avatarColor || ''}
+              size={30}
+            />
+          </div>
+        );
+    }
   };
 
   // Go to bookmark room
@@ -1329,14 +1336,7 @@ const ListChatUsers = ({
 
                 <p
                   className={`ml-2 text-[15px] break-all ${item?.unreadMessages > 0 ? (item.isMuted ? 'w-[calc(100%_-_100px)]' : 'w-[calc(100%_-_70px)]') : item.isMuted ? 'w-[calc(100%_-_70px)]' : 'w-[calc(100%_-_40px)]'} text-justify font-medium `}>
-                  {item.code &&
-                  chatRoomNameEditing.find(
-                    (room) => room.roomCode === item.code,
-                  )
-                    ? chatRoomNameEditing.find(
-                        (room) => room.roomCode === item.code,
-                      )?.roomName
-                    : item?.name || ''}
+                  {item?.name || ''}
                 </p>
 
                 {item.isMuted && (
@@ -1412,14 +1412,7 @@ const ListChatUsers = ({
                   <div className="!w-8 !h-8">{renderAvatar(item)}</div>
                   <p
                     className={`ml-2 text-[15px] break-all ${item?.unreadMessages > 0 ? (item.isMuted ? 'w-[calc(100%_-_100px)]' : 'w-[calc(100%_-_70px)]') : item.isMuted ? 'w-[calc(100%_-_70px)]' : 'w-[calc(100%_-_40px)]'} text-justify font-medium `}>
-                    {item.code &&
-                    chatRoomNameEditing.find(
-                      (room) => room.roomCode === item.code,
-                    )
-                      ? chatRoomNameEditing.find(
-                          (room) => room.roomCode === item.code,
-                        )?.roomName
-                      : item?.name || ''}
+                    {item?.name || ''}
                   </p>
                   {item.isMuted && (
                     <div
@@ -1470,6 +1463,17 @@ const ListChatUsers = ({
           dataOptionsParticipants={dataOptionsParticipants}
           onClose={() => setIsModalOpen(false)}
           createChatMutation={createChatMutation}
+          setOpenErrorUploadFileModal={setOpenErrorUploadFileModal}
+        />
+      )}
+
+      {openErrorUploadFileModal && (
+        <ErrorUploadFileValidationModal
+          open={true}
+          message={UPLOAD_AVATAR_FILE_MAXIMUM_SIZE}
+          onClose={() => {
+            setOpenErrorUploadFileModal(false);
+          }}
         />
       )}
 
