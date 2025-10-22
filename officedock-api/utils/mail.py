@@ -39,7 +39,7 @@ class MailService:
         """
         Regular email sending.
         """
-        footer_html = f"""<br>
+        footer_html = f"""
         <p>
         -------- <br>
         アステッキホールディングス株式会社 <br>
@@ -205,8 +205,8 @@ class PaymentMailService(MailService):
         subject = f"【{self.SYSTEM_NAME}】アカウント発行完了のお知らせ"
         message = f"""
             <p>{company_name}<br>{responsible_name} 様</p>
-            <p>この度は{self.SYSTEM_NAME}にお申し込みいただき、誠にありがとうございます。</p>
-            <p>アカウントの発行が完了しましたので、下記の内容をご確認ください。</p>
+            <p>この度は{self.SYSTEM_NAME}にお申し込みいただき、誠にありがとうございます。<br>
+            アカウントの発行が完了しましたので、下記の内容をご確認ください。</p>
             <p>
                 ■ ログイン情報<br>
                 ログインID： {user_email}<br>
@@ -232,8 +232,8 @@ class PaymentMailService(MailService):
         subject = f"【{self.SYSTEM_NAME}】新規ユーザーアカウント追加のお知らせ"
         message = f"""
             <p>{company_name}<br>{responsible_name} 様</p>
-            <p>いつも{self.SYSTEM_NAME}をご利用いただき、誠にありがとうございます。</p>
-            <p>貴社のアカウントに新しいユーザーが追加されましたので、以下の通りお知らせいたします。</p>
+            <p>いつも{self.SYSTEM_NAME}をご利用いただき、誠にありがとうございます。<br>
+            貴社のアカウントに新しいユーザーが追加されましたので、以下の通りお知らせいたします。</p>
             <p>
                 ■ 追加ユーザー情報<br>
                 氏名： {new_user_name}<br>
@@ -390,7 +390,7 @@ class PaymentMailService(MailService):
             <p>いつも{self.SYSTEM_NAME}をご利用いただき、誠にありがとうございます。</p>
             <p>
                 {usage_month}分のご利用料金につきまして、ご登録のお支払い方法による決済が正常に完了いたしませんでした。<br>
-                <現在もサービスは継続してご利用いただけますが、お支払い情報に不備がある可能性がございます。
+                現在もサービスは継続してご利用いただけますが、お支払い情報に不備がある可能性がございます。
             </p>
             <p>お手数をおかけいたしますが、下記よりお支払い情報のご確認・ご変更をお願いいたします。</p>
             <p>
