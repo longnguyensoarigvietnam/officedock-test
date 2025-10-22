@@ -115,16 +115,14 @@ const PointHistory = () => {
                             <p>コイン失効</p>
                           </div>
                         ) : (
-                          <p className="text-sm">
-                            {history.transactionType}
-                          </p>
+                          <p className="text-sm">{history.transactionType}</p>
                         )}
                       </div>
                       <div className="w-[1px] self-stretch bg-[#D2DBE1]"></div>
                       <div className="w-[21%] py-[6px]">
                         <p className="text-sm">
                           {history.user ? (
-                            <div className="flex items-center justify-center gap-[10px]">
+                            <div className="flex items-center justify-start gap-[10px]">
                               <CustomUserAvatar
                                 avatarUrl={history.user?.avatar || ''}
                                 avatarColor={history.user.avatarColor}
