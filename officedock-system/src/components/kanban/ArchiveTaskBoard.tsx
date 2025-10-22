@@ -143,7 +143,7 @@ const ArchiveTaskBoard = ({
                   onClick={() => {
                     handleClick(task.id);
                   }}
-                  className={`relative ml-1 mt-1 group border border-transparent no-show hover:border hover:border-[#BEC9CE]  hover:border-solid   bg-white rounded-[10px] text-xs flex flex-col gap-2 mb-1`}>
+                  className={`relative cursor-pointer ml-1 mt-1 group border border-transparent no-show hover:border hover:border-[#BEC9CE]  hover:border-solid   bg-white rounded-[10px] text-xs flex flex-col gap-2 mb-1`}>
                   <div className="flex items-center py-2.5  w-full">
                     <div className="flex items-center gap-4 w-[46.2%] pl-[18px] flex-shrink-0">
                       <div className="flex items-center w-3/4 gap-2">
