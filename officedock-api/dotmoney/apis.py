@@ -1,9 +1,8 @@
 import time
 
 from django.db import transaction
-from rest_framework.response import Response
+from django.http import HttpResponseRedirect
 from drf_spectacular.utils import extend_schema, OpenApiParameter
-from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
@@ -77,9 +76,7 @@ class DotMoneyViewSet(BaseAPIViewSet):
                 complete=complete_flag,
             )
             # HTTP 302 redirect
-            return Response(
-                status=status.HTTP_302_FOUND, headers={"Location": url}
-            )
+            return HttpResponseRedirect(url)
 
         # 1. Validate required params
         if not user_id or amount <= 0 or not query_string:
