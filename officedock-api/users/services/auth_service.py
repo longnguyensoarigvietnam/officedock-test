@@ -262,7 +262,7 @@ class UserAuthService:
 
         mail_service = MailService()
         mail_service.send_system_forgot_password(
-            user.profile.full_name, email, reset_password.token
+            user.profile.full_name, email, reset_password.token, is_admin
         )
 
     def reset_password(self, serializer_data):
