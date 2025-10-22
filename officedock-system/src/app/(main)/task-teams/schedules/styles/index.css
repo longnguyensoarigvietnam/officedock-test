@@ -589,13 +589,11 @@
 .calendar-team-custom .fc-timegrid-axis {
   width: auto !important;
   min-width: 55px !important;
-  max-width: 65px;
 }
 .calendar-team-custom .fc-timegrid-axis,
 .calendar-team-custom .fc-timegrid-divider,
 .calendar-team-custom .fc-scrollgrid-section-liquid td:first-child {
   min-width: 59px !important;
-  width: 59px !important;
 }
 .calendar-team-custom .fc .fc-scrollgrid col:first-child {
   min-width: 59px !important;
