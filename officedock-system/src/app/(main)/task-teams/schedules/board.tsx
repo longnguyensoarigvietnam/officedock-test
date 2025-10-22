@@ -13,7 +13,7 @@ import React, {
   useState,
 } from 'react';
 import { useMutation } from 'react-query';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import FullCalendar from '@fullcalendar/react';
 import { isAfter, isBefore, isToday } from 'date-fns';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -960,6 +960,17 @@ const ScheduleTeamBoard = () => {
     return 'zero-all-day-events';
   };
 
+  const pathname = usePathname();
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const calendarApi = calendarRef.current?.getApi?.();
+      if (calendarApi) {
+        calendarApi.updateSize();
+      }
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [currentResources]);
+
   return (
     <>
       <div className="pt-[30px] px-10  font-medium  w-full">
@@ -1253,7 +1264,8 @@ const ScheduleTeamBoard = () => {
       </div>
 
       <div
-        className={`w-full relative calendar-team-custom day ${getAllDayEventCountText(events)} `}
+        key={pathname}
+        className={`w-full relative  overflow-visible min-w-0 calendar-team-custom day ${getAllDayEventCountText(events)} `}
         style={{ overflowX: 'auto', width: '100%' }}>
         <FullCalendar
           ref={calendarRef}
@@ -1294,7 +1306,7 @@ const ScheduleTeamBoard = () => {
           datesSet={handleDatesSet}
           locale={'ja-JP'}
           height={'70vh'}
-          dayMinWidth={250}
+          dayMinWidth={300}
           stickyFooterScrollbar={true}
           events={modifyEvents(events)}
           dayMaxEvents={2}

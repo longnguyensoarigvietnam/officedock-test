@@ -2485,12 +2485,14 @@ const KanbanBoardTaskTeam = () => {
             </div>
             <div className="flex justify-center bg-white p-[6px] rounded-[20px] items-center gap-2 ml-5 ">
               <Button
+                disabled={isLoadingDataTask}
                 variant={'primary'}
                 className={`!py-0 !px-0 font-bold w-[90px] h-7
               !rounded-[20px] text-xs`}>
                 タスク
               </Button>
               <Button
+                disabled={isLoadingDataTask}
                 onClick={() => {
                   router.push(
                     `${pageRouters.SCHEDULE_TEAM_MANAGEMENT.href}?organization=${organizationId}&tabId=1`,
