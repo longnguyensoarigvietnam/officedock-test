@@ -277,7 +277,12 @@ class AdminUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         # Send mail to invited user
         mail_service = MailService()
-        mail_service.send_admin_invite_user(user.email, password, user)
+        mail_service.send_admin_invite_user(
+            user.email,
+            password,
+            user,
+            invited_by=self.request.user.profile.full_name,
+        )
 
     @transaction.atomic()
     def perform_update(self, serializer):
@@ -578,7 +583,7 @@ class SystemAuthViewSet(BaseAPIViewSet):
 
         # Send OTP code to user email
         MailService().send_system_login_otp(
-            str(user.profile), user.two_factor_auth_email, otp_code
+            user.profile.full_name, user.two_factor_auth_email, otp_code
         )
         user_verification.save()
 
@@ -826,7 +831,11 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         if serializer_data.get("login_type") == LoginTypes.EMAIL.value:
             new_user_email = user.email
             mail_service.send_system_invite_user_by_email(
-                user.email, password, company
+                new_user_email,
+                password,
+                company_name=company.name,
+                invite_by=current_user.profile.full_name,
+                user_name=user.profile.full_name,
             )
         else:
             new_user_email = serializer_data.get("username")

@@ -668,6 +668,7 @@ class TaskCalendarSerializer(TaskCommonSerializer):
             "type",
             "categories",
             "status",
+            "archived_at",
         ]
 
     def get_is_start(self, instance):
