@@ -96,10 +96,8 @@ class UserAuthService:
 
         # Send OTP code to user email
         email_service = MailService()
-        email_service.send_admin_login_otp(
-            user.two_factor_auth_email, otp_code
-        ) if is_admin else email_service.send_system_login_otp(
-            str(user.profile), user.two_factor_auth_email, otp_code
+        email_service.send_system_login_otp(
+            user.profile.full_name, user.two_factor_auth_email, otp_code
         )
         user_verification.save()
 
@@ -126,10 +124,8 @@ class UserAuthService:
 
         # Send OTP code to user email
         email_service = MailService()
-        email_service.send_admin_login_otp(
-            user.two_factor_auth_email, otp_code
-        ) if is_admin else email_service.send_system_login_otp(
-            str(user.profile), user.two_factor_auth_email, otp_code
+        email_service.send_system_login_otp(
+            user.profile.full_name, user.two_factor_auth_email, otp_code
         )
         user_verification.save()
 
@@ -265,10 +261,8 @@ class UserAuthService:
         reset_password = ResetPassword.create(user=user)
 
         mail_service = MailService()
-        mail_service.send_admin_forgot_password(
-            email, reset_password.token
-        ) if is_admin else mail_service.send_system_forgot_password(
-            email, reset_password.token
+        mail_service.send_system_forgot_password(
+            user.profile.full_name, email, reset_password.token
         )
 
     def reset_password(self, serializer_data):
