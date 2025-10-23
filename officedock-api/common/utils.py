@@ -501,18 +501,23 @@ def transform_statistic_categories(statistic_categories):
 def get_large_statistic_category_color(task):
     """Handle get large statistic category color"""
 
-    color = (
+    item = (
         OrganizationsStatisticCategories.objects.filter(
             organization_id=task.organization_id,
             large_statistic_category__large_categories__task=task,
         )
-        .values_list("color", flat=True)
+        .values_list("color", "large_statistic_category__name")
         .first()
     )
+
+    color, name = None, None
+    if item:
+        color, name = item
+
     return [
         {
             "id": None,
-            "name": None,
+            "name": name,
             "color": color,
             "type": ScheduleCategoryTypes.LARGE.value,
         }
