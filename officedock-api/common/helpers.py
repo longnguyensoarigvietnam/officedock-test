@@ -248,6 +248,7 @@ def get_data_organization_my_statistic(user, organizations, company):
     """
     Get data for filter my statistic
     """
+    organizations = organizations.filter(users=user)
     orgs = CreationDataOrganizationWithStructCategorySerializer(
         organizations, many=True, context={"user": user}
     ).data
