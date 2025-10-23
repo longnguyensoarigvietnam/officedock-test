@@ -3210,7 +3210,7 @@ const KanbanBoardTask = () => {
           style={{
             background: 'linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%)',
           }}
-          className="flex-1 pl-10 relative ">
+          className="flex-1  relative ">
           <DragDropContext
             onDragStart={() => {
               setIsInteracting(true);
@@ -3236,7 +3236,7 @@ const KanbanBoardTask = () => {
                     ? ` calc(${Math.max(viewportWidth, 1280)}px - ${500 - (656 - widthCalendar)}px)`
                     : `calc(${Math.max(viewportWidth, 1280)}px - 500px) `,
               }}
-              className={`h-full overflow-x-auto flex flex-col gap-[14px] py-7 pr-7 pl-1 ${isListView ? 'overflow-y-auto' : 'overflow-y-hidden'}`}
+              className={`h-full overflow-x-auto flex flex-col gap-[14px] py-7 pr-7 pl-10 ${isListView ? 'overflow-y-auto' : 'overflow-y-hidden'}`}
               id="kanbanContainer">
               {!isArchiveTaskView && (
                 <FrequentlyTask

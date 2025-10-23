@@ -435,6 +435,76 @@ function StatisticTeamCalendar() {
       }
     }
   };
+  const handlePrevCalendarClose = () => {
+    setIsLoadingLarge(true);
+    setIsLoadingMedium(true);
+    setIsLoadingOrganization(true);
+    const dataPrevDateStart = handleSetStartDateBefore(
+      isTypeTime,
+      dataStartDate,
+    );
+    setDataStartDate(dataPrevDateStart as Date);
+    setStartDate(dataPrevDateStart as Date);
+
+    if (dataEndDate) {
+      const dataPrevDateEnd = handleSetStartDateBefore(isTypeTime, dataEndDate);
+      setDataEndDate(dataPrevDateEnd as Date);
+      setEndDate(dataPrevDateEnd as Date);
+    }
+    if (isDataCheckCompare) {
+      setIsLoadingLargeCompare(true);
+      setIsLoadingMediumCompare(true);
+      setIsLoadingOrganizationCompare(true);
+      const dataPrevDateStartCompare = handleSetStartDateBefore(
+        isTypeTime,
+        dataStartDateCompare,
+      );
+      setDataStartDateCompare(dataPrevDateStartCompare as Date);
+      setStartDateCompare(dataPrevDateStartCompare as Date);
+
+      if (dataEndDateCompare) {
+        const dataPrevDateEndCompare = handleSetStartDateBefore(
+          isTypeTime,
+          dataEndDateCompare,
+        );
+        setDataEndDate(dataPrevDateEndCompare as Date);
+        setEndDateCompare(dataPrevDateEndCompare as Date);
+      }
+      const enableViews = getCompareLineChartEnableViews(
+        dataStartDate,
+        dataEndDate as Date,
+        dataStartDateCompare,
+        dataEndDateCompare as Date,
+      ) as string[];
+      if (enableViews.length > 0) {
+        setLineChartViewBy({
+          value: enableViews[0],
+          label: enableViews[0],
+        });
+      } else {
+        setLineChartViewBy({
+          value: '',
+          label: '',
+        });
+      }
+    } else {
+      const enableViews = getLineChartEnableViews(
+        dataStartDate,
+        dataEndDate as Date,
+      ) as string[];
+      if (enableViews.length > 0) {
+        setLineChartViewBy({
+          value: enableViews[0],
+          label: enableViews[0],
+        });
+      } else {
+        setLineChartViewBy({
+          value: '',
+          label: '',
+        });
+      }
+    }
+  };
   const handleNextCalendar = () => {
     const dataPrevDateStart = handleSetStartDateAfter(
       isTypeTime,
@@ -462,6 +532,78 @@ function StatisticTeamCalendar() {
       }
     }
   };
+  const handleNextCalendarClose = () => {
+    setIsOpenModal(false);
+    setIsLoadingLarge(true);
+    setIsLoadingMedium(true);
+    setIsLoadingOrganization(true);
+    const dataPrevDateStart = handleSetStartDateAfter(
+      isTypeTime,
+      dataStartDate,
+    );
+
+    setDataStartDate(dataPrevDateStart as Date);
+    setStartDate(dataPrevDateStart as Date);
+
+    if (dataEndDate) {
+      const dataPrevDateEnd = handleSetStartDateAfter(isTypeTime, dataEndDate);
+      setDataEndDate(dataPrevDateEnd as Date);
+      setEndDate(dataPrevDateEnd as Date);
+    }
+    if (isDataCheckCompare) {
+      setIsLoadingLargeCompare(true);
+      setIsLoadingMediumCompare(true);
+      setIsLoadingOrganizationCompare(true);
+      const dataPrevDateStartCompare = handleSetStartDateAfter(
+        isTypeTime,
+        dataStartDateCompare,
+      );
+      setDataStartDateCompare(dataPrevDateStartCompare as Date);
+      setStartDateCompare(dataPrevDateStartCompare as Date);
+
+      if (dataEndDateCompare) {
+        const dataPrevDateEndCompare = handleSetStartDateAfter(
+          isTypeTime,
+          dataEndDateCompare,
+        );
+        setDataEndDate(dataPrevDateEndCompare as Date);
+        setEndDateCompare(dataPrevDateEndCompare as Date);
+      }
+      const enableViews = getCompareLineChartEnableViews(
+        dataStartDate,
+        dataEndDate as Date,
+        dataStartDateCompare,
+        dataEndDateCompare as Date,
+      ) as string[];
+      if (enableViews.length > 0) {
+        setLineChartViewBy({
+          value: enableViews[0],
+          label: enableViews[0],
+        });
+      } else {
+        setLineChartViewBy({
+          value: '',
+          label: '',
+        });
+      }
+    } else {
+      const enableViews = getLineChartEnableViews(
+        dataStartDate,
+        dataEndDate as Date,
+      ) as string[];
+      if (enableViews.length > 0) {
+        setLineChartViewBy({
+          value: enableViews[0],
+          label: enableViews[0],
+        });
+      } else {
+        setLineChartViewBy({
+          value: '',
+          label: '',
+        });
+      }
+    }
+  };
   return (
     <div className="relative">
       {/* Input data */}
@@ -478,9 +620,11 @@ function StatisticTeamCalendar() {
             )
               return;
             e.preventDefault();
-            setIsOpenModal(true);
-
-            handlePrevCalendar();
+            if (isOpenModal) {
+              handlePrevCalendar();
+            } else {
+              handlePrevCalendarClose();
+            }
           }}
           ref={buttonPrev}>
           <ImageRound
@@ -504,7 +648,7 @@ function StatisticTeamCalendar() {
               return;
             setIsOpenModal(!isOpenModal);
           }}
-          className="w-fit h-fit min-h-[34px] flex flex-col gap-[6px]  px-3 py-2 border border-[#77858F] bg-white rounded-md  ">
+          className="w-fit h-fit min-h-[34px] cursor-pointer flex flex-col gap-[6px]  px-3 py-2 border border-[#77858F] bg-white rounded-md  ">
           <div className="flex items-center gap-[10px] h-5">
             <div className="text-xs font-medium text-primary px-[14px] h-[18px] flex items-center  bg-[#EBF1F7] rounded-sm">
               {isTypeTime}
@@ -563,9 +707,11 @@ function StatisticTeamCalendar() {
             )
               return;
             e.preventDefault();
-            setIsOpenModal(true);
-
-            handleNextCalendar();
+            if (isOpenModal) {
+              handleNextCalendar();
+            } else {
+              handleNextCalendarClose();
+            }
           }}>
           <ImageRound
             className=" h-fit w-fit cursor-pointer"

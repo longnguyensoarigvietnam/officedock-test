@@ -3910,7 +3910,7 @@ const TimeSchedule = memo(
                       </div>
                       <Heading
                         as="h4"
-                        className="text-[20px] font-medium pr-4 line-clamp-2">
+                        className="text-[18px] !text-[#5B6770] font-medium pr-4 line-clamp-2">
                         {isExtendCalendar
                           ? `${formattedStartDate} - ${formattedEndDate}`
                           : formattedCurrentDate}
@@ -3930,13 +3930,13 @@ const TimeSchedule = memo(
                           fontWeight: 'bold',
                           zIndex: 1000,
                         }}
-                        className={`flex justify-center border border-dashed border-[#A7B7C2] top-[13px]  right-[70px] w-[130px] gap-[2px] items-center  h-10 ${isDraggingSchedule ? '' : 'hidden'}`}>
+                        className={`flex justify-center bg-[#EDF7FC] border border-dashed border-[#A7B7C2] top-[13px]  right-[70px] w-[130px] gap-[2px] items-center  h-10 ${isDraggingSchedule ? '' : 'hidden'}`}>
                         <ImageRound
                           name="Delete"
                           src={'/icons/delete-gray-bold.svg'}
                           className={`w-[14px] h-fit hover:cursor-pointer`}
                         />
-                        <p className="text-[#77858F] text-[10px] leading-[14px]  py-[2px] px-1 rounded-sm">
+                        <p className="text-[#77858F] font-medium text-xs leading-[14px]  py-[2px] px-1 rounded-sm">
                           予定から削除
                         </p>
                       </div>

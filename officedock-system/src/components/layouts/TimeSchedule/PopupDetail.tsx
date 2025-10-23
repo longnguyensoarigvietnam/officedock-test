@@ -232,6 +232,12 @@ const PopupDetail = ({
                   }
                 }
               }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+                  e.preventDefault();
+                  e.currentTarget.blur();
+                }
+              }}
               className="!w-[50px] !h-[30px] !py-0 bg-[#EBF1F7] text-black !text-xs !pb-[2px] font-normal rounded-[3px] !px-0 text-center !border-none  !opacity-100"
             />
           </div>
@@ -358,6 +364,12 @@ const PopupDetail = ({
                     } else {
                       setValueEnd(formatTime24h(planEndDate));
                     }
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+                    e.preventDefault();
+                    e.currentTarget.blur();
                   }
                 }}
                 className={` !w-[50px] rounded-[3px] !h-[30px] !py-0 bg-[#EBF1F7] text-black !pb-[2px] !text-xs font-normal text-center  !px-0 !border-none  !opacity-100`}
