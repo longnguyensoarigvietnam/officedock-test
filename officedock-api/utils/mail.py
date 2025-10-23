@@ -94,14 +94,20 @@ class MailService:
 
         self.send(subject, message, [recipient])
 
-    def send_system_forgot_password(self, user_name, recipient, token):
+    def send_system_forgot_password(
+        self, user_name, recipient, token, is_admin
+    ):
         """
         Send a forgot password email for system.
         """
 
         # FIXME: Replace email template later
 
-        url = f"{settings.SYSTEM_WEBAPP_URL}/reset-password/?token={token}"
+        url = (
+            f"{settings.ADMIN_WEBAPP_URL}/reset-password/?token={token}"
+            if is_admin
+            else f"{settings.SYSTEM_WEBAPP_URL}/reset-password/?token={token}"
+        )
         subject = f"【{self.SYSTEM_NAME}】パスワード再設定のご案内"
         message = f"""
             <p>{user_name}様 <br>
@@ -176,7 +182,7 @@ class MailService:
             <p>■アカウント情報<br>
                 メールアドレス：{recipient}<br>
                 初期パスワード： {password} <br>
-                ログイン URL： {settings.SYSTEM_WEBAPP_URL}
+                ログイン URL： {settings.ADMIN_WEBAPP_URL}
             </p>
         """
 

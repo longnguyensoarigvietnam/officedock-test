@@ -112,6 +112,15 @@ class StripeService:
 
         return product, price
 
+    def get_customer(self, company: Company):
+        """Get a Stripe customer"""
+        try:
+            return stripe.Customer.retrieve(company.stripe_customer_id)
+        except stripe.error.StripeError as e:
+            company.stripe_customer_id = None
+            company.save(update_fields=["stripe_customer_id"])
+            return False
+
     def get_or_create_customer(self, company: Company):
         """
         Get or create a Stripe customer for the company.
@@ -122,15 +131,9 @@ class StripeService:
         Returns:
             str: The Stripe customer ID.
         """
-        customers = stripe.Customer.search(
-            query=f"name:'{company.name}' AND metadata['company_id']:'{company.id}'"
-        )
-        if customers:
-            ids = [customer["id"] for customer in customers["data"]]
-
-            company.stripe_customer_id = ids[0]
-            company.save(update_fields=["stripe_customer_id"])
-            return ids[0]
+        customer = self.get_customer(company)
+        if customer:
+            return customer.id
 
         new_customer = stripe.Customer.create(
             name=company.name,
