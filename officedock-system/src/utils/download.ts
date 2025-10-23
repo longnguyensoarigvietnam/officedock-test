@@ -1,10 +1,11 @@
-import { ExportType } from "@constants/enums";
+import { ExportType } from '@constants/enums';
 
 // Handle file download from API response
 export const handleFileDownload = (
   response: any,
   defaultFileName: string,
-  exportType: ExportType = ExportType.CSV
+  exportType: ExportType = ExportType.CSV,
+  showTimestamp: boolean = true,
 ): void => {
   try {
     // Create blob from response data
@@ -30,7 +31,7 @@ export const handleFileDownload = (
         now.getMinutes().toString().padStart(2, '0') +
         now.getSeconds().toString().padStart(2, '0');
 
-      filename = `${defaultFileName}_${timestamp}.${exportType}`;
+      filename = `${showTimestamp ? `${timestamp}_` : ''}${defaultFileName}.${exportType}`;
     }
 
     // Create and trigger download

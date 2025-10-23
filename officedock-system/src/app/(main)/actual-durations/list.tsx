@@ -1,9 +1,21 @@
 'use client';
 import { useMutation } from 'react-query';
 import Link from 'next/link';
-import React, { Fragment, useContext, useEffect, useState } from 'react';
+import React, {
+  Fragment,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 import { Transition } from '@headlessui/react';
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from '@tanstack/react-table';
 
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
@@ -11,6 +23,7 @@ import Input from '@components/common/Input';
 import Pagination from '@components/common/Pagination';
 import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 import Dropdown from '@components/common/Dropdown';
+import { Table } from '@components/common/Table';
 
 import { apiRouters, pageRouters } from '@constants/routers';
 import {
@@ -336,11 +349,213 @@ const ListActualDurations = () => {
     setValue('title', '');
   };
 
+  const columns = useMemo(
+    (): ColumnDef<ActualDurationDetail, unknown>[] => [
+      {
+        accessorKey: 'id',
+        header: 'ID',
+        size: 100,
+        cell: (info) => info.getValue(),
+      },
+      {
+        accessorKey: 'type',
+        header: 'タスク/予定',
+        size: 150,
+        cell: ({ getValue }) =>
+          getValue() == ItemStartType.TASK
+            ? WorkItemType.Task
+            : WorkItemType.Event,
+      },
+      {
+        accessorKey: 'title',
+        header: 'タイトル',
+        size: 250,
+        cell: (info) => info.getValue(),
+      },
+      {
+        accessorKey: 'categories',
+        header: 'カテゴリ',
+        cell: ({ row }) => {
+          const element = row.original;
+          const large = element.categories.find(
+            (cat: { id?: number; name?: string; type?: string }) =>
+              cat.type === EventWorkCategory.LARGE,
+          );
+          const medium = element.categories.find(
+            (cat: { id?: number; name?: string; type?: string }) =>
+              cat.type === EventWorkCategory.MEDIUM,
+          );
+          const small =
+            element.type === ItemStartType.TASK
+              ? element.categories.find(
+                  (cat: { id?: number; name?: string; type?: string }) =>
+                    cat.type === EventWorkCategory.SMALL,
+                )
+              : undefined;
+
+          if (!large && !medium && !small) return NO_SETTING;
+
+          const text = [
+            large?.name || NO_OPTION_CATEGORY,
+            medium?.name || NO_OPTION_CATEGORY,
+            small?.name || '',
+          ]
+            .filter(Boolean)
+            .join('＞');
+
+          return <div className="max-w-full break-words">{text}</div>;
+        },
+      },
+      {
+        accessorKey: 'tags',
+        header: '集計タグ',
+        size: 360,
+        cell: ({ row }) => {
+          const tags = row.original.tags as
+            | { id: number; name: string }[]
+            | undefined;
+
+          if (!tags || tags.length === 0) return <></>;
+
+          return (
+            <div className="max-w-full break-words">
+              {tags
+                ?.map(
+                  (
+                    tag: { id: number; name: string },
+                    index: number,
+                    arr: { id: number; name: string }[],
+                  ) => `${tag.name}${index !== arr.length - 1 ? '／' : ''}`,
+                )
+                .join('') ?? ''}
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: 'createdAt',
+        header: '作成日時',
+        size: 120,
+        cell: ({ getValue }) =>
+          getSubmitLevelFormattedDate(new Date(getValue() as string)),
+      },
+      {
+        accessorKey: 'pausedAt',
+        header: '計測時間',
+        size: 150,
+        cell: ({ row }) => {
+          const e = row.original;
+          return e.pausedAt
+            ? calculateActualDuration(
+                String(e.startedAt),
+                e.pausedAt ? String(e.pausedAt) : '',
+              )
+            : '計測中';
+        },
+      },
+      {
+        accessorKey: 'staffs',
+        header: '従業員',
+        size: 360,
+        cell: ({ getValue }) => {
+          const staffs = getValue<string[]>();
+
+          if (!staffs || staffs.length === 0) return null;
+
+          return (
+            <div className="max-w-full break-words">
+              {staffs
+                .map(
+                  (staff, index, arr) =>
+                    `${staff}${index !== arr.length - 1 ? '／' : ''}`,
+                )
+                .join('')}
+            </div>
+          );
+        },
+      },
+      {
+        id: 'actions',
+        header: '操作',
+        size: 150,
+        enableSorting: false,
+        cell: ({ row }) => {
+          const element = row.original;
+          return (
+            <div className="flex gap-2 justify-center items-center">
+              <Link
+                href={pageRouters.DETAIL_ACTUAL_DURATIONS.href(
+                  `${element.id}`,
+                )}>
+                <ImageRound
+                  name="Detail"
+                  src="/icons/detail.svg"
+                  className="w-5 h-5 hover:cursor-pointer"
+                />
+              </Link>
+
+              {session?.user.permissions &&
+              hasPermissionInArray(
+                session.user.permissions,
+                PermissionsSystem.ACTUAL_DURATION_UPDATE,
+              ) &&
+              element.pausedAt ? (
+                <Link
+                  href={pageRouters.EDIT_ACTUAL_DURATIONS.href(
+                    `${element.id}`,
+                    `${element.type}`,
+                  )}>
+                  <ImageRound
+                    name="Edit"
+                    src="/icons/edit-gray.svg"
+                    className="w-3 h-3 hover:cursor-pointer opacity-65"
+                  />
+                </Link>
+              ) : (
+                <div className="w-3 h-3 "></div>
+              )}
+
+              {session?.user.permissions &&
+              hasPermissionInArray(
+                session.user.permissions,
+                PermissionsSystem.ACTUAL_DURATION_DELETE,
+              ) &&
+              element.pausedAt ? (
+                <ImageRound
+                  name="Delete"
+                  src="/icons/delete-gray.svg"
+                  className="w-[12px] h-[14px] hover:cursor-pointer"
+                  onClick={() => handleOpenDeleteActualDurationModal(element)}
+                />
+              ) : (
+                <div className="w-[13px] h-[16px]"></div>
+              )}
+            </div>
+          );
+        },
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
+  const tableData = useMemo(
+    () => actualDurationList?.results ?? [],
+    [actualDurationList?.results],
+  );
+
+  const table = useReactTable({
+    data: tableData,
+    columns: columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
+
   return (
-    <Fragment>
+    <div
+      className={`${expanded ? 'max-w-[calc(100%-200px)]' : 'max-w-[calc(100%-70px)]'}`}>
       <div className="flex flex-col border rounded-lg">
         <div
-          className={`flex justify-between px-3 py-4 rounded-t-lg ${showFilter && 'border-b'} bg-gray-100`}>
+          className={`flex justify-between px-3 py-4 rounded-t-lg ${showFilter && 'border-b'} bg-[#F8FAFC]`}>
           <span className="text-gray-700 text-base font-medium">検索</span>
           <ImageRound
             name="Filter extend icon"
@@ -361,7 +576,7 @@ const ListActualDurations = () => {
             className={`flex flex-col gap-4 p-4 bg-white`}
             onSubmit={handleSubmit(onSubmit)}>
             <div className="flex gap-4">
-              <div className="w-[278px]">
+              <div className="w-1/4">
                 <div className="w-full flex items-end gap-4">
                   <div className="w-full">
                     <Controller
@@ -387,7 +602,7 @@ const ListActualDurations = () => {
                   </div>
                 </div>
               </div>
-              <div className="w-[278px]">
+              <div className="w-1/4">
                 <div className="w-full flex items-end gap-4">
                   <div className="w-full">
                     <Input
@@ -398,7 +613,7 @@ const ListActualDurations = () => {
                   </div>
                 </div>
               </div>
-              <div className="w-[278px]">
+              <div className="w-1/4">
                 <div className="w-full flex items-end gap-4">
                   <div className="w-full">
                     <Controller
@@ -424,7 +639,7 @@ const ListActualDurations = () => {
                   </div>
                 </div>
               </div>
-              <div className="w-[278px]">
+              <div className="w-1/4">
                 <div className="w-full flex items-end gap-4">
                   <div className="w-full">
                     <Controller
@@ -452,7 +667,7 @@ const ListActualDurations = () => {
               </div>
             </div>
             <div className="flex gap-4">
-              <div className="w-[278px]">
+              <div className="w-1/4">
                 <div className="w-full flex items-end gap-4">
                   <div className="w-full">
                     <Controller
@@ -478,7 +693,7 @@ const ListActualDurations = () => {
                   </div>
                 </div>
               </div>
-              <div className="w-[278px]">
+              <div className="w-1/4">
                 <div className="w-full flex items-end gap-4">
                   <div className="w-full">
                     <Controller
@@ -504,7 +719,7 @@ const ListActualDurations = () => {
                   </div>
                 </div>
               </div>
-              <div className="w-[278px]">
+              <div className="w-1/4">
                 <div className="w-full flex items-end gap-4">
                   <div className="w-full">
                     <Controller
@@ -530,7 +745,7 @@ const ListActualDurations = () => {
                   </div>
                 </div>
               </div>
-              <div className="w-[278px]"></div>
+              <div className="w-1/4"></div>
             </div>
             <div className="flex justify-end gap-5">
               <Button
@@ -555,7 +770,7 @@ const ListActualDurations = () => {
           session?.user.permissions,
           PermissionsSystem.ACTUAL_DURATION_ADD,
         ) && (
-          <div className="flex justify-end gap-10">
+          <div className="flex justify-end gap-10 my-8">
             <div className="w-60">
               <Dropdown
                 placeholder="従業員"
@@ -619,193 +834,95 @@ const ListActualDurations = () => {
             </Link>
           </div>
         )}
-      <div className="w-full">
-        <div
-          className={`max-h-[calc(100vh_-_290px)] ${expanded ? 'max-w-[calc(100vw_-_250px)]' : 'max-w-[calc(100vw_-_120px)]'} overflow-x-auto ring-1 ring-gray-200 rounded-tl-lg rounded-tr-lg bg-white`}>
-          <div className="sticky top-0 z-10 grid grid-cols-[10%_15%_20%_25%_25%_10%_15%_25%_15%] min-w-[1200px] [&>div]:bg-[#F3F4F6] text-[#374151]">
-            <div className="px-5 py-3 min-w-[100px] font-medium flex items-center justify-center">
-              ID
-            </div>
-            <div className="px-5 py-3 min-w-[150px] font-medium">
-              タスク/予定
-            </div>
-            <div className="px-5 py-3 min-w-[250px] font-medium">タイトル</div>
-            <div className="px-5 py-3 min-w-[360px] font-medium">カテゴリ</div>
-            <div className="px-5 py-3 min-w-[360px] font-medium">集計タグ</div>
-            <div className="px-5 py-3 min-w-[120px] font-medium">作成日時</div>
-            <div className="px-5 py-3 min-w-[150px] font-medium">計測時間</div>
-            <div className="px-5 py-3 min-w-[360px] font-medium">従業員</div>
-            <div className="px-5 py-3 min-w-[150px] font-medium flex items-center justify-center">
-              操作
-            </div>
-          </div>
-          <div className="!bg-white relative">
-            {dataActualDurations && dataActualDurations.length ? (
-              dataActualDurations.map((element, index) => (
-                <div
-                  className="grid grid-cols-[10%_15%_20%_25%_25%_10%_15%_25%_15%] min-w-[1200px] text-[#4B5563]"
-                  key={index}>
-                  <div className="min-w-[100px] border-b-[1px]">
-                    <p className="min-w-[100px] py-3 flex justify-center items-center">
-                      {element.id}
-                    </p>
-                  </div>
-                  <div className="text-left min-w-[150px] border-b-[1px]">
-                    <p className=" min-w-[150px] px-5 py-3 flex justify-start items-center">
-                      {element.type == ItemStartType.TASK
-                        ? WorkItemType.Task
-                        : WorkItemType.Event}
-                    </p>
-                  </div>
-                  <div className="text-left min-w-[250px] border-b-[1px]">
-                    <p className="min-w-[250px] px-5 py-3 break-all">
-                      {element.title}
-                    </p>
-                  </div>
-                  <div className="text-left min-w-[360px] border-b-[1px]">
-                    <p className="min-w-[360px] px-5 py-3 break-all">
-                      {[
-                        element?.categories.find(
-                          (category) =>
-                            category.type == EventWorkCategory.LARGE,
-                        ),
-                        element?.categories.find(
-                          (category) =>
-                            category.type == EventWorkCategory.MEDIUM,
-                        ),
-                        element.type == ItemStartType.TASK
-                          ? element?.categories.find(
-                              (category) =>
-                                category.type == EventWorkCategory.SMALL,
-                            )
-                          : '',
-                      ].some(Boolean)
-                        ? [
-                            element?.categories.find(
-                              (category) =>
-                                category.type == EventWorkCategory.LARGE,
-                            )?.name || NO_OPTION_CATEGORY,
-                            element?.categories.find(
-                              (category) =>
-                                category.type == EventWorkCategory.MEDIUM,
-                            )?.name || NO_OPTION_CATEGORY,
-                            element.type == ItemStartType.TASK
-                              ? element?.categories.find(
-                                  (category) =>
-                                    category.type == EventWorkCategory.SMALL,
-                                )?.name || NO_OPTION_CATEGORY
-                              : '',
-                          ]
-                            .filter(Boolean)
-                            .join('＞')
-                        : NO_SETTING}
-                    </p>
-                  </div>
-                  <div className="text-left min-w-[360px] border-b-[1px]">
-                    <p className="min-w-[360px] px-5 py-3 break-all">
-                      {element.tags.map((tag, index) => {
-                        return (
-                          <span key={index}>
-                            {tag.name}{' '}
-                            {index != element.tags.length - 1 && '／'}
-                          </span>
-                        );
-                      })}
-                    </p>
-                  </div>
-                  <div className="text-left min-w-[120px] border-b-[1px]">
-                    <p className="min-w-[120px] px-5 py-3 flex justify-start items-center">
-                      {getSubmitLevelFormattedDate(
-                        new Date(element.createdAt as Date),
-                      )}
-                    </p>
-                  </div>
-                  <div className="text-left min-w-[150px] border-b-[1px]">
-                    <p className="min-w-[150px] px-5 py-3 flex justify-start items-center">
-                      {element.pausedAt
-                        ? calculateActualDuration(
-                            String(element.startedAt),
-                            element.pausedAt ? String(element.pausedAt) : '',
-                          )
-                        : '計測中'}
-                    </p>
-                  </div>
-                  <div className="text-left min-w-[360px] border-b-[1px]">
-                    <p className="min-w-[360px] break-all px-5 py-3">
-                      {element.staffs?.map((staff, index) => {
-                        return (
-                          <span key={index}>
-                            {staff}{' '}
-                            {index !== element?.staffs?.length - 1 && '／'}
-                          </span>
-                        );
-                      })}
-                    </p>
-                  </div>
-                  <div className="min-w-[150px] border-b-[1px]">
-                    <div className="flex min-w-[150px] px-5 py-3 gap-2 justify-center items-center">
-                      <Link
-                        href={pageRouters.DETAIL_ACTUAL_DURATIONS.href(
-                          `${element.id}`,
-                        )}>
-                        <ImageRound
-                          name="Detail"
-                          src={'/icons/detail.svg'}
-                          className="w-5 h-5 hover:cursor-pointer"
-                        />
-                      </Link>
-                      {session?.user.permissions &&
-                      hasPermissionInArray(
-                        session?.user.permissions,
-                        PermissionsSystem.ACTUAL_DURATION_UPDATE,
-                      ) &&
-                      element.pausedAt ? (
-                        <Link
-                          href={pageRouters.EDIT_ACTUAL_DURATIONS.href(
-                            `${element.id}`,
-                            `${element.type}`,
-                          )}>
-                          <ImageRound
-                            name="Edit"
-                            src={'/icons/edit-gray.svg'}
-                            className={`w-3 h-3 hover:cursor-pointer opacity-65`}
-                          />
-                        </Link>
-                      ) : (
-                        <div className="w-3 h-3 "></div>
-                      )}
-                      {session?.user.permissions &&
-                      hasPermissionInArray(
-                        session?.user.permissions,
-                        PermissionsSystem.ACTUAL_DURATION_DELETE,
-                      ) &&
-                      element.pausedAt ? (
-                        <ImageRound
-                          name="Delete"
-                          src={'/icons/delete-gray.svg'}
-                          className="w-[12px] h-[14px] hover:cursor-pointer"
-                          onClick={() =>
-                            handleOpenDeleteActualDurationModal(element)
-                          }
-                        />
-                      ) : (
-                        <div className="w-[13px] h-[16px]"></div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="py-5 text-sm leading-6 h-14 relative">
-                <div
-                  className={`flex justify-center items-center text-[#4B5563]`}>
-                  {NO_DATA_AVAILABLE}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+      <Table
+        classCustom="!p-0"
+        className={`w-full !overflow-x-auto table-auto h-full bg-white !rounded-[10px]`}>
+        <thead>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <tr key={headerGroup.id}>
+              {headerGroup.headers.map((header, index) => {
+                const isSticky = index === 0;
+                return (
+                  <th
+                    key={header.id}
+                    style={{
+                      width: header.getSize(),
+                      minWidth: header.getSize(),
+                      maxWidth: header.getSize(),
+                    }}
+                    className={`
+                              text-[#77858F] bg-[#F8FAFC] text-xs font-medium py-3 max-w-[100%] truncate 
+                              ${index !== headerGroup.headers.length - 1 ? 'border-r-[1px]' : ''}
+                              ${isSticky ? 'sticky left-0 z-10' : ''}
+                            `}>
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext(),
+                    )}
+                  </th>
+                );
+              })}
+            </tr>
+          ))}
+        </thead>
+        <tbody>
+          {table.getRowModel().rows.length ? (
+            table.getRowModel().rows.map((row, rowIndex) => {
+              const isLastRow =
+                rowIndex === table.getRowModel().rows.length - 1;
+              const cells = row.getVisibleCells();
+
+              return (
+                <tr key={row.id}>
+                  {cells.map((cell, colIndex) => {
+                    const isFirstCol = colIndex === 0;
+                    const isLastCol = colIndex === cells.length - 1;
+
+                    const cellClasses = [
+                      'px-4',
+                      'py-2',
+                      'max-w-full break-words',
+                      'text-center',
+                      'text-sm',
+                      'text-black border font-medium',
+                      isFirstCol && 'border-l-0',
+                      isLastCol && 'border-r-0',
+                      isLastRow && 'border-b-0',
+                      isFirstCol && 'sticky left-0 z-10 bg-white',
+                    ]
+                      .filter(Boolean)
+                      .join(' ');
+
+                    return (
+                      <td
+                        key={cell.id}
+                        style={{
+                          width: cell.column.getSize(),
+                          minWidth: cell.column.getSize(),
+                          maxWidth: cell.column.getSize(),
+                        }}
+                        className={cellClasses}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })
+          ) : (
+            <tr>
+              <td
+                colSpan={table.getVisibleLeafColumns().length}
+                className="text-black text-sm text-center py-4">
+                {NO_DATA_AVAILABLE}
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </Table>
       <div className="flex justify-center">
         {dataActualDurations && dataActualDurations.length ? (
           <Pagination
@@ -821,7 +938,7 @@ const ListActualDurations = () => {
         onConfirm={handleConfirmDeleteOrganization}
         onClose={() => setOpenConfirmDeleteModal(false)}
       />
-    </Fragment>
+    </div>
   );
 };
 

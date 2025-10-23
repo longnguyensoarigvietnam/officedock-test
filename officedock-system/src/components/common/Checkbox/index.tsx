@@ -52,7 +52,7 @@ const Checkbox = ({
           aria-describedby={`${id}-description`}
           name={id}
           type="checkbox"
-          className={`h-4 w-4 rounded !border-[#77858F] checked:border-none  ${disable && 'opacity-50'}focus:outline-none focus:shadow-sm focus:border-focus focus:ring-0 focus:ring-offset-0 ${classSize}`}
+          className={`h-4 w-4 rounded !border-[#77858F] checked:border-none ${disable && 'opacity-50'} focus:outline-none focus:shadow-sm focus:border-focus focus:ring-0 focus:ring-offset-0 ${classSize}`}
           checked={checked}
           disabled={disable}
           onChange={handleChange}
@@ -63,7 +63,7 @@ const Checkbox = ({
         className={`${checkboxOnRight ? '' : 'ml-3'} text-sm leading-6 flex ${descriptionInline ? 'flex-row' : 'flex-col'} ${boxLabelClass}`}>
         <label
           htmlFor={id}
-          className={`font-medium text-black ${classLabel}`}>
+          className={`font-medium text-black hover:cursor-pointer ${classLabel}`}>
           {label}
         </label>
         <p

@@ -101,15 +101,16 @@ const MultiSelectDropdown = ({
           <>
             <div
               key={option.value}
-              className={`relative hover:cursor-pointer flex items-start justify-between  select-none hover:bg-[#f8fafc] py-2 pl-2 pr-3 border-b-[1px] border-gray-100`}>
+              onClick={() => {
+                handleOptionClick(option);
+              }}
+              className={`relative hover:!cursor-pointer flex items-start justify-between hover:bg-[#f8fafc] py-2 pl-2 pr-3 border-b-[1px] border-gray-100`}>
               <div className={`max-w-[80%] ${optionsCheckBoxClassName}`}>
                 <Checkbox
                   label={option.label}
-                  onChange={() => {
-                    handleOptionClick(option);
-                  }}
                   disable={disabled}
                   classLabel={labelOptionClass}
+                  className='hover:!cursor-pointer'
                   isChecked={
                     selected?.find(
                       (selectedOption) => selectedOption.value == option.value,
