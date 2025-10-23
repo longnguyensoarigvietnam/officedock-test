@@ -1,5 +1,12 @@
 'use client';
-import { CSSProperties, Fragment, ReactNode, useEffect, useState } from 'react';
+import {
+  CSSProperties,
+  Fragment,
+  ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import {
   Listbox,
   ListboxButton,
@@ -68,6 +75,7 @@ const TimeDropdown = ({
   );
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [searchInput, setSearchInput] = useState<string>('');
+  const optionsRef = useRef<HTMLUListElement | null>(null);
 
   const priorityStyles = [
     {
@@ -143,6 +151,24 @@ const TimeDropdown = ({
         : ' ',
     );
 
+  useEffect(() => {
+    if (!isOpen || !optionsRef.current || !selected) return;
+
+    const parent = optionsRef.current;
+
+    // Selected exists → scroll to selected
+    if (selected) {
+      const el = parent.querySelector(
+        `[data-value="${selected.value}"]`,
+      ) as HTMLElement | null;
+
+      if (el) {
+        parent.scrollTop = el.offsetTop;
+        return;
+      }
+    }
+  }, [isOpen, selected, filteredOptions]);
+
   return (
     <div className="flex flex-col w-full h-full">
       <Listbox value={selected} onChange={setSelected} disabled={disabled}>
@@ -167,6 +193,7 @@ const TimeDropdown = ({
                   leaveFrom="opacity-100"
                   leaveTo="opacity-0">
                   <ListboxOptions
+                    ref={optionsRef}
                     className={`absolute z-20 left-[-4px]  mt-1 max-h-56 w-full min-w-[65px] overflow-auto rounded bg-white text-xs shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none ${classNameOption} ${isBottomOptions ? 'top-6' : 'bottom-8'}`}>
                     {isLoading ? (
                       <Spinner
@@ -178,6 +205,7 @@ const TimeDropdown = ({
                         <ListboxOption
                           key={option.value}
                           style={styleClassOption}
+                          data-value={option.value}
                           className={({ focus }) =>
                             `relative ${openByDefault && priorityStyles.find((item) => item.label === option.value)?.color} ${openByDefault && statusStyles.find((item) => item.label === option.label)?.color} cursor-default select-none  py-2 hover:cursor-pointer ${focus ? 'bg-slate-50' : 'text-gray-900'} ${labelOptionClass}`
                           }

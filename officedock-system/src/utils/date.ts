@@ -1022,6 +1022,36 @@ export const getFilteredTimeOptions = (
   });
 };
 
+export const getJapanMinutes = (): number => {
+  const formatter = new Intl.DateTimeFormat('ja-JP', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: 'Asia/Tokyo',
+  });
+  const parts = formatter.formatToParts(new Date());
+  const hour = Number(parts.find((p) => p.type === 'hour')?.value ?? 0);
+  const minute = Number(parts.find((p) => p.type === 'minute')?.value ?? 0);
+  return hour * 60 + minute;
+};
+
+export const findClosestTimeOption = (
+  options: OptionDropdownType[],
+  currentMinutes: number,
+): OptionDropdownType | undefined => {
+  return options.reduce((prev, curr) => {
+    const toMinutes = (val: string) => {
+      const [h, m] = val.split(':').map(Number);
+      return h * 60 + m;
+    };
+
+    return Math.abs(toMinutes(String(curr.value)) - currentMinutes) <
+      Math.abs(toMinutes(String(prev.value)) - currentMinutes)
+      ? curr
+      : prev;
+  }, options[0]);
+};
+
 export const isTodaySchedule = (date: Date) => {
   const today = new Date();
   return (

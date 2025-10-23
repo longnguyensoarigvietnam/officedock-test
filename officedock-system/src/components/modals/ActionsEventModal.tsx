@@ -204,12 +204,13 @@ const ActionsEventModal = ({
       setDataOptionsParticipants([...eventOrganizations, ...eventMembers]);
 
       if (data?.eventLocations) {
-        setDataOptionsEventLocation(
-          data?.eventLocations?.map((org) => ({
+        setDataOptionsEventLocation([
+          { label: NO_SETTING, value: '' },
+          ...(data?.eventLocations?.map((org) => ({
             label: org.name,
             value: org.id || '',
-          })),
-        );
+          })) || []),
+        ]);
       }
       if (data?.tags) {
         setDataOptionsTags(

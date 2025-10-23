@@ -87,36 +87,38 @@ export const VotingListPage = () => {
   });
 
   // Get current MVP voting info (title, start date, end date, members)
-  const { isLoadingMVPVotingDetail, currentMVPVotingDetail, refetchMVPVotingDetail } = useMVPVotingDetail(
-    {
-      showLoading: false,
-      onSuccess: (data) => {
-        const organizationList = data?.organizations?.length
-          ? data.organizations.map((org) => ({
-              orgInfo: { ...org },
-              collapseStatus: true,
-            }))
-          : [];
-
-        if (data?.remainingCandidates?.length) {
-          organizationList.push({
-            orgInfo: {
-              id: REMAINING_ORGANIZATIONS_ID,
-              icon: '',
-              iconColor: '',
-              name: '',
-              type: '',
-              uuid: '',
-              candidates: data?.remainingCandidates ?? [],
-            },
+  const {
+    isLoadingMVPVotingDetail,
+    currentMVPVotingDetail,
+    refetchMVPVotingDetail,
+  } = useMVPVotingDetail({
+    showLoading: false,
+    onSuccess: (data) => {
+      const organizationList = data?.organizations?.length
+        ? data.organizations.map((org) => ({
+            orgInfo: { ...org },
             collapseStatus: true,
-          });
-        }
+          }))
+        : [];
 
-        setMemberListByOrganization(organizationList);
-      },
+      if (data?.remainingCandidates?.length) {
+        organizationList.push({
+          orgInfo: {
+            id: REMAINING_ORGANIZATIONS_ID,
+            icon: '',
+            iconColor: '',
+            name: '',
+            type: '',
+            uuid: '',
+            candidates: data?.remainingCandidates ?? [],
+          },
+          collapseStatus: true,
+        });
+      }
+
+      setMemberListByOrganization(organizationList);
     },
-  );
+  });
 
   // Call API to vote MVP
   const handleVoteMVP = async (data: {
@@ -170,12 +172,12 @@ export const VotingListPage = () => {
                 background: 'linear-gradient(180deg, #C59941 0%, #D0AA5A 100%)',
                 boxShadow: '0px 4px 0px 0px #C87B1E40',
               }}
-              className="absolute bottom-[480px] left-1/2 -translate-x-1/2 p-[10px] rounded-[14px] w-[310px] h-[194px]">
+              className="absolute bottom-[480px] left-1/2 -translate-x-1/2 p-[10px] rounded-[14px] w-[310px]">
               <div className="relative">
                 <p className="text-white text-[13px] font-bold leading-none">
                   マイルくん
                 </p>
-                <div className="mt-[10px] w-full h-[155px] bg-white rounded-[5px] py-[17px] pl-[15px] text-[13px] font-semibold text-black space-y-[6px]">
+                <div className="mt-[10px] w-full bg-white rounded-[5px] py-[17px] pl-[15px] text-[13px] font-semibold text-black space-y-[6px]">
                   <p className="text-sm leading-none"> 今回のMVPテーマは、</p>
                   <p className="text-lg text-[#B58F42] leading-none">
                     {currentMVPVotingDetail.title}{' '}
@@ -199,19 +201,16 @@ export const VotingListPage = () => {
                       コインを贈呈するよ！
                     </p>
                   </div>
-                  <p className="text-sm leading-none">
-                    {' '}
-                    投票期間は、
-                    <span className="text-base text-[#B58F42] text-nowrap">
-                      {formatShowDeadline(
-                        String(currentMVPVotingDetail?.startDate),
-                      )}{' '}
-                      ~{' '}
-                      {convertDateToJapaneseFormat(
-                        new Date(currentMVPVotingDetail?.endDate || new Date()),
-                      )}
-                    </span>
-                    ！
+                  <p className="text-sm leading-none"> 投票期間は、</p>
+                  <p className="text-base text-[#B58F42] text-nowrap leading-[1] !mt-[2px]">
+                    {formatShowDeadline(
+                      String(currentMVPVotingDetail?.startDate),
+                    )}{' '}
+                    ~{' '}
+                    {convertDateToJapaneseFormat(
+                      new Date(currentMVPVotingDetail?.endDate || new Date()),
+                    )}{' '}
+                    <span className="text-black text-sm leading-none">！</span>
                   </p>
                 </div>
                 <div
