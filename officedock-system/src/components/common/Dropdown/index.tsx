@@ -189,7 +189,7 @@ const Dropdown = ({
               <div className={`relative h-full ${label ? 'mt-1' : ''}`}>
                 <ListboxButton
                   style={styleClass}
-                  className={`relative cursor-pointer  w-full cursor-default leading-5.5 !text-center rounded-[6px] bg-white py-2.5 text-gray-900 shadow-sm border text-base focus-visible:!outline-none focus-visible:!shadow-none ${disabled && 'opacity-55'} ${errorClasses}  ${openByDefault ? 'flex justify-center items-center pr-0 pl-0' : 'pl-3.5 pr-10'} ${className}`}>
+                  className={`relative  w-full cursor-default leading-5.5 !text-center rounded-[6px] bg-white py-2.5 text-gray-900 shadow-sm border text-base focus-visible:!outline-none focus-visible:!shadow-none ${disabled && 'opacity-55'} ${errorClasses}  ${openByDefault ? 'flex justify-center items-center pr-0 pl-0' : 'pl-3.5 pr-10'} ${className}`}>
                   <span
                     className={`flex items-center ${!openByDefault && 'pr-3'}  ${classActive}`}>
                     {selected ? (
