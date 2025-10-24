@@ -103,7 +103,7 @@ const MySkill = () => {
             <div
               key={index}
               className="w-full rounded-[30px] p-[30px] font-medium bg-[#F8FAFC]">
-              <p className="text-[#77858F] text-base mb-[30px]">
+              <p className="text-[#77858F] text-base mb-[30px] max-w-full break-all">
                 {item.organizationName}
               </p>
               <div>
