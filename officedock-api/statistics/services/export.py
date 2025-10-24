@@ -231,6 +231,12 @@ class ExportTaskService:
             for col_idx, value in enumerate(row_values, start=1):
                 cell = ws.cell(row=start_row, column=col_idx, value=value)
                 cell.border = thin_border
+
+                # No.
+                if col_idx == 1:
+                    cell.alignment = left_align
+
+                # 割合
                 if col_idx == 4:
                     cell.number_format = "0.00%"
                     cell.alignment = left_align
