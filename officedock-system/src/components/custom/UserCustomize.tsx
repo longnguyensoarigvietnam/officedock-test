@@ -3,6 +3,7 @@ import {
   useContext,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -13,6 +14,7 @@ import ImageRound from '@components/common/ImageRound';
 import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { updateAvatarUrl } from '@utils';
+import { CACHE_KEY, CACHE_TTL } from '@constants';
 
 interface Props {
   isPodium?: boolean;
@@ -32,6 +34,34 @@ export const RenderAccessories = ({
   const totalImages = useRef(0);
   const prevItemsRef = useRef<string>('');
 
+  const initialCache = useMemo(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (!cached) return null;
+      const parsed = JSON.parse(cached);
+      if (
+        parsed &&
+        Array.isArray(parsed.data) &&
+        Date.now() - parsed.timestamp < CACHE_TTL
+      ) {
+        return parsed.data;
+      }
+    } catch {
+      return null;
+    }
+    return null;
+  }, []);
+
+  // If there is a buffer at the beginning → allocate it to dataItems
+  useEffect(() => {
+    if (initialCache && initialCache.length > 0) {
+      setDataItem(initialCache);
+      totalImages.current = initialCache.length;
+    }
+    setIsFetching(true); // still enable loader
+  }, [initialCache, setDataItem]);
+
   // --- API fetch
   const { isFetchingCreationDataCommon } = useCreationDataCommon({
     options: { get_items_of_user: true },
@@ -44,6 +74,14 @@ export const RenderAccessories = ({
         const merged = updateAvatarUrl(dataItems, updates);
         setDataItem(merged);
         totalImages.current = merged.length;
+
+        localStorage.setItem(
+          CACHE_KEY,
+          JSON.stringify({
+            timestamp: Date.now(),
+            data: merged,
+          }),
+        );
       }
     },
   });

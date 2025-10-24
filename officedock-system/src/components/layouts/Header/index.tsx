@@ -1038,7 +1038,7 @@ const Header = ({ className }: HeaderProps) => {
   return (
     <>
       <header
-        className={`sticky 2xl:fixed top-0 z-30 bg-white w-full h-[76px]  p-3 flex justify-between item-center ${className}`}
+        className={`sticky 2xl:fixed top-0 z-30 bg-white w-full h-[70px]  p-3 flex justify-between item-center ${className}`}
         style={{ boxShadow: '0px 4px 8px 0px #1D2D3F0A' }}>
         <div className="flex gap-8 justify-between w-full">
           <div className="flex flex-grow items-center gap-8">

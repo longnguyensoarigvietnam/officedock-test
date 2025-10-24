@@ -410,7 +410,10 @@ const DailyReportBoard = () => {
         refetchDataStatistic();
         refetchDataStatisticPDF();
         queryClient.refetchQueries(['getDataTaskHeaderList']);
-        if (task.pausedAt === null && statusTaskSelected.isStart) {
+        if (
+          (!task.pausedAt || task.pausedAt == null) &&
+          statusTaskSelected.isStart
+        ) {
           queryClient.refetchQueries(['getTaskHeaderStart']);
         }
         if (data && statusTaskSelected.taskDurationRunningUuid) {

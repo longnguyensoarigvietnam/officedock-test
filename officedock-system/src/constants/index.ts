@@ -554,3 +554,6 @@ export const ONLY_PAYMENT_PERMISSIONS = [
   'payment_management_update',
   'payment_management_add',
 ] as const;
+
+export const CACHE_KEY = 'userItemsCache';
+export const CACHE_TTL = 3600_000;

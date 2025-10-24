@@ -142,6 +142,7 @@ const MyPage = () => {
         avatarUrl={authenticatedUser?.avatar || ''}
         avatarColor={authenticatedUser?.avatarColor || ''}
         size={46}
+        isZoom={true}
       />
     );
   };
@@ -332,44 +333,49 @@ const MyPage = () => {
         }}
         className="w-full flex flex-col rounded-bl-[30px] rounded-r-[30px]">
         <div className="flex ">
-          <div className="h-20 bg-white w-fit px-5 py-4 text-[#77858F] font-medium flex items-center gap-5 rounded-br-[30px]">
+          <div className="h-[9vh] bg-white w-fit px-[1.39vw] py-[1.80vh] text-[#77858F] font-medium flex items-center gap-[1.39vw] rounded-br-[2.08vw]">
             <div>{session?.user.id && renderBoxUser()}</div>
-            <div className="flex items-center gap-[10px]">
-              <p className="break-all max-w-[100px] line-clamp-2 text-sm">
+
+            <div className="flex items-center gap-[0.69vw]">
+              <p className="break-all max-w-[6.94vw] line-clamp-2 text-[0.97vw]">
                 名前
               </p>
-              <p className="break-all text-[22px] text-black max-w-[100px] line-clamp-2">
+              <p className="break-all text-[1.53vw] text-black max-w-[6.94vw] line-clamp-2">
                 {session?.user.profile.fullName}
               </p>
             </div>
 
-            <div className="h-[16px] border-l border-[#D2DBE1]"></div>
-            <div className="flex items-center text-sm font-medium gap-[10px]">
+            <div className="h-[1.8vh] border-l border-[#D2DBE1]"></div>
+
+            <div className="flex items-center text-[0.97vw] font-medium gap-[0.69vw]">
               <p>ID</p>
-              <p className="text-base text-black">{session?.user.id}</p>
+              <p className="text-[1.11vw] text-black">{session?.user.id}</p>
             </div>
           </div>
-          <div className="w-fit px-5 shadow-common mt-5 ml-5 font-bold text-base bg-white rounded-full h-10 flex items-center justify-center gap-[9px]">
+
+          <div className="w-fit px-[1.39vw] shadow-common mt-[2.25vh] ml-[1.39vw] font-bold text-[1.11vw] bg-white rounded-full h-[4.49vh] flex items-center justify-center gap-[0.63vw]">
             <ImageRound
               name="Badge icon"
               src={'/icons/badge.svg'}
-              className={`w-fit h-fit`}
+              className="w-[2.25vh] h-[2.25vh]"
             />
             <p>{totalCoins || 0}</p>
+
             <ImageRound
               name="Pearl icon"
               src={'/icons/pearl.svg'}
-              className={`w-fit h-fit ml-[10px]`}
+              className="w-[2.25vh] h-[2.25vh] ml-[0.69vw]"
             />
             <p>{totalPearls || 0}</p>
+
             <p
               onClick={() => router.push(pageRouters.HISTORY_POINT.href)}
-              className="text-sm text-primary underline ml-[11px] cursor-pointer hover:opacity-80">
+              className="text-[0.97vw] text-primary underline ml-[0.76vw] cursor-pointer hover:opacity-80">
               ポイント履歴/交換
             </p>
           </div>
         </div>
-        <div className="mt-[30px] ml-[30px]">
+        <div className="mt-[3.37vh] ml-[2.08vw]">
           <SkillSetting
             myPageSkillList={myPageSkillList}
             setSkillIdToUpdate={setSkillIdToUpdate}
@@ -378,7 +384,7 @@ const MyPage = () => {
             setOpenConfirmDeleteSkillModal={setOpenConfirmDeleteSkillModal}
           />
         </div>
-        <div className="absolute bottom-[30px] left-[30px] z-[1]">
+        <div className="absolute top-[23.13vh] left-[2.08vw] z-[1]">
           {/* Menu */}
           <MyPageMenu
             onClickSettingSurvey={() => setOpenSettingSurvey(true)}
@@ -391,9 +397,9 @@ const MyPage = () => {
             isHasMvpVoting={creationDataCommonData?.isHasMvpVoting || false}
           />
         </div>
-        <div className="relative ml-[30px] mb-[40px] flex items-end flex-grow">
+        <div className="relative ml-[3.37vh] mb-[4.49vh] flex items-end flex-grow">
           <div className="flex-grow">
-            <div className="h-[424px] w-[336px] ml-[337px] relative">
+            <div className="h-[47.64vh] w-[37.75vh] ml-[37.86vh] relative">
               <RenderAccessories handleShowData={() => setIsShowMike(true)} />
             </div>
 
@@ -404,38 +410,42 @@ const MyPage = () => {
                   style={{
                     background:
                       'linear-gradient(180deg, #355AC9 0%, #5282FC 100%)',
-                    boxShadow: '0px 4px 0px 0px #355AC940',
+                    boxShadow: '0px 0.45vh 0px 0px #355AC940',
                   }}
-                  className="absolute top-[calc(100%_-_531px)] left-[555px] p-[10px] rounded-[14px] w-[258px] h-fit ">
-                  <p className="text-white text-[13px] font-bold">マイルくん</p>
-                  <div className="mt-[10px] w-full bg-white rounded-[5px] p-3 text-[13px] font-semibold text-black">
+                  className="absolute top-[calc(100%_-_59.66vh)] left-[62.17vh] p-[1.12vh] rounded-[1.57vh] w-[28.98vh] h-fit">
+                  <p className="text-white text-[1.46vh] font-bold">
+                    マイルくん
+                  </p>
+                  <div className="mt-[1.12vh] w-full bg-white rounded-[0.56vh] p-[0.34vh] text-[1.46vh] font-semibold text-black">
                     {receivedThanksMessageList?.length
                       ? '新しいサンクスメッセージが届いているよ！'
                       : 'ポイントが貯まると、素敵な商品と交換できるよ！'}
                   </div>
                 </div>
-                <div className="bg-[#5282FB] rotate-[20deg] absolute clip-diagonal-left h-[25px] w-[22px] top-[calc(100%_-_425px)] left-[585px]"></div>
+
+                {/* Tam giác nằm dưới */}
+                <div className="bg-[#5282FB] rotate-[20deg] absolute clip-diagonal-left h-[2.81vh] w-[2.47vh] top-[calc(100%_-_49.75vh)] left-[65.74vh]"></div>
               </>
             )}
+
             {/* Seagull icon */}
             {receivedThanksMessageList?.length ? (
-              <div className="absolute bottom-0 left-[620px]">
+              <div className="absolute bottom-0 left-[69.58vh]">
                 <ImageRound
                   name="Seagull"
                   src="/icons/seagull.svg"
-                  className="w-[201px] h-[317px] cursor-pointer"
+                  className="w-[22.61vh] h-[35.62vh] cursor-pointer"
                   onClick={() => setShowReceiveEnvelopeAnimation(true)}
                 />
               </div>
-            ) : (
-              <></>
-            )}
+            ) : null}
           </div>
+
           {/* Tweet icon */}
           <ImageRound
             name="Tweet icon"
-            src={'/icons/tweet.svg'}
-            className={`w-[92px] h-[99px] z-10 hover:cursor-pointer absolute -bottom-[10px] right-[10px]`}
+            src="/icons/tweet.svg"
+            className="w-[10.34vh] h-[11.12vh] z-10 hover:cursor-pointer absolute -bottom-[1.12vh] right-[1.12vh]"
             onClick={() => setOpenCreateTweetModal(true)}
           />
         </div>

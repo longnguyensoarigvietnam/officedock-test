@@ -64,15 +64,15 @@ export const SkillSetting = ({
         <ImageRound
           name={`Step ${step} treasure`}
           src={treasureIcons[step]}
-          className={`w-[40px] h-[40px] cursor-pointer`}
+          className={`w-[4.49vh] h-[4.49vh] cursor-pointer`}
         />
       );
     }
 
     const renderLevelText = () => (
-      <div className="flex gap-[2px] items-baseline">
-        <p className="text-[15px] font-medium">Lv.</p>
-        <p className="text-[26px] font-medium">{level}</p>
+      <div className="flex gap-[0.14vw] items-baseline">
+        <p className="text-[1.04vw] font-medium">Lv.</p>
+        <p className="text-[1.8vw] font-medium">{level}</p>
       </div>
     );
 
@@ -82,7 +82,7 @@ export const SkillSetting = ({
   };
 
   return (
-    <div className="flex item-center gap-[14px]">
+    <div className="flex item-center gap-[0.97vw]">
       {myPageSkillList?.map((skill) => {
         const isLocked = skill.isLocked;
         const step = skill.skill.step
@@ -125,66 +125,73 @@ export const SkillSetting = ({
                           ? '0px 0px 20px 0px #36ACDE80'
                           : '0px 2px 8px 0px #0000001A',
                       }}
-                      className="w-[245px] h-[55px] relative bg-white px-5 py-3 flex items-center gap-[10px] justify-center  rounded-[14px]">
+                      className="w-[17.01vw] h-[6.18vh] relative bg-white px-[1.39vw] py-[1.35vh] flex items-center gap-[0.69vw] justify-center  rounded-[0.97vw]">
                       {showTwinklingStars && (
                         <>
-                          <div className="absolute -top-[19px] left-[20px] bg-primary rounded-[20px] w-[126px] h-[19px] flex items-center justify-center">
-                            <p className="text-white text-[11px] font-bold">
+                          <div className="absolute -top-[1.3vw] left-[1.4vw] bg-primary rounded-[1.4vw] w-[8.75vw] h-[1.32vw] flex items-center justify-center">
+                            <p className="text-white text-[0.76vw] font-bold leading-none">
                               レベルアップ申請可能
                             </p>
                           </div>
-                          <div className="bg-primary absolute clip-diagonal-left h-[7px] w-[7px] top-0 left-[40px]"></div>
+                          <div className="bg-primary absolute clip-diagonal-left h-[0.49vw] w-[0.49vw] top-0 left-[2.8vw]"></div>
                         </>
                       )}
 
                       {showTwinklingStars && (
                         <>
                           <TwinklingIcon
-                            className="absolute top-[10px] left-[-3px] w-[5px] h-[5px]"
+                            className="absolute top-[0.69vw] left-[-0.21vw] w-[0.35vw] h-[0.35vw]"
                             delay={0}
                             iconUrl="/icons/blue-star.svg"
+                            isZoom={true}
                           />
                           <TwinklingIcon
-                            className="absolute top-[3px] left-[5px] w-[5px] h-[5px]"
+                            className="absolute top-[0.21vw] left-[0.35vw] w-[0.35vw] h-[0.35vw]"
                             delay={0.5}
                             iconUrl="/icons/blue-star.svg"
+                            isZoom={true}
                           />
                           <TwinklingIcon
-                            className="absolute top-[10px] -right-[3px] w-[5px] h-[5px]"
+                            className="absolute top-[0.69vw] -right-[0.21vw] w-[0.35vw] h-[0.35vw]"
                             delay={0.8}
                             iconUrl="/icons/blue-star.svg"
+                            isZoom={true}
                           />
                           <TwinklingIcon
-                            className="absolute bottom-[5px] left-[-3px] w-[5px] h-[5px]"
+                            className="absolute bottom-[0.35vw] left-[-0.21vw] w-[0.35vw] h-[0.35vw]"
                             delay={1}
                             iconUrl="/icons/blue-star.svg"
+                            isZoom={true}
                           />
                           <TwinklingIcon
-                            className="absolute bottom-[5px] -right-[3px] w-[5px] h-[5px]"
+                            className="absolute bottom-[0.35vw] -right-[0.21vw] w-[0.35vw] h-[0.35vw]"
                             delay={1.2}
                             iconUrl="/icons/blue-star.svg"
+                            isZoom={true}
                           />
                           <TwinklingIcon
-                            className="absolute -bottom-[3px] right-[5px] w-[5px] h-[5px]"
+                            className="absolute -bottom-[0.21vw] right-[0.35vw] w-[0.35vw] h-[0.35vw]"
                             delay={1.5}
                             iconUrl="/icons/blue-star.svg"
+                            isZoom={true}
                           />
                         </>
                       )}
 
                       <div className="w-fit h-fit">
-                        <p className="max-w-[150px] truncate text-[15px] text-left font-medium">
+                        <p className="max-w-[10.4vw] truncate text-[1.04vw] text-left font-medium leading-none">
                           {skill.skill.name}
                         </p>
-                        <div className="w-[156px] mt-[5px]">
+                        <div className="w-[10.83vw] mt-[0.35vw]">
                           <SkillMapProgressBar
                             value={progressPercent}
                             strokeColor={strokeColor}
                             trailColor={stepCompleted ? '#D2DBE1' : '#EBF1F7'}
-                            height={'6px'}
+                            height="0.42vw"
                           />
                         </div>
                       </div>
+
                       <div className="relative">
                         {renderTreasureForStep(
                           Boolean(isLocked),
@@ -236,9 +243,9 @@ export const SkillSetting = ({
       {myPageSkillList && myPageSkillList.length < MAX_MY_PAGE_SET_SKILLS ? (
         <div
           style={{
-            boxShadow: '0px 0px 7px 0px #00000080',
+            boxShadow: '0px 0px 0.49vw 0px #00000080',
           }}
-          className="w-[245px] min-w-[245px] h-[52px] bg-transparent border border-white rounded-[14px] hover:opacity-70 flex items-center cursor-pointer justify-center text-white text-center font-medium text-sm"
+          className="w-[17.01vw] min-w-[17.01vw] h-[6.18vh]  bg-transparent border border-white rounded-[0.97vw] hover:opacity-70 flex items-center cursor-pointer justify-center text-white text-center font-medium text-[1vw]"
           onClick={() => setOpenSetSkillModal(true)}>
           <p className="font-medium">＋ スキルをセットできます</p>
         </div>
