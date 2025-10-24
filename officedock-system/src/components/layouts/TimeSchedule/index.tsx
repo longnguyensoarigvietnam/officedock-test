@@ -556,7 +556,7 @@ const TimeSchedule = memo(
                     planStartDate: taskSchedule.planStartDate,
                     planEndDate: taskSchedule.planEndDate as string,
                     end: adjustedEndDate,
-                    startEditable: true,
+                    startEditable: item.archivedAt ? false : true,
                     largeColor: largeColor,
                     isImportant: item.isImportant,
                     deadline: item.deadline,

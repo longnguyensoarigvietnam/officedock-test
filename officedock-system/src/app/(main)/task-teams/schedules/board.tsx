@@ -51,7 +51,6 @@ import {
 import api from '@base/api';
 
 import { TaskTeamStateContext } from '@providers/TaskTeamProvider';
-import { LoadingContext } from '@providers/LoadingProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { TaskContext } from '@providers/TaskProvider';
 
@@ -73,6 +72,8 @@ import { OptionDropdownType } from '@interfaces/common';
 import { NO_SETTING } from '@constants';
 import { generateVerticalGradient } from '@utils';
 import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
+import RowSkeleton from '@components/skeleton/RowSkeleton';
+import Checkbox from '@components/common/Checkbox';
 
 const ScheduleTeamBoard = () => {
   const hasFetched = useRef<boolean>(false);
@@ -87,13 +88,13 @@ const ScheduleTeamBoard = () => {
   const { organizationTeamList, selectedOrganization } =
     useContext(GlobalStateContext);
   const { dataActualAddSchedule } = useContext(TaskContext);
-  const { isConcurrently } = useContext(TaskTeamStateContext);
 
   // State
   const searchParams = useSearchParams();
   const params = new URLSearchParams(searchParams);
 
-  const { setIsLoading } = useContext(LoadingContext);
+  const [isLoadingSchedule, setIsLoadingSchedule] = useState(false);
+  const [isConcurrently, setIsConcurrently] = useState(false);
   const router = useRouter();
   const organizationId = searchParams.get('organization');
   const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
@@ -446,13 +447,21 @@ const ScheduleTeamBoard = () => {
           });
         }
       } else if (isBefore(startDate, today)) {
-        setOptionShow(ItemScheduleTitleType.ACTUAL);
-        getActualEventCalendarByTeam({
-          organizationId:
-            (selectedOrganization?.value as string) || String(organizationId),
-          startDate: startDateISOString,
-          endDate: endDateISOString,
-        });
+        if (selectedOptionShow == ItemScheduleTitleType.ACTUAL) {
+          getActualEventCalendarByTeam({
+            organizationId:
+              (selectedOrganization?.value as string) || String(organizationId),
+            startDate: startDateISOString,
+            endDate: endDateISOString,
+          });
+        } else {
+          getPlanEventCalendarByTeam({
+            organizationId:
+              (selectedOrganization?.value as string) || String(organizationId),
+            startDate: startDateISOString,
+            endDate: endDateISOString,
+          });
+        }
       } else if (isAfter(startDate, today)) {
         setOptionShow(ItemScheduleTitleType.PLANS);
         getPlanEventCalendarByTeam({
@@ -570,18 +579,23 @@ const ScheduleTeamBoard = () => {
     organizationId,
     startDate,
     endDate,
+    isConcurrentlyParam,
   }: {
     organizationId: string;
     startDate?: string;
     endDate?: string;
+    isConcurrentlyParam?: boolean;
   }) => {
-    setIsLoading(true);
+    setIsLoadingSchedule(true);
 
     const params = new URLSearchParams({
       ...(organizationId && { organization_id: String(organizationId) }),
       start_date: startDate || String(currentRange.start),
       end_date: endDate || String(currentRange.end),
-      is_cross_team_task: String(isConcurrently),
+      is_cross_team_task:
+        isConcurrentlyParam != undefined
+          ? String(isConcurrentlyParam)
+          : String(isConcurrently),
 
       ...(orderingOptions?.user_ids?.length && {
         user_ids: orderingOptions.user_ids.map((item) => item.value).join(','),
@@ -679,7 +693,7 @@ const ScheduleTeamBoard = () => {
       },
       onSettled: () => {
         setIsLoadingDataTask(false);
-        setIsLoading(false);
+        setIsLoadingSchedule(false);
         hasFetched.current = false;
       },
     },
@@ -689,17 +703,22 @@ const ScheduleTeamBoard = () => {
     organizationId,
     startDate,
     endDate,
+    isConcurrentlyParam,
   }: {
     organizationId: string;
     startDate?: string;
     endDate?: string;
+    isConcurrentlyParam?: boolean;
   }) => {
-    setIsLoading(true);
+    setIsLoadingSchedule(true);
     const params = new URLSearchParams({
       ...(organizationId && { organization_id: String(organizationId) }),
       start_date: startDate || String(currentRange.start),
       end_date: endDate || String(currentRange.end),
-      is_cross_team_task: String(isConcurrently),
+      is_cross_team_task:
+        isConcurrentlyParam !== undefined
+          ? String(isConcurrentlyParam)
+          : String(isConcurrently),
       ...(orderingOptions?.user_ids?.length && {
         user_ids: orderingOptions.user_ids.map((item) => item.value).join(','),
       }),
@@ -781,7 +800,7 @@ const ScheduleTeamBoard = () => {
       },
       onSettled: () => {
         setIsLoadingDataTask(false);
-        setIsLoading(false);
+        setIsLoadingSchedule(false);
         hasFetched.current = false;
       },
     },
@@ -972,7 +991,7 @@ const ScheduleTeamBoard = () => {
   }, [currentResources]);
 
   return (
-    <>
+    <div className="w-full h-full relative">
       <div className="pt-[30px] px-10  font-medium  w-full">
         <div className="mb-[30px] flex items-center justify-between">
           <div className="flex items-center">
@@ -989,7 +1008,7 @@ const ScheduleTeamBoard = () => {
             <div className="flex justify-center bg-white p-[6px] rounded-[20px] items-center gap-2 ml-5 ">
               <Button
                 variant={'outline'}
-                className={`!text-[#77858F] !bg-transparent !border-[#77858F] !py-0 !px-0 font-bold w-[80px] h-7 !rounded-[20px] text-xs`}
+                className={`!text-[#77858F] !bg-[#EBF1F7] !border-none !py-0 !px-0 font-bold w-[90px] h-7 !rounded-[20px] text-xs`}
                 onClick={() => {
                   router.push(
                     `${pageRouters.TASKS_TEAM_MANAGEMENT.href}?organization=${
@@ -1007,6 +1026,62 @@ const ScheduleTeamBoard = () => {
                 スケジュール
               </Button>
             </div>{' '}
+            <div className="ml-3">
+              <Checkbox
+                label="他チームを表示"
+                isChecked={isConcurrently}
+                disable={isLoadingDataTask}
+                onChange={(data) => {
+                  setIsConcurrently(data);
+                  if (selectedOptionShow == ItemScheduleTitleType.PLANS) {
+                    if (calendarRef.current) {
+                      const calendarApi = calendarRef.current.getApi();
+                      const startDateISOString =
+                        formatQueryStartDateForCalendar(
+                          calendarApi.view.activeStart,
+                        );
+                      const endDateISOString = formatQueryEndDateForCalendar(
+                        calendarApi.view.activeEnd,
+                      );
+
+                      calendarRef.current?.getApi().refetchEvents();
+
+                      getPlanEventCalendarByTeam({
+                        organizationId:
+                          (selectedOrganization?.value as string) ||
+                          String(organizationId),
+                        startDate: startDateISOString,
+                        endDate: endDateISOString,
+                        isConcurrentlyParam: data,
+                      });
+                    }
+                  }
+                  if (selectedOptionShow == ItemScheduleTitleType.ACTUAL) {
+                    if (calendarRef.current) {
+                      const calendarApi = calendarRef.current.getApi();
+                      const startDateISOString =
+                        formatQueryStartDateForCalendar(
+                          calendarApi.view.activeStart,
+                        );
+                      const endDateISOString = formatQueryEndDateForCalendar(
+                        calendarApi.view.activeEnd,
+                      );
+
+                      calendarRef.current?.getApi().refetchEvents();
+
+                      getActualEventCalendarByTeam({
+                        organizationId:
+                          (selectedOrganization?.value as string) ||
+                          String(organizationId),
+                        startDate: startDateISOString,
+                        endDate: endDateISOString,
+                        isConcurrentlyParam: data,
+                      });
+                    }
+                  }
+                }}
+              />
+            </div>
           </div>
           <div className="flex items-center">
             {listMemberTeam.length > 0 && getParticipantAvatars(listMemberTeam)}
@@ -1014,14 +1089,18 @@ const ScheduleTeamBoard = () => {
         </div>
         <div
           className={`flex gap-7 justify-between items-center w-full mb-6 min-w-[300px]`}>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-shrink-0 items-center gap-2">
             <div className="flex items-center ml-[-1rem] gap-4">
-              <ImageRound
-                name="Chevron left"
-                src={'/icons/chevron-left-calendar.svg'}
-                onClick={handlePrev}
-                className="!w-[8px] !h-[10px] hover:cursor-pointer"
-              />
+              {!isLoadingSchedule ? (
+                <ImageRound
+                  name="Chevron left"
+                  src={'/icons/chevron-left-calendar.svg'}
+                  onClick={handlePrev}
+                  className="!w-[8px] !h-[10px] hover:cursor-pointer"
+                />
+              ) : (
+                <div className="!w-[8px] !h-[10px]"></div>
+              )}
               <div className="flex items-end font-normal gap-2">
                 <p className="text-[30px] text-[#5B6770]  font-medium">
                   {displayMonth}月
@@ -1039,13 +1118,17 @@ const ScheduleTeamBoard = () => {
                   )
                 </p>
               </div>
+              {!isLoadingSchedule ? (
+                <ImageRound
+                  name="Chevron right"
+                  src={'/icons/chevron-left-calendar.svg'}
+                  onClick={handleNext}
+                  className="!w-[8px] !h-[10px] rotate-180 hover:cursor-pointer"
+                />
+              ) : (
+                <div className="!w-[8px] !h-[10px]"></div>
+              )}
 
-              <ImageRound
-                name="Chevron right"
-                src={'/icons/chevron-left-calendar.svg'}
-                onClick={handleNext}
-                className="!w-[8px] !h-[10px] rotate-180 hover:cursor-pointer"
-              />
               <div className="ml-[10px] z-20">
                 <DatePicker
                   className="z-50"
@@ -1055,6 +1138,7 @@ const ScheduleTeamBoard = () => {
                       ? calendarRef.current.getApi().getDate()
                       : new Date()
                   }
+                  disabled={isLoadingSchedule}
                   tooltipMsg="カレンダーから日付を選択"
                   size="!w-[18px] !h-[18px]"
                   onChange={(e) => {
@@ -1065,14 +1149,9 @@ const ScheduleTeamBoard = () => {
             </div>
             <>
               {isDateLessThanToday(currentDate) ? (
-                <Button
-                  variant="option"
-                  className={`${selectedOptionShow === ItemScheduleTitleType.ACTUAL && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2]  !bg-[#EBF1F7] '} h-6 w-[80px] !px-0 !py-0 text-xs font-bold !rounded-[20px]   `}>
-                  実績
-                </Button>
-              ) : isTodaySchedule(currentDate) ? (
                 <>
                   <Button
+                    disabled={isLoadingSchedule}
                     variant={
                       isLoadingDataTask
                         ? 'outline'
@@ -1110,6 +1189,86 @@ const ScheduleTeamBoard = () => {
                     予定
                   </Button>
                   <Button
+                    disabled={isLoadingSchedule}
+                    variant={
+                      isLoadingDataTask
+                        ? 'outline'
+                        : selectedOptionShow === ItemScheduleTitleType.ACTUAL
+                          ? 'option'
+                          : 'outline'
+                    }
+                    onClick={() => {
+                      if (selectedOptionShow !== ItemScheduleTitleType.ACTUAL) {
+                        setOptionShow(ItemScheduleTitleType.ACTUAL);
+                        if (calendarRef.current) {
+                          const calendarApi = calendarRef.current.getApi();
+                          const startDateISOString =
+                            formatQueryStartDateForCalendar(
+                              calendarApi.view.activeStart,
+                            );
+                          const endDateISOString =
+                            formatQueryEndDateForCalendar(
+                              calendarApi.view.activeEnd,
+                            );
+
+                          calendarRef.current?.getApi().refetchEvents();
+
+                          getActualEventCalendarByTeam({
+                            organizationId:
+                              (selectedOrganization?.value as string) ||
+                              String(organizationId),
+                            startDate: startDateISOString,
+                            endDate: endDateISOString,
+                          });
+                        }
+                      }
+                    }}
+                    className={`${selectedOptionShow === ItemScheduleTitleType.ACTUAL && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2]  !bg-[#EBF1F7] '} h-6 w-[80px] !px-0 !py-0 text-xs font-bold !rounded-[20px]   `}>
+                    実績
+                  </Button>
+                </>
+              ) : isTodaySchedule(currentDate) ? (
+                <>
+                  <Button
+                    disabled={isLoadingSchedule}
+                    variant={
+                      isLoadingDataTask
+                        ? 'outline'
+                        : selectedOptionShow === ItemScheduleTitleType.PLANS
+                          ? 'option'
+                          : 'outline'
+                    }
+                    onClick={() => {
+                      if (selectedOptionShow !== ItemScheduleTitleType.PLANS) {
+                        setOptionShow(ItemScheduleTitleType.PLANS);
+                        if (calendarRef.current) {
+                          const calendarApi = calendarRef.current.getApi();
+                          const startDateISOString =
+                            formatQueryStartDateForCalendar(
+                              calendarApi.view.activeStart,
+                            );
+                          const endDateISOString =
+                            formatQueryEndDateForCalendar(
+                              calendarApi.view.activeEnd,
+                            );
+
+                          calendarRef.current?.getApi().refetchEvents();
+
+                          getPlanEventCalendarByTeam({
+                            organizationId:
+                              (selectedOrganization?.value as string) ||
+                              String(organizationId),
+                            startDate: startDateISOString,
+                            endDate: endDateISOString,
+                          });
+                        }
+                      }
+                    }}
+                    className={`${selectedOptionShow === ItemScheduleTitleType.PLANS && !isLoadingDataTask ? '!bg-[#3CABF3]' : '!border-[#A7B7C2] !text-[#A7B7C2] !bg-[#EBF1F7]  '}   h-6 w-[80px] !px-0 !py-0 text-xs font-bold !rounded-[20px] `}>
+                    予定
+                  </Button>
+                  <Button
+                    disabled={isLoadingSchedule}
                     variant={
                       isLoadingDataTask
                         ? 'outline'
@@ -1150,6 +1309,7 @@ const ScheduleTeamBoard = () => {
               ) : (
                 <>
                   <Button
+                    disabled={isLoadingSchedule}
                     variant="option"
                     className={`${selectedOptionShow === ItemScheduleTitleType.PLANS && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] !bg-[#EBF1F7]  '} !bg-[#3CABF3]  h-6 w-[80px] !px-0 !py-0 text-xs font-bold !rounded-[20px]`}>
                     予定
@@ -1177,24 +1337,29 @@ const ScheduleTeamBoard = () => {
                         {firstThree.slice(0, 3).map((item, index) => (
                           <div
                             key={index}
-                            onClick={() =>
-                              handleRemoveItem(
-                                item.category as
-                                  | 'organization_ids'
-                                  | 'tag_ids'
-                                  | 'category_ids',
-                                item.value,
-                              )
-                            }
                             className="w-[105px] h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#EBF1F7]">
                             <span className="w-[71px] truncate">
                               {item.label}
                             </span>
-                            <ImageRound
-                              src={`/icons/close.svg`}
-                              name="close"
-                              className="w-fit h-fit cursor-pointer"
-                            />
+                            {!isLoadingSchedule ? (
+                              <ImageRound
+                                src={`/icons/close.svg`}
+                                name="close"
+                                onClick={() => {
+                                  handleRemoveItem(
+                                    item.category as
+                                      | 'organization_ids'
+                                      | 'tag_ids'
+                                      | 'category_ids',
+                                    item.value,
+                                  );
+                                  scrollToNowIndicator();
+                                }}
+                                className="w-fit h-fit cursor-pointer"
+                              />
+                            ) : (
+                              <div className="w-[18px] h-[18px]"></div>
+                            )}
                           </div>
                         ))}
                         <p className="px-[10px] h-6 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
@@ -1206,25 +1371,29 @@ const ScheduleTeamBoard = () => {
                         {allLabels.map((item, index) => (
                           <div
                             key={index}
-                            onClick={() => {
-                              handleRemoveItem(
-                                item.category as
-                                  | 'organization_ids'
-                                  | 'tag_ids'
-                                  | 'category_ids',
-                                item.value,
-                              );
-                              scrollToNowIndicator();
-                            }}
                             className=" h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#DAE2EB]">
                             <span className="min-w-[71px] truncate">
                               {item.label}
                             </span>
-                            <ImageRound
-                              src={`/icons/close.svg`}
-                              name="close"
-                              className="w-fit h-fit cursor-pointer"
-                            />
+                            {!isLoadingSchedule ? (
+                              <ImageRound
+                                src={`/icons/close.svg`}
+                                name="close"
+                                className="w-fit h-fit cursor-pointer"
+                                onClick={() => {
+                                  handleRemoveItem(
+                                    item.category as
+                                      | 'organization_ids'
+                                      | 'tag_ids'
+                                      | 'category_ids',
+                                    item.value,
+                                  );
+                                  scrollToNowIndicator();
+                                }}
+                              />
+                            ) : (
+                              <div className="w-[18px] h-[18px]"></div>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -1262,7 +1431,15 @@ const ScheduleTeamBoard = () => {
           />
         </div>
       </div>
-
+      {isLoadingSchedule && (
+        <div className="absolute h-[calc(100vh_-_150px)] w-full z-[30] ">
+          <RowSkeleton
+            numberOfRows={1}
+            className="h-full flex-grow !rounded-[14px] w-[calc(100%)] !bg-[#E6F3FB] !bg-[linear-gradient(100deg,_#ffffff00_40%,_#ffffff80_50%,_#ffffff00_60%)] !bg-[length:200%_100%]"
+            classNameCustom="h-full"
+          />
+        </div>
+      )}
       <div
         key={pathname}
         className={`w-full relative  overflow-visible min-w-0 calendar-team-custom day ${getAllDayEventCountText(events)} `}
@@ -1409,7 +1586,7 @@ const ScheduleTeamBoard = () => {
           }}
         />
       </div>
-    </>
+    </div>
   );
 };
 

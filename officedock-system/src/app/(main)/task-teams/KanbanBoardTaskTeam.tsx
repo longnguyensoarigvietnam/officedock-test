@@ -2470,7 +2470,7 @@ const KanbanBoardTaskTeam = () => {
   return (
     <>
       <div
-        className={`pt-[30px] pr-10 h-[calc(100vh_-_76px)] !overflow-hidden ${isDragging ? 'overflow-hidden' : 'overflow-y-auto'}   font-medium  w-full pb-10`}>
+        className={`pt-[30px] pr-10 h-[calc(100vh_-_70px)] !overflow-hidden ${isDragging ? 'overflow-hidden' : 'overflow-y-auto'}   font-medium  w-full pb-10`}>
         <div className="mb-[30px] flex items-center justify-between">
           <div className="flex items-center">
             <div className="flex gap-1 items-center">
@@ -2529,17 +2529,6 @@ const KanbanBoardTaskTeam = () => {
                         {firstThree.slice(0, 2).map((item, index) => (
                           <div
                             key={index}
-                            onClick={() => {
-                              setIsReadyToFetch(true);
-                              handleRemoveItem(
-                                item.category as
-                                  | 'organization_ids'
-                                  | 'tag_ids'
-                                  | 'user_ids'
-                                  | 'category_ids',
-                                item.value,
-                              );
-                            }}
                             className="w-[105px] h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#DAE2EB]">
                             <span className="w-[71px] truncate">
                               {item.label}
@@ -2549,6 +2538,17 @@ const KanbanBoardTaskTeam = () => {
                                 src={`/icons/close.svg`}
                                 name="close"
                                 className="w-fit h-fit cursor-pointer"
+                                onClick={() => {
+                                  setIsReadyToFetch(true);
+                                  handleRemoveItem(
+                                    item.category as
+                                      | 'organization_ids'
+                                      | 'tag_ids'
+                                      | 'user_ids'
+                                      | 'category_ids',
+                                    item.value,
+                                  );
+                                }}
                               />
                             )}
                           </div>
@@ -2562,16 +2562,6 @@ const KanbanBoardTaskTeam = () => {
                         {allLabels.map((item, index) => (
                           <div
                             key={index}
-                            onClick={() => {
-                              setIsReadyToFetch(true);
-                              handleRemoveItem(
-                                item.category as
-                                  | 'organization_ids'
-                                  | 'tag_ids'
-                                  | 'category_ids',
-                                item.value,
-                              );
-                            }}
                             className="w-[105px] h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#DAE2EB]">
                             <span className="w-[71px] truncate">
                               {item.label}
@@ -2581,6 +2571,16 @@ const KanbanBoardTaskTeam = () => {
                                 src={`/icons/close.svg`}
                                 name="close"
                                 className="w-fit h-fit cursor-pointer"
+                                onClick={() => {
+                                  setIsReadyToFetch(true);
+                                  handleRemoveItem(
+                                    item.category as
+                                      | 'organization_ids'
+                                      | 'tag_ids'
+                                      | 'category_ids',
+                                    item.value,
+                                  );
+                                }}
                               />
                             )}
                           </div>

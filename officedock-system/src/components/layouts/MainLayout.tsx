@@ -153,7 +153,7 @@ const MainLayout = ({
   }
 
   return (
-    <div className="h-[calc(100vh_-_76px)]">
+    <div className="h-[calc(100vh_-_70px)]">
       <Metadata
         metadata={
           title == pageRouters.CHAT_MANAGEMENT.name

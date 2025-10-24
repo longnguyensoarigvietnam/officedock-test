@@ -24,7 +24,7 @@ const Drawer = ({
         onClick={onClose}
       />
       <div
-        className={`fixed ${className} top-[76px] z-[22] h-[calc(100vh-76px)] overflow-hidden right-0  w-fit bg-white shadow-lg  transform transition-transform ${
+        className={`fixed ${className} top-[70px] z-[22] h-[calc(100vh-70px)] overflow-hidden right-0  w-fit bg-white shadow-lg  transform transition-transform ${
           open
             ? 'animate-[slideToLeft_0.7s_linear_forwards]'
             : 'animate-[slideToRight_0.7s_linear_forwards]'

@@ -184,7 +184,7 @@ const ActionFilterTask = ({
       };
     });
 
-    if (!selectedCategories[teamId]) {
+    if (selectedCategories[teamId]) {
       setSelectedCategories((prev) => ({
         ...prev,
         [teamId]: {},

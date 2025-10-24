@@ -187,7 +187,7 @@ const DraggableLayout = () => {
                 position={positionBtn}
                 disableDragging={true}
                 enableResizing={false}
-                className="w-full h-full z-20">
+                className="w-full h-full z-[50]">
                 <div
                   onClick={() => handleShow()}
                   className="w-[46px] h-10 bg-[#0068B7] flex items-center justify-center cursor-pointer  rounded-tl-[10px]">

@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import ImageRound from '@components/common/ImageRound';
 import SmoothImage from '@components/common/ImageRound/SmoothImage';
@@ -10,6 +10,7 @@ import { ItemAvatarType } from '@constants/enums';
 import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 import { AvatarItemUser } from '@interfaces/shop';
 import { updateAvatarUrl } from '@utils';
+import { CACHE_KEY, CACHE_TTL } from '@constants';
 
 interface Props {
   isPodium?: boolean;
@@ -30,6 +31,33 @@ export const RenderAccessoriesPreview = ({
   const totalImages = useRef(0);
   const prevUrlsRef = useRef<string>('');
 
+  const initialCache = useMemo(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (!cached) return null;
+      const parsed = JSON.parse(cached);
+      if (
+        parsed &&
+        Array.isArray(parsed.data) &&
+        Date.now() - parsed.timestamp < CACHE_TTL
+      ) {
+        return parsed.data;
+      }
+    } catch {
+      return null;
+    }
+    return null;
+  }, []);
+
+  useEffect(() => {
+    if (initialCache && initialCache.length > 0) {
+      setItemsPreview(initialCache);
+      totalImages.current = initialCache.length;
+    }
+    setShowLoader(true);
+  }, [initialCache, setItemsPreview]);
+
   const { isFetchingCreationDataCommon } = useCreationDataCommon({
     options: {
       get_balances_of_user: true,
@@ -43,6 +71,13 @@ export const RenderAccessoriesPreview = ({
         }));
         const merged = updateAvatarUrl(itemsPreview, updates);
         setItemsPreview(merged);
+        localStorage.setItem(
+          CACHE_KEY,
+          JSON.stringify({
+            timestamp: Date.now(),
+            data: merged,
+          }),
+        );
       }
     },
   });

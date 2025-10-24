@@ -1940,7 +1940,9 @@ const EventCalendar = () => {
         return [];
       }
       return events.map((event) => {
-        const eventClass = event.id?.includes('holiday') ? 'holiday-event' : 'event-type-schedule';
+        const eventClass = event.id?.includes('holiday')
+          ? 'holiday-event'
+          : 'event-type-schedule';
         return {
           ...event,
           classNames: [eventClass],
@@ -2505,7 +2507,7 @@ const EventCalendar = () => {
           style={{
             boxShadow: '-4px 0px 8px 0px #0000000D',
           }}
-          className={`${showSidebar ? 'w-[320px] rounded-l-[30px] relative py-6 px-4 h-[calc(100vh_-_76px)] bg-[#F6F9FA]' : 'opacity-0 w-0 overflow-hidden'}`}>
+          className={`${showSidebar ? 'w-[320px] rounded-l-[30px] relative py-6 px-4 h-[calc(100vh_-_70px)] bg-[#F6F9FA]' : 'opacity-0 w-0 overflow-hidden'}`}>
           <CalendarSidebar
             calendarRef={calendarRef}
             keySearch={keySearch}

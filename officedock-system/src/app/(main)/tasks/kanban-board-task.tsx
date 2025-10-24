@@ -3190,7 +3190,7 @@ const KanbanBoardTask = () => {
 
   return (
     <>
-      <div className="flex flex-row flex-grow h-[calc(100vh_-_76px)] gap-0 bg-white">
+      <div className="flex flex-row flex-grow h-[calc(100vh_-_70px)] gap-0 bg-white">
         <TimeSchedule
           exEvents={exEvents}
           creationDataCommonData={creationDataCommonData}
@@ -3462,15 +3462,6 @@ const KanbanBoardTask = () => {
                         {firstSix.slice(0, 6).map((item, index) => (
                           <div
                             key={index}
-                            onClick={() =>
-                              handleRemoveItem(
-                                item.category as
-                                  | 'organization_ids'
-                                  | 'tag_ids'
-                                  | 'category_ids',
-                                item.value,
-                              )
-                            }
                             className="w-[105px] h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#EBF1F7]">
                             <span className="w-[71px] truncate">
                               {item.label}
@@ -3480,6 +3471,15 @@ const KanbanBoardTask = () => {
                                 src={`/icons/close.svg`}
                                 name="close"
                                 className="w-fit h-fit cursor-pointer"
+                                onClick={() =>
+                                  handleRemoveItem(
+                                    item.category as
+                                      | 'organization_ids'
+                                      | 'tag_ids'
+                                      | 'category_ids',
+                                    item.value,
+                                  )
+                                }
                               />
                             )}
                           </div>
@@ -3493,17 +3493,6 @@ const KanbanBoardTask = () => {
                         {allLabels.map((item, index) => (
                           <div
                             key={index}
-                            onClick={() => {
-                              setIsReadyToFetch(true);
-
-                              handleRemoveItem(
-                                item.category as
-                                  | 'organization_ids'
-                                  | 'tag_ids'
-                                  | 'category_ids',
-                                item.value,
-                              );
-                            }}
                             className="w-[105px] h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#EBF1F7]">
                             <span className="w-[71px] truncate">
                               {item.label}
@@ -3513,6 +3502,17 @@ const KanbanBoardTask = () => {
                                 src={`/icons/close.svg`}
                                 name="close"
                                 className="w-fit h-fit cursor-pointer"
+                                onClick={() => {
+                                  setIsReadyToFetch(true);
+
+                                  handleRemoveItem(
+                                    item.category as
+                                      | 'organization_ids'
+                                      | 'tag_ids'
+                                      | 'category_ids',
+                                    item.value,
+                                  );
+                                }}
                               />
                             )}
                           </div>

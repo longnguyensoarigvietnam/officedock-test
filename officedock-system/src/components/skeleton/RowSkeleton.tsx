@@ -1,11 +1,16 @@
 interface RowsProps {
   numberOfRows?: number;
   className?: string;
+  classNameCustom?: string;
 }
 
-const RowSkeleton: React.FC<RowsProps> = ({ numberOfRows, className }) => {
+const RowSkeleton: React.FC<RowsProps> = ({
+  numberOfRows,
+  className,
+  classNameCustom,
+}) => {
   return (
-    <div className="flex flex-col gap-2">
+    <div className={`flex flex-col gap-2 ${classNameCustom}`}>
       {Array.from({ length: numberOfRows || 1 }).map((_, index) => (
         <div
           key={index}
