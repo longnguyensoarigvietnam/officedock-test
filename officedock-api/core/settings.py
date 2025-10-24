@@ -200,7 +200,15 @@ EDITABLE_AFTER_CLOSING = int(os.getenv("EDITABLE_AFTER_CLOSING", 10))
 
 # Get REDIS_URL from environment variable or install directly
 REDIS_URL = os.getenv("REDIS_URL", None)
-SYSTEM_YOUTUBE_URL = os.getenv("SYSTEM_YOUTUBE_URL", None)
+SYSTEM_YOUTUBE_URL = os.getenv(
+    "SYSTEM_YOUTUBE_URL", "https://www.youtube.com/@officedock2025"
+)
+MAIL_TEMPLATE_FOOTER_EMAIL = os.getenv(
+    "MAIL_TEMPLATE_FOOTER_EMAIL", "info@officedock.jp"
+)
+MAIL_TEMPLATE_FOOTER_ADDRESS = os.getenv(
+    "MAIL_TEMPLATE_FOOTER_ADDRESS", "https://officedock.jp/"
+)
 
 # Channels
 ASGI_APPLICATION = "core.asgi.application"
