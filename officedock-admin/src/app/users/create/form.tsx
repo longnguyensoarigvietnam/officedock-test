@@ -5,14 +5,15 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 import { useMutation } from 'react-query';
 
 import Button from '@components/common/Button';
-
 import Input from '@components/common/Input';
 
 import api from '@base/api';
-import { CreateUserFormData, CreateUserFormRequest } from '@interfaces/user';
+
+import { CreateUserFormRequest } from '@interfaces/user';
 
 import {
   ERROR_CREATE_MESSAGE,
+  FIELD_MAX_LENGTH_255_MESSAGE,
   NAME_REQUIRED_MESSAGE,
   SUCCESS_CREATE_MESSAGE,
 } from '@constants/message';
@@ -21,18 +22,23 @@ import { apiRouters, pageRouters } from '@constants/routers';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 
+import { useErrorToast } from '@hooks/useErrorToast';
+
 import { emailRules } from '@utils/validators';
+import { getErrorMessage, handleServerFormErrors } from '@utils';
 
 const CreateUserForm = () => {
   const router = useRouter();
   const { setIsLoading } = useContext(LoadingContext);
   const { showToast } = useToast();
+  const showErrorToast = useErrorToast();
 
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors },
-  } = useForm<CreateUserFormData>({
+  } = useForm<CreateUserFormRequest>({
     mode: 'onSubmit',
   });
 
@@ -51,11 +57,10 @@ const CreateUserForm = () => {
         });
         router.push(pageRouters.USERS_MANAGEMENT.href);
       },
-      onError: () => {
-        showToast({
-          variant: 'error',
-          description: ERROR_CREATE_MESSAGE,
-        });
+      onError: (error: any) => {
+        showErrorToast(error, ERROR_CREATE_MESSAGE);
+
+        handleServerFormErrors<CreateUserFormRequest>(error, setError);
       },
       onSettled: () => {
         setIsLoading(false);
@@ -63,11 +68,11 @@ const CreateUserForm = () => {
     },
   );
 
-  const onSubmit: SubmitHandler<CreateUserFormData> = (data) => {
+  const onSubmit: SubmitHandler<CreateUserFormRequest> = (data) => {
     createUser({
       email: data.email,
       profile: {
-        fullName: data.name,
+        fullName: data.profile.fullName,
       },
     });
   };
@@ -81,16 +86,20 @@ const CreateUserForm = () => {
             label="名前"
             required
             placeholder="入力してください"
-            error={errors?.name?.message}
-            register={register('name', {
+            error={getErrorMessage(errors, 'profile.fullName')}
+            register={register('profile.fullName', {
               required: NAME_REQUIRED_MESSAGE,
+              maxLength: {
+                value: 255,
+                message: FIELD_MAX_LENGTH_255_MESSAGE,
+              },
             })}
           />
           <Input
             label="メールアドレス"
             required
             placeholder="入力してください"
-            error={errors?.email?.message}
+            error={getErrorMessage(errors, 'email')}
             register={register('email', emailRules(true))}
           />
         </div>

@@ -29,10 +29,13 @@ import { useToast } from '@providers/ToastProvider';
 
 import useDetailTerm from '@hooks/useDetailTerm';
 import { useErrorToast } from '@hooks/useErrorToast';
+
 import { CreateTermFormData, TermFormDataRequest } from '@interfaces/term';
 import { OptionDropdownType } from '@interfaces/common';
+
 import { formatDate } from '@utils/date';
 import { isContentEmpty } from '@utils';
+
 import api from '@base/api';
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });

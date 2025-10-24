@@ -29,6 +29,7 @@ import {
 } from '@constants';
 
 import useCompanyDetail from '@hooks/useDetailCompany';
+import { useErrorToast } from '@hooks/useErrorToast';
 
 import { useToast } from '@providers/ToastProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
@@ -41,6 +42,7 @@ const CompanyDetailInfo = () => {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const { showToast } = useToast();
+  const showErrorToast = useErrorToast();
   const { setIsLoading } = useContext(LoadingContext);
   const [openConfirmTerminateModal, setOpenConfirmTerminateModal] =
     useState(false);
@@ -81,11 +83,8 @@ const CompanyDetailInfo = () => {
 
         setIsLoading(false);
       },
-      onError: () => {
-        showToast({
-          variant: 'error',
-          description: ERROR_SAVE_MESSAGE,
-        });
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_SAVE_MESSAGE);
         setIsLoading(false);
       },
     },
@@ -109,11 +108,8 @@ const CompanyDetailInfo = () => {
         setOpenConfirmTerminateModal(false);
         setIsLoading(false);
       },
-      onError: () => {
-        showToast({
-          variant: 'error',
-          description: ERROR_SAVE_MESSAGE,
-        });
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_SAVE_MESSAGE);
         setOpenConfirmTerminateModal(false);
         setIsLoading(false);
       },

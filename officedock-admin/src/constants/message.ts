@@ -18,8 +18,7 @@ export const INDUSTRY_REQUIRED_MESSAGE = '業種は必須です。';
 export const STATUS_REQUIRED_MESSAGE = 'ステータスは必須です。';
 export const SYSTEM_MAIN_PURPOSE_REQUIRED_MESSAGE =
   'システム導入の主な目的は必須です。';
-export const DEPARTMENT_REQUIRED_MESSAGE =
-  '利用部門は必須です。';
+export const DEPARTMENT_REQUIRED_MESSAGE = '利用部門は必須です。';
 
 //Validate message
 export const PASSWORD_MIN_LENGTH_MESSAGE =
@@ -27,6 +26,7 @@ export const PASSWORD_MIN_LENGTH_MESSAGE =
 export const PASSWORD_NOT_MATCHED_MESSAGE = 'パスワードが一致しません。';
 export const PASSWORD_WRONG_FORMAT = 'このパスワードは一般的すぎます。';
 export const PHONE_NUMBER_WRONG_FORMAT = '電話番号の形式が正しくありません。';
+export const FIELD_MAX_LENGTH_255_MESSAGE = '255文字以内で入力してください。';
 
 // Success message
 export const SUCCESS_SENT_MAIL_MESSAGE = 'メール送信に成功しました';
