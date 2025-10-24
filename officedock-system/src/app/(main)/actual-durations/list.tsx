@@ -490,7 +490,7 @@ const ListActualDurations = () => {
                 <ImageRound
                   name="Detail"
                   src="/icons/detail.svg"
-                  className="w-5 h-5 hover:cursor-pointer"
+                  className="w-[18px] h-[18px] hover:cursor-pointer opacity-65"
                 />
               </Link>
 
@@ -508,11 +508,11 @@ const ListActualDurations = () => {
                   <ImageRound
                     name="Edit"
                     src="/icons/edit-gray.svg"
-                    className="w-3 h-3 hover:cursor-pointer opacity-65"
+                    className="w-[14px] h-[14px] hover:cursor-pointer opacity-65"
                   />
                 </Link>
               ) : (
-                <div className="w-3 h-3 "></div>
+                <div className="w-[14px] h-[14px]"></div>
               )}
 
               {session?.user.permissions &&
@@ -553,10 +553,10 @@ const ListActualDurations = () => {
   return (
     <div
       className={`${expanded ? 'max-w-[calc(100%-200px)]' : 'max-w-[calc(100%-70px)]'}`}>
-      <div className="flex flex-col border rounded-lg">
+      <div className="flex flex-col border border-gray-300 rounded-lg">
         <div
           className={`flex justify-between px-3 py-4 rounded-t-lg ${showFilter && 'border-b'} bg-[#F8FAFC]`}>
-          <span className="text-gray-700 text-base font-medium">検索</span>
+          <span className="text-black text-base font-medium">検索</span>
           <ImageRound
             name="Filter extend icon"
             src={'/icons/arrow-down.svg'}
@@ -573,7 +573,7 @@ const ListActualDurations = () => {
           leaveFrom="transform translate-y-0"
           leaveTo="transform -translate-y-[10%]">
           <form
-            className={`flex flex-col gap-4 p-4 bg-white`}
+            className={`flex flex-col gap-4 p-4 bg-white rounded-b-lg`}
             onSubmit={handleSubmit(onSubmit)}>
             <div className="flex gap-4">
               <div className="w-1/4">
@@ -585,6 +585,9 @@ const ListActualDurations = () => {
                       render={({ field: { onChange, value } }) => (
                         <Dropdown
                           label="タスク/予定"
+                          labelTextClass="text-black font-medium"
+                          labelOptionClass="text-sm"
+                          labelClass="text-sm"
                           options={[
                             { label: '選択', value: '' },
                             ...TASK_AND_EVENT_OPTIONS,
@@ -607,6 +610,8 @@ const ListActualDurations = () => {
                   <div className="w-full">
                     <Input
                       label="タイトル"
+                      labelClassName="text-sm text-black font-medium"
+                      className='text-sm h-[42px] !placeholder-[#BABABA]'
                       placeholder="入力してください"
                       register={register('title')}
                     />
@@ -622,6 +627,9 @@ const ListActualDurations = () => {
                       render={({ field: { onChange, value } }) => (
                         <Dropdown
                           label="集計タグ"
+                          labelTextClass="text-black font-medium"
+                          labelOptionClass="text-sm"
+                          labelClass="text-sm"
                           options={[
                             { label: '選択', value: '' },
                             ...dataOptionsTags,
@@ -648,6 +656,9 @@ const ListActualDurations = () => {
                       render={({ field: { onChange, value } }) => (
                         <Dropdown
                           label="従業員"
+                          labelTextClass="text-black font-medium"
+                          labelOptionClass="text-sm"
+                          labelClass="text-sm"
                           options={[
                             { label: '選択', value: '' },
                             ...dataOptionsStaff,
@@ -676,6 +687,9 @@ const ListActualDurations = () => {
                       render={({ field: { onChange, value } }) => (
                         <Dropdown
                           label="大カテゴリ"
+                          labelTextClass="text-black font-medium"
+                          labelOptionClass="text-sm"
+                          labelClass="text-sm"
                           options={[
                             { label: '未選択', value: '' },
                             ...dataOptionsLargeCategories,
@@ -702,6 +716,9 @@ const ListActualDurations = () => {
                       render={({ field: { onChange, value } }) => (
                         <Dropdown
                           label="中カテゴリ"
+                          labelTextClass="text-black font-medium"
+                          labelOptionClass="text-sm"
+                          labelClass="text-sm"
                           options={[
                             { label: '未選択', value: '' },
                             ...dataOptionsMediumCategories,
@@ -728,6 +745,9 @@ const ListActualDurations = () => {
                       render={({ field: { onChange, value } }) => (
                         <Dropdown
                           label="小カテゴリ"
+                          labelTextClass="text-black font-medium"
+                          labelOptionClass="text-sm"
+                          labelClass="text-sm"
                           options={[
                             { label: '未選択', value: '' },
                             ...dataOptionsSmallCategories,
@@ -747,18 +767,18 @@ const ListActualDurations = () => {
               </div>
               <div className="w-1/4"></div>
             </div>
-            <div className="flex justify-end gap-5">
+            <div className="flex justify-end gap-[10px]">
               <Button
                 variant="outline"
                 type="button"
-                className="w-28 !text-primary !rounded-lg"
+                className="w-[100px] h-[36px] !text-primary !rounded-lg"
                 onClick={handleClearFilterForm}>
                 クリア
               </Button>
               <Button
                 variant="secondary"
                 type="submit"
-                className="w-28 !text-primary !bg-[#eaeeff] !rounded-lg !border-transparent">
+                className="w-[100px] h-[36px] !text-primary !bg-[#eaeeff] !rounded-lg !border-transparent">
                 絞り込み
               </Button>
             </div>
@@ -770,13 +790,15 @@ const ListActualDurations = () => {
           session?.user.permissions,
           PermissionsSystem.ACTUAL_DURATION_ADD,
         ) && (
-          <div className="flex justify-end gap-10 my-8">
+          <div className="flex justify-end gap-5 my-8">
             <div className="w-60">
               <Dropdown
                 placeholder="従業員"
-                classNameTextData=" !px-2 [&>div]:justify-center "
+                classNameTextData="!px-2 [&>div]:justify-center "
                 classNameOption=""
                 className=""
+                labelOptionClass="text-sm"
+                labelClass="text-sm"
                 options={dataOptionsStaff}
                 selectedOption={{
                   label: selectedStaff.label,
@@ -790,9 +812,12 @@ const ListActualDurations = () => {
             <div className="w-60">
               <Dropdown
                 placeholder="タスク/予定を選択"
+                placeholderClass="!text-[#BABABA]"
                 classNameTextData="!px-2 [&>div]:justify-center "
                 classNameOption=""
-                className="h-[45px]"
+                className="h-[42px]"
+                labelOptionClass="text-sm"
+                labelClass="text-sm"
                 options={actualDurationsByStaff}
                 disabled={!actualDurationsByStaff.length}
                 selectedOption={
@@ -828,7 +853,7 @@ const ListActualDurations = () => {
                   : ''
               }
               className={'flex'}>
-              <Button disabled={!selectedActualDurationId} className="w-44">
+              <Button disabled={!selectedActualDurationId} className="w-44 h-[42px]">
                 新規登録
               </Button>
             </Link>
