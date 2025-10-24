@@ -143,7 +143,7 @@ class DotMoneyViewSet(BaseAPIViewSet):
         user = request.user
         user_id = user.id
         user_name = user.full_name
-        balance = user.exchangeable_coin
+        balance = min(user.coin, user.exchangeable_coin)
 
         # Build full exchange URL using DotMoney service
         full_url = DotMoneyService().build_exchange_url(
