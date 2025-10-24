@@ -312,7 +312,7 @@ const RoomDetail = () => {
         <div className="absolute bottom-[42px] left-[120px]">
           <div className="flex-grow">
             <div className="h-[424px] w-[336px] ml-[200px] relative">
-              <RenderAccessories />
+              <RenderAccessories user_id={String(params.id)} />
             </div>
           </div>
         </div>

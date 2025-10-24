@@ -461,7 +461,6 @@ const TaskListStatisticTags = ({
                 <div className="w-4">
                   <Checkbox
                     isChecked={!isShowCompare}
-                    disable={!isShowCompare}
                     onChange={() => {
                       setCurrentPage(1);
                       setIsShowCompare(false);
@@ -482,7 +481,6 @@ const TaskListStatisticTags = ({
                 <div className="w-4">
                   <Checkbox
                     isChecked={isShowCompare}
-                    disable={isShowCompare}
                     onChange={() => {
                       setCurrentPage(1);
                       setIsShowCompare(true);

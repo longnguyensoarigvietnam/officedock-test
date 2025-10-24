@@ -250,7 +250,7 @@ const TaskListStatistic = ({
           {/* Filter */}
           <FilterStatistic />
         </div>
-        <div className='flex items-center gap-4'>
+        <div className="flex items-center gap-4">
           {/* Download button */}
           <Popover className="relative">
             {({ close }) => {
@@ -457,7 +457,6 @@ const TaskListStatistic = ({
                 <div className="w-4">
                   <Checkbox
                     isChecked={!isShowCompare}
-                    disable={!isShowCompare}
                     onChange={() => {
                       setCurrentPage(1);
                       setIsShowCompare(false);
@@ -478,7 +477,6 @@ const TaskListStatistic = ({
                 <div className="w-4">
                   <Checkbox
                     isChecked={isShowCompare}
-                    disable={isShowCompare}
                     onChange={() => {
                       setCurrentPage(1);
                       setIsShowCompare(true);
