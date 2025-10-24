@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework.exceptions import ValidationError
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -25,6 +26,7 @@ from companies.constants import (
 from companies.services import CompanyService
 
 from roles.constants import Screens
+from users.models import User
 from .filters import CompanyFilter
 from .models import Company, CompanyPaymentMethod, CompanyPlan, Contract
 from .serializers import (
@@ -97,6 +99,11 @@ class CompanyViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         setting up Stripe subscription, and updating contract status.
         """
         company = self.get_object()
+        if User.objects.filter(
+            Q(email=company.responsible_person_mail)
+            | Q(username=company.responsible_person_mail)
+        ).exists():
+            raise ValidationError({"detail": ERROR_MESSAGES["email_exists"]})
         self.company_service.active_company(request, company)
         return self.response_ok()
 
