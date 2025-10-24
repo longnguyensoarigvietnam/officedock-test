@@ -17,6 +17,7 @@ import {
   ERROR_COMMON_MESSAGE,
   ERROR_UPDATE_MESSAGE,
   INDUSTRY_REQUIRED_MESSAGE,
+  FIELD_MAX_LENGTH_255_MESSAGE,
   PHONE_NUMBER_WRONG_FORMAT,
   PHONE_REQUIRED_MESSAGE,
   RESPONSIBLE_PERSON_NAME_REQUIRED_MESSAGE,
@@ -343,6 +344,10 @@ const EditCompanyForm = () => {
         placeholder="会社名を入力してください"
         register={register('name', {
           required: COMPANY_NAME_REQUIRED_MESSAGE,
+          maxLength: {
+            value: 255,
+            message: FIELD_MAX_LENGTH_255_MESSAGE,
+          },
         })}
         autoComplete="off"
         error={errors.name?.message}
@@ -382,6 +387,10 @@ const EditCompanyForm = () => {
         placeholder="担当責任者名を入力してください"
         register={register('responsiblePersonName', {
           required: RESPONSIBLE_PERSON_NAME_REQUIRED_MESSAGE,
+          maxLength: {
+            value: 255,
+            message: FIELD_MAX_LENGTH_255_MESSAGE,
+          },
         })}
         autoComplete="off"
         error={errors?.responsiblePersonName?.message}
@@ -437,6 +446,10 @@ const EditCompanyForm = () => {
         placeholder="住所を入力してください"
         register={register('contract.address', {
           required: ADDRESS_REQUIRED_MESSAGE,
+          maxLength: {
+            value: 255,
+            message: FIELD_MAX_LENGTH_255_MESSAGE,
+          },
         })}
         autoComplete="off"
         error={errors?.contract?.address?.message}

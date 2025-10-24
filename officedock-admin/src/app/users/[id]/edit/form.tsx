@@ -9,28 +9,34 @@ import Button from '@components/common/Button';
 import Input from '@components/common/Input';
 
 import api from '@base/api';
-import { CreateUserFormData, CreateUserFormRequest } from '@interfaces/user';
+
+import { CreateUserFormRequest } from '@interfaces/user';
 
 import {
   ERROR_COMMON_MESSAGE,
   ERROR_UPDATE_MESSAGE,
+  FIELD_MAX_LENGTH_255_MESSAGE,
   NAME_REQUIRED_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
 import { apiRouters, pageRouters } from '@constants/routers';
+import { ServerStatusCode } from '@constants/enums';
 
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 
 import { emailRules } from '@utils/validators';
+import { getErrorMessage, handleServerFormErrors } from '@utils';
+
 import useDetailUser from '@hooks/useDetailUser';
-import { ServerStatusCode } from '@constants/enums';
+import { useErrorToast } from '@hooks/useErrorToast';
 
 const EditUserForm = () => {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const { setIsLoading } = useContext(LoadingContext);
   const { showToast } = useToast();
+  const showErrorToast = useErrorToast();
 
   const { userDetail } = useDetailUser({
     userId: params.id,
@@ -49,19 +55,22 @@ const EditUserForm = () => {
     register,
     reset,
     handleSubmit,
+    setError,
     formState: { errors },
-  } = useForm<CreateUserFormData>({
+  } = useForm<CreateUserFormRequest>({
     mode: 'onSubmit',
   });
 
-  const defaultValues = useMemo<CreateUserFormData>(() => {
-    const value: CreateUserFormData = {
-      name: '',
+  const defaultValues = useMemo<CreateUserFormRequest>(() => {
+    const value: CreateUserFormRequest = {
+      profile: {
+        fullName: '',
+      },
       email: '',
     };
 
     if (userDetail) {
-      value.name = userDetail.profile?.fullName || '';
+      value.profile.fullName = userDetail.profile?.fullName || '';
       value.email = userDetail.email;
     }
 
@@ -86,22 +95,21 @@ const EditUserForm = () => {
       });
       router.push(pageRouters.USERS_MANAGEMENT.href);
     },
-    onError: () => {
-      showToast({
-        variant: 'error',
-        description: ERROR_UPDATE_MESSAGE,
-      });
+    onError: (error: any) => {
+      showErrorToast(error, ERROR_UPDATE_MESSAGE);
+
+      handleServerFormErrors<CreateUserFormRequest>(error, setError);
     },
     onSettled: () => {
       setIsLoading(false);
     },
   });
 
-  const onSubmit: SubmitHandler<CreateUserFormData> = (data) => {
+  const onSubmit: SubmitHandler<CreateUserFormRequest> = (data) => {
     editUser({
       email: data.email,
       profile: {
-        fullName: data.name,
+        fullName: data.profile.fullName,
       },
     });
   };
@@ -115,16 +123,20 @@ const EditUserForm = () => {
             label="名前"
             required
             placeholder="入力してください"
-            error={errors?.name?.message}
-            register={register('name', {
+            error={getErrorMessage(errors, 'profile.fullName')}
+            register={register('profile.fullName', {
               required: NAME_REQUIRED_MESSAGE,
+              maxLength: {
+                value: 255,
+                message: FIELD_MAX_LENGTH_255_MESSAGE,
+              },
             })}
           />
           <Input
             label="メールアドレス"
             required
             placeholder="入力してください"
-            error={errors?.email?.message}
+            error={getErrorMessage(errors, 'email')}
             disabled
             register={register('email', emailRules(true))}
           />
