@@ -19,12 +19,14 @@ import { CACHE_KEY, CACHE_TTL } from '@constants';
 interface Props {
   isPodium?: boolean;
   isBoat?: boolean;
+  user_id?: string | number;
   handleShowData?: () => void;
 }
 
 export const RenderAccessories = ({
   isPodium = false,
   isBoat = false,
+  user_id,
   handleShowData,
 }: Props) => {
   const { dataItems, setDataItem } = useContext(GlobalStateContext);
@@ -64,7 +66,10 @@ export const RenderAccessories = ({
 
   // --- API fetch
   const { isFetchingCreationDataCommon } = useCreationDataCommon({
-    options: { get_items_of_user: true },
+    options: {
+      get_items_of_user: true,
+    },
+    userId: user_id,
     onSuccess: (data) => {
       if (data.itemsOfUser) {
         const updates = data.itemsOfUser.map((item) => ({
@@ -74,14 +79,15 @@ export const RenderAccessories = ({
         const merged = updateAvatarUrl(dataItems, updates);
         setDataItem(merged);
         totalImages.current = merged.length;
-
-        localStorage.setItem(
-          CACHE_KEY,
-          JSON.stringify({
-            timestamp: Date.now(),
-            data: merged,
-          }),
-        );
+        if (!user_id) {
+          localStorage.setItem(
+            CACHE_KEY,
+            JSON.stringify({
+              timestamp: Date.now(),
+              data: merged,
+            }),
+          );
+        }
       }
     },
   });

@@ -397,9 +397,9 @@ const MyPage = () => {
             isHasMvpVoting={creationDataCommonData?.isHasMvpVoting || false}
           />
         </div>
-        <div className="relative ml-[3.37vh] mb-[4.49vh] flex items-end flex-grow">
+        <div className="relative ml-[3.37vh] mb-[4.49vh] top-[-3vh] flex items-end flex-grow">
           <div className="flex-grow">
-            <div className="h-[47.64vh] w-[37.75vh] ml-[37.86vh] relative">
+            <div className="h-[44.64vh] w-[35vh] ml-[31.86vh] relative">
               <RenderAccessories handleShowData={() => setIsShowMike(true)} />
             </div>
 
@@ -412,25 +412,24 @@ const MyPage = () => {
                       'linear-gradient(180deg, #355AC9 0%, #5282FC 100%)',
                     boxShadow: '0px 0.45vh 0px 0px #355AC940',
                   }}
-                  className="absolute top-[calc(100%_-_59.66vh)] left-[62.17vh] p-[1.12vh] rounded-[1.57vh] w-[28.98vh] h-fit">
+                  className="absolute top-[calc(100%_-_56.66vh)] left-[56.17vh] p-[1.12vh] rounded-[1.57vh] w-[28.98vh] h-fit">
                   <p className="text-white text-[1.46vh] font-bold">
                     マイルくん
                   </p>
-                  <div className="mt-[1.12vh] w-full bg-white rounded-[0.56vh] p-[0.34vh] text-[1.46vh] font-semibold text-black">
+                  <div className="mt-[1.12vh] w-full bg-white rounded-[0.56vh] p-[1.34vh] text-[1.46vh] font-semibold text-black">
                     {receivedThanksMessageList?.length
                       ? '新しいサンクスメッセージが届いているよ！'
                       : 'ポイントが貯まると、素敵な商品と交換できるよ！'}
                   </div>
                 </div>
 
-                {/* Tam giác nằm dưới */}
-                <div className="bg-[#5282FB] rotate-[20deg] absolute clip-diagonal-left h-[2.81vh] w-[2.47vh] top-[calc(100%_-_49.75vh)] left-[65.74vh]"></div>
+                <div className="bg-[#5282FB] rotate-[20deg] absolute clip-diagonal-left h-[2.81vh] w-[2.47vh] top-[calc(100%_-_44.85vh)] left-[59.74vh]"></div>
               </>
             )}
 
             {/* Seagull icon */}
-            {receivedThanksMessageList?.length ? (
-              <div className="absolute bottom-0 left-[69.58vh]">
+            {!receivedThanksMessageList?.length ? (
+              <div className="absolute bottom-0 left-[63.58vh]">
                 <ImageRound
                   name="Seagull"
                   src="/icons/seagull.svg"
@@ -445,7 +444,7 @@ const MyPage = () => {
           <ImageRound
             name="Tweet icon"
             src="/icons/tweet.svg"
-            className="w-[10.34vh] h-[11.12vh] z-10 hover:cursor-pointer absolute -bottom-[1.12vh] right-[1.12vh]"
+            className="w-[10.34vh] h-[11.12vh] z-10 hover:cursor-pointer absolute -bottom-[3.12vh] right-[1.12vh]"
             onClick={() => setOpenCreateTweetModal(true)}
           />
         </div>
