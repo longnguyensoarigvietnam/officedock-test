@@ -193,7 +193,9 @@ def calculate_progress_skill_map(
     old_task_updated=None,
 ):
     """
-    Handle calculate progress skill map by task
+    Handle calculate progress skill map by task.
+    This function updates a user’s skill progress based on their task activity.
+    It adjusts measurement counts and durations, and may trigger pop-ups when progress thresholds are reached.
     """
     if not task or not case:
         return
@@ -217,6 +219,7 @@ def calculate_progress_skill_map(
         .distinct()
     )
     for skill in org_cat_skills:
+        # Find an existing skill map entry for the user that’s active and incomplete.
         skill_map = SkillMap.objects.filter(
             skill_id=skill,
             organization=organization,
@@ -226,9 +229,11 @@ def calculate_progress_skill_map(
             is_valid=True,
         ).first()
         if skill_map:
+            # Get the current (incomplete) skill level from the map.
             current_skill_level = skill_map.skill_map_skill_levels.filter(
                 is_complete=False
             ).first()
+            # Skip updates if the duration task was created or task updated before this skill level was created.
             if (
                 (
                     duration_created_at
@@ -238,18 +243,22 @@ def calculate_progress_skill_map(
                 and old_task_updated < current_skill_level.created_at
             ):
                 continue
-
+            # Retrieve existing counters for this skill level.
             actual_measure_count = current_skill_level.actual_measure_count
             actual_measure_time = current_skill_level.actual_measure_time
+            # If subtracting progress, make sure the task is already in the tracked list.
             if is_minus and (
                 current_skill_level.measure_task_ids is None
                 or task.id not in current_skill_level.measure_task_ids
             ):
                 continue
+            # Determine how long this task contributes to skill progress.
             duration = duration_time or get_total_hours_of_task(
                 task, skill_map_level_created_at=current_skill_level.created_at
             )
+            # Negate duration if we are subtracting progress.
             total_duration_of_task = -duration if is_minus else duration
+            # Adjust the measure count based on the update case.
             if case in {
                 CalculateSkillMapProcessCases.NOT_CHANGE_COMPLETED_STATUS.value,
                 CalculateSkillMapProcessCases.CHANGE_COMPLETED_STATUS_TO_ANOTHER.value,
@@ -261,6 +270,7 @@ def calculate_progress_skill_map(
                 and not is_minus
             ):
                 actual_measure_count += 1
+            # If measure count reached threshold, trigger a completion pop-up.
             if (
                 current_skill_level.measure_count
                 and current_skill_level.measure_count <= actual_measure_count
@@ -273,9 +283,9 @@ def calculate_progress_skill_map(
                     user,
                     skill_map_level=current_skill_level,
                 )
+            # Update total measured time (if adding progress).
             if total_duration_of_task and is_plus:
-                # Update skill map skill level actual measure time
-                # Get new actual measure time
+                # Calculate the new actual measure time by adding the task duration.
                 time_duration = total_duration_of_task or duration_time
                 try:
                     new_actual_measure_time = (
@@ -304,6 +314,7 @@ def calculate_progress_skill_map(
                         user,
                         skill_map_level=current_skill_level,
                     )
+            # Manage which tasks contributed to this skill’s progress.
             measure_task_ids = current_skill_level.measure_task_ids or []
             if task.id in measure_task_ids and is_minus:
                 measure_task_ids.remove(task.id)

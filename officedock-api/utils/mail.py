@@ -44,8 +44,8 @@ class MailService:
         -------- <br>
         アステッキホールディングス株式会社 <br>
         {self.SYSTEM_NAME}（オフィスドック） サポートチーム <br>
-        Email：{settings.EMAIL_SENDER} <br>
-        サービスサイト：{settings.SYSTEM_WEBAPP_URL} <br>
+        Email：{settings.MAIL_TEMPLATE_FOOTER_EMAIL} <br>
+        サービスサイト：{settings.MAIL_TEMPLATE_FOOTER_ADDRESS} <br>
         オフィスドックカレッジ：{settings.SYSTEM_YOUTUBE_URL} <br>
         -------- <br>
         </p>
@@ -86,7 +86,7 @@ class MailService:
         message = f"""
                 <p>{user_name}様 <br>
                 いつも{self.SYSTEM_NAME}をご利用いただき、誠にありがとうございます。 <br>
-                二要素認証コードをお知らせしま。</p>
+                二要素認証コードをお知らせします。</p>
                 <p>■確認コード：<b>{otp_code}</b> <br>
                 ※この確認コードの有効期限は{int(OTP_TOKEN_MINUTES_EXPIRATION)}分間です。
                 </p>
@@ -173,7 +173,7 @@ class MailService:
 
         # FIXME: Replace email template later
 
-        subject = f"【{self.SYSTEM_NAME}】{invited_by}さんより招待されました"
+        subject = f"【{self.SYSTEM_NAME}管理システム】{invited_by}さんより招待されました"
 
         message = f"""
             <p>{invited_by}さんより OFFICE DOCK 管理システムに招待されました。<br>
@@ -452,7 +452,7 @@ class PaymentMailService(MailService):
             <p>お支払い情報の更新および未払い料金の決済を確認いたしました。<br>
             これに伴い、一時停止しておりましたサービスのご利用を本日より再開いたしましたのでお知らせいたします。
             </p>
-            <p>この度はお手続きをいただき、誠にありがとうございました</p>
+            <p>この度はお手続きをいただき、誠にありがとうございました。</p>
             <p>今後とも{self.SYSTEM_NAME}をどうぞよろしくお願い申し上げます。</p>
         """
         self.send(subject, message, [recipient])
