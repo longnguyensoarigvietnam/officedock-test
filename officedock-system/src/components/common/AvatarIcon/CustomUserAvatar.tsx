@@ -5,11 +5,11 @@ import { getFileURL } from '@utils';
 export type CustomUserAvatarProps = {
   avatarUrl: string;
   avatarColor: string;
-  size: number; // px trong thiết kế gốc (1440x890)
+  size: number;
   customClassName?: string;
   avatarClassName?: string;
   isCalendarScreen?: boolean;
-  isZoom?: boolean; // 👈 thêm biến này
+  isZoom?: boolean;
 };
 
 const DESIGN_WIDTH = 1440;

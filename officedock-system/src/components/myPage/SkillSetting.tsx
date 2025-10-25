@@ -125,7 +125,7 @@ export const SkillSetting = ({
                           ? '0px 0px 20px 0px #36ACDE80'
                           : '0px 2px 8px 0px #0000001A',
                       }}
-                      className="w-[17.01vw] h-[6.18vh] relative bg-white px-[1.39vw] py-[1.35vh] flex items-center gap-[0.69vw] justify-center  rounded-[0.97vw]">
+                      className="w-[17.01vw] h-[6.18vh] relative bg-white px-[1.39vw] py-[1.35vh] flex items-center gap-[0.69vw] justify-center rounded-[14px]">
                       {showTwinklingStars && (
                         <>
                           <div className="absolute -top-[1.3vw] left-[1.4vw] bg-primary rounded-[1.4vw] w-[8.75vw] h-[1.32vw] flex items-center justify-center">
@@ -140,40 +140,34 @@ export const SkillSetting = ({
                       {showTwinklingStars && (
                         <>
                           <TwinklingIcon
-                            className="absolute top-[0.69vw] left-[-0.21vw] w-[0.35vw] h-[0.35vw]"
+                            className="absolute top-[0.69vw] left-[-0.21vw] w-[0.3vw] h-[0.3vw]"
                             delay={0}
                             iconUrl="/icons/blue-star.svg"
-                            isZoom={true}
                           />
                           <TwinklingIcon
-                            className="absolute top-[0.21vw] left-[0.35vw] w-[0.35vw] h-[0.35vw]"
+                            className="absolute top-[0.21vw] left-[0.35vw] w-[0.3vw] h-[0.3vw]"
                             delay={0.5}
                             iconUrl="/icons/blue-star.svg"
-                            isZoom={true}
                           />
                           <TwinklingIcon
-                            className="absolute top-[0.69vw] -right-[0.21vw] w-[0.35vw] h-[0.35vw]"
+                            className="absolute top-[0.69vw] -right-[0.21vw] w-[0.3vw] h-[0.3vw]"
                             delay={0.8}
                             iconUrl="/icons/blue-star.svg"
-                            isZoom={true}
                           />
                           <TwinklingIcon
-                            className="absolute bottom-[0.35vw] left-[-0.21vw] w-[0.35vw] h-[0.35vw]"
+                            className="absolute bottom-[0.35vw] left-[-0.21vw] w-[0.3vw] h-[0.3vw]"
                             delay={1}
                             iconUrl="/icons/blue-star.svg"
-                            isZoom={true}
                           />
                           <TwinklingIcon
-                            className="absolute bottom-[0.35vw] -right-[0.21vw] w-[0.35vw] h-[0.35vw]"
+                            className="absolute bottom-[0.35vw] -right-[0.21vw] w-[0.3vw] h-[0.3vw]"
                             delay={1.2}
                             iconUrl="/icons/blue-star.svg"
-                            isZoom={true}
                           />
                           <TwinklingIcon
-                            className="absolute -bottom-[0.21vw] right-[0.35vw] w-[0.35vw] h-[0.35vw]"
+                            className="absolute -bottom-[0.21vw] right-[0.35vw] w-[0.3vw] h-[0.3vw]"
                             delay={1.5}
                             iconUrl="/icons/blue-star.svg"
-                            isZoom={true}
                           />
                         </>
                       )}
@@ -245,7 +239,7 @@ export const SkillSetting = ({
           style={{
             boxShadow: '0px 0px 0.49vw 0px #00000080',
           }}
-          className="w-[17.01vw] min-w-[17.01vw] h-[6.18vh]  bg-transparent border border-white rounded-[0.97vw] hover:opacity-70 flex items-center cursor-pointer justify-center text-white text-center font-medium text-[1vw]"
+          className="w-[17.01vw] min-w-[17.01vw] h-[6.18vh]  bg-transparent border border-white rounded-[14px] hover:opacity-70 flex items-center cursor-pointer justify-center text-white text-center font-medium text-[1vw]"
           onClick={() => setOpenSetSkillModal(true)}>
           <p className="font-medium">＋ スキルをセットできます</p>
         </div>
