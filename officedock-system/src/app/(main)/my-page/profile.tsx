@@ -404,7 +404,7 @@ const MyPage = () => {
             </div>
 
             {/* Message user */}
-            {isShowMike && (
+            {isShowMike ? (
               <>
                 <div
                   style={{
@@ -425,10 +425,12 @@ const MyPage = () => {
 
                 <div className="bg-[#5282FB] rotate-[20deg] absolute clip-diagonal-left h-[2.81vh] w-[2.47vh] top-[calc(100%_-_44.85vh)] left-[59.74vh]"></div>
               </>
+            ) : (
+              <></>
             )}
 
             {/* Seagull icon */}
-            {!receivedThanksMessageList?.length ? (
+            {receivedThanksMessageList?.length ? (
               <div className="absolute bottom-0 left-[63.58vh]">
                 <ImageRound
                   name="Seagull"
@@ -444,7 +446,7 @@ const MyPage = () => {
           <ImageRound
             name="Tweet icon"
             src="/icons/tweet.svg"
-            className="w-[10.34vh] h-[11.12vh] z-10 hover:cursor-pointer absolute -bottom-[3.12vh] right-[1.12vh]"
+            className="w-[10.34vh] h-[11.12vh] z-10 hover:cursor-pointer absolute -bottom-[5vh] right-[1.12vh]"
             onClick={() => setOpenCreateTweetModal(true)}
           />
         </div>
@@ -458,7 +460,7 @@ const MyPage = () => {
         fetchNextPage={fetchNextPage}
         setSelectedTweetToDelete={setSelectedTweetToDelete}
       />
-      {showReceiveEnvelopeAnimation && receivedThanksMessageList?.length && (
+      {showReceiveEnvelopeAnimation && receivedThanksMessageList?.length ? (
         <ReceiveEnvelopeAnimationOverlay
           receivedThanksMessageList={receivedThanksMessageList}
           onFinish={() => {
@@ -473,6 +475,8 @@ const MyPage = () => {
           }}
           setReceivedThanksMessageList={setReceivedThanksMessageList}
         />
+      ) : (
+        <></>
       )}
       {openCreateTweetModal && (
         <CreateTweetModal
