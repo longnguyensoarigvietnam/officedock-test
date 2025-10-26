@@ -15,22 +15,31 @@ import ErrorMessage from '@components/common/ErrorMessage';
 
 import {
   ERROR_CREATE_MESSAGE,
+  FIELD_MAX_LENGTH_255_MESSAGE,
   FIELD_REQUIRED,
   SUCCESS_CREATE_MESSAGE,
 } from '@constants/message';
 import { apiRouters, pageRouters } from '@constants/routers';
 import { STATUS_TERM } from '@constants/term';
 import { StatusTerm, TermType } from '@constants/enums';
+import { ONE_DAY_IN_MS } from '@constants';
 
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 
 import { CreateTermFormData, TermFormDataRequest } from '@interfaces/term';
 import { OptionDropdownType } from '@interfaces/common';
+
 import { formatDate } from '@utils/date';
-import { isContentEmpty } from '@utils';
-import api from '@base/api';
+import {
+  getErrorMessage,
+  handleServerFormErrors,
+  isContentEmpty,
+} from '@utils';
+
 import { useErrorToast } from '@hooks/useErrorToast';
+
+import api from '@base/api';
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
@@ -49,6 +58,8 @@ const CreatePolicyForm = () => {
     handleSubmit,
     watch,
     setValue,
+    setError,
+    clearErrors,
     formState: { errors },
   } = useForm<CreateTermFormData>({
     mode: 'onSubmit',
@@ -88,6 +99,8 @@ const CreatePolicyForm = () => {
       },
       onError: (error: AxiosError) => {
         showErrorToast(error, ERROR_CREATE_MESSAGE);
+
+        handleServerFormErrors<CreateTermFormData>(error, setError, control);
       },
       onSettled: () => {
         setIsLoading(false);
@@ -129,7 +142,16 @@ const CreatePolicyForm = () => {
                             element.value ===
                             (value as OptionDropdownType).value,
                         )}
-                        onChange={onChange}
+                        onChange={(option) => {
+                          clearErrors([
+                            'status',
+                            'title',
+                            'description',
+                            'periodEnd',
+                            'periodStart',
+                          ]);
+                          onChange(option);
+                        }}
                       />
                     )}
                   />
@@ -138,8 +160,9 @@ const CreatePolicyForm = () => {
             </div>
           </div>
         </div>
-        <div className="w-full flex gap-3">
-          <div className="w-1/2 flex flex-col gap-2">
+        <div
+          className={`w-full ${getErrorMessage(errors, 'periodStart') || getErrorMessage(errors, 'periodEnd') ? 'mb-4' : ''}`}>
+          <div className="w-1/2">
             <div className="w-full flex items-start justify-start gap-1">
               <div className="w-1/2 h-20">
                 <Controller
@@ -174,6 +197,7 @@ const CreatePolicyForm = () => {
                         setValue('periodEnd', null);
                       }}
                       minDate={new Date()}
+                      error={getErrorMessage(errors, 'periodStart')}
                     />
                   )}
                 />
@@ -191,20 +215,15 @@ const CreatePolicyForm = () => {
                       onChange={onChange}
                       minDate={
                         minDatePlan
-                          ? new Date(
-                              minDatePlan.getTime() + 24 * 60 * 60 * 1000,
-                            )
+                          ? new Date(minDatePlan.getTime() + ONE_DAY_IN_MS)
                           : new Date()
                       }
+                      error={getErrorMessage(errors, 'periodEnd')}
                     />
                   )}
                 />
               </div>
             </div>
-            <ErrorMessage
-              error={errors.periodStart?.message}
-              className="mb-[-10px] text-xs"
-            />
           </div>
         </div>
         <div className="w-full">
@@ -224,11 +243,12 @@ const CreatePolicyForm = () => {
                 StatusTerm.PUBLIC
                   ? FIELD_REQUIRED
                   : false,
+              maxLength: {
+                value: 255,
+                message: FIELD_MAX_LENGTH_255_MESSAGE,
+              },
             })}
-          />
-          <ErrorMessage
-            error={errors.title?.message}
-            className="mt-[7px] mb-[-10px] text-xs"
+            error={getErrorMessage(errors, 'title')}
           />
         </div>
         <div className="w-full">
@@ -253,7 +273,7 @@ const CreatePolicyForm = () => {
               },
             }}
             render={({ field }) => (
-              <div className="w-[80vw] max-w-full">
+              <div className="max-w-full">
                 <ReactQuill
                   {...field}
                   value={editorContent}
@@ -265,8 +285,8 @@ const CreatePolicyForm = () => {
             )}
           />
           <ErrorMessage
-            error={errors.description?.message}
-            className="mt-[7px] mb-[-10px] text-xs"
+            error={getErrorMessage(errors, 'description')}
+            className="mt-[7px] mb-[-10px]"
           />
         </div>
         <div className="w-full flex items-center gap-4 mt-8 flex-col">

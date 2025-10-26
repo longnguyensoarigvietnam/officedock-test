@@ -56,6 +56,7 @@ const EditUserForm = () => {
     reset,
     handleSubmit,
     setError,
+    control,
     formState: { errors },
   } = useForm<CreateUserFormRequest>({
     mode: 'onSubmit',
@@ -98,7 +99,7 @@ const EditUserForm = () => {
     onError: (error: any) => {
       showErrorToast(error, ERROR_UPDATE_MESSAGE);
 
-      handleServerFormErrors<CreateUserFormRequest>(error, setError);
+      handleServerFormErrors<CreateUserFormRequest>(error, setError, control);
     },
     onSettled: () => {
       setIsLoading(false);
