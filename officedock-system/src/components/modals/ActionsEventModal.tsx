@@ -534,6 +534,11 @@ const ActionsEventModal = ({
 
   // Check overlapping location
   const handleConfirmCheckOverlappingLocation = () => {
+    if (!watch('location.value')) {
+      setValue('isEventOverlapping', false, {
+        shouldDirty: true,
+      });
+    }
     const isMissingRequiredFields = watch('isAllDay')
       ? !watch('startDate') || !watch('endDate') || !watch('location.value')
       : !watch('startDate') ||
@@ -563,7 +568,7 @@ const ActionsEventModal = ({
         watch('endTime') as string,
       );
     }
-    checkDeleteHierarchyCategory({
+    checkOverlappingLocation({
       scheduleId: Number(dataEvent?.id),
       locationId: Number(watch('location.value')),
       planStartDate,
@@ -581,8 +586,8 @@ const ActionsEventModal = ({
     return await api.post(apiRouters.CHECK_OVERLAPPING_LOCATION, data);
   };
 
-  const { mutateAsync: checkDeleteHierarchyCategory } = useMutation(
-    'checkDeleteHierarchyCategory',
+  const { mutateAsync: checkOverlappingLocation } = useMutation(
+    'checkOverlappingLocation',
     handleCheckOverlappingLocation,
     {
       onSuccess: ({ data }) => {

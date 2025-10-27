@@ -1165,25 +1165,29 @@ const Header = ({ className }: HeaderProps) => {
                           <div className="relative flex flex-col gap-1 text-white text-[14px] font-medium">
                             {companyItems
                               .filter((item) => item.companyMenu == true)
-                              .map((item) => (
-                                <div
-                                  key={item.name}
-                                  className={`flex px-4 py-2 hover:bg-[#7D8A94] hover:cursor-pointer rounded-md ${pathname == item.href && 'bg-[#7D8A94]'}`}
-                                  onClick={() => {
-                                    if (isChatFilesUploading) {
-                                      setPendingPageChange(item.href as string);
-                                      setShowWarningChatUploadingModal(true);
+                              .map((item) => {
+                                return (
+                                  <div
+                                    key={item.name}
+                                    className={`flex px-4 py-2 hover:bg-[#7D8A94] hover:cursor-pointer rounded-md ${pathname.includes(item.href) && 'bg-[#7D8A94]'}`}
+                                    onClick={() => {
+                                      if (isChatFilesUploading) {
+                                        setPendingPageChange(
+                                          item.href as string,
+                                        );
+                                        setShowWarningChatUploadingModal(true);
+                                        close();
+                                        return;
+                                      }
+                                      handleNavigateToNewPage(
+                                        item.href as string,
+                                      );
                                       close();
-                                      return;
-                                    }
-                                    handleNavigateToNewPage(
-                                      item.href as string,
-                                    );
-                                    close();
-                                  }}>
-                                  <p>{item.name}</p>
-                                </div>
-                              ))}
+                                    }}>
+                                    <p>{item.name}</p>
+                                  </div>
+                                );
+                              })}
                           </div>
                         </div>
                       </PopoverPanel>
