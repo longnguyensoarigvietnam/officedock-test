@@ -310,6 +310,7 @@ class BaseScheduleSerializer(ScheduleSerializer):
             "categories",
             "select_organizations",
             "repeat_schedules",
+            "created_at",
         ]
 
     def to_representation(self, instance):

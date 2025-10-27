@@ -224,6 +224,10 @@ class UpdateDurationSerializer(serializers.ModelSerializer):
 
         # Exclude the current instance when updating
         if instance:
+            if instance.task and instance.task.archived_at:
+                raise serializers.ValidationError(
+                    {"detail": ERROR_MESSAGES["cannot_create"]}
+                )
             paused_at = paused_at or instance.paused_at or now()
             started_at = started_at or instance.started_at
             overlapping_qs = TaskDuration.objects.filter(
@@ -332,6 +336,11 @@ class ActualDurationCreationSerializer(serializers.ModelSerializer):
         instance = self.instance
         user = self.context.get("request").user
 
+        if task and task.archived_at:
+            raise serializers.ValidationError(
+                {"detail": ERROR_MESSAGES["cannot_create"]}
+            )
+
         # Validate range editable after close date
         validate_editable_actual_duration(instance, started_at, paused_at)
 
@@ -390,6 +399,10 @@ class ActualDurationBulkCreationSerializer(serializers.Serializer):
             model = task or schedule
             instance = self.instance
             user = self.context.get("request").user
+            if task and task.archived_at:
+                raise serializers.ValidationError(
+                    {"detail": ERROR_MESSAGES["cannot_create"]}
+                )
             for j in range(i + 1, len(durations)):
                 next_task = durations[j]["task"]
                 next_started_at = durations[j]["started_at"]
