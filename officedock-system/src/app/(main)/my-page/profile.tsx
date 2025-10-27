@@ -322,7 +322,7 @@ const MyPage = () => {
   );
 
   return (
-    <div className="h-full w-full relative min-h-[772px]">
+    <div className="h-full w-full relative ">
       <div
         style={{
           backgroundImage: 'url("/images/bg-profile.jpg")',
