@@ -390,6 +390,7 @@ const TimeSchedule = memo(
         scrollToNowIndicator();
       }
     };
+
     const handleChooseDay = (date?: Date) => {
       if (date) {
         const newDate = new Date(date);
