@@ -12,26 +12,46 @@ export function useUpdateTaskArchiveCache() {
     queries.forEach(({ queryKey }) => {
       queryClient.setQueryData(queryKey, (oldData: any) => {
         if (!oldData) return oldData;
+
+        // --- Infinite Query ---
         if (Array.isArray(oldData.pages)) {
+          const newPages = oldData.pages.map((page: any, idx: number) => {
+            const filtered = Array.isArray(page.results)
+              ? page.results.filter((task: TaskArchive) => task.id !== id)
+              : page.results;
+
+            const updatedTotal =
+              idx === 0 && typeof page.total === 'number'
+                ? Math.max(0, page.total - 1)
+                : page.total;
+
+            return { ...page, results: filtered, total: updatedTotal };
+          });
+
           return {
             ...oldData,
-            pages: oldData.pages.map((page: any) => ({
-              ...page,
-              results: Array.isArray(page.results)
-                ? page.results.filter((task: TaskArchive) => task.id !== id)
-                : page.results,
-            })),
-          };
-        }
-        if (Array.isArray(oldData.results)) {
-          return {
-            ...oldData,
-            results: oldData.results.filter(
-              (task: TaskArchive) => task.id !== id,
-            ),
+            pages: newPages,
           };
         }
 
+        // --- BasePagination ---
+        if (Array.isArray(oldData.results)) {
+          const filteredResults = oldData.results.filter(
+            (task: TaskArchive) => task.id !== id,
+          );
+          const updatedTotal =
+            typeof oldData.total === 'number'
+              ? Math.max(0, oldData.total - 1)
+              : oldData.total;
+
+          return {
+            ...oldData,
+            results: filteredResults,
+            total: updatedTotal,
+          };
+        }
+
+        // --- Array ---
         if (Array.isArray(oldData)) {
           return oldData.filter((task: TaskArchive) => task.id !== id);
         }
@@ -40,6 +60,7 @@ export function useUpdateTaskArchiveCache() {
       });
     });
   };
+
   const updateTaskInCache = (updatedTask: Task) => {
     const queries = queryClient
       .getQueryCache()
