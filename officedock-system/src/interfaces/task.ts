@@ -176,7 +176,7 @@ export interface Task {
   planEndDate?: string | null;
   hasActualDuration?: boolean;
   isCrossTeamTask?: boolean;
-  completedAt?: string;
+  completedAt?: string | null;
   archivedAt?: string;
 }
 export interface TaskRunningType {

@@ -144,6 +144,8 @@ interface ContextValue {
       startDate: string;
     }>
   >;
+  idTaskArchiveAt: string;
+  setIdTaskArchiveAt: Dispatch<SetStateAction<string>>;
 }
 
 const defaultValue: ContextValue = {
@@ -265,6 +267,8 @@ const defaultValue: ContextValue = {
     startDate: '',
   },
   setDataActualEdit: () => {},
+  idTaskArchiveAt: '',
+  setIdTaskArchiveAt: () => {},
 };
 
 export const TaskContext = createContext<ContextValue>(defaultValue);
@@ -366,6 +370,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     id: '',
     type: '',
   });
+  const [idTaskArchiveAt, setIdTaskArchiveAt] = useState<string>('');
   const [selectedOptionZoom, setSelectedOptionZoom] =
     useState<OptionDropdownType>({
       label: '100%',
@@ -492,6 +497,8 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     setTaskAddEmpty,
     dataActualEdit,
     setDataActualEdit,
+    idTaskArchiveAt,
+    setIdTaskArchiveAt,
   };
 
   return (

@@ -774,6 +774,12 @@ const TaskPageDataHeader = () => {
                         onChange={(e) => {
                           setValueStart(e.target.value);
                         }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+                            e.preventDefault();
+                            e.currentTarget.blur();
+                          }
+                        }}
                         onBlur={(e) => {
                           // Edit start data running in header
                           const startDate =
