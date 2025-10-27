@@ -161,7 +161,9 @@ const PopupDetail = ({
               }}
               disabled={
                 (startEditable == false && resourcePlan) ||
-                (resourcePlan == false && !isCalculation)
+                (startEditable == false &&
+                  resourcePlan == false &&
+                  !isCalculation)
               }
               onBlur={(e) => {
                 if (resourcePlan) {
@@ -256,7 +258,10 @@ const PopupDetail = ({
                 onChange={(e) => {
                   setValueEnd(e.target.value);
                 }}
-                disabled={startEditable == false || resourcePlan == false}
+                disabled={
+                  (startEditable == false && resourcePlan) ||
+                  (startEditable == false && resourcePlan == false)
+                }
                 onBlur={(e) => {
                   if (!resourcePlan) {
                     if (isCalculation) {
