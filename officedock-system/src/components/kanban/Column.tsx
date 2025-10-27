@@ -103,8 +103,13 @@ const Column = ({
   const { data: session } = useSessionCache();
   const isMyRoutine = columnId === `${StatusValueTask.MY_ROUTINE}`;
 
-  const { columnWidth, extendByStatus, orderingOptions, setExtendByStatus } =
-    useContext(TaskContext);
+  const {
+    columnWidth,
+    extendByStatus,
+    orderingOptions,
+    setExtendByStatus,
+    setIdTaskArchiveAt,
+  } = useContext(TaskContext);
 
   const [hasMore, setHasMore] = useState(true);
   const [lastIndex, setLastIndex] = useState<number | null>(null);
@@ -263,6 +268,7 @@ const Column = ({
 
       // Create a new list, remove the oldest item
       const newItems = items.filter((item) => item.id !== oldestItem.id);
+      setIdTaskArchiveAt(String(oldestItem.id));
 
       // Return new state
       return {

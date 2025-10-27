@@ -133,6 +133,7 @@ import {
   combineDateAndTime,
   convertDateString,
   convertToMinutesNumber,
+  formatJapaneseDateRangeSchedule,
   formatQueryEndDateForCalendar,
   formatQueryEndDateForCalendarCustom,
   formatQueryStartDateForCalendar,
@@ -207,11 +208,13 @@ const TimeSchedule = memo(
     const popoverRef = useRef<HTMLDivElement | null>(null);
 
     const {
+      idTaskArchiveAt,
       memberSelected,
       dataActualAddSchedule,
       displayHeaderDateStart,
       displayHeaderDateEnd,
       dataActualEdit,
+      setIdTaskArchiveAt,
       setIsInteracting,
       setDisplayHeaderDayStart,
       setDisplayHeaderDayEnd,
@@ -301,8 +304,7 @@ const TimeSchedule = memo(
       return (slotHeight / baseSlider) * baseFontSizeXs;
     };
     const formattedCurrentDate = formatDateJp(new Date());
-    const formattedStartDate = formatDateJp(displayHeaderDateStart);
-    const formattedEndDate = formatDateJp(displayHeaderDateEnd);
+
     const isToday = isSameDay(new Date(), displayHeaderDateStart);
 
     // Event state
@@ -1121,6 +1123,27 @@ const TimeSchedule = memo(
           endDate: endDateISOString,
         });
     };
+    // Update data when archive task
+    useEffect(() => {
+      if (idTaskArchiveAt) {
+        // Check item exist in list schedule
+        const updatedTaskList = taskTimeScheduleList.map((item) => {
+          if (
+            `${item.taskId}` == idTaskArchiveAt &&
+            item.resourceId === ItemScheduleType.PLANS
+          ) {
+            return {
+              ...item,
+              startEditable: false,
+            };
+          }
+          return item;
+        });
+        setTaskTimeScheduleList(updatedTaskList);
+        setIdTaskArchiveAt('');
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [idTaskArchiveAt]);
 
     // Update data when edit in modal edit
     useEffect(() => {
@@ -3805,7 +3828,7 @@ const TimeSchedule = memo(
                 : '1040px'
               : '440px',
           }}
-          className={`${searchParams.get('view') == ViewOptions.DAY && 'w-[440px] '}  !bg-[#E6F3FB]  schedule-page rounded-tr-[60px] relative overflow-x-auto overflow-y-hidden `}
+          className={`${searchParams.get('view') == ViewOptions.DAY && 'w-[440px] '} !bg-[#E6F3FB]  schedule-page rounded-tr-[60px] relative overflow-x-auto overflow-y-hidden `}
           ref={resizableElementRef}>
           <div
             className={`resizer absolute cursor-ew-resize right-[2px] z-[2] top-1/2 translate-x-1/2 -translate-y-1/2 h-full w-1 bg-transparent ${isExtendCalendar ? 'block' : 'hidden'}`}
@@ -3910,9 +3933,14 @@ const TimeSchedule = memo(
                       </div>
                       <Heading
                         as="h4"
-                        className="text-[18px] !text-[#5B6770] font-medium pr-4 line-clamp-2">
+                        className="text-[20px] !text-[#5B6770] font-medium pr-4 line-clamp-2">
                         {isExtendCalendar
-                          ? `${formattedStartDate} - ${formattedEndDate}`
+                          ? displayHeaderDateStart &&
+                            displayHeaderDateEnd &&
+                            formatJapaneseDateRangeSchedule(
+                              displayHeaderDateStart,
+                              displayHeaderDateEnd,
+                            )
                           : formattedCurrentDate}
                       </Heading>
                       {isToday && !isExtendCalendar && (

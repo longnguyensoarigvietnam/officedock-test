@@ -309,6 +309,10 @@ const KanbanBoardTask = () => {
   const [resetInitialColumnsData, setResetInitialColumnsData] =
     useState<boolean>(true);
 
+  // Cache task Archive
+  const { removeTaskFromCache, updateTaskInCache } =
+    useUpdateTaskArchiveCache();
+
   // Call API get task board list
   const { taskBoardList, numberPages, isFetchingTaskBoards } = useTaskBoardList(
     {
@@ -779,6 +783,7 @@ const KanbanBoardTask = () => {
         }),
       );
       setDataItemUpdateSchedule(newItem);
+      if (newItem.archivedAt) return;
 
       if (newItem.status && newItem.status.id && columnsKanbanData) {
         const newStatusId = newItem.status.id.toString();
@@ -1498,6 +1503,12 @@ const KanbanBoardTask = () => {
           };
 
           if (
+            destination.droppableId == String(StatusValueTask.COMPLETED) &&
+            source.droppableId != destination.droppableId
+          ) {
+            movedItem.completedAt = new Date().toISOString();
+          }
+          if (
             source.droppableId != String(StatusValueTask.MY_ROUTINE) &&
             destination.droppableId == String(StatusValueTask.MY_ROUTINE)
           ) {
@@ -1722,6 +1733,8 @@ const KanbanBoardTask = () => {
             ? sourceItems
             : Array.from(destColumn.items);
         const [movedItem] = sourceItems.splice(source.index, 1); // Remove item from its original position
+        movedItem.completedAt = null;
+
         if (
           (source.droppableId == String(StatusValueTask.MY_ROUTINE) &&
             destination.droppableId != String(StatusValueTask.MY_ROUTINE)) ||
@@ -2020,9 +2033,9 @@ const KanbanBoardTask = () => {
     'getDetailTask',
     handleGetDataDetailTask,
     {
-      onSuccess: async (data) => {
+      onSuccess: async (data: Task) => {
         const isCompletedWithSchedule =
-          data.status.id == StatusValueTask.MY_ROUTINE &&
+          data.status?.id == StatusValueTask.MY_ROUTINE &&
           data.repeatType == null &&
           data.taskSchedules.length > 0;
 
@@ -2037,6 +2050,10 @@ const KanbanBoardTask = () => {
 
         setDataTaskEdit(taskDetail);
         setIdTaskEditSelected('');
+        if (data.archivedAt) {
+          setIdTaskArchiveDelete(data.id);
+        }
+
         setShowEditTaskModal(true);
       },
       onError: () => {
@@ -2097,7 +2114,7 @@ const KanbanBoardTask = () => {
     return await api.patch(apiRouters.TASK_DETAIL(`${data.id}`), data);
   };
   const { mutate: editTask } = useMutation('postEditTask', handleEditTask, {
-    onSuccess: async ({ data }, variant) => {
+    onSuccess: async ({ data }: { data: Task }, variant) => {
       if (variant && variant.oldIdStatus) {
         handleUpdateItem(
           {
@@ -2117,6 +2134,9 @@ const KanbanBoardTask = () => {
         value: variant.id || '',
         type: ItemStartType.TASK,
       });
+      if (data.archivedAt && isArchiveTaskView) {
+        updateTaskInCache(data);
+      }
       queryClient.refetchQueries(['getDataTaskHeaderList']);
       queryClient.refetchQueries(['getTaskDurationDetail']);
 
@@ -2830,9 +2850,6 @@ const KanbanBoardTask = () => {
     }
   };
 
-  // Cache task Archive
-  const { removeTaskFromCache } = useUpdateTaskArchiveCache();
-
   // Handle delete task
   const handleDeleteTask = async (id: string) => {
     const { data: response } = await api.delete(
@@ -3221,11 +3238,11 @@ const KanbanBoardTask = () => {
               style={{
                 width: expanded
                   ? isExtendCalendar
-                    ? `calc(${Math.max(viewportWidth, 1280)}px - ${widthCalendar + 250}px)`
-                    : `calc(${Math.max(viewportWidth, 1280)}px - 700px)`
+                    ? `calc(${Math.max(viewportWidth, 1280)}px - ${widthCalendar + 220}px)`
+                    : `calc(${Math.max(viewportWidth, 1280)}px - 650px)`
                   : isExtendCalendar
-                    ? `calc(${Math.max(viewportWidth, 1280)}px - ${widthCalendar + 120}px)`
-                    : `calc(${Math.max(viewportWidth, 1280)}px - 565px)`,
+                    ? `calc(${Math.max(viewportWidth, 1280)}px - ${widthCalendar + 100}px)`
+                    : `calc(${Math.max(viewportWidth, 1280)}px - 505px)`,
                 maxWidth: expanded
                   ? widthCalendar < 100
                     ? '100%'

@@ -573,7 +573,7 @@ const Sidebar = ({ className }: Props) => {
                     <div className="flex justify-center pr-2 mb-6">
                       <Dropdown
                         options={organizationList}
-                        className="!bg-[#182A4B33] !border-none !rounded-[6px] !w-full mb-1 !text-white !font-medium !text-sm !pr-0"
+                        className="!bg-[#182A4B33] cursor-pointer !border-none !rounded-[6px] !w-full mb-1 !text-white !font-medium !text-sm !pr-0"
                         selectedOption={
                           selectedOrganization || {
                             label: defaultOrganization?.label || '',

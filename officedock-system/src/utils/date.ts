@@ -1869,3 +1869,30 @@ export function formatCompletedAt(completedAt: string): string {
 
   return `${y}年 ${m}月 ${d}日`;
 }
+
+export function formatJapaneseDateRangeSchedule(
+  start: Date | string,
+  end: Date | string,
+): string {
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+
+  const dayOfWeek = ['日', '月', '火', '水', '木', '金', '土'];
+
+  const startYear = startDate.getFullYear();
+  const endYear = endDate.getFullYear();
+
+  const startMonth = startDate.getMonth() + 1;
+  const endMonth = endDate.getMonth() + 1;
+
+  const startDay = startDate.getDate();
+  const endDay = endDate.getDate();
+
+  const startWeek = dayOfWeek[startDate.getDay()];
+  const endWeek = dayOfWeek[endDate.getDay()];
+
+  if (startYear === endYear) {
+    return `${startYear}年${startMonth}月${startDay}日(${startWeek}) - ${endMonth}月${endDay}日(${endWeek})`;
+  }
+  return `${startYear}年${startMonth}月${startDay}日(${startWeek}) - ${endYear}年${endMonth}月${endDay}日(${endWeek})`;
+}
