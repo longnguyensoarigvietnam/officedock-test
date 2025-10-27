@@ -1769,7 +1769,11 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         # Task queryset
         queryset = self.filter_queryset(self.get_queryset())
         task_status = TaskStatusModel.objects.filter(id=status_id).first()
-        if task_status and task_status.name == TaskStatus.COMPLETED.value:
+        if (
+            task_status
+            and task_status.name == TaskStatus.COMPLETED.value
+            and not is_team_task
+        ):
             queryset = queryset.filter(archived_at__isnull=True)
 
         if ordering:

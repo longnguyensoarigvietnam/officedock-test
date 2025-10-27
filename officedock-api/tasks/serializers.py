@@ -401,9 +401,18 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
             "show_deadline_time",
             "deleted_at",
             "archived_at",
+            "completed_at",
         ]
 
-        read_only_fields = ["id", "is_start", "is_my_task", "created_at"]
+        read_only_fields = [
+            "id",
+            "is_start",
+            "is_my_task",
+            "created_at",
+            "completed_at",
+            "archived_at",
+            "deleted_at",
+        ]
 
     def validate(self, attrs):
         """Validation data"""
