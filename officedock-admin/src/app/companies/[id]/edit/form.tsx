@@ -32,7 +32,6 @@ import {
   ServerStatusCode,
 } from '@constants/enums';
 import {
-  HALF_WIDTH_DIGIT_REGEX,
   ONLY_DIGITS_REGEX,
   PHONE_REGEX,
 } from '@constants/regex';
@@ -44,6 +43,7 @@ import {
 
 import useCompanyDetail from '@hooks/useDetailCompany';
 import useCommonCreationData from '@hooks/useCommonCreationData';
+import { useErrorToast } from '@hooks/useErrorToast';
 
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
@@ -52,7 +52,7 @@ import { OptionDropdownType } from '@interfaces/common';
 import { EditCompanyRequest } from '@interfaces/company';
 
 import { emailRules } from '@utils/validators';
-import { normalizeJapaneseText } from '@utils';
+import { getErrorMessage, handleServerFormErrors, normalizeJapaneseText } from '@utils';
 
 import api from '@base/api';
 
@@ -83,6 +83,7 @@ const EditCompanyForm = () => {
   const { setIsLoading } = useContext(LoadingContext);
 
   const { showToast } = useToast();
+  const showErrorToast = useErrorToast();
 
   const [industryOptions, setIndustryOptions] = useState<OptionDropdownType[]>(
     [],
@@ -156,6 +157,7 @@ const EditCompanyForm = () => {
     control,
     register,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm<EditCompanyType>({
     mode: 'onSubmit',
@@ -258,6 +260,7 @@ const EditCompanyForm = () => {
     }
 
     return value;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyDetail, industryOptions, departmentOptions]);
 
   useEffect(() => {
@@ -280,19 +283,9 @@ const EditCompanyForm = () => {
         router.push(pageRouters.COMPANY_MANAGEMENT.href);
       },
       onError: (error: any) => {
-        const data = error?.response?.data as
-          | Record<string, string[]>
-          | undefined;
+        showErrorToast(error, ERROR_UPDATE_MESSAGE);
 
-        const firstErrorMessage =
-          data && Object.keys(data).length > 0
-            ? data[Object.keys(data)[0]]?.[0] // first field → first message
-            : ERROR_UPDATE_MESSAGE;
-
-        showToast({
-          variant: 'error',
-          description: firstErrorMessage || ERROR_UPDATE_MESSAGE,
-        });
+        handleServerFormErrors<EditCompanyType>(error, setError, control);
       },
       onSettled: () => {
         setIsLoading(false);
@@ -350,7 +343,7 @@ const EditCompanyForm = () => {
           },
         })}
         autoComplete="off"
-        error={errors.name?.message}
+        error={getErrorMessage(errors, 'name')}
       />
       {watch('status.value') == CompanyStatus.ACTIVE_CONTRACT ||
       watch('status.value') == CompanyStatus.TEMPORARY_USAGE ? (
@@ -367,7 +360,7 @@ const EditCompanyForm = () => {
               onChange={(e) => {
                 onChange(e);
               }}
-              error={errors.status?.message}
+              error={getErrorMessage(errors, 'status')}
             />
           )}
           rules={{ required: STATUS_REQUIRED_MESSAGE }}
@@ -393,14 +386,14 @@ const EditCompanyForm = () => {
           },
         })}
         autoComplete="off"
-        error={errors?.responsiblePersonName?.message}
+        error={getErrorMessage(errors, 'responsiblePersonName')}
       />
       <Input
         label="メールアドレス"
         placeholder="メールアドレスを入力してください"
         register={register('responsiblePersonMail', emailRules(true))}
         autoComplete="off"
-        error={errors?.responsiblePersonMail?.message}
+        error={getErrorMessage(errors, 'responsiblePersonMail')}
       />
       <Input
         label="電話番号"
@@ -425,12 +418,6 @@ const EditCompanyForm = () => {
             e.currentTarget.value = e.currentTarget.value.replace(/.$/, '');
           }
         }}
-        onBeforeInput={(e) => {
-          const nativeEvent = e.nativeEvent as InputEvent; // browser's InputEvent
-          if (!HALF_WIDTH_DIGIT_REGEX.test(nativeEvent.data || '')) {
-            e.preventDefault();
-          }
-        }}
         onPaste={(e) => {
           const pasted = e.clipboardData.getData('text');
           // block paste if it contains anything other than ASCII digits
@@ -439,7 +426,7 @@ const EditCompanyForm = () => {
           }
         }}
         autoComplete="off"
-        error={errors?.contract?.phone?.message}
+        error={getErrorMessage(errors, 'contract.phone')}
       />
       <Input
         label="住所"
@@ -452,7 +439,7 @@ const EditCompanyForm = () => {
           },
         })}
         autoComplete="off"
-        error={errors?.contract?.address?.message}
+        error={getErrorMessage(errors, 'contract.address')}
       />
       <Controller
         control={control}
@@ -539,6 +526,7 @@ const EditCompanyForm = () => {
                   ? 'border-[1px] !border-error'
                   : ''
               }
+              errorMessage={getErrorMessage(errors, 'contract.industry')}
             />
           );
         }}
@@ -594,7 +582,7 @@ const EditCompanyForm = () => {
                 ? 'border-[1px] !border-error'
                 : ''
             }
-            errorMessage={errors.contract?.systemMainPurpose?.message}
+            errorMessage={getErrorMessage(errors, 'contract.systemMainPurpose')}
           />
         )}
         rules={{ required: SYSTEM_MAIN_PURPOSE_REQUIRED_MESSAGE }}
@@ -699,7 +687,7 @@ const EditCompanyForm = () => {
                   ? 'border-[1px] !border-error'
                   : ''
               }
-              errorMessage={errors.contract?.department?.message}
+              errorMessage={getErrorMessage(errors, 'contract.department')}
             />
           );
         }}

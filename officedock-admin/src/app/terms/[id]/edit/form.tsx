@@ -17,23 +17,32 @@ import {
   END_DATE_MUST_BE_GREATER_THAN_START_DATE,
   ERROR_COMMON_MESSAGE,
   ERROR_UPDATE_MESSAGE,
+  FIELD_MAX_LENGTH_255_MESSAGE,
   FIELD_REQUIRED,
   SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
 import { apiRouters, pageRouters } from '@constants/routers';
 import { STATUS_TERM } from '@constants/term';
 import { ServerStatusCode, StatusTerm, TermType } from '@constants/enums';
+import { ONE_DAY_IN_MS } from '@constants';
 
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 
 import useDetailTerm from '@hooks/useDetailTerm';
+import { useErrorToast } from '@hooks/useErrorToast';
+
 import { CreateTermFormData, TermFormDataRequest } from '@interfaces/term';
 import { OptionDropdownType } from '@interfaces/common';
+
 import { formatDate } from '@utils/date';
-import { isContentEmpty } from '@utils';
+import {
+  getErrorMessage,
+  handleServerFormErrors,
+  isContentEmpty,
+} from '@utils';
+
 import api from '@base/api';
-import { useErrorToast } from '@hooks/useErrorToast';
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
@@ -65,6 +74,8 @@ const EditTermForm = () => {
     reset,
     handleSubmit,
     setValue,
+    setError,
+    clearErrors,
     formState: { errors },
   } = useForm<CreateTermFormData>({
     mode: 'onSubmit',
@@ -133,6 +144,8 @@ const EditTermForm = () => {
     },
     onError: (error: AxiosError) => {
       showErrorToast(error, ERROR_UPDATE_MESSAGE);
+
+      handleServerFormErrors<CreateTermFormData>(error, setError, control);
     },
     onSettled: () => {
       setIsLoading(false);
@@ -175,7 +188,16 @@ const EditTermForm = () => {
                                 element.value ===
                                 (value as OptionDropdownType)?.value,
                             )}
-                            onChange={onChange}
+                            onChange={(option) => {
+                              clearErrors([
+                                'status',
+                                'title',
+                                'description',
+                                'periodEnd',
+                                'periodStart',
+                              ]);
+                              onChange(option);
+                            }}
                             disabled={termDetail?.isConfirmed ? true : false}
                           />
                         </>
@@ -187,8 +209,9 @@ const EditTermForm = () => {
             </div>
           </div>
         </div>
-        <div className="w-full flex gap-3">
-          <div className="w-1/2 flex flex-col gap-2">
+        <div
+          className={`w-full ${getErrorMessage(errors, 'periodStart') || getErrorMessage(errors, 'periodEnd') ? 'mb-4' : ''}`}>
+          <div className="w-1/2">
             <div className="w-full flex items-start justify-start gap-1">
               <div className={`w-1/2 h-20`}>
                 <Controller
@@ -225,12 +248,9 @@ const EditTermForm = () => {
                       className={`${termDetail?.isConfirmed && '!opacity-55'}`}
                       minDate={new Date()}
                       disabled={termDetail?.isConfirmed ? true : false}
+                      error={getErrorMessage(errors, 'periodStart')}
                     />
                   )}
-                />
-                <ErrorMessage
-                  error={errors.periodStart?.message}
-                  className="mt-[5px] mb-[-15px] text-xs"
                 />
               </div>
               <p className="mb-3 mt-10">~</p>
@@ -256,17 +276,12 @@ const EditTermForm = () => {
                       onChange={onChange}
                       minDate={
                         minDatePlan
-                          ? new Date(
-                              minDatePlan.getTime() + 24 * 60 * 60 * 1000,
-                            )
+                          ? new Date(minDatePlan.getTime() + ONE_DAY_IN_MS)
                           : undefined
                       }
+                      error={getErrorMessage(errors, 'periodEnd')}
                     />
                   )}
-                />
-                <ErrorMessage
-                  error={errors.periodEnd?.message}
-                  className="mt-[5px] mb-[-15px] text-xs"
                 />
               </div>
             </div>
@@ -289,12 +304,13 @@ const EditTermForm = () => {
                 StatusTerm.PUBLIC
                   ? FIELD_REQUIRED
                   : false,
+              maxLength: {
+                value: 255,
+                message: FIELD_MAX_LENGTH_255_MESSAGE,
+              },
             })}
             disabled={termDetail?.isConfirmed ? true : false}
-          />
-          <ErrorMessage
-            error={errors.title?.message}
-            className="mt-[7px] mb-[-10px] text-xs"
+            error={getErrorMessage(errors, 'title')}
           />
         </div>
         <div className="w-full">
@@ -319,7 +335,7 @@ const EditTermForm = () => {
               },
             }}
             render={({ field }) => (
-              <div className="w-[80vw] max-w-full">
+              <div className="max-w-full">
                 <ReactQuill
                   {...field}
                   value={editorContent}
@@ -332,8 +348,8 @@ const EditTermForm = () => {
             )}
           />
           <ErrorMessage
-            error={errors.description?.message}
-            className="mt-[7px] mb-[-10px] text-xs"
+            error={getErrorMessage(errors, 'description')}
+            className="mt-[7px] mb-[-10px]"
           />
         </div>
         <div className="w-full flex items-center gap-4 mt-8 flex-col">

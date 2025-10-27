@@ -161,13 +161,23 @@ export const mapServerErrorKeyToFormKey = (key: string): string => {
 export const handleServerFormErrors = <T extends Record<string, any>>(
   error: any,
   setError: UseFormSetError<T>,
+  control?: any,
 ) => {
   if (!error?.response?.data) return;
 
   const flattened = flattenErrors(error.response.data);
 
+  const registeredFields: string[] = control?._fields
+    ? Object.keys(control._fields)
+    : [];
+
   Object.entries(flattened).forEach(([field, messages]) => {
     const formKey = mapServerErrorKeyToFormKey(field) as Path<T>;
+
+    if (registeredFields.length > 0 && !registeredFields.includes(formKey)) {
+      return; // ignore unknown fields like "detail"
+    }
+
     setError(formKey, {
       type: 'server',
       message: messages[0],

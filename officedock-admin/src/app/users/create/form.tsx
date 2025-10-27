@@ -37,6 +37,7 @@ const CreateUserForm = () => {
     register,
     handleSubmit,
     setError,
+    control,
     formState: { errors },
   } = useForm<CreateUserFormRequest>({
     mode: 'onSubmit',
@@ -60,7 +61,7 @@ const CreateUserForm = () => {
       onError: (error: any) => {
         showErrorToast(error, ERROR_CREATE_MESSAGE);
 
-        handleServerFormErrors<CreateUserFormRequest>(error, setError);
+        handleServerFormErrors<CreateUserFormRequest>(error, setError, control);
       },
       onSettled: () => {
         setIsLoading(false);

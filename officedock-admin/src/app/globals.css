@@ -139,3 +139,18 @@ input:-webkit-autofill:active {
 .ql-font {
   display: none !important;
 }
+.quill-editor {
+  width: 100%;
+}
+
+.quill-editor .ql-container {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.quill-editor .ql-editor {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-wrap: break-word;  /* handles long words */
+  word-break: break-word;     /* fallback */
+}
