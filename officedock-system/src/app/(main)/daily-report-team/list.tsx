@@ -28,9 +28,12 @@ import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 const ListData = () => {
   const { setIsLoading } = useContext(LoadingContext);
-  const { dataDatePicker, setDataDatePicker } = useContext(
-    TeamDailyStateContext,
-  );
+  const {
+    dataDatePicker,
+    setDataDatePicker,
+    selectedOrganization,
+    setSelectedOrganization,
+  } = useContext(TeamDailyStateContext);
 
   const [dataListDailyReport, setDataListDailyReport] = useState<
     DataListDailyType[]
@@ -39,12 +42,6 @@ const ListData = () => {
   const [organizationTeamList, setOrganizationList] = useState<
     OptionDropdownType[]
   >([]);
-
-  const [selectedOrganization, setSelectedOrganization] =
-    useState<OptionDropdownType>({
-      label: 'すべて',
-      value: 'ALL',
-    });
 
   useCreationDataCommon({
     options: {
