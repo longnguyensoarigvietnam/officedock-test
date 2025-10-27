@@ -557,3 +557,5 @@ export const ONLY_PAYMENT_PERMISSIONS = [
 
 export const CACHE_KEY = 'userItemsCache';
 export const CACHE_TTL = 3600_000;
+
+export const DESIGN_WIDTH = 1440;

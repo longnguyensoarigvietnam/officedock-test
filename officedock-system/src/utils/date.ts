@@ -1052,6 +1052,11 @@ export const findClosestTimeOption = (
   }, options[0]);
 };
 
+export const timeStringToMinutes = (time: string): number => {
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours * 60 + minutes;
+};
+
 export const isTodaySchedule = (date: Date) => {
   const today = new Date();
   return (

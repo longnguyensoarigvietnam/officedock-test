@@ -1,5 +1,8 @@
 import { memo, useMemo } from 'react';
 import Image from 'next/image';
+
+import { DESIGN_WIDTH } from '@constants';
+
 import { getFileURL } from '@utils';
 
 export type CustomUserAvatarProps = {
@@ -11,8 +14,6 @@ export type CustomUserAvatarProps = {
   isCalendarScreen?: boolean;
   isZoom?: boolean;
 };
-
-const DESIGN_WIDTH = 1440;
 
 const CustomUserAvatar = memo(
   ({

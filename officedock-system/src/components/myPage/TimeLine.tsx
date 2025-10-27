@@ -1,13 +1,13 @@
 import { useEffect, useRef } from 'react';
+import Image from 'next/image';
 
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import Spinner from '@components/common/Spinner';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
-import ImageRound from '@components/common/ImageRound';
 
 import { TweetDetail } from '@interfaces/tweet';
 
-import { SYSTEM_TWEET_NAME } from '@constants';
+import { DESIGN_WIDTH, SYSTEM_TWEET_NAME } from '@constants';
 
 import {
   convertToCurrentTimezone,
@@ -83,6 +83,8 @@ export const TimeLine = ({
     );
   };
 
+  const iconScale = (30 / DESIGN_WIDTH) * 100;
+
   return (
     <div className="w-[24.44vw] h-[calc(100%_-_8.76vh)] py-[3.48vh] px-[1.32vw] absolute top-[3.37vh] right-[2.08vw] border-[0.07vw] border-white bg-[#3599D8CC] rounded-[1.67vw] space-y-[2.81vh]">
       {/* Header */}
@@ -95,7 +97,7 @@ export const TimeLine = ({
       {/* Messages */}
       <div
         ref={resultsContainerRef}
-        className={`customized-scrollbar ${isLoadingList && tweetList.length == 0 ? 'overflow-y-hidden' : 'overflow-y-auto'} max-h-[calc(100%_-_5.62vh)] flex flex-col-reverse gap-[1.12vh] !w-full`}>
+        className={`customized-scrollbar ${isLoadingList && tweetList.length == 0 ? 'overflow-y-hidden' : 'overflow-y-auto'} max-h-[calc(100%_-_5.62vh)] flex flex-col-reverse gap-[4.49vh] !w-full`}>
         {isLoadingList && tweetList.length == 0 ? (
           <div className="flex flex-col items-start ml-3 space-y-2">
             <RowSkeleton
@@ -131,13 +133,23 @@ export const TimeLine = ({
                 className="space-y-[1.12vh] text-white !w-full px-[0.69vw]">
                 <div className="flex items-center justify-between">
                   <div className={`flex gap-[0.63vw] items-center`}>
-                    <div className="h-[3.37vh]">
+                    <div
+                      style={{
+                        width: `${iconScale}vw`,
+                        height: `${iconScale}vw`,
+                      }}>
                       {tweet.isSystem ? (
-                        <ImageRound
-                          name="Blue company"
-                          src={'/icons/blue-company.svg'}
-                          className={`w-[3.37vh] h-[3.37vh]`}
-                        />
+                        <div
+                          className="relative overflow-hidden"
+                          style={{ width: `${iconScale}vw`, height: `${iconScale}vw` }}>
+                          <Image
+                            src={'/icons/blue-company.svg'}
+                            className={`hover:cursor-pointer object-cover object-center`}
+                            fill
+                            alt="Blue company"
+                            unoptimized
+                          />
+                        </div>
                       ) : (
                         renderAvatar(
                           tweet?.user?.avatar || '',
