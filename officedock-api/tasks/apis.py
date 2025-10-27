@@ -1207,7 +1207,11 @@ class TaskViewSet(
             people_in_charge = item.pop("people_in_charge", [])
             task_status = item.pop("status", None)
             is_begin_unpin = item.pop("is_begin_unpin")
-
+            if task and task.archived_at:
+                if task_status and task_status != task.status:
+                    raise ValidationError(
+                        {"detail": ERROR_MESSAGES["cannot_updated"]}
+                    )
             # Create or update TaskIndex based on the presence of user or team
             if user:
                 if is_begin_unpin:
@@ -2056,7 +2060,7 @@ class TaskArchiveViewSet(BaseAPIViewSet, mixins.ListModelMixin):
     API endpoint to show Tasks to the Calendar.
     """
 
-    queryset = Task.objects.all()
+    queryset = Task.objects.filter(deleted_at__isnull=True).all()
     serializer_class = TaskArchiveSerializer
     permission_classes = [ActionPermission]
     filter_backends = [

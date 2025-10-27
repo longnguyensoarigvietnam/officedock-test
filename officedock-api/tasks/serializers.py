@@ -407,6 +407,7 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
 
     def validate(self, attrs):
         """Validation data"""
+        instance = self.instance
         repeat_type = attrs.get("repeat_type")
         week_day = attrs.get("week_day", None)
         month_day = attrs.get("month_day", None)
@@ -433,6 +434,19 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
             raise serializers.ValidationError(
                 {"plan_end_date": ERROR_MESSAGES["select_day"]}
             )
+
+        if instance and instance.archived_at:
+            if attrs.get("status") and attrs.get("status") != instance.status:
+                raise serializers.ValidationError(
+                    {"detail": ERROR_MESSAGES["cannot_updated"]}
+                )
+            if (
+                attrs.get("task_schedules")
+                and attrs.get("task_schedules") != instance.task_schedules
+            ):
+                raise serializers.ValidationError(
+                    {"detail": ERROR_MESSAGES["cannot_updated"]}
+                )
 
         return attrs
 
@@ -559,6 +573,7 @@ class TaskBoardSerializer(TaskCommonSerializer):
             "type",
             "categories",
             "completed_at",
+            "created_at",
         ]
 
     def to_representation(self, instance):
@@ -669,6 +684,7 @@ class TaskCalendarSerializer(TaskCommonSerializer):
             "categories",
             "status",
             "archived_at",
+            "created_at",
         ]
 
     def get_is_start(self, instance):
@@ -747,6 +763,7 @@ class TaskScheduleForCreationSerializer(serializers.ModelSerializer):
         """Validation"""
         plan_start_date = attrs.get("plan_start_date")
         plan_end_date = attrs.get("plan_end_date")
+        task = attrs.get("task")
         if (
             plan_start_date
             and plan_end_date
@@ -754,6 +771,11 @@ class TaskScheduleForCreationSerializer(serializers.ModelSerializer):
         ):
             raise serializers.ValidationError(
                 {"detail": ERROR_MESSAGES["start_date_end_date_invalid"]}
+            )
+
+        if task and task.archived_at:
+            raise serializers.ValidationError(
+                {"detail": ERROR_MESSAGES["cannot_create"]}
             )
 
         return attrs
