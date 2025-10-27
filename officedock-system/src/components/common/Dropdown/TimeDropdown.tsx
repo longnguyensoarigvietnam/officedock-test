@@ -17,10 +17,18 @@ import {
 
 import ErrorMessage from '../ErrorMessage';
 import ImageRound from '../ImageRound';
+import Spinner from '../Spinner';
+
 import { OptionDropdownType } from '@interfaces/common';
+
 import { NO_DATA_AVAILABLE } from '@constants';
 import { PriorityTask, StatusTask } from '@constants/enums';
-import Spinner from '../Spinner';
+
+import {
+  findClosestTimeOption,
+  getJapanMinutes,
+  timeStringToMinutes,
+} from '@utils/date';
 
 type Props = {
   label?: ReactNode;
@@ -152,11 +160,11 @@ const TimeDropdown = ({
     );
 
   useEffect(() => {
-    if (!isOpen || !optionsRef.current || !selected) return;
+    if (!isOpen || !optionsRef.current) return;
 
     const parent = optionsRef.current;
 
-    // Selected exists → scroll to selected
+    // Case 1: Selected exists → scroll to selected
     if (selected) {
       const el = parent.querySelector(
         `[data-value="${selected.value}"]`,
@@ -167,7 +175,26 @@ const TimeDropdown = ({
         return;
       }
     }
-  }, [isOpen, selected, filteredOptions]);
+
+    let referenceMinutes: number;
+    if (valueInput) {
+      referenceMinutes = timeStringToMinutes(valueInput); // Case 2: No selected, but has valueInput → scroll nearest to valueInput
+    } else {
+      referenceMinutes = getJapanMinutes(); // Case 3: No selected, no valueInput → scroll nearest to current time
+    }
+
+    const closestOption = filteredOptions
+      ? findClosestTimeOption(filteredOptions, referenceMinutes)
+      : undefined;
+    if (closestOption) {
+      const el = parent.querySelector(
+        `[data-value="${closestOption.value}"]`,
+      ) as HTMLElement | null;
+      if (el) {
+        parent.scrollTop = el.offsetTop;
+      }
+    }
+  }, [isOpen, selected, filteredOptions, valueInput]);
 
   return (
     <div className="flex flex-col w-full h-full">
