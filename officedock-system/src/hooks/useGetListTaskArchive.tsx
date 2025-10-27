@@ -118,8 +118,12 @@ const useTaskArchiveList = ({
     },
   });
 
+  const total =
+    data?.pages?.[0]?.total ?? data?.pages?.[data.pages.length - 1]?.total ?? 0;
+
   return {
     archiveTaskList: data?.pages?.flatMap((p) => p?.results ?? []) ?? [],
+    totalTask: total,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,

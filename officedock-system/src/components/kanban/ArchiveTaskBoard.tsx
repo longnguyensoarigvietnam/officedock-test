@@ -29,9 +29,9 @@ const ArchiveTaskBoard = ({
 
   const [isClicked, setIsClicked] = useState(false);
   const [extendTask, setExtendTask] = useState(true);
-  const [totalData, setTotalData] = useState(0);
   const {
     archiveTaskList,
+    totalTask,
     fetchNextPage,
     hasNextPage,
     isLoadingList,
@@ -39,9 +39,6 @@ const ArchiveTaskBoard = ({
   } = useTaskArchiveList({
     orderingOptions,
     ordering: ordering ? '-completed_at' : '-archived_at',
-    onSuccess: (data) => {
-      setTotalData(data.total || 0);
-    },
   });
   const resultsContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -105,7 +102,7 @@ const ArchiveTaskBoard = ({
         <div className={`bg-[#A7B7C2] w-[2px] h-[20px] right-1.5 top-2`} />
 
         <p className="font-medium text-[14px]">アーカイブタスク</p>
-        <p className="text-[#77858F] text-[14px]">{totalData}</p>
+        <p className="text-[#77858F] text-[14px]">{totalTask || 0}</p>
       </div>
       <div className="flex ml-1 text-[#77858F] font-medium text-[12px] ">
         <p className="w-[46%] border-r-2">タスク名</p>
