@@ -354,13 +354,13 @@ const ListActualDurations = () => {
       {
         accessorKey: 'id',
         header: 'ID',
-        size: 100,
+        size: 80,
         cell: (info) => info.getValue(),
       },
       {
         accessorKey: 'type',
         header: 'タスク/予定',
-        size: 150,
+        size: 80,
         cell: ({ getValue }) =>
           getValue() == ItemStartType.TASK
             ? WorkItemType.Task
@@ -375,6 +375,7 @@ const ListActualDurations = () => {
       {
         accessorKey: 'categories',
         header: 'カテゴリ',
+        size: 360,
         cell: ({ row }) => {
           const element = row.original;
           const large = element.categories.find(
@@ -442,7 +443,7 @@ const ListActualDurations = () => {
       {
         accessorKey: 'pausedAt',
         header: '計測時間',
-        size: 150,
+        size: 120,
         cell: ({ row }) => {
           const e = row.original;
           return e.pausedAt
@@ -456,7 +457,7 @@ const ListActualDurations = () => {
       {
         accessorKey: 'staffs',
         header: '従業員',
-        size: 360,
+        size: 150,
         cell: ({ getValue }) => {
           const staffs = getValue<string[]>();
 
@@ -477,7 +478,7 @@ const ListActualDurations = () => {
       {
         id: 'actions',
         header: '操作',
-        size: 150,
+        size: 120,
         enableSorting: false,
         cell: ({ row }) => {
           const element = row.original;
