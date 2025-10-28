@@ -24,10 +24,10 @@ const TabParticipantsChat = ({ chatRoomDetail }: Props) => {
               avatarColor={people.avatarColor || ''}
               size={36}
             />
-            <div className="ml-[10px] max-w-[100px] truncate">
+            <div className="ml-[10px] max-w-[100px] flex-shrink-0 line-clamp-2">
               {people.fullName}
             </div>
-            <div className="ml-[6px] mt-[3px] text-xs text-[#77858F] font-medium">
+            <div className="ml-[6px] break-all line-clamp-2 mt-[3px] text-xs text-[#77858F] font-medium">
               {people.organizations?.name}
             </div>
           </div>
