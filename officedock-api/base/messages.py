@@ -156,6 +156,9 @@ _ERROR_MESSAGES = {
         ),
         "close_date_range_1_to_31": _("Must be between 1 and 31."),
         "editable_range_1_to_10": _("Must be between 1 and 10."),
+        "cannot_edit_schedule_task_archive": _(
+            "Cannot edit schedule of task archived"
+        ),
     },
     "ja": {
         "token_invalid": _("トークンは無効です。"),
@@ -262,6 +265,7 @@ _ERROR_MESSAGES = {
         "cannot_edit_editable_date": _("修正可能な期間を変更できません。"),
         "close_date_range_1_to_31": _("締日は1日から31日まで選択してください。"),
         "editable_range_1_to_10": _("修正可能な期間は1日間から10日間まで選択してください。"),
+        "cannot_edit_schedule_task_archive": _("アーカイブ済みのタスクは、実施予定日時を修正できません。"),
     },
 }
 
