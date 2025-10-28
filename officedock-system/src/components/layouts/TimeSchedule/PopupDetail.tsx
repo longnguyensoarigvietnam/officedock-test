@@ -4,7 +4,10 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import ImageRound from '@components/common/ImageRound';
 import Input from '@components/common/Input';
 import { ActionTask, ItemStartType, StatusValueTask } from '@constants/enums';
-import { ERROR_DELETE_TASK_RUNNING } from '@constants/message';
+import {
+  ERROR_DELETE_MESSAGE,
+  ERROR_DELETE_TASK_RUNNING,
+} from '@constants/message';
 import { useToast } from '@providers/ToastProvider';
 import {
   combineDateAndTime,
@@ -418,7 +421,14 @@ const PopupDetail = ({
         <div className="absolute top-10 right-[-105px] bg-[#5B6770] w-[168px] rounded-md py-[6px] text-white font-medium text-sm">
           <p
             onClick={() => {
-              deletePlanTask(uuid, taskId);
+              if (startEditable == false && resourcePlan) {
+                showToast({
+                  variant: 'error',
+                  description: ERROR_DELETE_MESSAGE,
+                });
+              } else {
+                deletePlanTask(uuid, taskId);
+              }
             }}
             className="py-[10px] px-[14px] hover:bg-[#7D8A94] cursor-pointer">
             予定からタスクを削除
