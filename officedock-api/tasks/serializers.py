@@ -188,7 +188,7 @@ class TaskScheduleSerializer(serializers.ModelSerializer):
         instance = self.instance
         if instance and instance.task and instance.task.archived_at:
             raise serializers.ValidationError(
-                {"detail": ERROR_MESSAGES["cannot_updated"]}
+                {"detail": ERROR_MESSAGES["cannot_edit_schedule_task_archive"]}
             )
 
         return attrs
@@ -464,7 +464,11 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
                 and attrs.get("task_schedules") != instance.task_schedules
             ):
                 raise serializers.ValidationError(
-                    {"detail": ERROR_MESSAGES["cannot_updated"]}
+                    {
+                        "detail": ERROR_MESSAGES[
+                            "cannot_edit_schedule_task_archive"
+                        ]
+                    }
                 )
 
         return attrs
@@ -794,7 +798,7 @@ class TaskScheduleForCreationSerializer(serializers.ModelSerializer):
 
         if task and task.archived_at:
             raise serializers.ValidationError(
-                {"detail": ERROR_MESSAGES["cannot_create"]}
+                {"detail": ERROR_MESSAGES["cannot_edit_schedule_task_archive"]}
             )
 
         return attrs
