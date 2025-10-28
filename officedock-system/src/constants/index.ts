@@ -1,4 +1,5 @@
 import {
+  CalendarViewOptions,
   ItemAvatarType,
   ItemStartType,
   PermissionType,
@@ -559,3 +560,22 @@ export const CACHE_KEY = 'userItemsCache';
 export const CACHE_TTL = 3600_000;
 
 export const DESIGN_WIDTH = 1440;
+
+export const CALENDAR_VIEW_OPTIONS = [
+  {
+    value: CalendarViewOptions.VIEW_BY_DAY,
+    label: '日',
+  },
+  {
+    value: CalendarViewOptions.VIEW_BY_WEEK,
+    label: '週',
+  },
+  {
+    value: CalendarViewOptions.VIEW_BY_MONTH,
+    label: '月',
+  },
+  {
+    value: CalendarViewOptions.VIEW_BY_YEAR,
+    label: '年',
+  },
+];

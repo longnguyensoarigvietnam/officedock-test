@@ -13,8 +13,8 @@ import { CalendarViewOptions, PermissionsSystem } from '@constants/enums';
 import { JAPANESE_TIME_ZONE } from '@constants';
 
 import {
-  CalendarPopoverEvent,
   CalendarPopoverInfo,
+  EventCalendarDetail,
   EventParticipant,
 } from '@interfaces/calendar';
 import { Profile } from '@interfaces/user';
@@ -37,12 +37,16 @@ interface EventListModalProps {
     userIds: number[];
     avatarUrl: string;
   }[];
+  calendarView: CalendarViewOptions;
   setEventListModalInfo: Dispatch<SetStateAction<CalendarPopoverInfo | null>>;
   setDefaultCreateStartDate: Dispatch<SetStateAction<Date | undefined>>;
   handleCreateNewEventFromPopup: () => void;
-  handleEventClickInPopup: (eventId: string, repeatScheduleId: string) => void;
+  handleEventClickInPopup: (params: {
+    eventId: string;
+    repeatScheduleId: string;
+    eventInfo: EventCalendarDetail;
+  }) => void;
   checkShowUserAvatar: (participants?: EventParticipant[]) => boolean;
-  calendarView: CalendarViewOptions;
 }
 
 export const EventListModal = ({
@@ -148,7 +152,10 @@ export const EventListModal = ({
               size={24}
             />
           ) : (
-            <GroupIconWithDynamicColor color={orgInfo?.color || '#228CDB'} size={24}/>
+            <GroupIconWithDynamicColor
+              color={orgInfo?.color || '#228CDB'}
+              size={24}
+            />
           )}
         </div>
       </DynamicTooltip>
@@ -208,7 +215,7 @@ export const EventListModal = ({
   };
 
   // Show avatars depending on event
-  const showEventAvatars = (event: CalendarPopoverEvent) => {
+  const showEventAvatars = (event: EventCalendarDetail) => {
     const organizationIds = event.selectOrganizations || [];
     const userIds = event.participants?.map((user) => Number(user.id)) || [];
 
@@ -313,21 +320,22 @@ export const EventListModal = ({
                 return (
                   <li
                     key={event.eventId}
-                    className={`text-xs bg-[#EBF1F7] text-[#444546] flex items-center !rounded-[8px] pl-[10px] h-[48px] ${event.repeatScheduleId.includes('holiday') && 'hover:cursor-not-allowed'}`}
+                    className={`text-xs bg-[#EBF1F7] text-[#444546] flex items-center !rounded-[8px] pl-[10px] h-[48px] ${event?.id && event?.id.includes('holiday') && 'hover:cursor-not-allowed'}`}
                     onClick={() => {
-                      if (!event.repeatScheduleId.includes('holiday')) {
+                      if (event.id && !event?.id.includes('holiday')) {
                         setEventListModalInfo(null);
-                        handleEventClickInPopup(
-                          event.eventId,
-                          event.repeatScheduleId,
-                        );
+                        handleEventClickInPopup({
+                          eventId: event?.eventId || '',
+                          repeatScheduleId: event.id,
+                          eventInfo: event,
+                        });
                       }
                     }}>
                     <div className="flex items-center gap-[10px]">
                       {event ? showEventAvatars(event) : <></>}
                       <div className="flex flex-col gap-[10px]">
                         <p
-                          className={`font-semibold max-w-[150px] truncate ${event.repeatScheduleId.includes('holiday') && 'text-error'}`}>
+                          className={`font-semibold max-w-[150px] truncate ${event?.id && event?.id.includes('holiday') && 'text-error'}`}>
                           {event.title || ''}
                         </p>
                         <div className="flex gap-1">

@@ -25,6 +25,13 @@ export interface EventCalendarDetail {
   scheduleId?: number | null;
   taskId?: number | null;
   eventId?: string;
+  repeatType?: string | null;
+  repeatInterval?: number | null;
+  weekDay?: number | null;
+  monthDay?: number | null;
+  month?: number | null;
+  isEventOverlapping?: boolean;
+  categories?: EventCategoryOption[];
 }
 
 export interface EventCalendarDayRange {
@@ -72,7 +79,7 @@ export interface EventEditFormData {
   type?: string | OptionDropdownType;
   largeCategory?: OptionDropdownType;
   mediumCategory?: OptionDropdownType;
-  categories?: { id: string; name: string; type: string }[];
+  categories?: EventCategoryOption[];
   createdAt?: Date;
   repeatType?: OptionDropdownType | string | null;
   repeatInterval?: OptionDropdownType | number | null;
@@ -97,7 +104,7 @@ export interface EventRequest {
   type?: string;
   sendToChat?: boolean;
   message?: string;
-  categories?: EventWorkCategoryOption[];
+  categories?: EventCategoryOption[];
   categoryIds?:
     | {
         categoryId: string | null;
@@ -182,6 +189,12 @@ export interface EventCalendarProps {
     uuid: string;
   }[];
   isCrossTeamTask?: boolean;
+  repeatType?: string | null;
+  repeatInterval?: number | null;
+  weekDay?: number | null;
+  monthDay?: number | null;
+  month?: number | null;
+  isEventOverlapping?: boolean;
 }
 
 export interface TaskCalendarProps {
@@ -199,28 +212,15 @@ export interface TaskCalendarProps {
   resourceId?: number;
 }
 
-export interface EventWorkCategoryOption {
+export interface EventCategoryOption {
   name: string;
   type: string;
   id?: number;
 }
 
-export interface CalendarPopoverEvent {
-  eventId: string;
-  repeatScheduleId: string;
-  title: string;
-  start?: Date;
-  end?: Date;
-  type?: EventCalendarType;
-  participants?: EventParticipant[];
-  selectOrganizations?: number[];
-  location?: LocationEventType;
-  allDay?: boolean;
-}
-
 export interface CalendarPopoverInfo {
   date: Date;
-  events: Array<CalendarPopoverEvent>;
+  events: Array<EventCalendarDetail>;
   left?: number;
   top?: number;
 }

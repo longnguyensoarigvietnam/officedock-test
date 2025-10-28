@@ -23,6 +23,7 @@ import { useMutation, useQueryClient } from 'react-query';
 import resourceTimeGridPlugin from '@fullcalendar/resource-timegrid';
 import resourcePlugin from '@fullcalendar/resource';
 import scrollgridPlugin from '@fullcalendar/scrollgrid';
+import { EventClickArg } from '@fullcalendar/core';
 import { getHolidaysOf } from 'japanese-holidays';
 
 import ImageRound from '@components/common/ImageRound';
@@ -41,6 +42,7 @@ import RangeSlider from '@components/common/RangeSlider';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import EventActionTypeModal from '@components/modals/EventActionTypeModal';
+import { EventCard } from '@components/calendar/EventCard';
 
 import useDebounceText from '@hooks/useDebounceText';
 import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
@@ -50,7 +52,6 @@ import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 import { hasPermissionInArray } from '@utils';
 import {
   addTimeToDate,
-  convertToTimeString,
   formatQueryEndDateForCalendar,
   formatQueryStartDateForCalendar,
   getJapaneseDayName,
@@ -99,13 +100,16 @@ import {
   TaskRepetitiveValue,
   ViewOptions,
 } from '@constants/enums';
-import { DEFAULT_END_TIME, DEFAULT_START_TIME, NO_SETTING } from '@constants';
+import {
+  CALENDAR_VIEW_OPTIONS,
+  DEFAULT_END_TIME,
+  DEFAULT_START_TIME,
+  NO_SETTING,
+} from '@constants';
 
 import api from '@base/api';
 
 import './styles/calendar.css';
-import { EventCard } from '@components/calendar/EventCard';
-import { EventClickArg } from '@fullcalendar/core';
 
 const EventCalendar = () => {
   // Refs
@@ -125,7 +129,13 @@ const EventCalendar = () => {
     useState(false);
   const [openConfirmEditEventModal, setOpenConfirmEditEventModal] =
     useState(false);
-  const [openEventInfoModal, setOpenEventInfoModal] = useState<boolean>(false);
+  const [openEventInfoModal, setOpenEventInfoModal] = useState<{
+    status: boolean;
+    info: EventCalendarDetail | null;
+  }>({
+    status: false,
+    info: null,
+  });
   const [openEventActionTypeModal, setOpenEventActionTypeModal] = useState<{
     status: boolean;
     type: ActionsEvent | null;
@@ -664,7 +674,7 @@ const EventCalendar = () => {
 
   const handleEventContent = (eventContent: any) => {
     if (eventContent.event.id.startsWith('loading')) {
-      return <RowSkeleton className="w-full h-[31px] mb-1" />;
+      return <RowSkeleton className="w-full h-[31px]" />;
     } else {
       const calendarApi = eventContent.view.calendar;
       const currentView = calendarApi.view.type;
@@ -703,7 +713,7 @@ const EventCalendar = () => {
       return seg.event.id;
     });
     if (events) {
-      const filterEvents: any[] = [];
+      const filterEvents: EventCalendarDetail[] = [];
       events
         .filter((event) => clickInfoEvents.includes(event.id))
         .forEach((event) => {
@@ -730,28 +740,40 @@ const EventCalendar = () => {
               ) {
                 if (event.allDay) {
                   filterEvents.push({
+                    id: `${event.id}`,
                     eventId: `${event.eventId}`,
-                    repeatScheduleId: `${event.id}`,
                     title: event.title,
                     start: event.start,
                     end: adjustedEndISOString,
+                    allDay: event.allDay,
                     type: event.type,
                     participants: event.participants || [],
                     selectOrganizations: event.selectOrganizations || [],
-                    location: event.location || '',
+                    location: event.location,
+                    month: event?.month || null,
+                    monthDay: event?.monthDay || null,
+                    weekDay: event?.weekDay || null,
+                    repeatInterval: event?.repeatInterval || null,
+                    repeatType: event?.repeatType || null,
                   });
                 }
               } else {
                 filterEvents.push({
+                  id: `${event.id}`,
                   eventId: `${event.eventId}`,
-                  repeatScheduleId: `${event.id}`,
                   title: event.title,
                   start: event.start,
                   end: adjustedEndISOString,
+                  allDay: event.allDay,
                   type: event.type,
                   participants: event.participants || [],
                   selectOrganizations: event.selectOrganizations || [],
-                  location: event.location || '',
+                  location: event.location,
+                  month: event?.month || null,
+                  monthDay: event?.monthDay || null,
+                  weekDay: event?.weekDay || null,
+                  repeatInterval: event?.repeatInterval || null,
+                  repeatType: event?.repeatType || null,
                 });
               }
             }
@@ -773,12 +795,12 @@ const EventCalendar = () => {
 
   // Show events in modal
   const handleShowEventsInModal = (
-    eventList: any[],
+    eventList: EventCalendarDetail[],
     date: Date,
     pageX: number,
     pageY: number,
   ) => {
-    const filterEvents: any[] = [];
+    const filterEvents: EventCalendarDetail[] = [];
     eventList.forEach((event) => {
       if (event.end) {
         const eventStart = new Date(event.start);
@@ -790,24 +812,28 @@ const EventCalendar = () => {
           event.allDay;
 
         const adjustedEnd = shouldAdjustEnd
-          ? subtractOneDay(event.end)
+          ? subtractOneDay(String(event.end))
           : eventEnd;
         const adjustedEndISOString = shouldAdjustEnd
-          ? subtractOneDay(event.end).toISOString()
+          ? subtractOneDay(String(event.end)).toISOString()
           : event.end;
         if (removeTimeAndCompareDates(eventStart, adjustedEnd, clickDate)) {
           filterEvents.push({
+            id: `${event.id}`,
             eventId: `${event.eventId}`,
-            repeatScheduleId: `${event.id}`,
             title: event.title,
             start: event.start,
             end: adjustedEndISOString,
+            allDay: event.allDay,
             type: event.type,
             participants: event.participants || [],
             selectOrganizations: event.selectOrganizations || [],
-            address: event.address || '',
-            allDay: event.allDay,
-            location: event.location || '',
+            location: event.location,
+            month: event?.month || null,
+            monthDay: event?.monthDay || null,
+            weekDay: event?.weekDay || null,
+            repeatInterval: event?.repeatInterval || null,
+            repeatType: event?.repeatType || null,
           });
         }
       }
@@ -862,7 +888,6 @@ const EventCalendar = () => {
                 avatarColor: member?.avatarColor || '',
               };
             }),
-            address: '',
             resourceIds: dashboardMemberList.map((member) => String(member.id)),
           };
         });
@@ -940,7 +965,7 @@ const EventCalendar = () => {
                   type: EventCalendarType.SCHEDULE,
                   participants: event.participants || [],
                   selectOrganizations: event?.selectOrganizations || [],
-                  location: event.location || '',
+                  location: event.location,
                   resourceIds: [
                     ...(event.participants
                       ?.filter(
@@ -951,6 +976,15 @@ const EventCalendar = () => {
                       ? [Number(session?.user.id)]
                       : []),
                   ],
+                  eventStart: schedule.planStartDate,
+                  eventEnd: schedule.planEndDate,
+                  month: event?.month || null,
+                  monthDay: event?.monthDay || null,
+                  weekDay: event?.weekDay || null,
+                  repeatInterval: event?.repeatInterval || null,
+                  repeatType: event?.repeatType || null,
+                  isEventOverlapping: event?.isEventOverlapping || false,
+                  categories: event?.categories || [],
                 };
               }),
           );
@@ -1246,34 +1280,6 @@ const EventCalendar = () => {
     {
       onSuccess: async (data) => {
         setOpenCreateEventModal(true);
-        setDataEventEdit(data);
-      },
-      onError: (error: AxiosError) => {
-        if (error.response?.status === ServerStatusCode.NOT_FOUND) {
-          showToast({
-            variant: 'error',
-            description: ERROR_NOT_FOUND_EVENT,
-          });
-          handleRemoveEventParam();
-        }
-      },
-      onSettled: () => {},
-    },
-  );
-
-  const handleConfirmGetDataDetailEvent = (
-    eventId: string,
-    repeatScheduleId: string,
-  ) => {
-    getDataDetailEvent({ eventId, repeatScheduleId });
-  };
-
-  const { mutate: getDataEventInfo } = useMutation(
-    'getDataEventInfo',
-    handleGetDataDetailEvent,
-    {
-      onSuccess: async (data) => {
-        setOpenEventInfoModal(true);
         setDataEventEdit({
           ...data,
           startDate: data.repeatSchedules.planStartDate,
@@ -1293,18 +1299,10 @@ const EventCalendar = () => {
     },
   );
 
-  const handleConfirmGetDataEventInfo = (
-    eventId: string,
-    repeatScheduleId: string,
-  ) => {
-    getDataEventInfo({ eventId, repeatScheduleId });
-  };
-
   // Handle click in event
   const handleEventClick = (clickInfo: EventClickArg) => {
     const eventId = clickInfo.event?.extendedProps?.eventId || '';
     const repeatScheduleId = clickInfo.event?.id || '';
-
     setSelectedEventInfo({
       eventId,
       repeatScheduleId,
@@ -1317,36 +1315,73 @@ const EventCalendar = () => {
       searchParams.get('view') == ViewOptions.MONTH
     ) {
       if (clickInfo.event.extendedProps.type === EventCalendarType.SCHEDULE) {
-        handleConfirmGetDataEventInfo(eventId, repeatScheduleId);
-      }
-      setInfoModalPosition({
-        left: clickInfo.jsEvent.pageX,
-        top: clickInfo.jsEvent.pageY,
-      });
-    } else {
-      setEventListModalInfo(null);
-      if (clickInfo.event.extendedProps.type === EventCalendarType.SCHEDULE) {
-        handleSetEventParam({
-          id: `${clickInfo.event.id}`,
-          action: ActionsEvent.EDIT,
+        setOpenEventInfoModal({
+          status: true,
+          info: {
+            id: repeatScheduleId,
+            eventId: eventId,
+            title: clickInfo.event.title,
+            start: clickInfo.event.extendedProps.eventStart,
+            end: clickInfo.event.extendedProps.eventEnd,
+            allDay: clickInfo.event.allDay,
+            type: clickInfo.event.extendedProps.type,
+            participants: clickInfo.event.extendedProps.participants || [],
+            selectOrganizations:
+              clickInfo.event.extendedProps.selectOrganizations || [],
+            location: clickInfo.event.extendedProps.location,
+            month: clickInfo.event.extendedProps?.month || null,
+            monthDay: clickInfo.event.extendedProps?.monthDay || null,
+            weekDay: clickInfo.event.extendedProps?.weekDay || null,
+            repeatInterval:
+              clickInfo.event.extendedProps?.repeatInterval || null,
+            repeatType: clickInfo.event.extendedProps?.repeatType || null,
+            categories: clickInfo.event.extendedProps?.categories || [],
+          },
         });
-        handleConfirmGetDataDetailEvent(eventId, repeatScheduleId);
+        setInfoModalPosition({
+          left: clickInfo.jsEvent.pageX,
+          top: clickInfo.jsEvent.pageY,
+        });
       }
-      setActionEventClick(ActionsEvent.EDIT);
     }
   };
 
   // Handle click in popup
-  const handleEventClickInPopup = (
-    eventId: string,
-    repeatScheduleId: string,
-  ) => {
+  const handleEventClickInPopup = ({
+    eventId,
+    repeatScheduleId,
+    eventInfo,
+  }: {
+    eventId: string;
+    repeatScheduleId: string;
+    eventInfo: EventCalendarDetail;
+  }) => {
     setSelectedEventInfo({
       eventId,
       repeatScheduleId,
       openType: SelectedEventOpenType.POPUP,
     });
-    handleConfirmGetDataEventInfo(eventId, repeatScheduleId);
+    setOpenEventInfoModal({
+      status: true,
+      info: {
+        id: repeatScheduleId,
+        title: eventInfo.title,
+        start: eventInfo.start,
+        end: eventInfo.end,
+        allDay: eventInfo.allDay,
+        eventId: eventId,
+        type: eventInfo.type,
+        participants: eventInfo.participants || [],
+        selectOrganizations: eventInfo.selectOrganizations || [],
+        location: eventInfo.location,
+        month: eventInfo?.month || null,
+        monthDay: eventInfo?.monthDay || null,
+        weekDay: eventInfo?.weekDay || null,
+        repeatInterval: eventInfo?.repeatInterval || null,
+        repeatType: eventInfo?.repeatType || null,
+        categories: eventInfo?.categories || [],
+      },
+    });
   };
 
   useEffect(() => {
@@ -1362,7 +1397,7 @@ const EventCalendar = () => {
 
       getDataDetailEvent({
         eventId: eventDetailId.replace('event', ''),
-        repeatScheduleId: '',
+        repeatScheduleId: repeatScheduleIdURL || '',
       });
     }
     if (actionType === ActionsEvent.CREATE) {
@@ -1392,25 +1427,6 @@ const EventCalendar = () => {
   const { control, watch } = useForm({
     mode: 'onSubmit',
   });
-
-  const calendarViewOptions = [
-    {
-      value: CalendarViewOptions.VIEW_BY_DAY,
-      label: '日',
-    },
-    {
-      value: CalendarViewOptions.VIEW_BY_WEEK,
-      label: '週',
-    },
-    {
-      value: CalendarViewOptions.VIEW_BY_MONTH,
-      label: '月',
-    },
-    {
-      value: CalendarViewOptions.VIEW_BY_YEAR,
-      label: '年',
-    },
-  ];
 
   // Get calendar initial view
   const getCalendarInitialView = () => {
@@ -1867,7 +1883,10 @@ const EventCalendar = () => {
         setOpenConfirmDeleteEventModal(false);
         setConfirmEventDataToEdit(undefined);
         setBackToEditing(false);
-        setOpenEventInfoModal(false);
+        setOpenEventInfoModal({
+          status: false,
+          info: null,
+        });
         setActionsEventMessage('');
         showToast({
           description: SUCCESS_DELETE_MESSAGE,
@@ -1955,15 +1974,20 @@ const EventCalendar = () => {
   const handleSetEventParam = ({
     id,
     action,
+    repeatScheduleId,
   }: {
     id: string | null;
     action?: string | null;
+    repeatScheduleId?: string | null;
   }) => {
     if (id) {
       params.set('event', id);
     }
     if (action) {
       params.set('action', action);
+    }
+    if (repeatScheduleId) {
+      params.set('repeat-schedule', repeatScheduleId);
     }
     router.push(`?${params.toString()}`);
   };
@@ -1980,19 +2004,19 @@ const EventCalendar = () => {
 
   // Get default calendar view
   const getDefaultCalendarView = () => {
-    let defaultView = calendarViewOptions[2];
+    let defaultView = CALENDAR_VIEW_OPTIONS[2];
     switch (searchParams.get('view')) {
       case ViewOptions.YEAR:
-        defaultView = calendarViewOptions[3];
+        defaultView = CALENDAR_VIEW_OPTIONS[3];
         break;
       case ViewOptions.MONTH:
-        defaultView = calendarViewOptions[2];
+        defaultView = CALENDAR_VIEW_OPTIONS[2];
         break;
       case ViewOptions.WEEK:
-        defaultView = calendarViewOptions[1];
+        defaultView = CALENDAR_VIEW_OPTIONS[1];
         break;
       case ViewOptions.DAY:
-        defaultView = calendarViewOptions[0];
+        defaultView = CALENDAR_VIEW_OPTIONS[0];
         break;
       default:
         break;
@@ -2218,8 +2242,8 @@ const EventCalendar = () => {
                   defaultValue={getDefaultCalendarView()}
                   render={({ field: { value, onChange } }) => (
                     <Dropdown
-                      options={calendarViewOptions}
-                      selectedOption={calendarViewOptions.find(
+                      options={CALENDAR_VIEW_OPTIONS}
+                      selectedOption={CALENDAR_VIEW_OPTIONS.find(
                         (element) => element.value === value?.value,
                       )}
                       className="h-[30px] !w-full !border-[#77858F] border-[1px] rounded-[6px] text-xs !py-1 !pr-0 !shadow-none"
@@ -2764,22 +2788,19 @@ const EventCalendar = () => {
           onBackToEditModal={() => {
             setOpenCreateEventModal(true);
             setOpenConfirmDeleteEventModal(false);
-            setDataEventEdit(confirmEventDataToEdit);
-            setBackToEditing(true);
             setActionsEventMessage('');
-            if (!searchParams.get('action')) {
-              handleSetEventParam({
-                id: `${dataEventEdit?.id}`,
-                action: ActionsEvent.EDIT,
-              });
-              setActionEventClick(ActionsEvent.EDIT);
-            }
+            handleSetEventParam({
+              id: eventIdURL,
+              action: ActionsEvent.EDIT,
+              repeatScheduleId: repeatScheduleIdURL || null,
+            });
+            setActionEventClick(ActionsEvent.EDIT);
           }}
         />
       )}
-      {openEventInfoModal && (
+      {openEventInfoModal.status && openEventInfoModal.info ? (
         <EventInfoModal
-          dataEvent={dataEventEdit}
+          dataEvent={openEventInfoModal.info}
           top={infoModalPosition?.top}
           left={infoModalPosition?.left}
           checkShowUserAvatar={checkShowUserAvatar}
@@ -2789,7 +2810,10 @@ const EventCalendar = () => {
           onClose={() => {
             setDataEventEdit(undefined);
             setSelectedEventInfo(null);
-            setOpenEventInfoModal(false);
+            setOpenEventInfoModal({
+              status: false,
+              info: null,
+            });
             setDefaultCreateStartDate(undefined);
             setInfoModalPosition({
               left: 0,
@@ -2798,8 +2822,9 @@ const EventCalendar = () => {
           }}
           onEdit={(data) => {
             handleSetEventParam({
-              id: `${data.id}`,
+              id: `${data.eventId}`,
               action: ActionsEvent.EDIT,
+              repeatScheduleId: data.id || null,
             });
             setActionEventClick(ActionsEvent.EDIT);
             setSelectedEventInfo((prev) => {
@@ -2811,13 +2836,17 @@ const EventCalendar = () => {
             });
 
             setOpenCreateEventModal(true);
-            setOpenEventInfoModal(false);
+            setOpenEventInfoModal({
+              status: false,
+              info: null,
+            });
             setOpenConfirmEditEventModal(false);
           }}
           onCopy={(data) => {
             handleSetEventParam({
-              id: `${data.id}`,
+              id: `${data.eventId}`,
               action: ActionsEvent.COPY,
+              repeatScheduleId: data.id || null,
             });
             setActionEventClick(ActionsEvent.COPY);
             setSelectedEventInfo((prev) => {
@@ -2828,57 +2857,22 @@ const EventCalendar = () => {
               };
             });
             setOpenCreateEventModal(true);
-            setOpenEventInfoModal(false);
+            setOpenEventInfoModal({
+              status: false,
+              info: null,
+            });
             setOpenConfirmEditEventModal(false);
           }}
           onDelete={(data) => {
             handleSetEventParam({
-              id: `${data.id}`,
-            });
-            let newParticipantIds: number[] = [];
-            if (data.participants) {
-              newParticipantIds = data.participants.map((item) =>
-                Number(item.id),
-              );
-            }
-            let newTagIds: OptionDropdownType[] = [];
-            if (data.tags) {
-              newTagIds = data.tags.map((item) => ({
-                label: String(item.name),
-                value: String(item.id),
-              }));
-            }
-
-            setConfirmEventDataToEdit({
-              ...data,
-              type: { label: `${data.type}`, value: `${data.type}` },
-              largeCategory: {
-                value: `${data.categories && data.categories.find((cat) => cat.type == EventWorkCategory.LARGE)?.id}`,
-                label: `${
-                  data.categories &&
-                  (data.categories.find(
-                    (cat) => cat.type == EventWorkCategory.LARGE,
-                  )?.name as string)
-                }`,
-              },
-              mediumCategory: {
-                value: `${data.categories && data.categories.find((cat) => cat.type == EventWorkCategory.MEDIUM)?.id}`,
-                label: `${
-                  data.categories &&
-                  (data.categories.find(
-                    (cat) => cat.type == EventWorkCategory.MEDIUM,
-                  )?.name as string)
-                }`,
-              },
-              participantIds: newParticipantIds,
-              tagIds: newTagIds,
-              endDate: new Date(`${data.endDate}`),
-              endTime: convertToTimeString(`${data.endDate}`),
-              startDate: new Date(`${data.startDate}`),
-              startTime: convertToTimeString(`${data.startDate}`),
+              id: `${data.eventId}`,
+              repeatScheduleId: data.id || null,
             });
             setOpenCreateEventModal(false);
-            setOpenEventInfoModal(false);
+            setOpenEventInfoModal({
+              status: false,
+              info: null,
+            });
             if (String(data.repeatType) != TaskRepetitiveValue.ONCE) {
               setEventActionType(EventActionType.THIS_EVENT);
               setOpenEventActionTypeModal({
@@ -2891,6 +2885,8 @@ const EventCalendar = () => {
             }
           }}
         />
+      ) : (
+        <></>
       )}
     </Fragment>
   );
