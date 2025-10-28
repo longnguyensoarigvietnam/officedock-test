@@ -384,7 +384,7 @@ const MyPage = () => {
             setOpenConfirmDeleteSkillModal={setOpenConfirmDeleteSkillModal}
           />
         </div>
-        <div className="absolute top-[23.13vh] left-[2.08vw] z-[50]">
+        <div className="absolute top-[23.13vh] left-[2.08vw] z-[20]">
           {/* Menu */}
           <MyPageMenu
             onClickSettingSurvey={() => setOpenSettingSurvey(true)}
