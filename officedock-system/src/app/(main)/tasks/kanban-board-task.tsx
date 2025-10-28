@@ -1272,9 +1272,13 @@ const KanbanBoardTask = () => {
       onSuccess: async () => {
         queryClient.refetchQueries(['getDataTaskHeaderList']);
       },
-      onError: () => {
+      onError: (error: AxiosError<any>) => {
         // When an error occurs, change the state to re-render the kanban board to its old state
         setResetInitialColumnsData(!resetInitialColumnsData);
+        showErrorToast(error, ERROR_UPDATE_MESSAGE);
+
+        // TODO: Update new data
+        // refetchTaskBoardList();
       },
       onSettled: () => {
         isItemDropToDone.current = false;
@@ -1437,6 +1441,7 @@ const KanbanBoardTask = () => {
         type: `${taskSelectedToStart.type}`,
       });
   };
+
   const onDragEnd = useCallback(
     async (result: DropResult) => {
       const { source, destination, type } = result;

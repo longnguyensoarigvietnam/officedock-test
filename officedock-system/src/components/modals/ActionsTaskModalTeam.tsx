@@ -976,6 +976,7 @@ const ActionsTaskModalTeam = ({
                 ? data.deadlineRemindCountdown
                 : null,
               showDeadlineTime: Boolean(watch('deadlineTime')),
+              plans: dataTask?.archivedAt ? undefined : data.plans,
             });
       }
       if (action === ActionTask.CREATE) {

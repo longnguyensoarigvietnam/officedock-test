@@ -90,7 +90,7 @@ export interface TaskFormData {
   };
   isImportant: boolean;
   todoList?: TodoItem[];
-  plans: PlanItem[] | null;
+  plans?: PlanItem[] | null;
   oldIdStatus?: string;
   oldNameStatus?: string;
   oldIdPeople?: string;
