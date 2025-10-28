@@ -49,7 +49,7 @@ export const MyPageMenu = ({
                 background: 'linear-gradient(180deg, #355AC9 0%, #5282FC 100%)',
                 boxShadow: '0px 0.45vh 0px 0px #0028A140',
               }}
-              className="relative w-[12.36vh] z-[50] cursor-pointer hover:opacity-80 h-fit rounded-[1.12vh] pb-[1.69vh] pt-[4.27vh] flex flex-col justify-end items-center text-white text-[1.46vh] font-bold">
+              className="relative w-[12.36vh]  cursor-pointer hover:opacity-80 h-fit rounded-[1.12vh] pb-[1.69vh] pt-[4.27vh] flex flex-col justify-end items-center text-white text-[1.46vh] font-bold">
               <div className="flex flex-col gap-[0.11vh] items-center">
                 {page.name.split(' ').map((section, index) => (
                   <p key={index} className="leading-none">

@@ -73,10 +73,10 @@ const MemoDataChat = ({
   ];
 
   useEffect(() => {
-    if (dataFileAddList && activeTab !== ChatMemoType.FILE) {
+    if (activeTab !== ChatMemoType.FILE) {
       setDataFileAddList([]);
     }
-  }, [activeTab, dataFileAddList, setDataFileAddList]);
+  }, [activeTab]);
 
   return (
     <div className="px-4 pt-5">
