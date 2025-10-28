@@ -1334,13 +1334,11 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
         ).filter(
             Q(
                 task__organization_id__in=org_ids,
-                task__deleted_at__isnull=True,
             )
             | Q(
                 schedule__organization_id=calendar_org.id
                 if calendar_org
                 else None,
-                schedule__deleted_at__isnull=True,
             )
         )
 
