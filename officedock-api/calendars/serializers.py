@@ -291,6 +291,7 @@ class BaseScheduleSerializer(ScheduleSerializer):
     event_type = serializers.SerializerMethodField()
     is_my_schedule = serializers.SerializerMethodField()
     is_start = serializers.SerializerMethodField()
+    is_event_overlapping = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Schedule
@@ -311,6 +312,7 @@ class BaseScheduleSerializer(ScheduleSerializer):
             "select_organizations",
             "repeat_schedules",
             "created_at",
+            "is_event_overlapping",
         ]
 
     def to_representation(self, instance):
@@ -365,6 +367,32 @@ class BaseScheduleSerializer(ScheduleSerializer):
 
         if user := request.user:
             return instance.participants_schedules.filter(user=user).exists()
+
+        return False
+
+    def get_is_event_overlapping(self, obj: Schedule) -> bool:
+        """
+        Check if a schedule overlaps with existing events at a given location and time period.
+        """
+        if not obj.location_id:
+            return False
+
+        request = self.context.get("request")
+        if not request:
+            return False
+
+        # Handle recurring event case
+        if repeat_id := request.query_params.get("repeat_schedule_id"):
+            repeat_schedule = obj.repeat_schedules.filter(id=repeat_id).first()
+            if not repeat_schedule:
+                return False
+
+            return is_event_overlapping(
+                instance=obj,
+                location=obj.location_id,
+                start_date=repeat_schedule.plan_start_date,
+                end_date=repeat_schedule.plan_end_date,
+            )
 
         return False
 

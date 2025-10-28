@@ -2096,7 +2096,7 @@ class TaskArchiveViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         # Task queryset
         queryset = (
             self.filter_queryset(self.get_queryset())
-            .filter(archived_at__isnull=False)
+            .filter(archived_at__isnull=False, people_in_charge=request.user)
             .order_by("-archived_at")
         )
 
