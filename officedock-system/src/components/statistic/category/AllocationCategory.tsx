@@ -124,7 +124,7 @@ const AllocationCategory = memo(
           setProgressDataSmall([]);
         }
       }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [statisticCategoryList, selectedOrganization?.value]);
 
     useEffect(() => {
@@ -233,13 +233,13 @@ const AllocationCategory = memo(
           {/* Header & sort */}
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-x-5">
-              <div className="flex items-center gap-[10px] ">
+              <div className="flex items-center gap-[10px] w-fit flex-shrink-0 ">
                 <ImageRound
                   className={`w-5 h-5  hover:cursor-pointer`}
                   name="statistic-progress-bar icon"
                   src={`/icons/statistic-progress-bar.svg`}
                 />
-                <span className="text-black w-[210px] flex-shrink-0 font-semibold text-[18px]">
+                <span className="text-black w-fit flex-shrink-0 font-semibold text-[18px]">
                   各カテゴリーの時間配分
                 </span>
               </div>

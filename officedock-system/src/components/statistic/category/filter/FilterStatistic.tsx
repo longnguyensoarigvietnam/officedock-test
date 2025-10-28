@@ -39,7 +39,7 @@ const FilterStatistic = ({ className }: Props) => {
                   <ImageRound
                     src="/icons/filter.svg"
                     name="Filter icon"
-                    className="w-[14px] h-[14px] ml-2"
+                    className="w-[14px] h-[14px]"
                   />
                   {selectedTags.length == 0 && <span>タグの絞り込み</span>}
                 </PopoverButton>

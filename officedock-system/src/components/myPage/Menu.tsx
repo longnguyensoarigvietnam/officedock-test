@@ -36,7 +36,7 @@ export const MyPageMenu = ({
         return (
           <div
             key={index}
-            className="relative group"
+            className="relative group z-[9999]"
             onClick={() =>
               page.openSendThanksMessageForm &&
               onOpenSendThanksMessageForm &&
@@ -49,7 +49,7 @@ export const MyPageMenu = ({
                 background: 'linear-gradient(180deg, #355AC9 0%, #5282FC 100%)',
                 boxShadow: '0px 0.45vh 0px 0px #0028A140',
               }}
-              className="relative w-[12.36vh] cursor-pointer hover:opacity-80 h-fit rounded-[1.12vh] pb-[1.69vh] pt-[4.27vh] flex flex-col justify-end items-center text-white text-[1.46vh] font-bold">
+              className="relative w-[12.36vh] z-[50] cursor-pointer hover:opacity-80 h-fit rounded-[1.12vh] pb-[1.69vh] pt-[4.27vh] flex flex-col justify-end items-center text-white text-[1.46vh] font-bold">
               <div className="flex flex-col gap-[0.11vh] items-center">
                 {page.name.split(' ').map((section, index) => (
                   <p key={index} className="leading-none">
@@ -84,7 +84,7 @@ export const MyPageMenu = ({
                 style={{
                   boxShadow: '0px 0.45vh 0.45vh 0px #1D2D3F0A',
                 }}
-                className="absolute after:content-[''] after:absolute after:top-0 after:left-[-1.12vh] after:w-[1.12vh] after:h-full after:bg-transparent hidden group-hover:flex top-0 text-black left-[13.03vh] text-[1.46vh] flex-col gap-[0.22vh] py-[0.11vh] font-medium bg-white min-w-[20.22vh] w-fit h-fit rounded-md border border-button">
+                className="absolute after:content-[''] after:absolute after:top-0 after:left-[-1.12vh] after:w-[1.12vh] after:h-full after:bg-transparent hidden group-hover:flex top-0 text-black left-[13.43vh] text-[1.46vh] flex-col gap-[0.22vh] py-[0.11vh] font-medium bg-white min-w-[20.22vh] w-fit h-fit rounded-md border border-button">
                 {page.child.map((item, index) => (
                   <>
                     <Link

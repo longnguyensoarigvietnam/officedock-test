@@ -51,7 +51,7 @@ const FilterTeamStatistic = ({
                   <ImageRound
                     src="/icons/filter.svg"
                     name="Filter icon"
-                    className="w-[14px] h-[14px] ml-2"
+                    className="w-[14px] h-[14px]"
                   />
                   {isFilterMember &&
                     orderingOptions?.user_ids.length == 0 &&
