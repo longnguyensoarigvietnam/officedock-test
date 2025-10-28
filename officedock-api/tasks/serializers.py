@@ -183,6 +183,16 @@ class TaskScheduleSerializer(serializers.ModelSerializer):
 
         read_only_fields = ["id", "uuid", "is_start"]
 
+    def validate(self, attrs):
+        """Validation"""
+        instance = self.instance
+        if instance and instance.task and instance.task.archived_at:
+            raise serializers.ValidationError(
+                {"detail": ERROR_MESSAGES["cannot_updated"]}
+            )
+
+        return attrs
+
     def get_is_start(self, instance):
         """
         Return status start of task
