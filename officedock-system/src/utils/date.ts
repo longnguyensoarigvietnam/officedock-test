@@ -1878,7 +1878,7 @@ export function formatCompletedAt(completedAt: string): string {
 export function formatJapaneseDateRangeSchedule(
   start: Date | string,
   end: Date | string,
-): string {
+) {
   const startDate = new Date(start);
   const endDate = new Date(end);
 
@@ -1896,8 +1896,16 @@ export function formatJapaneseDateRangeSchedule(
   const startWeek = dayOfWeek[startDate.getDay()];
   const endWeek = dayOfWeek[endDate.getDay()];
 
-  if (startYear === endYear) {
-    return `${startYear}年${startMonth}月${startDay}日(${startWeek}) - ${endMonth}月${endDay}日(${endWeek})`;
-  }
-  return `${startYear}年${startMonth}月${startDay}日(${startWeek}) - ${endYear}年${endMonth}月${endDay}日(${endWeek})`;
+  const startText = `${startYear}年${startMonth}月${startDay}日`;
+  const endText =
+    startYear === endYear
+      ? `${endMonth}月${endDay}日`
+      : `${endYear}年${endMonth}月${endDay}日`;
+
+  return {
+    start: startText,
+    end: endText,
+    startWeek,
+    endWeek,
+  };
 }

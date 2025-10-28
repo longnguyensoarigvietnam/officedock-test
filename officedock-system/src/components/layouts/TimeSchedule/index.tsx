@@ -885,6 +885,13 @@ const TimeSchedule = memo(
         },
         onError: (error: AxiosError<any>) => {
           showErrorToast(error, ERROR_UPDATE_MESSAGE);
+
+          // TODO: Update reload new data
+          // setTaskTimeScheduleList([]);
+          // handleCallApiAllData(
+          //   formatQueryStartDateForCalendar(displayHeaderDateStart),
+          //   formatQueryStartDateForCalendar(displayHeaderDateEnd),
+          // );
         },
         onSettled: () => {
           setIsLoading(false);
@@ -2815,7 +2822,8 @@ const TimeSchedule = memo(
       const draggedEvent = info.event;
       const draggedResourceId = draggedEvent.extendedProps.resourceId;
       const trashEl = document.getElementById('trash-area');
-      if (trashEl) {
+
+      if (trashEl && draggedEvent.startEditable) {
         const trashRect = trashEl.getBoundingClientRect();
 
         const x = info.jsEvent.clientX;
@@ -2866,6 +2874,7 @@ const TimeSchedule = memo(
       }
       setTimeout(() => setIsInteracting(false), 200);
     };
+
     const moveSingleEventAddActual = (event: EventImpl) => {
       const draggedEvent = taskTimeScheduleList.find(
         (e) => e.uuid === event.extendedProps.uuid,
@@ -2983,7 +2992,8 @@ const TimeSchedule = memo(
       if (
         isShiftPressed &&
         resourcePlan &&
-        clickInfo.event.extendedProps.type === ItemStartType.TASK
+        clickInfo.event.extendedProps.type === ItemStartType.TASK &&
+        clickInfo?.event.startEditable
       ) {
         const uuid = clickInfo.event.extendedProps.uuid;
         setSelectedEvents((prev) =>
@@ -3814,6 +3824,14 @@ const TimeSchedule = memo(
       400,
     );
 
+    const { start, end, startWeek, endWeek } =
+      displayHeaderDateStart &&
+      displayHeaderDateEnd &&
+      formatJapaneseDateRangeSchedule(
+        displayHeaderDateStart,
+        displayHeaderDateEnd,
+      );
+
     return (
       <>
         <div
@@ -3934,15 +3952,22 @@ const TimeSchedule = memo(
                       </div>
                       <Heading
                         as="h4"
-                        className="text-[20px] !text-[#5B6770] font-medium pr-4 line-clamp-2">
-                        {isExtendCalendar
-                          ? displayHeaderDateStart &&
-                            displayHeaderDateEnd &&
-                            formatJapaneseDateRangeSchedule(
-                              displayHeaderDateStart,
-                              displayHeaderDateEnd,
-                            )
-                          : formattedCurrentDate}
+                        className="text-[20px] !text-[#5B6770] flex items-center gap-1 flex-wrap font-medium pr-4 line-clamp-2">
+                        {isExtendCalendar ? (
+                          <>
+                            <p>{start}</p>
+                            <p className="text-[15px] relative top-[2px]">
+                              ({startWeek})
+                            </p>
+                            <p className="mx-1">-</p>
+                            <p>{end}</p>
+                            <p className="text-[15px] relative top-[2px]">
+                              ({endWeek})
+                            </p>
+                          </>
+                        ) : (
+                          formattedCurrentDate
+                        )}
                       </Heading>
                       {isToday && !isExtendCalendar && (
                         <div className="bg-primary -ml-[10px] px-1 py-[2px] rounded-md text-xs text-white font-medium">

@@ -905,6 +905,7 @@ const ActionsTaskModal = ({
                 : null,
               showDeadlineTime: Boolean(watch('deadlineTime')),
               peopleInChargeIds: undefined,
+              plans: dataTask?.archivedAt ? undefined : data.plans,
             });
       }
       if (action === ActionTask.CREATE) {
