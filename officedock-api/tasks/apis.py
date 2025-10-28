@@ -1616,6 +1616,14 @@ class TaskScheduleViewSet(
                 self._check_overtime(task_schedule)
         return self.response_ok()
 
+    def perform_destroy(self, instance):
+        """
+        Handle destroy task schedule
+        """
+        if instance.task and instance.task.archived_at:
+            raise ValidationError({"detail": ERROR_MESSAGES["cannot_delete"]})
+        return super().perform_destroy(instance)
+
 
 @extend_schema(tags=["System > Task"])
 class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
