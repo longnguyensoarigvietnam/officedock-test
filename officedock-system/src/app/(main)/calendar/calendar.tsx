@@ -664,7 +664,7 @@ const EventCalendar = () => {
 
   const handleEventContent = (eventContent: any) => {
     if (eventContent.event.id.startsWith('loading')) {
-      return <RowSkeleton className="w-full h-[31px] mb-1" />;
+      return <RowSkeleton className="w-full h-[31px]" />;
     } else {
       const calendarApi = eventContent.view.calendar;
       const currentView = calendarApi.view.type;

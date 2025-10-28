@@ -230,14 +230,14 @@ const TaskListTeamStatistic = ({
       className="p-[30px] bg-[#F8FAFC] my-5 rounded-[30px] mb-10">
       {/* Header & sort */}
       <div className="flex justify-between items-center">
-        <div className="flex items-center gap-x-2">
-          <div className="flex items-center gap-[10px] ">
+        <div className="flex items-center gap-x-5">
+          <div className="flex items-center gap-[10px]  w-fit flex-shrink-0">
             <ImageRound
               className={`w-5 h-5  hover:cursor-pointer`}
               name="period icon"
               src={`/icons/task-active.svg`}
             />
-            <span className="text-[18px] w-[90px] flex-shrink-0 text-black font-semibold">
+            <span className="text-[18px] w-fit flex-shrink-0 text-black font-semibold">
               タスク一覧
             </span>
           </div>

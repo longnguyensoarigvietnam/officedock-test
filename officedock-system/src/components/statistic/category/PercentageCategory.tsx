@@ -473,13 +473,13 @@ const PercentageCategory = ({
         {/* Header & sort */}
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-x-5">
-            <div className="flex items-center gap-[10px] ">
+            <div className="flex items-center gap-[10px] w-fit flex-shrink-0 ">
               <ImageRound
                 className={`w-5 h-5  hover:cursor-pointer`}
                 name="statistic-active icon"
                 src={`/icons/statistic-active.svg`}
               />
-              <span className="text-black w-[154px] flex-shrink-0 font-semibold text-[18px]">
+              <span className="text-black w-fit flex-shrink-0 font-semibold text-[18px]">
                 カテゴリーの割合
               </span>
             </div>
