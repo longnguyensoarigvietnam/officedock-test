@@ -84,7 +84,7 @@ export const MyPageMenu = ({
                 style={{
                   boxShadow: '0px 0.45vh 0.45vh 0px #1D2D3F0A',
                 }}
-                className="absolute after:content-[''] after:absolute after:top-0 after:left-[-1.12vh] after:w-[1.12vh] after:h-full after:bg-transparent hidden group-hover:flex top-0 text-black left-[13.43vh] text-[1.46vh] flex-col gap-[0.22vh] py-[0.11vh] font-medium bg-white min-w-[20.22vh] w-fit h-fit rounded-md border border-button">
+                className="absolute after:content-[''] after:absolute after:top-0 after:left-[-1.12vh] after:w-[1.12vh] after:h-full after:bg-transparent hidden group-hover:flex top-0 text-black left-[13.43vh] text-[1.46vh] flex-col gap-[0.22vh] py-[0.11vh] px-[0.22vw] font-medium bg-white min-w-[20.22vh] w-fit h-fit rounded-md border border-button">
                 {page.child.map((item, index) => (
                   <>
                     <Link
@@ -93,13 +93,13 @@ export const MyPageMenu = ({
                       onClick={() => {
                         if (item.onClick) onClickSettingSurvey();
                       }}
-                      className={`px-[0.22vh] py-[1.12vh] flex hover:opacity-85 w-full hover:text-primary cursor-pointer ${
+                      className={`px-[0.55vw] py-[1.12vh] flex hover:opacity-85 w-full hover:text-primary cursor-pointer ${
                         item.name == pageRouters.CUSTOMIZE_ITEM.name &&
                         '!w-[22.47vh]'
                       }`}>
                       {item.name}
                       {item.displayCount && unAnsweredSurveyCount ? (
-                        <span className="bg-[#FFEE6F] ml-[0.11vh] h-[2.24vh] flex items-center justify-center flex-shrink-0 w-[4.27vh] text-[1.46vh] rounded-[100px] text-black font-bold">
+                        <span className="bg-[#FFEE6F] ml-[0.41vw] h-[2.24vh] flex items-center justify-center flex-shrink-0 w-[4.27vh] text-[1.46vh] rounded-[100px] text-black font-bold">
                           {unAnsweredSurveyCount > MAXIMUM_VISIBLE_COUNT
                             ? `${MAXIMUM_VISIBLE_COUNT}+`
                             : unAnsweredSurveyCount}
