@@ -372,7 +372,7 @@ export const MessageDetailBookmark = ({
                     <ImageRound
                       name="Save"
                       src={`/icons/save-active.svg`}
-                      className="w-[10px] h-[12px] hover:cursor-pointer"
+                      className="w-[10px] h-[12px]  relative top-[4px] hover:cursor-pointer"
                     />
                   )}
                 </div>
@@ -748,7 +748,7 @@ export const MessageDetailBookmark = ({
                     <ImageRound
                       name="Save"
                       src={`/icons/save-active.svg`}
-                      className="w-[10px] h-[12px] hover:cursor-pointer"
+                      className="w-[10px] h-[12px]  hover:cursor-pointer"
                     />
                   )}
                 </div>
@@ -970,7 +970,7 @@ export const MessageDetailBookmark = ({
                     <ImageRound
                       name="Save"
                       src={`/icons/save-active.svg`}
-                      className="w-[10px] h-[12px] hover:cursor-pointer"
+                      className="w-[10px] h-[12px]  hover:cursor-pointer"
                     />
                   )}
                 </div>
