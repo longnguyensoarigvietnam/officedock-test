@@ -208,6 +208,7 @@ export interface TaskActualType {
     id: number;
     color: string;
   }[];
+  createdAt: string;
 }
 export interface peopleInChargeType {
   id: number | string;

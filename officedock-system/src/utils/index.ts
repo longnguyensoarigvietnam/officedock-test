@@ -379,6 +379,7 @@ export function transformDataTaskDailyToTable(
       pausedAt: duration.pausedAt
         ? formatTime24h(duration.pausedAt)
         : formatTime24h(`${new Date()}`),
+      createdAt: duration.createdAt,
     }));
 
     // Get startedAt and pausedAt from the first child if it exists
@@ -413,6 +414,7 @@ export function transformDataTaskDailyToTable(
       totalDuration: task.totalDuration,
       startedAt, // Include startedAt
       pausedAt, // Include pausedAt
+      createdAt: task.taskDurations[0].createdAt,
     };
   });
 }

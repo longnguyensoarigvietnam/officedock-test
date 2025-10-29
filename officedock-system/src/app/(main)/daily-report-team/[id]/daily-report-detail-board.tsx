@@ -895,11 +895,6 @@ const DailyReportDetailBoard = () => {
 
     return smallCategories;
   }
-  // Check permission with close date
-  const isPermissionCloseDate = isCheckPermissionWithCloseDate({
-    dateA: dataDatePicker,
-    dateB: session?.user.company.startEditableDate || '',
-  });
 
   const columns: ColumnDef<dataTaskDailyTable>[] = [
     {
@@ -1366,6 +1361,12 @@ const DailyReportDetailBoard = () => {
         const isAnyRunning =
           row.original.children &&
           row.original.children.some((item) => item.isRunning);
+
+        // Check permission with close date
+        const isPermissionCloseDate = isCheckPermissionWithCloseDate({
+          dateA: rowData.createdAt,
+          dateB: session?.user.company.startEditableDate || '',
+        });
 
         return (
           <div

@@ -1231,6 +1231,8 @@ const KanbanBoardTaskTeam = () => {
   useEffect(() => {
     if (actionType && typeDetail === ItemStartType.TASK) {
       if (taskDetailId) {
+        setIsShowModalEditTeam(true);
+
         setTimeout(() => {
           getDataDetailTask(parseInt(taskDetailId));
         }, 500);
