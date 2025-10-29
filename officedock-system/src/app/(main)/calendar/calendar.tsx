@@ -2270,7 +2270,7 @@ const EventCalendar = () => {
             className={`w-full ${!isDayOrWeekView() && 'pl-10'} relative calendar-custom ${searchParams.get('view') || ''} ${getAllDayEventCountText(events)} !overflow-hidden ${showSidebar ? (!isDayOrWeekView() ? 'pr-5' : '') : !isDayOrWeekView() ? 'pr-10' : ''}`}
             style={{ overflowX: 'auto', width: '100%' }}>
             {calendarLoading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-[#E6F3FB] z-10"></div>
+              <div className="absolute inset-0 flex items-center justify-center bg-[#E6F3FB] z-10 mt-[6px]"></div>
             )}
             {isEventRendering && (
               <>
