@@ -1199,7 +1199,7 @@ const CreateActualDurationsForm = () => {
       </div>
       <div className="w-full flex items-center gap-2 mt-0 flex-col mb-3">
         <Button
-          className="w-[426px]"
+          className="w-[426px] !border-none"
           style={{ boxShadow: '0px 1px 5px 0px #00000033' }}
           onClick={handleSubmit(handleSubmitCreateActualDuration)}>
           保存
