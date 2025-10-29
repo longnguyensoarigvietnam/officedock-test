@@ -1979,7 +1979,7 @@ const TimeSchedule = memo(
             resourcePlanDay &&
             searchParams.get('view') === ViewOptions.DAY) ||
           (resizedEvent.extendedProps.type == ItemStartType.TASK &&
-            !resourcePlanWeek &&
+            resourcePlanWeek &&
             searchParams.get('view') === ViewOptions.WEEK)
         ) {
           showToast({
@@ -2171,7 +2171,7 @@ const TimeSchedule = memo(
             resourcePlanDay &&
             searchParams.get('view') == ViewOptions.DAY) ||
           (droppedEvent.extendedProps.type == ItemStartType.TASK &&
-            !resourcePlanWeek &&
+            resourcePlanWeek &&
             searchParams.get('view') == ViewOptions.WEEK)
         ) {
           showToast({
