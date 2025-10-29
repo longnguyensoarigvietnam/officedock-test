@@ -98,6 +98,7 @@ import {
   ViewOptions,
 } from '@constants/enums';
 import {
+  ERROR_ARCHIVE_MESSAGE,
   ERROR_COMMON_MESSAGE,
   ERROR_CREATE_MESSAGE,
   ERROR_DELETE_MESSAGE,
@@ -1976,6 +1977,12 @@ const TimeSchedule = memo(
 
         info.event.setDates(oldStart as Date, oldEnd);
         setTimeout(() => setIsInteracting(false), 200);
+        if (resizedEvent.extendedProps.type == ItemStartType.TASK) {
+          showToast({
+            variant: 'error',
+            description: ERROR_ARCHIVE_MESSAGE,
+          });
+        }
 
         return;
       }
@@ -2167,7 +2174,12 @@ const TimeSchedule = memo(
 
         info.event.setDates(oldStart as Date, oldEnd);
         setTimeout(() => setIsInteracting(false), 200);
-
+        if (droppedEvent.extendedProps.type == ItemStartType.TASK) {
+          showToast({
+            variant: 'error',
+            description: ERROR_ARCHIVE_MESSAGE,
+          });
+        }
         return;
       }
       if (
@@ -3880,7 +3892,9 @@ const TimeSchedule = memo(
                         <div className="flex items-end text-xl gap-1 text-[#5B6770] font-medium">
                           <p>{dataDate.month}月</p>
                           <p>{dataDate.day}日</p>
-                          <p className="text-sm mb-[3px]">({dataDate.dayOfWeek})</p>
+                          <p className="text-sm mb-[3px]">
+                            ({dataDate.dayOfWeek})
+                          </p>
                         </div>
 
                         <DynamicTooltip content="翌日" placement="top">

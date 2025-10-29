@@ -106,7 +106,9 @@ export const ERROR_EXTEND_COLUMN = 'タブの拡大縮小のエラーが出ま�
 export const ERROR_DUPLICATE_LOCATION = 'この場所名はすでに存在しています';
 export const ERROR_WRONG_DATE_SURVEY = '現時刻より後の時刻に設定してください。';
 export const ERROR_BUY_ITEM_USER = '交換に失敗しました。';
-export const ERROR_FILE_DOWNLOAD = 'ファイルのダウンロードに失敗しました。'
+export const ERROR_FILE_DOWNLOAD = 'ファイルのダウンロードに失敗しました。';
+export const ERROR_ARCHIVE_MESSAGE =
+  'アーカイブ済みのタスクは、実施予定日時を修正できません。';
 
 // Toast message
 export const SUCCESS_TITLE_MESSAGE = '成功';
