@@ -1956,22 +1956,6 @@ const TimeSchedule = memo(
       const resizedEvent = info.event as any;
       const isActualCalculate = info.event.extendedProps.isCalculation;
 
-      if (resizedEvent.startEditable == false) {
-        const oldStart = info.oldEvent.start;
-        const oldEnd = info.oldEvent.end;
-
-        info.event.setDates(oldStart as Date, oldEnd);
-        setTimeout(() => setIsInteracting(false), 200);
-        if (resizedEvent.extendedProps.type == ItemStartType.TASK) {
-          showToast({
-            variant: 'error',
-            description: ERROR_ARCHIVE_MESSAGE,
-          });
-        }
-
-        return;
-      }
-
       const isLessThanToday = isDateLessThanToday(resizedEvent.start);
       const resourcePlanDay =
         resizedEvent._def.resourceIds?.length &&
@@ -1982,6 +1966,29 @@ const TimeSchedule = memo(
         const oldStart = info.oldEvent.start;
         const oldEnd = info.oldEvent.end;
         info.event.setDates(oldStart as Date, oldEnd);
+      }
+
+      if (resizedEvent.startEditable == false) {
+        const oldStart = info.oldEvent.start;
+        const oldEnd = info.oldEvent.end;
+
+        info.event.setDates(oldStart as Date, oldEnd);
+        setTimeout(() => setIsInteracting(false), 200);
+        if (
+          (resizedEvent.extendedProps.type == ItemStartType.TASK &&
+            resourcePlanDay &&
+            searchParams.get('view') === ViewOptions.DAY) ||
+          (resizedEvent.extendedProps.type == ItemStartType.TASK &&
+            !resourcePlanWeek &&
+            searchParams.get('view') === ViewOptions.WEEK)
+        ) {
+          showToast({
+            variant: 'error',
+            description: ERROR_ARCHIVE_MESSAGE,
+          });
+        }
+
+        return;
       }
 
       if (!resourcePlanDay && isDateInFutureOrToday(resizedEvent.end)) {
@@ -2159,7 +2166,14 @@ const TimeSchedule = memo(
 
         info.event.setDates(oldStart as Date, oldEnd);
         setTimeout(() => setIsInteracting(false), 200);
-        if (droppedEvent.extendedProps.type == ItemStartType.TASK) {
+        if (
+          (droppedEvent.extendedProps.type == ItemStartType.TASK &&
+            resourcePlanDay &&
+            searchParams.get('view') == ViewOptions.DAY) ||
+          (droppedEvent.extendedProps.type == ItemStartType.TASK &&
+            !resourcePlanWeek &&
+            searchParams.get('view') == ViewOptions.WEEK)
+        ) {
           showToast({
             variant: 'error',
             description: ERROR_ARCHIVE_MESSAGE,
