@@ -722,7 +722,7 @@ const EditActualDurationsForm = () => {
     }
   };
   const isPermissionCloseDate = isCheckPermissionWithCloseDate({
-    dateA: actualDurationDetail?.startedAt as Date,
+    dateA: actualDurationDetail?.createdAt as Date,
     dateB: session?.user.company.startEditableDate || '',
   });
 

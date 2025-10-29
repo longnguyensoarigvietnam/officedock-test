@@ -145,6 +145,7 @@ export interface dataTaskDaily {
     duration: string;
     startedAt: string;
     pausedAt: string;
+    createdAt: Date | string;
   }[];
   type: string;
   todoList: TodoItem[];
@@ -162,6 +163,7 @@ export interface ChildTask {
     id: number;
     name: string;
   }[];
+  createdAt: Date | string;
   todoList: TodoItem[];
   totalDuration: string;
   startedAt: string;
@@ -215,6 +217,7 @@ export interface dataTaskDailyTable {
   isRunning?: boolean;
   organization?: number;
   type?: string;
+  createdAt: Date | string;
 }
 export interface DataActualDetail {
   largeColor: string;

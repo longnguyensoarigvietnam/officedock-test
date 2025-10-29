@@ -506,13 +506,21 @@ const ScheduleTeamBoard = () => {
           });
         }
       } else if (isBefore(startDate, today)) {
-        setOptionShow(ItemScheduleTitleType.ACTUAL);
-        getActualEventCalendarByTeam({
-          organizationId:
-            (selectedOrganization?.value as string) || String(organizationId),
-          startDate: startDateISOString,
-          endDate: endDateISOString,
-        });
+        if (selectedOptionShow === ItemScheduleTitleType.ACTUAL) {
+          getActualEventCalendarByTeam({
+            organizationId:
+              (selectedOrganization?.value as string) || String(organizationId),
+            startDate: startDateISOString,
+            endDate: endDateISOString,
+          });
+        } else {
+          getPlanEventCalendarByTeam({
+            organizationId:
+              (selectedOrganization?.value as string) || String(organizationId),
+            startDate: startDateISOString,
+            endDate: endDateISOString,
+          });
+        }
       } else if (isAfter(startDate, today)) {
         setOptionShow(ItemScheduleTitleType.PLANS);
         getPlanEventCalendarByTeam({

@@ -622,7 +622,7 @@ const TimeSchedule = memo(
                     (item) => item.type === EventWorkCategory.LARGE,
                   )?.color;
                 const isPermissionCloseDate = isCheckPermissionWithCloseDate({
-                  dateA: task.planStartDate as string,
+                  dateA: task.createdAt as string,
                   dateB: session?.user.company.startEditableDate || '',
                 });
 
@@ -1762,10 +1762,6 @@ const TimeSchedule = memo(
       const uuidData = uuidv4();
 
       const isLessThanToday = isDateLessThanToday(newEvent.start);
-      const isPermissionCloseDate = isCheckPermissionWithCloseDate({
-        dateA: newEvent.start,
-        dateB: session?.user.company.startEditableDate || '',
-      });
 
       if (!info.draggedEl) {
         info.event.remove();
@@ -1783,14 +1779,6 @@ const TimeSchedule = memo(
           : isLessThanToday
             ? false
             : true;
-      const resourceData =
-        searchParams.get('view') === ViewOptions.WEEK
-          ? isLessThanToday
-            ? ItemScheduleType.ACTUAL
-            : ItemScheduleType.PLANS
-          : resourcePlan
-            ? ItemScheduleType.PLANS
-            : ItemScheduleType.ACTUAL;
 
       if (!newEventId || newEventId === '') {
         info.view.calendar.refetchEvents();
@@ -1849,10 +1837,7 @@ const TimeSchedule = memo(
                       ? ItemScheduleType.PLANS
                       : ItemScheduleType.ACTUAL,
 
-                startEditable:
-                  resourceData == ItemScheduleType.PLANS
-                    ? true
-                    : isPermissionCloseDate,
+                startEditable: true,
                 planStartDate: String(newEvent.start) || '',
                 planEndDate: String(newEvent.end) || '',
                 largeColor: newEvent.extendedProps.largeColor,
@@ -2355,11 +2340,7 @@ const TimeSchedule = memo(
                     });
                     if (!hasOverlap) {
                       const newUuid = uuidv4();
-                      const isNewPermissionCloseDate =
-                        isCheckPermissionWithCloseDate({
-                          dateA: newStartChange as Date,
-                          dateB: session?.user.company.startEditableDate || '',
-                        });
+
                       setTaskTimeScheduleList([
                         ...taskTimeScheduleList,
                         {
@@ -2375,7 +2356,7 @@ const TimeSchedule = memo(
                           planEndDate: String(newEndChange) || '',
                           resourceId: ItemScheduleType.ACTUAL,
                           largeColor: droppedEvent.extendedProps.largeColor,
-                          startEditable: isNewPermissionCloseDate,
+                          startEditable: true,
                         },
                       ]);
                       createActualDuration({
@@ -3892,7 +3873,7 @@ const TimeSchedule = memo(
                         <div className="flex items-end text-xl gap-1 text-[#5B6770] font-medium">
                           <p>{dataDate.month}月</p>
                           <p>{dataDate.day}日</p>
-                          <p className="text-sm mb-[3px]">
+                          <p className="text-sm mb-[2px]">
                             ({dataDate.dayOfWeek})
                           </p>
                         </div>
@@ -3968,10 +3949,10 @@ const TimeSchedule = memo(
                         {isExtendCalendar ? (
                           <>
                             <p>{start}</p>
-                            <p className="text-sm mb-[3px]">({startWeek})</p>
+                            <p className="text-sm mb-[2px]">({startWeek})</p>
                             <p className="mx-1">-</p>
                             <p>{end}</p>
-                            <p className="text-sm mb-[3px]">({endWeek})</p>
+                            <p className="text-sm mb-[2px]">({endWeek})</p>
                           </>
                         ) : (
                           formattedCurrentDate

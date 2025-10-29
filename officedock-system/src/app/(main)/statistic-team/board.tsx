@@ -367,8 +367,12 @@ const StatisticTeamBoard = () => {
 
   const { creationDataCommonData } = useCreationDataCommon({
     organizationId: selectedOrganizationSideBar
-      ? (selectedOrganizationSideBar?.value as string)
-      : organizationId || '',
+      ? selectedOrganizationSideBar?.value
+        ? (selectedOrganizationSideBar?.value as string)
+        : undefined
+      : organizationId == 'null'
+        ? undefined
+        : organizationId || undefined,
     options: {
       get_organization_for_team_statistic: true,
     },
