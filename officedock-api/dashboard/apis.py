@@ -285,6 +285,8 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
         if self.action in ["partial_update", "update"]:
             return UpdateDurationSerializer(*args, **kwargs)
 
+        return super().get_serializer(*args, **kwargs)
+
     @transaction.atomic
     def perform_update(self, serializer, request):
         """Handle update duration"""

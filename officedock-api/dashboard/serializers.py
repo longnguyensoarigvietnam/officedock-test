@@ -64,6 +64,7 @@ class DurationSerializer(serializers.ModelSerializer):
             "is_cancel_alert",
             "categories",
             "total_duration",
+            "created_at",
         ]
         read_only_fields = ["id"]
 
@@ -470,6 +471,7 @@ class ActualDurationListSerializer(serializers.ModelSerializer):
             "schedule_id",
             "created_at",
             "actions",
+            "created_at",
         ]
         read_only_fields = ["id"]
 
@@ -542,4 +544,5 @@ class ActualDurationDetailSerializer(ActualDurationListSerializer):
             "started_at",
             "paused_at",
             "type",
+            "created_at",
         ]
