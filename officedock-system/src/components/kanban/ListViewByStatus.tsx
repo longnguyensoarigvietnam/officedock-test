@@ -260,7 +260,7 @@ const ListViewByStatus = ({
 
   return (
     <>
-      <div className="flex items-center gap-3 mb-3">
+      <div className="flex items-center gap-[10px] mb-[14px]">
         <DynamicTooltip
           content={
             extendByStatus.find((list) => list.id == listId)?.status
@@ -313,16 +313,16 @@ const ListViewByStatus = ({
       </div>
       {extendByStatus.find((list) => list.id == listId)?.status &&
         (listId == StatusValueTask.MY_ROUTINE ? (
-          <div className="flex text-[#77858F] text-[12px] mb-4 px-1">
-            <p className="w-[59%] border-r-2">タスク名</p>
-            <p className="w-[20%] border-r-2 text-center">予定日時</p>
+          <div className="flex text-[#77858F] text-[12px] mb-4 px-1 font-medium">
+            <p className="w-[59%] border-r-[1px]">タスク名</p>
+            <p className="w-[20%] border-r-[1px] text-left pl-[14px]">予定日時</p>
           </div>
         ) : (
-          <div className="flex text-[#77858F] text-[12px] mb-4 px-1">
-            <p className="w-[59%] border-r-2">タスク名</p>
-            <p className="w-[15%] border-r-2 text-center">締切</p>
-            <p className="w-[8%] border-r-2 text-center">重要</p>
-            <p className="px-5 border-r-2">ステータス</p>
+          <div className="flex text-[#77858F] text-[12px] mb-4 px-1 font-medium">
+            <p className="w-[59%] border-r-[1px]">タスク名</p>
+            <p className="w-[15%] border-r-[1px] text-left pl-[14px]">締切</p>
+            <p className="w-[8%] border-r-[1px] text-center">重要</p>
+            <p className="px-5">ステータス</p>
           </div>
         ))}
 
@@ -331,7 +331,7 @@ const ListViewByStatus = ({
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
-            className={`flex-grow overflow-y-auto rounded-md px-1 max-h-[500px] mb-3 overflow-x-hidden scrollbar-gutter-stable ${
+            className={`flex-grow overflow-y-auto rounded-md p-1 max-h-[500px] mb-[22px] overflow-x-hidden scrollbar-gutter-stable ${
               snapshot.isDraggingOver ? 'bg-gray-200' : ''
             }`}>
             {extendByStatus.find((list) => list.id == listId)?.status &&

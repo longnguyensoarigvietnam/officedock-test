@@ -105,12 +105,12 @@ const Modal = ({
                       </Heading>
                       {showIconClose && (
                         <div
-                          className={`${closeIconClassName}`}
+                          className={`!bg-white !rounded-full !p-[7px] !hover:cursor-pointer ${closeIconClassName}`}
                           style={{
                             boxShadow: '0px 2px 8px 0px #0000000F',
                           }}>
                           <ImageRound
-                            className={`mt-1 w-5 h-5 hover:cursor-pointer ${closeClassName}`}
+                            className={`hover:cursor-pointer !mt-0 !w-4 !h-4 !hover:cursor-pointer ${closeClassName}`}
                             src="/icons/close.svg"
                             name="Close modal"
                             onClick={onClose}

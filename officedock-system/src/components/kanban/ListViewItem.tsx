@@ -332,7 +332,7 @@ const ListViewItem = ({
                 }
               }}>
               <div className="flex items-center gap-4 w-3/5">
-                <div className="flex items-center w-3/4 gap-2">
+                <div className="flex items-center w-3/4 gap-[10px]">
                   {isShowSchedule ? (
                     <div className="h-full min-w-4">
                       <ClockIconWithDynamicColor
@@ -348,7 +348,7 @@ const ListViewItem = ({
                         style={{ background: largeColor }}></div>
                     </div>
                   )}
-                  <p className="font-bold text-sm max-w-[calc(100%_-_16px)] truncate">
+                  <p className="font-bold text-[15px] max-w-[calc(100%_-_16px)] truncate">
                     {content.title}
                   </p>
                 </div>
@@ -426,18 +426,18 @@ const ListViewItem = ({
                 {content.status?.id !== StatusValueTask.MY_ROUTINE ? (
                   <>
                     <p
-                      className={`hover:cursor-pointer ${checkDeadline && 'text-primary'} border-x-2 w-2/5 text-center`}>
+                      className={`hover:cursor-pointer ${checkDeadline && 'text-primary'} border-x-[1px] w-2/5 text-left text-[13px] pl-[14px]`}>
                       {content.deadline &&
                         formatShowDeadlineTask(content.deadline)}
                     </p>
                     {content.isImportant ? (
-                      <div className="w-1/5 border-r-2 flex items-center justify-center">
-                        <p className="text-center font-medium text-primary bg-[#EBF1F7] rounded w-fit px-1 py-0.5">
+                      <div className="w-1/5 border-r-[1px] flex items-center justify-center">
+                        <p className="text-center font-medium text-primary bg-[#EBF1F7] rounded w-fit px-[6px] py-0.5">
                           重要
                         </p>
                       </div>
                     ) : (
-                      <div className="w-1/5 border-r-2"></div>
+                      <div className="w-1/5 border-r-[1px]"></div>
                     )}
 
                     <div
@@ -460,11 +460,11 @@ const ListViewItem = ({
                             styleClass={{
                               fontSize: '12px',
                               lineHeight: '18px',
-                              width: '80px',
-                              height: '21px',
+                              width: '70px',
+                              height: '22px',
                               padding: '6px',
                               gap: '10px',
-                              borderRadius: '4px',
+                              borderRadius: '3px',
                             }}
                             classNameTextData={`!text-[12px]`}
                             classNameOption={`!text-[12px] !w-[120px]`}
@@ -500,7 +500,7 @@ const ListViewItem = ({
                   </>
                 ) : (
                   <>
-                    <p className="w-[calc(50%_+_7px)] text-center border-x-2">
+                    <p className="w-[calc(50%_+_7px)] text-left pl-[14px] border-x-[1px] text-[13px]">
                       {displayRoutineTaskScheduleTitle(content)}
                     </p>
                   </>

@@ -1834,8 +1834,8 @@ const ActionsEventModal = ({
             </div>
           </div>
           {/* Event category */}
-          <div className="flex justify-between items-center">
-            <p className="w-fit font-medium text-[14px]">予定カテゴリー</p>
+          <div className="flex justify-between">
+            <p className={`w-fit font-medium text-[14px] mt-9`}>予定カテゴリー</p>
             <div className="w-[518px]">
               <p className="text-[#7F8991] mb-[14px] font-medium text-sm flex items-end leading-none">
                 カレンダー
