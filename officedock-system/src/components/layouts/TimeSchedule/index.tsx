@@ -3880,7 +3880,7 @@ const TimeSchedule = memo(
                         <div className="flex items-end text-xl gap-1 text-[#5B6770] font-medium">
                           <p>{dataDate.month}月</p>
                           <p>{dataDate.day}日</p>
-                          <p className="text-sm">({dataDate.dayOfWeek})</p>
+                          <p className="text-sm mb-[3px]">({dataDate.dayOfWeek})</p>
                         </div>
 
                         <DynamicTooltip content="翌日" placement="top">
@@ -3950,14 +3950,14 @@ const TimeSchedule = memo(
                       </div>
                       <Heading
                         as="h4"
-                        className="text-[20px] !text-[#5B6770] flex items-center gap-1 flex-wrap font-medium pr-4 line-clamp-2">
+                        className="text-[20px] !text-[#5B6770] flex items-end gap-1 flex-wrap font-medium pr-4 line-clamp-2">
                         {isExtendCalendar ? (
                           <>
                             <p>{start}</p>
-                            <p className="text-sm ">({startWeek})</p>
+                            <p className="text-sm mb-[3px]">({startWeek})</p>
                             <p className="mx-1">-</p>
                             <p>{end}</p>
-                            <p className="text-sm ">({endWeek})</p>
+                            <p className="text-sm mb-[3px]">({endWeek})</p>
                           </>
                         ) : (
                           formattedCurrentDate
