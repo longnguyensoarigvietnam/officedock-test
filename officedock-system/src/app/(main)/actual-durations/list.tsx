@@ -27,6 +27,7 @@ import { Table } from '@components/common/Table';
 
 import { apiRouters, pageRouters } from '@constants/routers';
 import {
+  DESIGN_WIDTH,
   NO_DATA_AVAILABLE,
   NO_OPTION_CATEGORY,
   NO_SETTING,
@@ -156,6 +157,18 @@ const ListActualDurations = () => {
   // Actual durations by selected member
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [pageNumber, setPageNumber] = useState<number>(1);
+
+  const [viewportWidth, setViewportWidth] = useState(window.innerWidth);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setViewportWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Get organization options for pulldown
   useCreationDataCommon({
@@ -553,7 +566,7 @@ const ListActualDurations = () => {
 
   return (
     <div
-      className={`${expanded ? 'max-w-[calc(100%-200px)]' : 'max-w-[calc(100%-70px)]'}`}>
+      className={`${expanded ? `${viewportWidth > DESIGN_WIDTH ? 'max-w-[calc(100vw-270px)]' : 'max-w-[calc(100%-200px)]'}` : `${viewportWidth > DESIGN_WIDTH ? 'max-w-[calc(100vw-125px)]' : 'max-w-[calc(100%-70px)]'}`}`}>
       <div className="flex flex-col border border-gray-300 rounded-lg">
         <div
           className={`flex justify-between px-3 py-4 rounded-t-lg ${showFilter && 'border-b'} bg-[#F8FAFC]`}>
@@ -612,7 +625,7 @@ const ListActualDurations = () => {
                     <Input
                       label="タイトル"
                       labelClassName="text-sm text-black font-medium"
-                      className='text-sm h-[42px] !placeholder-[#BABABA]'
+                      className="text-sm h-[42px] !placeholder-[#BABABA]"
                       placeholder="入力してください"
                       register={register('title')}
                     />
@@ -854,7 +867,9 @@ const ListActualDurations = () => {
                   : ''
               }
               className={'flex'}>
-              <Button disabled={!selectedActualDurationId} className="w-44 h-[42px]">
+              <Button
+                disabled={!selectedActualDurationId}
+                className="w-44 h-[42px]">
                 新規登録
               </Button>
             </Link>

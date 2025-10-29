@@ -12,6 +12,10 @@ import {
 
 import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
 
+import { hasFullPaymentPermissions } from '@utils';
+
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
 export type ViewProfileModalProps = {
   open: boolean;
   onClose: () => void;
@@ -22,6 +26,7 @@ const ViewProfileModal = memo(
   ({ open, onClose, openEditModal }: ViewProfileModalProps) => {
     const { authenticatedUser, isFetchingAuthenticatedUser } =
       useAuthenticatedUser({});
+    const { data: session } = useSessionCache();
 
     return (
       <Modal
@@ -91,11 +96,16 @@ const ViewProfileModal = memo(
                   </p>
                 </div>
               </div>
-              <Button
-                className="w-[56px] min-w-[56px] !h-[30px] !py-2 !px-0"
-                onClick={openEditModal}>
-                編集
-              </Button>
+              {session &&
+              hasFullPaymentPermissions(session.user.permissions) ? (
+                <></>
+              ) : (
+                <Button
+                  className="w-[56px] min-w-[56px] !h-[30px] !py-2 !px-0"
+                  onClick={openEditModal}>
+                  編集
+                </Button>
+              )}
             </div>
 
             <div className="flex gap-3 items-center pb-5 mb-5 border-b-[1px] border-b-[#D2DBE1] leading-[1]">
