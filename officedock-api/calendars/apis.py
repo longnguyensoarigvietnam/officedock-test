@@ -472,7 +472,9 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             repeat_schedule.plan_end_date = datetime.combine(
                 original_end_date, end_time
             )
-            repeat_schedule.save()
+            repeat_schedule.save(
+                update_fields=["plan_start_date", "plan_end_date"]
+            )
 
     @transaction.atomic()
     def perform_update(self, serializer):
@@ -667,6 +669,7 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                         },
                         user=user,
                     )
+        # Update duration and handle repeat schedule by recurring option and input repeat_schedule
         if recurring_event_option in [
             ScheduleRepeatOption.THIS_AND_FOLLOWING_EVENTS.value,
             ScheduleRepeatOption.ALL_EVENTS.value,
@@ -674,7 +677,7 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             self._handle_update_duration_and_remove_repeat_schedules(
                 instance, recurring_event_option, repeat_schedule
             )
-
+        # Update input repeat_schedule when option is THIS_EVENT
         if (
             repeat_type
             and recurring_event_option == ScheduleRepeatOption.THIS_EVENT.value
@@ -686,9 +689,11 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             self._update_time_recurring(instance, start_date, end_date)
 
         # Create repeat schedule base on repeat type
-        if repeat_type and is_change_recurring:
-            instance.parent = None
-            instance.save()
+        if repeat_type:
+            # Delete paren when change repeat type and recurring of event
+            if is_change_recurring:
+                instance.parent = None
+                instance.save()
 
             self._generate_repeat_schedules(
                 instance,
