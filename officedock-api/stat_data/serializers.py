@@ -31,6 +31,7 @@ class DurationSerializer(serializers.ModelSerializer):
             "started_at",
             "paused_at",
             "duration",
+            "created_at",
         ]
         read_only_fields = ["id", "uuid"]
 

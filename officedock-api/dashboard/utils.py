@@ -76,6 +76,7 @@ def validate_editable_actual_duration(
     """
     if instance:
         date_now = datetime.now().date()
+        instance_created_at = instance.created_at
         instance_started_at = instance.started_at
         instance_paused_at = instance.paused_at
         company_dates = calculate_company_dates(instance.company)
@@ -88,8 +89,8 @@ def validate_editable_actual_duration(
         if date_now >= date_after_data_edit_deadline:
             start_of_day = date_after_closing
 
-        if instance_started_at < datetime.combine(
-            start_of_day, time.min, tzinfo=instance_started_at.tzinfo
+        if instance_created_at < datetime.combine(
+            start_of_day, time.min, tzinfo=instance_created_at.tzinfo
         ):
             if (
                 is_deleted
