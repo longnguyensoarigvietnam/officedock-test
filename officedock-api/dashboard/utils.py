@@ -104,7 +104,10 @@ def validate_editable_actual_duration(
         started_at = normalize_dt(started_at)
         paused_at = normalize_dt(paused_at)
 
-        if date_now >= date_after_data_edit_deadline:
+        if (
+            date_now >= date_after_data_edit_deadline
+            and date_after_closing < date_now
+        ):
             start_of_day = date_after_closing
 
         if instance_created_at < datetime.combine(

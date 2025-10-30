@@ -1,5 +1,4 @@
 from datetime import datetime
-from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.db.models import Manager
 
@@ -23,7 +22,7 @@ class ThanksMessageManager(Manager):
             second=0,
             microsecond=0,
         )
-        end_month = start_month + relativedelta(months=1)
+        end_month = company_dates["date_after_closing_next_month"]
 
         return self.filter(
             sender=user,

@@ -932,8 +932,19 @@ def calculate_company_dates(company, reference_date_param=None):
         reference_date_prev.year, reference_date_prev.month, close_day_prev
     )
 
+    # Step 4: Calculate next month's closing date
+    reference_date_next = reference_date + relativedelta(months=1)
+    last_day_of_next_month = monthrange(
+        reference_date_next.year, reference_date_next.month
+    )[1]
+    close_day_next = min(company_close_day, last_day_of_next_month)
+    close_date_next_month = date(
+        reference_date_next.year, reference_date_next.month, close_day_next
+    )
+
     # Step 5: Calculate derived dates
     date_after_closing = close_date + timedelta(days=1)
+    date_after_closing_next_month = close_date_next_month + timedelta(days=1)
 
     # Deadline for editing data (after closing date)
     date_after_data_edit_deadline = close_date + timedelta(
@@ -955,6 +966,7 @@ def calculate_company_dates(company, reference_date_param=None):
     return {
         "close_date": close_date,
         "date_after_closing": date_after_closing,
+        "date_after_closing_next_month": date_after_closing_next_month,
         "date_after_data_edit_deadline": date_after_data_edit_deadline,
         "start_date_calculation_deadline": start_date_calculation_deadline,
         "date_after_closing_this_month": date_after_closing
