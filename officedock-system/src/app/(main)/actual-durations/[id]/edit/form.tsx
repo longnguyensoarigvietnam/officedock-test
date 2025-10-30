@@ -20,6 +20,8 @@ import ImageRound from '@components/common/ImageRound';
 import DatePickerCustom from '@components/common/DatePicker/DatePickerCustom';
 import Dropdown from '@components/common/Dropdown';
 
+import { useErrorToast } from '@hooks/useErrorToast';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 import useOrganizationStatisticCategories from '@hooks/useOrganizationStatisticCategories';
 import useActualDurationDetail from '@hooks/useActualDurationDetail';
 
@@ -36,7 +38,7 @@ import {
   DATE_REQUIRED_DURATION,
   END_DATE_WRONG_SELECTED,
   ERROR_COMMON_MESSAGE,
-  ERROR_MESSAGE_TIME_TASK,
+  ERROR_UPDATE_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
 import {
@@ -62,10 +64,9 @@ import {
   getTimeDifference,
   isCheckPermissionWithCloseDate,
 } from '@utils/date';
-import { removeDuplicateOptions } from '@utils';
+import { handleServerFormErrors, removeDuplicateOptions } from '@utils';
 
 import api from '@base/api';
-import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 const EditActualDurationsForm = () => {
   const { statusTaskSelected, setStatusTaskSelected } = useContext(TaskContext);
@@ -78,6 +79,7 @@ const EditActualDurationsForm = () => {
 
   // Toast
   const { showToast } = useToast();
+  const showErrorToast = useErrorToast();
 
   // Creation data
   const [dataOrganizationCategories, setDataOrganizationCategories] = useState<
@@ -316,6 +318,7 @@ const EditActualDurationsForm = () => {
         });
       },
     });
+
   // Event types and tags - creation data
   useCreationDataCommon({
     organizationId: defaultTaskScheduleData?.organization
@@ -651,10 +654,13 @@ const EditActualDurationsForm = () => {
         }
         router.push(pageRouters.ACTUAL_DURATIONS_MANAGEMENT.href);
       },
-      onError: () => {
-        setError('startedAtDate', {
-          message: ERROR_MESSAGE_TIME_TASK,
-        });
+      onError: (error: any) => {
+        showErrorToast(error, ERROR_UPDATE_MESSAGE);
+        handleServerFormErrors<CreateActualDurationFormData>(
+          error,
+          setError,
+          control,
+        );
         setIsSubmit(false);
       },
       onSettled: () => {
@@ -690,7 +696,7 @@ const EditActualDurationsForm = () => {
     const actualDurationPayload = {
       tagIds: data.tagIds.map((tag) => {
         return Number(tag.value);
-      }),
+      }).filter(Boolean),
       categoryIds: categoryList,
       startedAt: addTimeToDate(
         data.startedAtDate ? new Date(data.startedAtDate) : new Date(),
@@ -848,6 +854,20 @@ const EditActualDurationsForm = () => {
                   )}
                 />
               )}
+
+              {errors.largeCategory?.message ||
+              errors.mediumCategory?.message ||
+              errors.smallCategory?.message ? (
+                <ErrorMessage
+                  error={
+                    errors.largeCategory?.message ||
+                    errors.mediumCategory?.message ||
+                    errors.smallCategory?.message
+                  }
+                />
+              ) : (
+                <></>
+              )}
             </div>
           </div>
           <div className="grid gap-3 w-1/2">
@@ -909,7 +929,12 @@ const EditActualDurationsForm = () => {
                 />
                 追加
               </Button>
-            </div>
+            </div>{' '}
+            {errors.tagIds?.message ? (
+              <ErrorMessage error={errors.tagIds?.message} className="mb-5" />
+            ) : (
+              <></>
+            )}
           </div>
           {searchParams.get('type') == EventCalendarType.TASK && (
             <div className="flex flex-col gap-2 mb-5">
@@ -1017,7 +1042,7 @@ const EditActualDurationsForm = () => {
                           },
                         })}
                         options={optionTimeInput}
-                        classNameOption="!top-1/2 -translate-y-1/2 mt-[5px]"
+                        classNameOption="!top-1/2 -translate-y-1/2 mt-[3px]"
                         onChangeDropdown={(e) => {
                           setValue('startedAtTime', e.label);
                           handleCalculateActualDuration(
@@ -1029,7 +1054,7 @@ const EditActualDurationsForm = () => {
                         }}
                         autoComplete="off"
                         type="text"
-                        className="h-[46px] !text-sm !pl-6 text-center"
+                        className="h-[46px] !text-sm !pl-6 !pr-0 text-left"
                       />
                     </div>
                   </div>
@@ -1155,7 +1180,7 @@ const EditActualDurationsForm = () => {
                             );
                           },
                         })}
-                        classNameOption="!top-1/2 -translate-y-1/2 mt-[5px]"
+                        classNameOption="!top-1/2 -translate-y-1/2 mt-[3px]"
                         options={optionTimeInput}
                         onChangeDropdown={(e) => {
                           setValue('pausedAtTime', e.label);
@@ -1167,7 +1192,7 @@ const EditActualDurationsForm = () => {
                           );
                         }}
                         type="text"
-                        className="h-[46px] !text-sm !pl-6 text-center"
+                        className="h-[46px] !text-sm  !pl-6 !pr-0 text-left"
                       />
                     </div>
                   </div>

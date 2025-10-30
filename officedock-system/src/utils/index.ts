@@ -82,6 +82,7 @@ import {
   getJapaneseWeekDay,
   sumDurationsChart,
 } from './date';
+import { FieldErrors, Path, UseFormSetError } from 'react-hook-form';
 
 export function hasPermissionInArray(
   requiredPermissions: PermissionsSystem[],
@@ -2614,4 +2615,117 @@ export const mapChatFilesToMemo = (
         },
       ],
     }));
+};
+
+export const getErrorMessage = (
+  errors: FieldErrors,
+  fieldName: string,
+): string | undefined => {
+  if (!errors) return undefined;
+  // Handle nested field names like "additional_qualifications.0.qualification_id"
+  if (fieldName.includes('.')) {
+    return getFieldArrayErrorMessage(errors, fieldName);
+  }
+
+  const error = errors[fieldName];
+  if (Array.isArray(error)) {
+    return error[0];
+  }
+  if (error?.message) {
+    return error.message as string;
+  }
+  return undefined;
+};
+
+export const flattenErrors = (
+  obj: any,
+  parentKey = '',
+): Record<string, string[]> => {
+  return Object.entries(obj).reduce(
+    (acc, [key, value]) => {
+      const newKey = parentKey ? `${parentKey}.${key}` : key;
+
+      if (Array.isArray(value)) {
+        acc[newKey] = value;
+      } else if (typeof value === 'object' && value !== null) {
+        Object.assign(acc, flattenErrors(value, newKey));
+      }
+      return acc;
+    },
+    {} as Record<string, string[]>,
+  );
+};
+
+export const getFieldArrayErrorMessage = (
+  errors: FieldErrors,
+  fieldName: string,
+): string | undefined => {
+  const path = fieldName.split('.');
+  let error: any = errors;
+
+  for (const key of path) {
+    if (error?.[key] == null) return undefined;
+    error = error[key];
+  }
+
+  // Handle array errors
+  if (Array.isArray(error)) {
+    return error[0];
+  }
+
+  // Handle error objects with message
+  if (error?.message) {
+    return error.message;
+  }
+
+  // Handle case where error is an object without message
+  if (error && typeof error === 'object') {
+    // Check if it's a validation error object
+    if (error.type && error.message) {
+      return error.message;
+    }
+    // If it's just an object, try to extract meaningful error
+    if (error && typeof error === 'object') {
+      const possibleKeys = ['error', 'detail', 'reason'];
+      for (const key of possibleKeys) {
+        if (error[key]) return String(error[key]);
+      }
+      return 'Invalid input';
+    }
+    return 'Invalid input';
+  }
+
+  return undefined;
+};
+
+// Convert server error keys to form field keys
+export const mapServerErrorKeyToFormKey = (key: string): string => {
+  return key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+};
+
+export const handleServerFormErrors = <T extends Record<string, any>>(
+  error: any,
+  setError: UseFormSetError<T>,
+  control?: any,
+) => {
+  if (!error?.response?.data) return;
+
+  const flattened = flattenErrors(error.response.data);
+
+  const registeredFields: string[] = control?._fields
+    ? Object.keys(control._fields)
+    : [];
+
+  Object.entries(flattened).forEach(([field, messages]) => {
+    const formKey = mapServerErrorKeyToFormKey(field) as Path<T>;
+
+    if (registeredFields.length > 0 && !registeredFields.includes(formKey)) {
+      return; // ignore unknown fields like "detail"
+    }
+
+    setError(formKey, {
+      type: 'server',
+      message: messages[0],
+    });
+  });
 };

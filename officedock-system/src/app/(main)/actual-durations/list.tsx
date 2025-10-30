@@ -863,6 +863,7 @@ const ListActualDurations = () => {
                   ? pageRouters.CREATE_ACTUAL_DURATIONS.href(
                       `${selectedActualDurationId}`,
                       `${chosenTaskSchedule?.type}`,
+                      `${selectedStaff.value}`,
                     )
                   : ''
               }

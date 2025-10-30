@@ -1000,7 +1000,7 @@ export const SearchMessagesModal = ({
                                       className="!font-medium !text-xs !rounded-[8px] !w-[86px] !h-[30px] !px-0"
                                       onClick={() => {
                                         router.push(
-                                          pageRouters.LEVEL_UP_TEAM.href,
+                                          `${pageRouters.LEVEL_UP_TEAM.href}?tabId=1`,
                                         );
                                       }}>
                                       確認する
