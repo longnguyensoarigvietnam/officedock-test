@@ -18,6 +18,7 @@ from tags.serializers import BaseTagSerializer
 from tasks.models import Task, TaskDuration
 from tasks.serializers import CategoryForCreationTaskSerializer
 from dashboard.utils import validate_editable_actual_duration
+from users.models import User
 
 
 class DurationCalculatorSerializer(serializers.Serializer):
@@ -254,6 +255,13 @@ class ActualDurationCreationSerializer(serializers.ModelSerializer):
     Base actual duration serializer
     """
 
+    user_id = serializers.PrimaryKeyRelatedField(
+        source="user",
+        queryset=User.objects.all(),
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
     task_id = serializers.PrimaryKeyRelatedField(
         source="task",
         queryset=Task.objects.all(),
@@ -297,6 +305,7 @@ class ActualDurationCreationSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "uuid",
+            "user_id",
             "task_id",
             "schedule_id",
             "tag_ids",
@@ -348,7 +357,7 @@ class ActualDurationCreationSerializer(serializers.ModelSerializer):
         if instance:
             paused_at = paused_at or instance.paused_at or now()
             started_at = started_at or instance.started_at
-            user = instance.user
+            user = instance.user or self.context.get("request").user
         overlapping_qs = TaskDuration.objects.filter(
             Q(
                 task=model if isinstance(model, Task) else None,
@@ -366,7 +375,9 @@ class ActualDurationCreationSerializer(serializers.ModelSerializer):
             overlapping_qs = overlapping_qs.exclude(id=instance.id)
 
         if overlapping_qs.exists():
-            raise ValidationError({"detail": ERROR_MESSAGES["exists_duration"]})
+            raise ValidationError(
+                {"started_at_date": ERROR_MESSAGES["exists_duration"]}
+            )
 
         return data
 
@@ -418,7 +429,7 @@ class ActualDurationBulkCreationSerializer(serializers.Serializer):
             if instance:
                 paused_at = paused_at or instance.paused_at or now()
                 started_at = started_at or instance.started_at
-                user = instance.user
+                user = instance.user or self.context.get("request").user
             overlapping_qs = TaskDuration.objects.filter(
                 Q(
                     task=model if isinstance(model, Task) else None,
