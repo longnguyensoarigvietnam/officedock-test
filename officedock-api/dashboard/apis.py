@@ -869,8 +869,8 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         """
         Handle update actual duration task or schedule
         """
-        user = self.request.user
         instance = serializer.instance
+        user = instance.user or self.request.user
         validated_data = serializer.validated_data
         task = validated_data.pop("task", None)
         schedule = validated_data.pop("schedule", None)
@@ -941,6 +941,7 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 )
         paused_at = paused_at or instance.paused_at or now()
         started_at = started_at or instance.started_at
+
         if started_at.date() != paused_at.date():
             separate_duration(instance, instance.paused_at, user=user)
 
@@ -974,7 +975,7 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         """
         Handle create actual duration and calculate progress skill
         """
-        user = self.request.user
+        user = item.pop("user", self.request.user)
         task = item.pop("task", None)
         schedule = item.pop("schedule", None)
         tags = item.pop("tags", None)

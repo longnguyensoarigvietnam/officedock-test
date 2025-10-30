@@ -44,7 +44,7 @@ from skills.serializers import (
     StepOfSkillSerializer,
     BaseOrganizationWithSkillSerializer,
     BaseOrganizationWithUserSkillMapSerializer,
-    SkillReplaceSkilMapSerializer,
+    SkillReplaceSkillMapSerializer,
     GroupStepSkillMapSerializer,
     UpdateSkillMapSkillLevelSerializer,
     UpdateSkillMapDefaultSerializer,
@@ -381,7 +381,7 @@ class SkillMapViewSet(
                     staff=user,
                     skill_parent__isnull=True,
                 )
-                .all()
+                .order_by("created_at")
             )
             step = organization.steps.first()
             data_skill_maps = []
@@ -399,7 +399,7 @@ class SkillMapViewSet(
                         )
                     else:
                         group_skill_map.append(
-                            SkillReplaceSkilMapSerializer(skill).data
+                            SkillReplaceSkillMapSerializer(skill).data
                         )
                     skill = Skill.objects.filter(parent_id=skill.id).first()
                 data_skill_maps.append(group_skill_map)
@@ -451,7 +451,7 @@ class SkillMapViewSet(
                 # Loop and get child skill
                 while skill:
                     group_skill.append(
-                        SkillReplaceSkilMapSerializer(skill).data
+                        SkillReplaceSkillMapSerializer(skill).data
                     )
                     skill = Skill.objects.filter(parent_id=skill.id).first()
                 data_skills.append(group_skill)

@@ -351,7 +351,7 @@ class SkillMapSerializer(serializers.ModelSerializer):
         )
 
 
-class SkillReplaceSkilMapSerializer(BaseSkillHierarchySerializer):
+class SkillReplaceSkillMapSerializer(BaseSkillHierarchySerializer):
     """Skill replace skill map"""
 
     is_locked = serializers.SerializerMethodField()
