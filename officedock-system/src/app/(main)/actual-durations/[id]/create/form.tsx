@@ -23,6 +23,7 @@ import Dropdown from '@components/common/Dropdown';
 import useTaskDetail from '@hooks/useTaskDetail';
 import useEventDetail from '@hooks/useEventDetail';
 import useOrganizationStatisticCategories from '@hooks/useOrganizationStatisticCategories';
+import { useErrorToast } from '@hooks/useErrorToast';
 import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 import { OptionDropdownType } from '@interfaces/common';
@@ -38,7 +39,7 @@ import {
   DATE_REQUIRED_DURATION,
   END_DATE_WRONG_SELECTED,
   ERROR_COMMON_MESSAGE,
-  ERROR_MESSAGE_TIME_TASK,
+  ERROR_CREATE_MESSAGE,
   SUCCESS_CREATE_MESSAGE,
 } from '@constants/message';
 import {
@@ -59,9 +60,9 @@ import {
   formatTimeInput,
   generateTimeOptionsAsObjects,
 } from '@utils/date';
+import { handleServerFormErrors, removeDuplicateOptions } from '@utils';
 
 import api from '@base/api';
-import { removeDuplicateOptions } from '@utils';
 
 const CreateActualDurationsForm = () => {
   // Params
@@ -75,9 +76,11 @@ const CreateActualDurationsForm = () => {
     searchParams.get('type') !== EventCalendarType.TASK
       ? Number(params.id)
       : undefined;
+  const userId = searchParams.get('user');
 
   // Toast
   const { showToast } = useToast();
+  const showErrorToast = useErrorToast();
 
   // Creation data
   const [dataOrganizationCategories, setDataOrganizationCategories] = useState<
@@ -230,6 +233,7 @@ const CreateActualDurationsForm = () => {
       }
     },
   });
+
   useEventDetail({
     scheduleId: scheduleId ? String(scheduleId) : '',
     onSuccess: (data) => {
@@ -302,6 +306,7 @@ const CreateActualDurationsForm = () => {
       }
     },
   });
+
   const {
     control,
     watch,
@@ -636,10 +641,13 @@ const CreateActualDurationsForm = () => {
         });
         router.push(pageRouters.ACTUAL_DURATIONS_MANAGEMENT.href);
       },
-      onError: () => {
-        setError('startedAtDate', {
-          message: ERROR_MESSAGE_TIME_TASK,
-        });
+      onError: (error: any) => {
+        showErrorToast(error, ERROR_CREATE_MESSAGE);
+        handleServerFormErrors<CreateActualDurationFormData>(
+          error,
+          setError,
+          control,
+        );
         setIsSubmit(false);
       },
       onSettled: () => {
@@ -684,12 +692,14 @@ const CreateActualDurationsForm = () => {
     };
     if (searchParams.get('type') == EventCalendarType.TASK) {
       createActualDuration({
+        userId: Number(userId),
         taskId: Number(params.id),
         isImportant: data.isImportant || false,
         ...actualDurationPayload,
       });
     } else {
       createActualDuration({
+        userId: Number(userId),
         scheduleId: Number(params.id),
         ...actualDurationPayload,
         scheduleType: data.scheduleType?.value
@@ -849,6 +859,20 @@ const CreateActualDurationsForm = () => {
                   )}
                 />
               )}
+
+              {errors.largeCategory?.message ||
+              errors.mediumCategory?.message ||
+              errors.smallCategory?.message ? (
+                <ErrorMessage
+                  error={
+                    errors.largeCategory?.message ||
+                    errors.mediumCategory?.message ||
+                    errors.smallCategory?.message
+                  }
+                />
+              ) : (
+                <></>
+              )}
             </div>
           </div>
           <div className="grid gap-3 w-1/2">
@@ -911,6 +935,11 @@ const CreateActualDurationsForm = () => {
                 追加
               </Button>
             </div>
+            {errors.tagIds?.message ? (
+              <ErrorMessage error={errors.tagIds?.message} className="mb-5" />
+            ) : (
+              <></>
+            )}
           </div>
           {searchParams.get('type') == EventCalendarType.TASK && (
             <div className="flex flex-col gap-2 mb-5">
@@ -1015,7 +1044,7 @@ const CreateActualDurationsForm = () => {
                             );
                           },
                         })}
-                        classNameOption="!top-1/2 -translate-y-1/2 mt-[5px]"
+                        classNameOption="!top-1/2 -translate-y-1/2 mt-[3px]"
                         options={optionTimeInput}
                         onChangeDropdown={(e) => {
                           setValue('startedAtTime', e.label);
@@ -1028,7 +1057,7 @@ const CreateActualDurationsForm = () => {
                         }}
                         autoComplete="off"
                         type="text"
-                        className="h-[46px] !text-sm !pl-6 text-center"
+                        className="h-[46px] !text-sm !pl-6 !pr-0 text-left"
                       />
                     </div>
                   </div>
@@ -1152,7 +1181,7 @@ const CreateActualDurationsForm = () => {
                             );
                           },
                         })}
-                        classNameOption="!top-1/2 -translate-y-1/2 mt-[5px]"
+                        classNameOption="!top-1/2 -translate-y-1/2 mt-[3px]"
                         options={optionTimeInput}
                         onChangeDropdown={(e) => {
                           setValue('pausedAtTime', e.label);
@@ -1164,7 +1193,7 @@ const CreateActualDurationsForm = () => {
                           );
                         }}
                         type="text"
-                        className="h-[46px] !text-sm !pl-6 text-center"
+                        className="h-[46px] !text-sm !pl-6 !pr-0 text-left"
                       />
                     </div>
                   </div>

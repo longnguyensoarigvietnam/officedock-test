@@ -947,7 +947,7 @@ export const MessageDetailQuoteChild = ({
                                         MessageType.CREATE_SUBMIT_LEVEL_SKILL
                                       ) {
                                         router.push(
-                                          pageRouters.LEVEL_UP_TEAM.href,
+                                          `${pageRouters.LEVEL_UP_TEAM.href}?tabId=1`,
                                         );
                                       } else {
                                         router.push(

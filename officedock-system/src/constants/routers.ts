@@ -346,8 +346,8 @@ export const pageRouters = {
   },
   CREATE_ACTUAL_DURATIONS: {
     name: '実績管理作成',
-    href: (id: string, type: string) =>
-      `/actual-durations/${id}/create?type=${type}`,
+    href: (id: string, type: string, userId: string) =>
+      `/actual-durations/${id}/create?type=${type}&user=${userId}`,
   },
   DETAIL_ACTUAL_DURATIONS: {
     name: '実績管理詳細',

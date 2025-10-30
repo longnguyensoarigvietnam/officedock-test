@@ -15,6 +15,7 @@ import { MessageHoverOptions } from './MessageHoverOptions';
 import DetailReactionChat from './DetailReactionChat';
 import { MessageDetailQuote } from './quote/MessageDetailQuote';
 import MessageDetailQuoteText from './quote/MessageDetailQuoteText';
+import RenderFiles from './renderFiles/RenderFiles';
 
 import {
   ADD_MEMBER_TASK_MESSAGE,
@@ -38,6 +39,7 @@ import {
   TaskRepetitiveValue,
 } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
+  import { DELETED_EVENT_TITLE } from '@constants/message';
 
 import {
   ChatDashboardMember,
@@ -47,6 +49,7 @@ import {
   ChatParticipant,
   ChatRoomDetail,
 } from '@interfaces/chat';
+import { Profile } from '@interfaces/user';
 
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
@@ -64,9 +67,6 @@ import {
 } from '@utils/date';
 
 import api from '@base/api';
-import { Profile } from '@interfaces/user';
-import { DELETED_EVENT_TITLE } from '@constants/message';
-import RenderFiles from './renderFiles/RenderFiles';
 
 export type MessageDetailProps = {
   chatRoomDetail: ChatRoomDetail | undefined;
@@ -1353,7 +1353,7 @@ export const MessageDetail = ({
                                         MessageType.CREATE_SUBMIT_LEVEL_SKILL
                                       ) {
                                         router.push(
-                                          pageRouters.LEVEL_UP_TEAM.href,
+                                          `${pageRouters.LEVEL_UP_TEAM.href}?tabId=1`,
                                         );
                                       } else {
                                         router.push(

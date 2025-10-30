@@ -70,6 +70,7 @@ export interface ActualDurationDefaultData {
 }
 
 export interface ActualDurationRequest {
+  userId?: number
   taskId?: number;
   scheduleId?: number;
   scheduleType?: string | null;

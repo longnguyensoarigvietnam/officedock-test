@@ -920,7 +920,9 @@ export const MessageDetailBookmark = ({
                                   variant="outline"
                                   className="!font-medium !text-xs !rounded-[8px] !w-[86px] !h-[30px] !px-0"
                                   onClick={() => {
-                                    router.push(pageRouters.LEVEL_UP_TEAM.href);
+                                    router.push(
+                                      `${pageRouters.LEVEL_UP_TEAM.href}?tabId=1`,
+                                    );
                                   }}>
                                   確認する
                                 </Button>
