@@ -1,7 +1,7 @@
+from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.db.models import Manager
-from django.utils.timezone import now
 
 from common.utils import calculate_company_dates
 
@@ -11,10 +11,12 @@ class ThanksMessageManager(Manager):
     Define thanks message manager
     """
 
-    def sent_this_month(self, user):
-        company_dates = calculate_company_dates(user.company)
-        date_after_closing = company_dates["date_after_closing"]
-        start_month = now().replace(
+    def sent_this_month(self, user, date=None):
+        company_dates = calculate_company_dates(user.company, date)
+        date_after_closing = company_dates["date_after_closing_this_month"]
+        start_month = datetime(
+            year=date_after_closing.year,
+            month=date_after_closing.month,
             day=date_after_closing.day,
             hour=0,
             minute=0,
@@ -29,8 +31,8 @@ class ThanksMessageManager(Manager):
             created_at__lt=end_month,
         )
 
-    def remaining_quota(self, user):
-        count = self.sent_this_month(user).count()
+    def remaining_quota(self, user, date=None):
+        count = self.sent_this_month(user, date).count()
         return max(settings.MONTHLY_QUOTA_THANKS_MESSAGES - count, 0)
 
     def unread_for(self, user):

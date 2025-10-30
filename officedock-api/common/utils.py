@@ -864,7 +864,7 @@ def get_user_organizations_with_descendants(user: User) -> list[int]:
     return org_ids
 
 
-def calculate_company_dates(company, reference_date=None):
+def calculate_company_dates(company, reference_date_param=None):
     """
     Calculate important accounting-related dates for a company.
 
@@ -877,7 +877,7 @@ def calculate_company_dates(company, reference_date=None):
 
     Args:
         company: Company instance with `close_date` and `editable_after_closing` attributes.
-        reference_date (date, optional): The base date for calculation (defaults to today).
+        reference_date_param (date, optional): The base date for calculation (defaults to today).
 
     Returns:
         dict: {
@@ -889,8 +889,8 @@ def calculate_company_dates(company, reference_date=None):
     """
 
     # Step 1: Define the reference date
-    if reference_date is None:
-        reference_date = timezone.now().date()
+    if reference_date_param is None:
+        reference_date_param = timezone.now().date()
 
     # Step 2: Get company-specific or default settings
     company_close_day = int(
@@ -901,6 +901,20 @@ def calculate_company_dates(company, reference_date=None):
             company, "editable_after_closing", settings.EDITABLE_AFTER_CLOSING
         )
     )
+
+    # Calculate correct reference date
+    reference_date = reference_date_param
+    reference_date_prev = reference_date - relativedelta(months=1)
+    last_day_of_prev_month = monthrange(
+        reference_date_prev.year, reference_date_prev.month
+    )[1]
+    if (
+        company_close_day + company_editable_after_closing
+        >= last_day_of_prev_month
+    ):
+        reference_date = reference_date_param - timedelta(
+            days=company_editable_after_closing + 1
+        )
 
     # Step 3: Calculate current month's closing date
     # Prevent invalid dates (e.g., Feb 30)
@@ -943,6 +957,9 @@ def calculate_company_dates(company, reference_date=None):
         "date_after_closing": date_after_closing,
         "date_after_data_edit_deadline": date_after_data_edit_deadline,
         "start_date_calculation_deadline": start_date_calculation_deadline,
+        "date_after_closing_this_month": date_after_closing
+        if reference_date_param >= date_after_closing
+        else start_date_calculation_deadline,
     }
 
 
