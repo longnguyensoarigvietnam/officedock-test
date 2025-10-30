@@ -502,7 +502,10 @@ class CompanyLoginSerializer(serializers.ModelSerializer):
             "date_after_data_edit_deadline"
         ]
 
-        if date_now >= date_after_data_edit_deadline:
+        if (
+            date_now >= date_after_data_edit_deadline
+            and date_after_closing < date_now
+        ):
             start_editable_date = date_after_closing
 
         return datetime.combine(start_editable_date, time.min)
