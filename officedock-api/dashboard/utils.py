@@ -68,6 +68,22 @@ def separate_duration_while_keep_running(duration, end_date, user=None):
     return
 
 
+def normalize_dt(value):
+    """Normalize datetime for consistent comparison."""
+    if not value:
+        return None
+
+    # Convert string (handle both ISO8601 and 'Z' timezone formats)
+    if isinstance(value, str):
+        try:
+            value = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError:
+            return None  # invalid string → skip
+
+    # Normalize by removing seconds and microseconds to avoid tiny mismatches
+    return value.replace(second=0, microsecond=0)
+
+
 def validate_editable_actual_duration(
     instance, started_at=None, paused_at=None, is_deleted=False
 ):
@@ -77,14 +93,16 @@ def validate_editable_actual_duration(
     if instance:
         date_now = datetime.now().date()
         instance_created_at = instance.created_at
-        instance_started_at = instance.started_at
-        instance_paused_at = instance.paused_at
+        instance_started_at = normalize_dt(instance.started_at)
+        instance_paused_at = normalize_dt(instance.paused_at)
         company_dates = calculate_company_dates(instance.company)
         date_after_closing = company_dates["date_after_closing"]
         start_of_day = company_dates["start_date_calculation_deadline"]
         date_after_data_edit_deadline = company_dates[
             "date_after_data_edit_deadline"
         ]
+        started_at = normalize_dt(started_at)
+        paused_at = normalize_dt(paused_at)
 
         if date_now >= date_after_data_edit_deadline:
             start_of_day = date_after_closing
