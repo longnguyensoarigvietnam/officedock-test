@@ -873,41 +873,47 @@ export function getTimeRangeForClickDate(
 
 // Convert edit input type time
 export const convertToMinutesNumber = (data: string | number): number => {
-  if (typeof data === 'number') {
-    return data;
-  }
+  if (typeof data === 'number') return data;
 
   const cleanedData = data.replace(/\s*:\s*/, ':').trim();
 
   if (/^\d{1,2}$/.test(cleanedData)) {
-    return parseInt(cleanedData, 10) * 100;
+    const hour = parseInt(cleanedData, 10);
+    return hour < 24 ? hour * 100 : 0;
   }
 
   if (/^\d{3,4}$/.test(cleanedData)) {
-    const length = cleanedData.length;
-    const hour = parseInt(cleanedData.slice(0, length - 2), 10);
-    const minute = parseInt(cleanedData.slice(length - 2), 10);
-    return hour * 100 + minute;
+    const len = cleanedData.length;
+    const hour = parseInt(cleanedData.slice(0, len - 2), 10);
+    const minute = parseInt(cleanedData.slice(len - 2), 10);
+    if (hour >= 24) return 0;
+    const totalMinutes = hour * 60 + minute;
+    const normalizedHour = Math.floor(totalMinutes / 60);
+    const normalizedMinute = totalMinutes % 60;
+    if (normalizedHour >= 24) return 0;
+    return normalizedHour * 100 + normalizedMinute;
   }
-  const timePattern = /^(\d{1,2}):(\d{2})\s?(AM|PM)?$/i;
+
+  const timePattern = /^(\d{1,2}):(\d{1,2})\s?(AM|PM)?$/i;
   const match = cleanedData.match(timePattern);
 
-  if (!match) {
-    // Handle Error
-    return 0;
-  }
+  if (!match) return 0;
 
   const [_, hours, minutes, period] = match;
   let hour = parseInt(hours, 10);
-  const minute = parseInt(minutes, 10);
+  let minute = parseInt(minutes, 10);
+
+  if (minute >= 60) {
+    hour += Math.floor(minute / 60);
+    minute = minute % 60;
+  }
 
   if (period) {
-    if (period.toUpperCase() === 'PM' && hour !== 12) {
-      hour += 12;
-    } else if (period.toUpperCase() === 'AM' && hour === 12) {
-      hour = 0;
-    }
+    if (period.toUpperCase() === 'PM' && hour !== 12) hour += 12;
+    else if (period.toUpperCase() === 'AM' && hour === 12) hour = 0;
   }
+
+  if (hour >= 24) (hour = 23), (minute = 59);
 
   return hour * 100 + minute;
 };

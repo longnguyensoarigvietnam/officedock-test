@@ -1534,10 +1534,7 @@ const TimeSchedule = memo(
       resourcePlan: boolean,
       isCalculation?: boolean,
     ): void => {
-      let value = e.target.value.replace(/\D/g, '');
-      if (value.length > 4) {
-        value = value.substring(0, 4);
-      }
+      const value = e.target.value;
 
       const updatedTasks = taskTimeScheduleList.map((item) => {
         if (item.uuid === uuid) {
@@ -1592,10 +1589,7 @@ const TimeSchedule = memo(
       uuid: string,
       resourcePlan: boolean,
     ): void => {
-      let value = e.target.value.replace(/\D/g, '');
-      if (value.length > 4) {
-        value = value.substring(0, 4);
-      }
+      const value = e.target.value;
       const updatedTasks = taskTimeScheduleList.map((item) => {
         if (item.uuid === uuid) {
           return {
