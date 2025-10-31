@@ -217,7 +217,6 @@ const PopupDetail = ({
                     },
                     items: taskTimeScheduleList,
                   });
-
                   if (data && !isCheck) {
                     setValueStart(
                       formatTimeInput(
