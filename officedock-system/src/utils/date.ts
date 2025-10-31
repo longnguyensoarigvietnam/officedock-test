@@ -872,50 +872,66 @@ export function getTimeRangeForClickDate(
 }
 
 // Convert edit input type time
-export const convertToMinutesNumber = (data: string | number): number => {
-  if (typeof data === 'number') return data;
-
-  const cleanedData = data.replace(/\s*:\s*/, ':').trim();
-
-  if (/^\d{1,2}$/.test(cleanedData)) {
-    const hour = parseInt(cleanedData, 10);
-    return hour < 24 ? hour * 100 : 0;
+export const convertToMinutesNumber = (data: string | number): string => {
+  if (typeof data === 'number') {
+    return String(data).padStart(4, '0');
   }
 
+  const cleanedData = data.replace(/\s*:\s*/g, ':').trim();
+
+  // 1️⃣ Nếu chỉ có giờ (vd "8" hoặc "08")
+  if (/^\d{1,2}$/.test(cleanedData)) {
+    const hour = parseInt(cleanedData, 10);
+    if (isNaN(hour) || hour >= 24) return '0000';
+    return `${String(hour).padStart(2, '0')}00`; // → "08" → "0800"
+  }
+
+  // 2️⃣ Nếu là HHMM hoặc HMM (vd "930", "0930")
   if (/^\d{3,4}$/.test(cleanedData)) {
     const len = cleanedData.length;
     const hour = parseInt(cleanedData.slice(0, len - 2), 10);
     const minute = parseInt(cleanedData.slice(len - 2), 10);
-    if (hour >= 24) return 0;
+    if (isNaN(hour) || isNaN(minute) || hour >= 24) return '0000';
+
     const totalMinutes = hour * 60 + minute;
-    const normalizedHour = Math.floor(totalMinutes / 60);
-    const normalizedMinute = totalMinutes % 60;
-    if (normalizedHour >= 24) return 0;
-    return normalizedHour * 100 + normalizedMinute;
+    let normalizedHour = Math.floor(totalMinutes / 60);
+    let normalizedMinute = totalMinutes % 60;
+    if (normalizedHour >= 24) {
+      normalizedHour = 23;
+      normalizedMinute = 59;
+    }
+
+    return `${String(normalizedHour).padStart(2, '0')}${String(normalizedMinute).padStart(2, '0')}`;
   }
 
+  // 3️⃣ Nếu có dấu : (vd "2:9", "02:90", "00:20", "2:9 PM")
   const timePattern = /^(\d{1,2}):(\d{1,2})\s?(AM|PM)?$/i;
   const match = cleanedData.match(timePattern);
 
-  if (!match) return 0;
+  if (!match) return '0000';
 
   const [_, hours, minutes, period] = match;
   let hour = parseInt(hours, 10);
   let minute = parseInt(minutes, 10);
 
+  // Normalize phút
   if (minute >= 60) {
     hour += Math.floor(minute / 60);
     minute = minute % 60;
   }
 
+  // Xử lý AM/PM
   if (period) {
     if (period.toUpperCase() === 'PM' && hour !== 12) hour += 12;
     else if (period.toUpperCase() === 'AM' && hour === 12) hour = 0;
   }
 
-  if (hour >= 24) (hour = 23), (minute = 59);
+  if (hour >= 24) {
+    hour = 23;
+    minute = 59;
+  }
 
-  return hour * 100 + minute;
+  return `${String(hour).padStart(2, '0')}${String(minute).padStart(2, '0')}`;
 };
 
 // Get submit level formatted date

@@ -875,34 +875,36 @@ const CreateActualDurationsForm = () => {
               )}
             </div>
           </div>
-          <div className="grid gap-3 w-1/2">
+          <div className=" gap-3 w-1/2 max-w-[50%] flex flex-col min-w-0">
             <label className="text-sm ">集計タグ</label>
             {projectFields.map((field, index) => (
-              <div className="flex gap-2" key={field.id}>
-                <Controller
-                  control={control}
-                  name={`tagIds.${index}`}
-                  render={({ field: { value, onChange } }) => {
-                    return (
-                      <Dropdown
-                        placeholder="選択してください"
-                        className="!py-1 !h-[46px] text-sm border-[#77858F] rounded-md"
-                        classNameOption="!text-sm"
-                        classNameTextData="!text-sm"
-                        options={unSelectedTagIdsOptions}
-                        selectedOption={dataOptionsTagIds.find(
-                          (element) => element.value == value?.value,
-                        )}
-                        onChange={(option: OptionDropdownType) => {
-                          onChange(option);
-                          handleSelectedTagIds(index, option);
-                        }}
-                        error={errors.tagIds?.[index]?.value?.message}
-                      />
-                    );
-                  }}
-                />
-                <div className="mt-[2.5px]">
+              <div className="flex gap-2 flex-grow" key={field.id}>
+                <div className="flex-grow min-w-0">
+                  <Controller
+                    control={control}
+                    name={`tagIds.${index}`}
+                    render={({ field: { value, onChange } }) => {
+                      return (
+                        <Dropdown
+                          placeholder="選択してください"
+                          className="!py-1 !h-[46px] text-sm border-[#77858F] rounded-md"
+                          classNameOption="!text-sm"
+                          classNameTextData="!text-sm"
+                          options={unSelectedTagIdsOptions}
+                          selectedOption={dataOptionsTagIds.find(
+                            (element) => element.value == value?.value,
+                          )}
+                          onChange={(option: OptionDropdownType) => {
+                            onChange(option);
+                            handleSelectedTagIds(index, option);
+                          }}
+                          error={errors.tagIds?.[index]?.value?.message}
+                        />
+                      );
+                    }}
+                  />
+                </div>
+                <div className="mt-[2.5px] w-fit flex-shrink-0">
                   <Button
                     sz="sm"
                     variant="outline"
