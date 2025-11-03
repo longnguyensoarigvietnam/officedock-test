@@ -6,3 +6,4 @@ export const ONLY_DIGITS_REGEX = /^\d*$/;
 export const MENTION_NAME_REGEX = /^[\w\s+\-*_/一-龯ぁ-んァ-ン々〆〤ー]+$/;
 export const HIGHLIGHT_SEARCH_TERM_REGEX = /[.*+?^${}()|[\]\\]/g;
 export const URL_REGEX = /(https?:\/\/[^\s]+)/g;
+export const HTML_TAG_REGEX = /<[^>]*>/g;

@@ -675,8 +675,8 @@ const StatisticTeamBoard = () => {
   };
 
   return (
-    <div className="pt-[30px] pr-10  font-medium ">
-      <div className=" flex items-start justify-between">
+    <div className="font-medium ">
+      <div className="sticky z-[21] top-[0px] px-10 py-[27px] bg-[#E6F3FB] flex items-start justify-between">
         <div className="flex items-center justify-between">
           <div className="flex items-start">
             {selectedOrganizationSideBar?.imgComponent && (
@@ -712,8 +712,8 @@ const StatisticTeamBoard = () => {
           <StatisticTeamCalendar />
         </div>
       </div>
-      <div className="w-full my-[30px] border-t border-[#D2DBE1]"></div>
-      <div>
+      <div className="w-full mb-[30px] border-t border-[#D2DBE1]"></div>
+      <div className="px-10">
         <div className="flex justify-between w-full">
           <div className="flex items-center gap-2">
             <div className="w-[220px]">
@@ -781,119 +781,124 @@ const StatisticTeamBoard = () => {
           {/* Filter modal */}
           <FilterTeamStatistic className="my-[30px]" classNameData=" w-[80%]" />
         </div>
+        {isCheckCompare ? (
+          <>
+            {/* Compare percentage of categories */}
+            <PercentageTeamCategoryCompare
+              startDate={startDate}
+              endDate={endDate}
+              startDateCompare={startDateCompare}
+              endDateCompare={endDateCompare}
+              statisticTeamCategoryList={statisticCategoryListTeam}
+              statisticCategoryListTeamCompare={
+                statisticCategoryListTeamCompare
+              }
+              statisticAllTeamCategoryList={statisticAllTeamCategoryList}
+              statisticAllTeamCategoryCompareList={
+                statisticAllTeamCategoryCompareList
+              }
+              handleSelectOrganization={handleSelectOrganization}
+              handleSelectOrganizationCustom={handleSelectOrganizationCustom}
+              handleSelectLarge={handleSelectLarge}
+              handleSelectMedium={handleSelectMedium}
+              handleSelectSmall={handleSelectSmall}
+            />
+            {/* Progress bar */}
+            <AllocationTeamCategoryCompare
+              startDate={startDate}
+              endDate={endDate}
+              startDateCompare={startDateCompare}
+              endDateCompare={endDateCompare}
+              statisticTeamCategoryList={statisticCategoryListTeam}
+              statisticCategoryListTeamCompare={
+                statisticCategoryListTeamCompare
+              }
+              statisticAllTeamCategoryList={statisticAllTeamCategoryList}
+              statisticAllTeamCategoryCompareList={
+                statisticAllTeamCategoryCompareList
+              }
+              handleSelectOrganization={handleSelectOrganization}
+              handleSelectLarge={handleSelectLarge}
+              handleSelectMedium={handleSelectMedium}
+              handleSelectSmall={handleSelectSmall}
+            />
+            {/* Compare line chart */}
+            <LineChartByTeamCompare
+              startDate={startDate}
+              endDate={endDate}
+              startDateCompare={startDateCompare}
+              endDateCompare={endDateCompare}
+              statisticTeamCategoryList={statisticCategoryListTeam}
+              statisticCategoryListTeamCompare={
+                statisticCategoryListTeamCompare
+              }
+              handleSelectOrganization={handleSelectOrganization}
+              handleSelectLarge={handleSelectLarge}
+              handleSelectMedium={handleSelectMedium}
+            />
+          </>
+        ) : (
+          <>
+            {/* Percentage of category */}
+            <PercentageTeamCategory
+              startDate={startDate}
+              endDate={endDate}
+              statisticTeamCategoryList={statisticCategoryListTeam}
+              statisticAllTeamCategoryList={statisticAllTeamCategoryList}
+              handleSelectOrganization={handleSelectOrganization}
+              handleSelectOrganizationCustom={handleSelectOrganizationCustom}
+              handleSelectLarge={handleSelectLarge}
+              handleSelectMedium={handleSelectMedium}
+            />
+            {/* Progress bar */}
+            <AllocationTeamCategory
+              startDate={startDate}
+              endDate={endDate}
+              statisticTeamCategoryList={statisticCategoryListTeam}
+              statisticAllTeamCategoryList={statisticAllTeamCategoryList}
+              handleSelectOrganization={handleSelectOrganization}
+              handleSelectLarge={handleSelectLarge}
+              handleSelectMedium={handleSelectMedium}
+              handleSelectSmall={handleSelectSmall}
+            />
+            {/* Line chart */}
+            <LineChartByTeam
+              startDate={startDate}
+              endDate={endDate}
+              statisticTeamCategoryList={statisticCategoryListTeam}
+              handleSelectOrganization={handleSelectOrganization}
+              handleSelectLarge={handleSelectLarge}
+              handleSelectMedium={handleSelectMedium}
+            />
+            <StackedAreaTeamChart
+              startDate={startDate}
+              endDate={endDate}
+              statisticTeamCategoryList={statisticCategoryListTeam}
+              handleSelectOrganization={handleSelectOrganization}
+              handleSelectLarge={handleSelectLarge}
+              handleSelectMedium={handleSelectMedium}
+            />
+          </>
+        )}
+        {/* Task list */}
+        {creationDataCommonData?.organizationStatistics && (
+          <TaskListTeamStatistic
+            startDate={startDate}
+            endDate={endDate}
+            startDateCompare={startDateCompare}
+            endDateCompare={endDateCompare}
+            isCheckCompare={isCheckCompare}
+            statisticCategoryListTeam={statisticCategoryListTeam}
+            handleSelectOrganization={handleSelectOrganization}
+            handleSelectLarge={handleSelectLarge}
+            handleSelectMedium={handleSelectMedium}
+            handleSelectSmall={handleSelectSmall}
+            creationDataStatisticData={creationDataCommonData?.organizationStatistics?.find(
+              (org) => org.id === selectedOrganization?.value,
+            )}
+          />
+        )}
       </div>
-
-      {isCheckCompare ? (
-        <>
-          {/* Compare percentage of categories */}
-          <PercentageTeamCategoryCompare
-            startDate={startDate}
-            endDate={endDate}
-            startDateCompare={startDateCompare}
-            endDateCompare={endDateCompare}
-            statisticTeamCategoryList={statisticCategoryListTeam}
-            statisticCategoryListTeamCompare={statisticCategoryListTeamCompare}
-            statisticAllTeamCategoryList={statisticAllTeamCategoryList}
-            statisticAllTeamCategoryCompareList={
-              statisticAllTeamCategoryCompareList
-            }
-            handleSelectOrganization={handleSelectOrganization}
-            handleSelectOrganizationCustom={handleSelectOrganizationCustom}
-            handleSelectLarge={handleSelectLarge}
-            handleSelectMedium={handleSelectMedium}
-            handleSelectSmall={handleSelectSmall}
-          />
-          {/* Progress bar */}
-          <AllocationTeamCategoryCompare
-            startDate={startDate}
-            endDate={endDate}
-            startDateCompare={startDateCompare}
-            endDateCompare={endDateCompare}
-            statisticTeamCategoryList={statisticCategoryListTeam}
-            statisticCategoryListTeamCompare={statisticCategoryListTeamCompare}
-            statisticAllTeamCategoryList={statisticAllTeamCategoryList}
-            statisticAllTeamCategoryCompareList={
-              statisticAllTeamCategoryCompareList
-            }
-            handleSelectOrganization={handleSelectOrganization}
-            handleSelectLarge={handleSelectLarge}
-            handleSelectMedium={handleSelectMedium}
-            handleSelectSmall={handleSelectSmall}
-          />
-          {/* Compare line chart */}
-          <LineChartByTeamCompare
-            startDate={startDate}
-            endDate={endDate}
-            startDateCompare={startDateCompare}
-            endDateCompare={endDateCompare}
-            statisticTeamCategoryList={statisticCategoryListTeam}
-            statisticCategoryListTeamCompare={statisticCategoryListTeamCompare}
-            handleSelectOrganization={handleSelectOrganization}
-            handleSelectLarge={handleSelectLarge}
-            handleSelectMedium={handleSelectMedium}
-          />
-        </>
-      ) : (
-        <>
-          {/* Percentage of category */}
-          <PercentageTeamCategory
-            startDate={startDate}
-            endDate={endDate}
-            statisticTeamCategoryList={statisticCategoryListTeam}
-            statisticAllTeamCategoryList={statisticAllTeamCategoryList}
-            handleSelectOrganization={handleSelectOrganization}
-            handleSelectOrganizationCustom={handleSelectOrganizationCustom}
-            handleSelectLarge={handleSelectLarge}
-            handleSelectMedium={handleSelectMedium}
-          />
-          {/* Progress bar */}
-          <AllocationTeamCategory
-            startDate={startDate}
-            endDate={endDate}
-            statisticTeamCategoryList={statisticCategoryListTeam}
-            statisticAllTeamCategoryList={statisticAllTeamCategoryList}
-            handleSelectOrganization={handleSelectOrganization}
-            handleSelectLarge={handleSelectLarge}
-            handleSelectMedium={handleSelectMedium}
-            handleSelectSmall={handleSelectSmall}
-          />
-          {/* Line chart */}
-          <LineChartByTeam
-            startDate={startDate}
-            endDate={endDate}
-            statisticTeamCategoryList={statisticCategoryListTeam}
-            handleSelectOrganization={handleSelectOrganization}
-            handleSelectLarge={handleSelectLarge}
-            handleSelectMedium={handleSelectMedium}
-          />
-          <StackedAreaTeamChart
-            startDate={startDate}
-            endDate={endDate}
-            statisticTeamCategoryList={statisticCategoryListTeam}
-            handleSelectOrganization={handleSelectOrganization}
-            handleSelectLarge={handleSelectLarge}
-            handleSelectMedium={handleSelectMedium}
-          />
-        </>
-      )}
-      {/* Task list */}
-      {creationDataCommonData?.organizationStatistics && (
-        <TaskListTeamStatistic
-          startDate={startDate}
-          endDate={endDate}
-          startDateCompare={startDateCompare}
-          endDateCompare={endDateCompare}
-          isCheckCompare={isCheckCompare}
-          statisticCategoryListTeam={statisticCategoryListTeam}
-          handleSelectOrganization={handleSelectOrganization}
-          handleSelectLarge={handleSelectLarge}
-          handleSelectMedium={handleSelectMedium}
-          handleSelectSmall={handleSelectSmall}
-          creationDataStatisticData={creationDataCommonData?.organizationStatistics?.find(
-            (org) => org.id === selectedOrganization?.value,
-          )}
-        />
-      )}
     </div>
   );
 };

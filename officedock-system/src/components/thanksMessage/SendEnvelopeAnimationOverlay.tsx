@@ -172,6 +172,11 @@ export default function SendEnvelopeAnimationOverlay({
     },
   );
 
+  const onBack = () => {
+    setShowEnvelopeContent(false);
+    setShowConfirmMessage(false);
+  }
+
   return (
     <div className="fixed h-screen inset-0 z-[9999] bg-black bg-opacity-40 flex items-center justify-center">
       {/* Envelope */}
@@ -219,8 +224,8 @@ export default function SendEnvelopeAnimationOverlay({
                 <Button
                   variant="outline"
                   className="bg-transparent w-[100px] rounded-[8px] h-[36px] !p-0"
-                  onClick={onFinish}>
-                  キャンセル
+                  onClick={onBack}>
+                  もどる
                 </Button>
                 <Button
                   variant="post"

@@ -39,11 +39,15 @@ import {
   PermissionsSystem,
   TemplateAction,
 } from '@constants/enums';
+import { HTML_TAG_REGEX } from '@constants/regex';
 
 import { CategoryStructure } from '@interfaces/skills';
 import { Template, TemplateFormData } from '@interfaces/template';
 import { OptionDropdownType } from '@interfaces/common';
 import { TaskErrorPerson, TaskFormData, TodoItem } from '@interfaces/task';
+import { Organizations } from '@interfaces/organization';
+
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 import { formatShowDateJapanese } from '@utils/date';
 import {
@@ -51,8 +55,6 @@ import {
   removeDuplicateOptions,
   showModalHeaderBackgroundColorByTime,
 } from '@utils';
-import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
-import { Organizations } from '@interfaces/organization';
 
 export type ActionTemplateModalProps = {
   open: boolean;
@@ -199,8 +201,7 @@ const ActionsTemplateModal = ({
               label: dataTemplate.organization.name,
               value: dataTemplate.organization.id as number,
             }
-          : undefined),
-        (value.description = dataTemplate.description || '');
+          : undefined);
 
       if (dataTemplate.tags) {
         value.tagIds = dataTemplate.tags.map((tag) => {
@@ -247,7 +248,14 @@ const ActionsTemplateModal = ({
               : NO_SETTING,
           });
       }
+
+      setShowDescriptionSection(
+        !!dataTemplate.description
+          ?.replace(HTML_TAG_REGEX, '') // remove HTML tags
+          .trim(),
+      );
     }
+
     if (orgUserList && action == ActionTask.CREATE) {
       value.organization = orgUserList.find(
         (organization) => organization.isMain,
@@ -529,6 +537,7 @@ const ActionsTemplateModal = ({
         };
       });
       setTodoList(newTodoList);
+      setShowTodoSection(newTodoList.length > 0);
     }
   }, [dataTemplate]);
   const handleBlur = ({

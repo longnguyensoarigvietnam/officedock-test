@@ -66,6 +66,7 @@ import {
   TaskRepetitiveType,
   TimeType,
 } from '@constants/enums';
+import { HTML_TAG_REGEX } from '@constants/regex';
 
 import { OptionDropdownType } from '@interfaces/common';
 import {
@@ -75,6 +76,7 @@ import {
   TodoItem,
 } from '@interfaces/task';
 import { CategoryStructure } from '@interfaces/skills';
+import { Organizations } from '@interfaces/organization';
 
 import {
   convertDateToStartDate,
@@ -92,7 +94,6 @@ import {
 } from '@utils';
 
 import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
-import { Organizations } from '@interfaces/organization';
 
 export type ActionTaskModalProps = {
   open: boolean;
@@ -357,8 +358,6 @@ const ActionsTaskModal = ({
           dataTask.deadline && dataTask.showDeadlineTime
             ? convertToTimeString(dataTask.deadline)
             : null);
-      value.description = dataTask.description || '';
-
       value.repeatInterval =
         action != ActionTask.COPY && dataTask.repeatInterval
           ? {
@@ -458,6 +457,12 @@ const ActionsTaskModal = ({
               : NO_SETTING,
           });
       }
+
+      setShowDescriptionSection(
+        !!dataTask.description
+          ?.replace(HTML_TAG_REGEX, '') // remove HTML tags
+          .trim(),
+      );
     }
     return value;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -831,6 +836,7 @@ const ActionsTaskModal = ({
         };
       });
       setTodoList(newTodoList);
+      setShowTodoSection(newTodoList.length > 0);
     }
   }, [dataTask]);
   const handleBlur = ({
