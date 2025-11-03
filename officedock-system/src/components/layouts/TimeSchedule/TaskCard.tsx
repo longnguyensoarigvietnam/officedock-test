@@ -334,7 +334,7 @@ const TaskCard = ({
         setIsHovering(false);
         setIsShowAction(false);
       }
-    }, 100);
+    }, 1100);
   };
 
   const handlePopupLeave = () => {
@@ -343,11 +343,13 @@ const TaskCard = ({
         setIsHovering(false);
         setIsShowAction(false);
       }
-    }, 100);
+    }, 1100);
   };
   useEffect(() => {
     if (isModalShow) {
-      setIsHovering(false);
+      setTimeout(() => {
+        setIsHovering(false);
+      }, 1000);
     }
   }, [isModalShow]);
 

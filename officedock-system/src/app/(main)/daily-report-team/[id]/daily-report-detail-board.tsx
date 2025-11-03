@@ -96,6 +96,7 @@ import {
   convertToTimeString,
   formatCurrentDay,
   formatDateServer,
+  formatShowDateJapanese,
   formatTimeInput,
   getDateInfoFull,
   getTimeDifference,
@@ -1999,10 +2000,10 @@ const DailyReportDetailBoard = () => {
         } // end while
       }
     }
-
     // save pdf
-    pdf.save('集計.pdf');
-
+    pdf.save(
+      `${formatShowDateJapanese(dataDatePicker)}_${dataDetailUser && dataDetailUser?.fullName}_集計.pdf`,
+    );
     // cleanup
     divRef.current.style.visibility = 'hidden';
     divRef.current.style.position = 'absolute';

@@ -32,6 +32,8 @@ type Props = {
   handleClickTooltip:
     | ((id: number | null, organizationId?: string) => void)
     | undefined;
+  onMouseLeave: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
+  onMouseEnter: () => void;
 };
 
 const ModalCustomTooltip = ({
@@ -47,6 +49,8 @@ const ModalCustomTooltip = ({
   dataOrganization,
   isAllTeamOption,
   handleClickTooltip,
+  onMouseLeave,
+  onMouseEnter,
 }: Props) => {
   const label = labels[tooltipData.value];
   const color = colors[tooltipData.value];
@@ -61,7 +65,10 @@ const ModalCustomTooltip = ({
       : undefined;
 
   return (
-    <div className="py-5">
+    <div
+      onMouseLeave={(e) => onMouseLeave(e)}
+      onMouseEnter={onMouseEnter}
+      className="py-5">
       {id == -1 ? (
         <div>
           <p className="text-xs font-medium text-[#77858F] mb-5 px-5">その他</p>

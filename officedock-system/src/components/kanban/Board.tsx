@@ -26,7 +26,6 @@ interface BoardKanbanProps {
     numPages: number;
     hasMores: boolean;
   }[];
-  orderTaskSave: Task[];
   creationDataCommonData: CreationDataCommon | undefined;
   setColumnsKanbanData: Dispatch<SetStateAction<Columns | undefined>>;
   setNumberPagesData: Dispatch<
@@ -54,7 +53,6 @@ const BoardKanban = ({
   columnsKanbanData,
   showFrequentlyTasks,
   numberPagesData,
-  orderTaskSave,
   creationDataCommonData,
   setColumnsKanbanData,
   setNumberPagesData,
@@ -134,9 +132,6 @@ const BoardKanban = ({
                 const hasNext = numberPagesData.find(
                   (page) => page.id === `${column.id}`,
                 )?.hasMores;
-                const matchingTaskIds = orderTaskSave
-                  .filter((task) => task.status?.id === column.id)
-                  .map((task) => task.id);
                 return (
                   <Draggable
                     draggableId={`${column.id}`}
@@ -161,7 +156,6 @@ const BoardKanban = ({
                           hasNext={hasNext}
                           tagSelected={tagSelected}
                           orderingRequest={orderingRequest}
-                          matchingTaskIds={matchingTaskIds}
                           searchValue={searchValue}
                           columnsKanbanData={columnsKanbanData}
                           creationDataCommonData={creationDataCommonData}

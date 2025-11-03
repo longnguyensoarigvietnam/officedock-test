@@ -462,7 +462,7 @@ export enum ScreenName {
   POINT_MANAGEMENT = 'pointManagement',
   PAYMENT_MANAGEMENT = 'paymentManagement',
   SURVEY_MANAGEMENT = 'surveyManagement',
-  ALL = 'all'
+  ALL = 'all',
 }
 
 export enum PermissionType {
@@ -550,6 +550,7 @@ export enum StatisticChartType {
   STANDARD = 'standard',
 }
 export enum TimeOptionsType {
+  YESTERDAY = '昨日',
   WEEK = '1週間',
   MONTH = '1ヶ月',
   HALF_YEAR = '6ヶ月',
@@ -714,9 +715,9 @@ export enum TransactionType {
 }
 export enum ExportType {
   CSV = 'csv',
-  XLSX = 'xlsx'
+  XLSX = 'xlsx',
 }
 export enum PeriodClassification {
   BASE = 'BASE',
-  COMPARISON = 'COMPARISON'
+  COMPARISON = 'COMPARISON',
 }

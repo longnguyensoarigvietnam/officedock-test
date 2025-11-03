@@ -5,6 +5,7 @@ import {
   formatTimeToJapanese,
   getJapaneseDayName,
 } from '@utils/date';
+import { useRef, useState } from 'react';
 
 interface ProgressBarProps {
   label: string;
@@ -58,6 +59,10 @@ const ProgressBarStatistic = ({
   handleClickChart,
 }: ProgressBarProps) => {
   const percentage = Math.round(Math.min((value / maxValue) * 100, 100));
+
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isHovering, setHovering] = useState<boolean>(false);
   return (
     <>
       <div className={`font-medium text-sm text-black ${className}`}>
@@ -77,6 +82,18 @@ const ProgressBarStatistic = ({
         <div
           className={`group w-full relative h-4 bg-gray-300 ${classProgressClass}`}>
           <div
+            ref={containerRef}
+            onMouseLeave={() => {
+              // If it really gets out of the whole container
+              hoverTimeoutRef.current = setTimeout(() => {
+                setHovering(false);
+              }, 1000);
+            }}
+            onMouseEnter={() => {
+              if (hoverTimeoutRef.current)
+                clearTimeout(hoverTimeoutRef.current);
+              setHovering(true);
+            }}
             className="h-full transition-all duration-500 rounded-[4px]"
             style={{
               width: `${percentage}%`,
@@ -90,7 +107,27 @@ const ProgressBarStatistic = ({
                 });
             }}></div>
           {percentage > 0 && (
-            <div className="absolute -top-[25%] left-[40%] w-[250px] rounded-[14px] py-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
+            <div
+              onMouseEnter={() => {
+                if (hoverTimeoutRef.current)
+                  clearTimeout(hoverTimeoutRef.current);
+              }}
+              onMouseLeave={(e) => {
+                const nextEl = e.relatedTarget as HTMLElement | null;
+                const container = containerRef.current;
+
+                // 🔍 If the next element is NOT in the container → it means it's really out
+                if (!container || (nextEl && container.contains(nextEl))) {
+                  // Still in the chart area → DO NOT turn off the tooltip
+                  return;
+                }
+
+                // Exit the chart area → hide the tooltip
+                hoverTimeoutRef.current = setTimeout(() => {
+                  setHovering(false);
+                }, 1000);
+              }}
+              className={`absolute -top-[25%] left-[40%] w-[250px] rounded-[14px] py-5 bg-white ${isHovering ? 'block' : 'hidden'}  pointer-events-auto transition-opacity duration-300 shadow-lg z-10`}>
               {id != -1 ? (
                 <div className="px-5">
                   {startDate && endDate && (

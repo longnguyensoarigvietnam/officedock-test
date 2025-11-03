@@ -40,7 +40,6 @@ interface ListViewByStatusProps {
   totalCount: number;
   userId: string;
   searchValue: string;
-  matchingTaskIds: number[];
   handlePinItem: (id: string) => void;
   handleActionEditTask: (id: number) => void;
   handleConfirmCopyTask: (id: number) => void;
@@ -70,7 +69,6 @@ const ListViewByStatus = ({
   totalCount,
   userId,
   searchValue,
-  matchingTaskIds,
   handlePinItem,
   handleActionEditTask,
   handleConfirmCopyTask,
@@ -103,7 +101,6 @@ const ListViewByStatus = ({
   const handleGetDataTaskMore = async (pageNumber: number) => {
     setInitialLoad(true);
 
-    const idTasks = matchingTaskIds.join(',');
     let apiUrl = `${apiRouters.TASK_BOARD_LIST}?status_id=${listId}&page=${pageNumber}&page_size=${PAGINATION_PAGE_SIZE_KANBAN}`;
 
     if (pinAtLast) {
@@ -118,7 +115,7 @@ const ListViewByStatus = ({
     }
 
     if (searchValue) {
-      apiUrl += `&search=${searchValue}${idTasks ? `&ids=${idTasks}` : ''}`;
+      apiUrl += `&search=${searchValue}`;
     }
     if (orderingOptions?.organization_ids?.length) {
       apiUrl += `&organization_ids=${orderingOptions.organization_ids.map((item) => item.value).join(',')}`;
@@ -315,7 +312,9 @@ const ListViewByStatus = ({
         (listId == StatusValueTask.MY_ROUTINE ? (
           <div className="flex text-[#77858F] text-[12px] mb-4 px-1 font-medium">
             <p className="w-[59%] border-r-[1px]">タスク名</p>
-            <p className="w-[20%] border-r-[1px] text-left pl-[14px]">予定日時</p>
+            <p className="w-[20%] border-r-[1px] text-left pl-[14px]">
+              予定日時
+            </p>
           </div>
         ) : (
           <div className="flex text-[#77858F] text-[12px] mb-4 px-1 font-medium">

@@ -21,7 +21,6 @@ import {
   StatusValueTask,
 } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
-import { ERROR_TIME_START_MESSAGE } from '@constants/message';
 import { DEFAULT_TIME_TEXT, OPTION_DEFAULT_TASK } from '@constants';
 
 import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
@@ -113,7 +112,7 @@ const TaskPageDataHeader = () => {
   const [isShowWarningEmptyTask, setIsShowWarningEmptyTask] = useState(false);
 
   const [optionsTaskMe, setOptionsTaskMe] = useState<OptionDropdownType[]>([]);
-  const [dataOverTimeWarning, setDataOverTimeWarning] = useState<{
+  const [_dataOverTimeWarning, setDataOverTimeWarning] = useState<{
     id: string;
     type: string;
     isOverEstimate: boolean;
@@ -476,7 +475,7 @@ const TaskPageDataHeader = () => {
     });
   };
   // Function call API  cancel alert
-  const { mutate: cancelAlert } = useMutation(
+  const { mutate: _cancelAlert } = useMutation(
     'postCancelAlert',
     handleCancelAlert,
     {
@@ -880,7 +879,8 @@ const TaskPageDataHeader = () => {
               ) : (
                 <span className="text-[#77858F]">{DEFAULT_TIME_TEXT}</span>
               )}
-              {statusTaskSelected?.isStart &&
+              {/* TODO: Close show nottify */}
+              {/* {statusTaskSelected?.isStart &&
                 taskSelected?.value &&
                 dataOverTimeWarning &&
                 dataOverTimeWarning?.isOverEstimate &&
@@ -906,7 +906,7 @@ const TaskPageDataHeader = () => {
                     />
                     <p className="break-keep">{ERROR_TIME_START_MESSAGE}</p>
                   </div>
-                )}
+                )} */}
               <Button
                 variant="secondary"
                 className="whitespace-nowrap mt-1 min-w-[22px]  bg-transparent border-none hover:opacity-75  !px-0 !py-0 !rounded-lg"

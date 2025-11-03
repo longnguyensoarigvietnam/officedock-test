@@ -64,6 +64,8 @@ interface ContextValue {
   >;
   dataOptionsStatus: OptionDropdownType[];
   setDataOptionsStatus: Dispatch<SetStateAction<OptionDropdownType[]>>;
+  valueSearch: string;
+  setValueSearch: Dispatch<SetStateAction<string>>;
 }
 
 const defaultValue: ContextValue = {
@@ -96,6 +98,8 @@ const defaultValue: ContextValue = {
   setOldUserAction: () => {},
   dataOptionsStatus: [],
   setDataOptionsStatus: () => {},
+  valueSearch: '',
+  setValueSearch: () => {},
 };
 
 export const TaskTeamStateContext = createContext<ContextValue>(defaultValue);
@@ -111,6 +115,9 @@ export const TaskTeamStateProvider = ({
   // Filter
   const [orderingRequest, setOrderingRequest] = useState<string>('');
   const [isConcurrently, setIsConcurrently] = useState(false);
+
+  // Search
+  const [valueSearch, setValueSearch] = useState('');
 
   const [orderingOptions, setOrderingOptions] = useState<{
     category_ids: OptionDropdownType[];
@@ -185,6 +192,8 @@ export const TaskTeamStateProvider = ({
     setOldUserAction,
     dataOptionsStatus,
     setDataOptionsStatus,
+    valueSearch,
+    setValueSearch,
   };
 
   return (

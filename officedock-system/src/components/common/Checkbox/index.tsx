@@ -13,6 +13,7 @@ export type CheckboxProps = {
   checkboxOnRight?: boolean;
   disable?: boolean;
   boxLabelClass?: string;
+  isPreventClick?: boolean;
   onChange?: (selectedValues: boolean) => void;
 };
 
@@ -27,6 +28,7 @@ const Checkbox = ({
   descriptionInline = false,
   checkboxOnRight = false,
   disable = false,
+  isPreventClick = false,
   boxLabelClass,
   onChange,
   ...props
@@ -56,6 +58,11 @@ const Checkbox = ({
           checked={checked}
           disabled={disable}
           onChange={handleChange}
+          onClick={(e) => {
+            if (isPreventClick) {
+              e.stopPropagation();
+            }
+          }}
           {...props}
         />
       </div>

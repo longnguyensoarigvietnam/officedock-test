@@ -161,7 +161,6 @@ const PieChartCustom = ({
         external: (context: any) => {
           const { tooltip } = context;
           if (tooltip.opacity === 0 && !isHovered) {
-            setTooltipData(null);
             return;
           }
           const dataIndex = tooltip.dataPoints[0]?.dataIndex;
@@ -227,23 +226,33 @@ const PieChartCustom = ({
     }
   };
 
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   return (
     <div
-      onMouseLeave={() => {
-        setIsHovered(false);
-        setTooltipData(null);
-      }}
       onClick={(e: any) => {
         handleClick(e);
       }}
-      className={`w-96 relative h-96 my-0 mx-auto ${className}`}>
-      <Pie ref={chartRef} data={chartData} options={options} />
-      {tooltipData && (
-        <div
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => {
+      className={`w-96 relative rounded-full h-96 my-0 mx-auto ${className}`}>
+      <Pie
+        ref={chartRef}
+        onMouseLeave={() => {
+          hoverTimeoutRef.current = setTimeout(() => {
             setIsHovered(false);
             setTooltipData(null);
+          }, 1000);
+        }}
+        onMouseEnter={() => {
+          if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+        }}
+        data={chartData}
+        options={options}
+      />
+      {tooltipData && (
+        <div
+          onMouseEnter={() => {
+            if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+            setIsHovered(true);
           }}
           style={{
             position: 'absolute',
@@ -255,6 +264,51 @@ const PieChartCustom = ({
             zIndex: 999,
           }}>
           <ModalCustomTooltip
+            onMouseEnter={() => {
+              if (hoverTimeoutRef.current)
+                clearTimeout(hoverTimeoutRef.current);
+            }}
+            onMouseLeave={(e) => {
+              const nextEl = e.relatedTarget as HTMLElement | null;
+              const chart = chartRef.current;
+              if (!chart) return;
+
+              const canvas = chart.canvas as HTMLCanvasElement;
+              const rect = canvas.getBoundingClientRect();
+              const x = e.clientX - rect.left;
+              const y = e.clientY - rect.top;
+
+              // Get the actual center and radius of the chart
+              const centerX = canvas.width / 2;
+              const centerY = canvas.height / 2;
+              const outerRadius =
+                chart._metasets?.[0]?.data?.[0]?.outerRadius ||
+                Math.min(centerX, centerY);
+
+              // Calculate the distance from the center to the cursor
+              const distance = Math.sqrt(
+                Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2),
+              );
+
+              // If the mouse is still in the circle → DO NOT hide
+              if (distance <= outerRadius) {
+                return;
+              }
+
+              // If the mouse is still in the tooltip or chart → DO NOT hide
+              if (
+                nextEl &&
+                (canvas.contains(nextEl) || nextEl.closest('.tooltip-wrapper'))
+              ) {
+                return;
+              }
+
+              // Exit the entire area → Hide tooltip
+              hoverTimeoutRef.current = setTimeout(() => {
+                setIsHovered(false);
+                setTooltipData(null);
+              }, 1000);
+            }}
             isTeam={isTeam && !isAllTeamOption}
             tooltipData={tooltipData}
             colors={colors || []}

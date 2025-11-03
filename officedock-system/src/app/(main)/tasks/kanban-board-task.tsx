@@ -114,6 +114,7 @@ import {
 import { compareItems } from '@utils';
 import api from '@base/api';
 import { useUpdateTaskArchiveCache } from '@hooks/CacheQuery/useUpdateTaskArchiveCache';
+import useDebounceText from '@hooks/useDebounceText';
 
 const createStatusTaskObjectFromArray = (
   array: StatusTask[],
@@ -270,7 +271,6 @@ const KanbanBoardTask = () => {
   const [dataTaskEdit, setDataTaskEdit] = useState<Task | null>(null);
   const [showFrequentlyTasks, setShowFrequentlyTasks] = useState(false);
   const [frequentlyTasks, setFrequentlyTasks] = useState<Task[]>([]);
-  const [orderTaskSave, setOrderTaskSave] = useState<Task[]>([]);
   const [isOpenModalFilter, setIsOpenModalFilter] = useState(false);
 
   const [pendingTaskData, setPendingTaskData] = useState<TaskFormData | null>();
@@ -313,10 +313,12 @@ const KanbanBoardTask = () => {
   const { removeTaskFromCache, updateTaskInCache } =
     useUpdateTaskArchiveCache();
 
+  const debouncedTaskSearch = useDebounceText(searchValue, 800);
+
   // Call API get task board list
   const { taskBoardList, numberPages, isFetchingTaskBoards } = useTaskBoardList(
     {
-      search: searchValue,
+      search: debouncedTaskSearch,
       tagId: `${tagSelected}`,
       userId: `${memberSelected}` || `${userIdTask ? userIdTask : ''}`,
     },
@@ -501,7 +503,6 @@ const KanbanBoardTask = () => {
       setTagSelected('');
       setSearchValue('');
       setOrderingRequest('');
-      setOrderTaskSave([]);
     };
   }, [setMemberSelected, setOrderingRequest, setTagSelected, setSearchValue]);
 
@@ -3392,6 +3393,9 @@ const KanbanBoardTask = () => {
                       inputClassName="h-[34px] bg-[#EBF1F7] border-none !rounded-[20px] text-sm placeholder-[#77858F]"
                       iconClassName="w-[14px] h-[14px]"
                       placeholder="タスク、キーワードを検索"
+                      onChange={(e) => {
+                        setSearchValue(e.target.value);
+                      }}
                     />
                   </div>
                   <div
@@ -3563,7 +3567,6 @@ const KanbanBoardTask = () => {
                         columnsKanbanData={columnsKanbanData}
                         showFrequentlyTasks={showFrequentlyTasks}
                         numberPagesData={numberPagesData}
-                        orderTaskSave={orderTaskSave}
                         creationDataCommonData={creationDataCommonData}
                         setColumnsKanbanData={setColumnsKanbanData}
                         setNumberPagesData={setNumberPagesData}
@@ -3607,7 +3610,6 @@ const KanbanBoardTask = () => {
                     columnsKanbanData={columnsKanbanData}
                     setColumnsKanbanData={setColumnsKanbanData}
                     setNumberPagesData={setNumberPagesData}
-                    orderTaskSave={orderTaskSave}
                     numberPagesData={numberPagesData}
                     handleActionEditTask={handleActionEditTask}
                     handleConfirmCopyTask={handleActionCopyTask}

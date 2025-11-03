@@ -1201,6 +1201,8 @@ export const getDaysFromTimeOption = (
   isEndDate?: boolean,
 ): number => {
   switch (option) {
+    case TimeOptionsType.YESTERDAY:
+      return 1;
     case TimeOptionsType.WEEK:
       return 7;
     case TimeOptionsType.MONTH:
@@ -1278,6 +1280,9 @@ export const handleSetStartDateBefore = (
   const newStartDateBefore = new Date(startDate);
 
   switch (option) {
+    case TimeOptionsType.YESTERDAY:
+      newStartDateBefore.setDate(newStartDateBefore.getDate() - 1);
+      break;
     case TimeOptionsType.WEEK:
       newStartDateBefore.setDate(newStartDateBefore.getDate() - 7);
       break;
