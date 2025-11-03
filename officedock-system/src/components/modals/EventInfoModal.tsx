@@ -1,5 +1,6 @@
 import { memo, useEffect, useRef, useState } from 'react';
 import { isSameDay } from 'date-fns';
+
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import ImageRound from '@components/common/ImageRound';
@@ -10,7 +11,7 @@ import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 import { NO_SETTING } from '@constants';
 import { PermissionsSystem, TaskRepetitiveValue } from '@constants/enums';
 
-import { EventEditFormData, EventParticipant } from '@interfaces/calendar';
+import { EventCalendarDetail, EventParticipant } from '@interfaces/calendar';
 import { LocationEventType } from '@interfaces/location';
 import { Profile } from '@interfaces/user';
 
@@ -24,7 +25,7 @@ import { calculatePopupPosition, hasPermissionInArray } from '@utils';
 export type EventInfoModalProps = {
   top?: number;
   left?: number;
-  dataEvent?: EventEditFormData;
+  dataEvent?: EventCalendarDetail;
   dashboardMemberList: Profile[];
   dataOptionsOrganizations: {
     id: string | number;
@@ -36,9 +37,9 @@ export type EventInfoModalProps = {
   selectedScheduleUserIds: string;
   checkShowUserAvatar: (participants?: EventParticipant[]) => boolean;
   onClose: () => void;
-  onEdit?: (values: EventEditFormData) => void;
-  onCopy?: (values: EventEditFormData) => void;
-  onDelete?: (values: EventEditFormData) => void;
+  onEdit?: (values: EventCalendarDetail) => void;
+  onCopy?: (values: EventCalendarDetail) => void;
+  onDelete?: (values: EventCalendarDetail) => void;
 };
 
 const EventInfoModal = memo(
@@ -104,13 +105,13 @@ const EventInfoModal = memo(
         .find((selectedUserId) => Number(selectedUserId) == participantId);
     };
 
-    const displayRepetitiveEventTime = (dataEvent: EventEditFormData) => {
+    const displayRepetitiveEventTime = (dataEvent: EventCalendarDetail) => {
       let title = '';
-      const repeatStartTime = dataEvent.startDate
-        ? formatHoursAndMinutesForDateTime(new Date(dataEvent.startDate))
+      const repeatStartTime = dataEvent.start
+        ? formatHoursAndMinutesForDateTime(new Date(dataEvent.start))
         : '';
-      const repeatEndTime = dataEvent.endDate
-        ? formatHoursAndMinutesForDateTime(new Date(dataEvent.endDate))
+      const repeatEndTime = dataEvent.end
+        ? formatHoursAndMinutesForDateTime(new Date(dataEvent.end))
         : '';
       switch (dataEvent?.repeatType as string) {
         case TaskRepetitiveValue.DAILY:
@@ -294,7 +295,7 @@ const EventInfoModal = memo(
     };
 
     // Show avatars depending on event
-    const showEventAvatars = (event: EventEditFormData) => {
+    const showEventAvatars = (event: EventCalendarDetail) => {
       const organizationIds = event.selectOrganizations || [];
       const userIds = event.participants?.map((user) => Number(user.id)) || [];
 
@@ -347,7 +348,7 @@ const EventInfoModal = memo(
                     <div
                       className="hover:bg-[#EBF1F4] p-1.5 hover:rounded-full hover:cursor-pointer opacity-25 hover:opacity-100"
                       onClick={() => {
-                        onEdit && onEdit(dataEvent as EventEditFormData);
+                        onEdit && onEdit(dataEvent!);
                       }}>
                       <ImageRound
                         name="Edit"
@@ -366,7 +367,7 @@ const EventInfoModal = memo(
                     <div
                       className="hover:bg-[#EBF1F4] p-1.5 hover:rounded-full hover:cursor-pointer opacity-25 hover:opacity-100"
                       onClick={() => {
-                        onCopy && onCopy(dataEvent as EventEditFormData);
+                        onCopy && onCopy(dataEvent!);
                       }}>
                       <ImageRound
                         name="Copy"
@@ -385,7 +386,7 @@ const EventInfoModal = memo(
                     <div
                       className="hover:bg-[#EBF1F4] px-1.5 py-[5px] mr-1 hover:rounded-full hover:cursor-pointer opacity-25 hover:opacity-100"
                       onClick={() => {
-                        onDelete && onDelete(dataEvent as EventEditFormData);
+                        onDelete && onDelete(dataEvent!);
                       }}>
                       <ImageRound
                         name="Delete"
@@ -415,29 +416,29 @@ const EventInfoModal = memo(
             <>
               <div className="flex">
                 <p className="leading-none mb-[14px]">
-                  {dataEvent?.startDate &&
-                    dataEvent?.endDate &&
+                  {dataEvent?.start &&
+                    dataEvent?.end &&
                     (isSameDay(
-                      new Date(dataEvent?.startDate),
-                      new Date(dataEvent?.endDate),
+                      new Date(dataEvent?.start),
+                      new Date(dataEvent?.end),
                     )
-                      ? formatShowDeadline(dataEvent?.startDate)
-                      : `${formatShowDeadline(dataEvent?.startDate)} ~ ${formatShowDeadline(dataEvent?.endDate)}`)}{' '}
+                      ? formatShowDeadline(dataEvent?.start)
+                      : `${formatShowDeadline(dataEvent?.start)} ~ ${formatShowDeadline(dataEvent?.end)}`)}{' '}
                 </p>
               </div>
-              {dataEvent && dataEvent.isAllDay ? (
+              {dataEvent && dataEvent.allDay ? (
                 <p className="text-[14px]">終日</p>
               ) : (
                 dataEvent &&
-                dataEvent.startDate &&
-                dataEvent.endDate && (
+                dataEvent.start &&
+                dataEvent.end && (
                   <div className="flex gap-1 items-center text-[14px]">
                     <p className="text-[12px] font-medium text-[#77858F]">
                       開始
                     </p>
                     <p>
                       {formatHoursAndMinutesForDateTime(
-                        new Date(dataEvent.startDate),
+                        new Date(dataEvent.start),
                       )}
                     </p>
                     <p className="text-[12px] mx-[2px]">~</p>
@@ -446,7 +447,7 @@ const EventInfoModal = memo(
                     </p>
                     <p>
                       {formatHoursAndMinutesForDateTime(
-                        new Date(dataEvent.endDate),
+                        new Date(dataEvent.end),
                       )}
                     </p>
                   </div>
