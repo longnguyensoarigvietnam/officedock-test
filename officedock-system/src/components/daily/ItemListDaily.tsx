@@ -1,7 +1,6 @@
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 
-import Button from '@components/common/Button';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import Checkbox from '@components/common/Checkbox';
 
@@ -35,6 +34,7 @@ const ItemListDaily = ({ userData, organization, handleConfirm }: Props) => {
   }, [userData]);
 
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const handleSaveData = (e: boolean) => {
     handleConfirm({
@@ -51,13 +51,23 @@ const ItemListDaily = ({ userData, organization, handleConfirm }: Props) => {
     debouncedSaveChecked(e);
   };
 
+  const handleRedirect = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('organization', String(organization.id));
+
+    router.push(
+      `${pageRouters.DAILY_REPORT_TEAM_DETAIL.href(String(userData.id))}?${params.toString()}`,
+    );
+  };
+
   return (
     <div
       key={userData.id}
       style={{
         boxShadow: '0px 2px 8px 0px #0000001A',
       }}
-      className="bg-white p-4 rounded-[14px] font-medium flex gap-3 justify-between">
+      onClick={handleRedirect}
+      className="bg-white cursor-pointer p-4 rounded-[14px] font-medium flex gap-3 justify-between">
       <div className="flex gap-5 flex-grow items-center">
         <div className="flex flex-col gap-1 items-center min-w-[50px] text-xs  text-primary">
           {isConfirm ? (
@@ -67,6 +77,7 @@ const ItemListDaily = ({ userData, organization, handleConfirm }: Props) => {
           )}
           <Checkbox
             isChecked={isConfirm}
+            isPreventClick
             onChange={handleChangeCheckBox}
             className="flex justify-center"
             classSize="w-4 h-4"
@@ -91,17 +102,6 @@ const ItemListDaily = ({ userData, organization, handleConfirm }: Props) => {
           {userData.totalDuration &&
             convertToJapaneseTime(userData.totalDuration)}
         </p>
-        <Button
-          onClick={() => {
-            router.push(
-              `${pageRouters.DAILY_REPORT_TEAM_DETAIL.href(
-                String(userData.id),
-              )}?organization=${organization.id}&tabId=1`,
-            );
-          }}
-          className="!px-0 !py-0 h-9 w-[98px] items-center justify-center ml-[6px]">
-          日報を見る
-        </Button>
       </div>
     </div>
   );

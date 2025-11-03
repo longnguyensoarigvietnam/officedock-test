@@ -49,7 +49,6 @@ interface ColumnProps {
   tagSelected: string | number;
   hasNext: boolean | undefined;
   totalCount: number;
-  matchingTaskIds: number[];
   orderingRequest: string;
   columnsKanbanData: Columns;
   addTask: (columnId: string) => void;
@@ -83,7 +82,6 @@ const Column = ({
   searchValue,
   userId,
   totalCount,
-  matchingTaskIds,
   columnsKanbanData,
   creationDataCommonData,
   showFrequentlyTasks,
@@ -150,7 +148,6 @@ const Column = ({
   const handleGetDataTaskMore = async (pageNumber: number) => {
     setInitialLoad(true);
 
-    const idTasks = matchingTaskIds.join(',');
     let apiUrl = `${apiRouters.TASK_BOARD_LIST}?status_id=${columnId}&page=${pageNumber}&page_size=${PAGINATION_PAGE_SIZE_KANBAN}`;
 
     if (pinAtLast) {
@@ -165,7 +162,7 @@ const Column = ({
     }
 
     if (searchValue) {
-      apiUrl += `&search=${searchValue}${idTasks ? `&ids=${idTasks}` : ''}`;
+      apiUrl += `&search=${searchValue}`;
     }
     if (orderingOptions?.organization_ids?.length) {
       apiUrl += `&organization_ids=${orderingOptions.organization_ids.map((item) => item.value).join(',')}`;

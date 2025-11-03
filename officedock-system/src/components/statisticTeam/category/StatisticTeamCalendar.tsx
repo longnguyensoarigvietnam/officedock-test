@@ -169,6 +169,19 @@ function StatisticTeamCalendar() {
     const newStartDate: Date = new Date(dataResource);
 
     switch (option) {
+      case TimeOptionsType.YESTERDAY: {
+        const today = new Date();
+
+        newStartDate.setTime(today.getTime());
+
+        setIsDisableCalendar(true);
+        setDataEndDate(new Date());
+
+        if (isCheckCompare) {
+          setIsDisableCalendarCompare(true);
+        }
+        break;
+      }
       case TimeOptionsType.WEEK: {
         const days = getDaysFromTimeOption(option, dataResource, true);
         newStartDate.setDate(newStartDate.getDate() - days + 1);
@@ -232,15 +245,21 @@ function StatisticTeamCalendar() {
         start: false,
         end: false,
       });
-      setDataStartDateCompare(
-        handleSetStartDateBefore(option, newStartDate) as Date,
-      );
-      if (!dataEndDateCompare) {
-        setDataEndDateCompare(new Date());
+      const dataStartCompareLast = handleSetStartDateBefore(
+        option,
+        newStartDate,
+      ) as Date;
+      setDataStartDateCompare(dataStartCompareLast);
+      if (option == TimeOptionsType.YESTERDAY) {
+        setDataEndDateCompare(dataStartCompareLast);
       } else {
-        setDataEndDateCompare(
-          handleSetStartDateBefore(option, dataEndDate || new Date()) as Date,
-        );
+        if (!dataEndDateCompare) {
+          setDataEndDateCompare(new Date());
+        } else {
+          setDataEndDateCompare(
+            handleSetStartDateBefore(option, dataEndDate || new Date()) as Date,
+          );
+        }
       }
     }
   };
@@ -754,7 +773,7 @@ function StatisticTeamCalendar() {
                   className="gap-3 flex items-center mt-[6px]">
                   <span>開始日</span>
                   <div
-                    className={`w-[135px] h-[34px] flex items-center justify-center rounded-md border border-[#77858F] ${isErrorData.start && '!border-red-500'}`}>
+                    className={`w-[135px] h-[34px] flex items-center justify-center rounded-md border ${dataStartDate ? 'border-primary' : 'border-[#77858F]'} ${isErrorData.start && '!border-red-500'}`}>
                     {formatShowDateJapanese(dataStartDate)}
                   </div>
                   <div className="h-[34px] flex items-center text-[#77858F]">
@@ -771,7 +790,7 @@ function StatisticTeamCalendar() {
                   className="gap-3 flex items-center mt-[6px]">
                   <span>終了日</span>
                   <div
-                    className={`w-[135px] h-[34px] flex items-center justify-center rounded-md border border-[#77858F] ${isErrorData.end && '!border-red-500'}`}>
+                    className={`w-[135px] h-[34px] flex items-center justify-center rounded-md border ${dataEndDate ? 'border-primary' : 'border-[#77858F]'} ${isErrorData.end && '!border-red-500'}`}>
                     {dataEndDate && formatShowDateJapanese(dataEndDate)}
                   </div>
                 </div>
@@ -861,7 +880,7 @@ function StatisticTeamCalendar() {
                     className="gap-3 flex items-center mt-[6px]">
                     <span>開始日</span>
                     <div
-                      className={`w-[135px] h-[34px] flex items-center justify-center rounded-md border border-[#77858F] ${isErrorDataCompare.start && '!border-red-500'}`}>
+                      className={`w-[135px] h-[34px] flex items-center justify-center rounded-md border ${dataStartDateCompare ? 'border-primary' : 'border-[#77858F]'} ${isErrorDataCompare.start && '!border-red-500'}`}>
                       {dataStartDateCompare &&
                         formatShowDateJapanese(dataStartDateCompare)}
                     </div>
@@ -877,7 +896,7 @@ function StatisticTeamCalendar() {
                     className="gap-3 flex items-center mt-[6px]">
                     <span>終了日</span>
                     <div
-                      className={`w-[135px] h-[34px] flex items-center justify-center rounded-md border border-[#77858F] ${isErrorDataCompare.end && '!border-red-500'}`}>
+                      className={`w-[135px] h-[34px] flex items-center justify-center rounded-md border ${dataEndDateCompare ? 'border-primary' : 'border-[#77858F]'}] ${isErrorDataCompare.end && '!border-red-500'}`}>
                       {dataEndDateCompare &&
                         formatShowDateJapanese(dataEndDateCompare)}
                     </div>

@@ -55,12 +55,10 @@ interface CardListViewProps {
     >
   >;
   handleViewArchive: () => void;
-  orderTaskSave: Task[];
 }
 const CardListView = ({
   isFetchingTaskBoards,
   columnsKanbanData,
-  orderTaskSave,
   numberPagesData,
   creationDataCommonData,
   setColumnsKanbanData,
@@ -116,9 +114,6 @@ const CardListView = ({
             const hasNext = numberPagesData.find(
               (page) => page.id === `${listByStatus.id}`,
             )?.hasMores;
-            const matchingTaskIds = orderTaskSave
-              .filter((task) => task.status?.id == listByStatus.id)
-              .map((task) => task.id);
             const count = numberPagesData.find(
               (page) => page.id === `${listByStatus.id}`,
             )?.count;
@@ -192,7 +187,6 @@ const CardListView = ({
                     setColumnsKanbanData={setColumnsKanbanData}
                     columnsKanbanData={columnsKanbanData}
                     setNumberPagesData={setNumberPagesData}
-                    matchingTaskIds={matchingTaskIds}
                     searchValue={searchValue}
                     userId={
                       `${memberSelected}` || `${userIdTask ? userIdTask : ''}`

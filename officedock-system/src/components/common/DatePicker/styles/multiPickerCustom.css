@@ -28,7 +28,7 @@
 
 .multi-date .saturday,
 .react-datepicker__day--keyboard-selected.saturday {
-  color: #3CABF3;
+  color: #3cabf3;
 }
 
 .multi-date .small .react-datepicker {
@@ -338,6 +338,12 @@
   z-index: 1;
   border-radius: 0 !important;
   color: black !important;
+}
+.multi-date .react-datepicker__day--selected {
+  color: white !important;
+}
+.multi-date .react-datepicker__day--today {
+  color: white !important;
 }
 /* Compare */
 .multi-date-compare .react-datepicker__day--today {

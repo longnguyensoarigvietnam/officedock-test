@@ -44,6 +44,7 @@ import {
   EventWorkCategory,
   FilterTypeKanban,
   ItemStartType,
+  ScreenName,
   ServerStatusCode,
   StatusTask,
   StatusValueTask,
@@ -98,6 +99,7 @@ import { TaskContext } from '@providers/TaskProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import api from '@base/api';
 import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
+import useDebounceText from '@hooks/useDebounceText';
 
 const KanbanBoardTaskTeam = () => {
   // Context
@@ -117,6 +119,8 @@ const KanbanBoardTaskTeam = () => {
     isConcurrently,
     setIsConcurrently,
     setDataOptionsStatus,
+    valueSearch,
+    setValueSearch,
   } = useContext(TaskTeamStateContext);
 
   const { setIsLoading } = useContext(LoadingContext);
@@ -155,7 +159,6 @@ const KanbanBoardTaskTeam = () => {
   const [isDragging, setDragging] = useState(false);
   const [openConfirmDeleteTaskModal, setOpenConfirmDeleteTaskModal] =
     useState(false);
-
   const [isReadyToFetch, setIsReadyToFetch] = useState(true);
   const [dataOrderRing, setDataOrderRing] = useState<string>('');
   const [openWarningCloseModal, setOpenWarningCloseModal] =
@@ -227,9 +230,11 @@ const KanbanBoardTaskTeam = () => {
     }
   }, [organizationId]);
 
+  const debouncedTaskSearch = useDebounceText(valueSearch, 800);
+
   // get list data team
   const { refetchTaskBoardListTeam } = useTaskBoardTeam({
-    current_screen: 'teamdock',
+    current_screen: ScreenName.TEAM_DOCK,
     organization_id: selectedOrganizationSideBar
       ? (selectedOrganizationSideBar?.value as string)
       : organizationId || '',
@@ -237,6 +242,7 @@ const KanbanBoardTaskTeam = () => {
     filter: {
       userId: orderingOptions?.user_ids,
       is_cross_team_task: isConcurrently,
+      search: debouncedTaskSearch,
     },
     isReadyToFetch: isReadyToFetch,
     ordering: dataOrderRing,
@@ -270,6 +276,7 @@ const KanbanBoardTaskTeam = () => {
           ? (selectedOrganizationSideBar?.value as string)
           : organizationId || '',
       ),
+      search: valueSearch,
       page: String(pageNumber),
       page_size: '10',
       ...(dataOrderRing && { dataOrderRing }),
@@ -279,7 +286,7 @@ const KanbanBoardTaskTeam = () => {
       ...(isConcurrently && {
         is_cross_team_task: String(isConcurrently),
       }),
-      ...{ current_screen: 'teamdock' },
+      ...{ current_screen: ScreenName.TEAM_DOCK },
     });
 
     const apiUrl = `${apiRouters.TASK_TEAM_LIST}?${params.toString()}`;
@@ -363,6 +370,7 @@ const KanbanBoardTaskTeam = () => {
       (organizationId as string),
     filter: {
       userId: orderingOptions?.user_ids,
+      search: debouncedTaskSearch,
     },
     isReadyToFetch: isReadyToFetch,
     ordering: dataOrderRing,
@@ -2661,6 +2669,9 @@ const KanbanBoardTaskTeam = () => {
               inputClassName="h-[34px] bg-white border-none !rounded-[20px] text-sm placeholder-[#77858F]"
               iconClassName="w-[14px] h-[14px]"
               placeholder="タスク、キーワードを検索"
+              onChange={(e) => {
+                setValueSearch(e.target.value);
+              }}
             />
 
             <div className="ml-3">

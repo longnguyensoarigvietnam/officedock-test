@@ -48,6 +48,7 @@ const StatusColumn = ({
   const {
     dataTotalStatus,
     isConcurrently,
+    valueSearch,
     setListDataKanbanTeam,
     setDataTotalStatus,
   } = useContext(TaskTeamStateContext);
@@ -155,7 +156,9 @@ const StatusColumn = ({
     if (isConcurrently) {
       apiUrl += `&is_cross_team_task=${true}`;
     }
-
+    if (valueSearch) {
+      apiUrl += `&search=${valueSearch}`;
+    }
     return await api.get<KanbanDataResponse>(apiUrl);
   };
   // Handle call API get more team
