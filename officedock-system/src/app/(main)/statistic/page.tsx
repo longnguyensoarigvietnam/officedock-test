@@ -10,7 +10,7 @@ const StatisticPage = () => {
     <MainLayout
       title={pageRouters.STATISTIC_MANAGEMENT.name}
       permission={PermissionsSystem.STATISTIC_VIEW}
-      className="!py-0 pl-10 pr-0"
+      className="!py-0 !px-0"
       showFooter={false}>
       <StatisticStateProvider>
         <StatisticBoard />

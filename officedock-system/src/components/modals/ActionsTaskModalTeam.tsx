@@ -68,6 +68,8 @@ import {
   TaskRepetitiveType,
   TimeType,
 } from '@constants/enums';
+import { HTML_TAG_REGEX } from '@constants/regex';
+
 import { OptionDropdownType } from '@interfaces/common';
 import {
   Task,
@@ -91,6 +93,7 @@ import {
   hasPermissionInArray,
   showModalHeaderBackgroundColorByTime,
 } from '@utils';
+
 import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 export type ActionTaskModalProps = {
@@ -359,8 +362,6 @@ const ActionsTaskModalTeam = ({
           dataTask.deadline && dataTask.showDeadlineTime
             ? convertToTimeString(dataTask.deadline)
             : null);
-      value.description = dataTask.description || '';
-
       value.repeatInterval = dataTask.repeatInterval
         ? {
             label: `${dataTask.repeatInterval}`,
@@ -464,6 +465,12 @@ const ActionsTaskModalTeam = ({
               : NO_SETTING,
           });
       }
+
+      setShowDescriptionSection(
+        !!dataTask.description
+          ?.replace(HTML_TAG_REGEX, '') // remove HTML tags
+          .trim(),
+      );
     }
     return value;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -897,6 +904,7 @@ const ActionsTaskModalTeam = ({
         };
       });
       setTodoList(newTodoList);
+      setShowTodoSection(newTodoList.length > 0);
     }
   }, [dataTask]);
   const handleBlur = ({

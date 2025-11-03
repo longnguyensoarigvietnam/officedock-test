@@ -28,9 +28,11 @@ import { ALL_TEAM_STATISTIC, DEFAULT_TIME_TEXT, NO_SETTING } from '@constants';
 import { pageRouters } from '@constants/routers';
 import { OrganizationStatisticType } from '@constants/enums';
 
-import { OptionDropdownType } from '@interfaces/common';
 import { formatDateToYMD, sumDurations } from '@utils/date';
 import { removeDuplicateOptions } from '@utils';
+
+import { OptionDropdownType } from '@interfaces/common';
+
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 
 const StatisticTagBoard = () => {
@@ -552,8 +554,8 @@ const StatisticTagBoard = () => {
   };
 
   return (
-    <div className="pt-[30px] pr-10  font-medium ">
-      <div className="flex items-center justify-between ">
+    <div className="font-medium ">
+      <div className="sticky z-[21] top-[0px] px-10 py-[27px] bg-[#E6F3FB] flex items-center justify-between ">
         <div className="flex items-center gap-5 ">
           <span className="text-[26px] font-medium relative top-[-2px]">
             集計
@@ -585,164 +587,163 @@ const StatisticTagBoard = () => {
           <StatisticTagCalendar />
         </div>
       </div>
-      <div className="w-full my-[30px] border-t border-[#D2DBE1]"></div>
+      <div className="w-full mb-[30px] border-t border-[#D2DBE1]"></div>
 
-      <div>
+      <div className="px-10">
         <div className="flex justify-between w-full">
           {/* Filter tag */}
           <FilterTag />
         </div>
         <div className="my-8"></div>
+        {isCheckCompare ? (
+          <>
+            {/* Percentage of categories */}
+            <PercentageTagsCompare
+              startDate={startDate}
+              endDate={endDate}
+              startDateCompare={startDateCompare}
+              endDateCompare={endDateCompare}
+              statisticTagsList={statisticTagsList}
+              statisticTagsCompareList={statisticTagsListCompare}
+              statisticAllTeamCategoryList={statisticAllTeamCategoryList}
+              statisticAllTeamCategoryCompareList={
+                statisticAllTeamCategoryCompareList
+              }
+              handleSelectOrganization={handleSelectOrganization}
+              handleSelectLarge={handleSelectLarge}
+              handleSelectMedium={handleSelectMedium}
+              handleSelectSmall={handleSelectSmall}
+            />
+            {/* Progress bar */}
+            <AllocationTagCompare
+              startDate={startDate}
+              endDate={endDate}
+              startDateCompare={startDateCompare}
+              endDateCompare={endDateCompare}
+              statisticTagsList={statisticTagsList}
+              statisticTagsCompareList={statisticTagsListCompare}
+              statisticAllTeamCategoryList={statisticAllTeamCategoryList}
+              statisticAllTeamCategoryCompareList={
+                statisticAllTeamCategoryCompareList
+              }
+              handleSelectOrganization={handleSelectOrganization}
+              handleSelectLarge={handleSelectLarge}
+              handleSelectMedium={handleSelectMedium}
+              handleSelectSmall={handleSelectSmall}
+            />
+            {/* Line chart */}
+            <LineChartCompare
+              startDate={startDate}
+              endDate={endDate}
+              startDateCompare={startDateCompare}
+              endDateCompare={endDateCompare}
+              statisticTaskDurationsListTag={statisticTaskDurationsListTag}
+              statisticTagTaskDurationsCompareList={
+                statisticTagTaskDurationsCompareList
+              }
+              statisticAllTeamTaskDurationsList={
+                statisticAllTeamTaskDurationsList
+              }
+              statisticAllTeamTaskDurationsCompareList={
+                statisticAllTeamTaskDurationsCompareList
+              }
+              isFetchingStatisticTaskDurationsListTag={
+                isFetchingStatisticTaskDurationsListTag
+              }
+              isFetchingStatisticTagTaskDurationsCompareList={
+                isFetchingStatisticTagTaskDurationsCompareList
+              }
+              isFetchingStatisticAllTeamTaskDurationsList={
+                isFetchingStatisticAllTeamTaskDurationsList
+              }
+              isFetchingStatisticAllTeamTaskDurationsCompareList={
+                isFetchingStatisticAllTeamTaskDurationsCompareList
+              }
+              handleSelectOrganization={handleSelectOrganization}
+              handleSelectLarge={handleSelectLarge}
+              handleSelectMedium={handleSelectMedium}
+              handleSelectSmall={handleSelectSmall}
+            />
+          </>
+        ) : (
+          <>
+            {/* Percentage of categories */}
+            <PercentageTags
+              startDate={startDate}
+              endDate={endDate}
+              statisticTagsList={statisticTagsList}
+              statisticAllTeamCategoryList={statisticAllTeamCategoryList}
+              handleSelectOrganization={handleSelectOrganization}
+              handleSelectLarge={handleSelectLarge}
+              handleSelectSmall={handleSelectSmall}
+              handleSelectMedium={handleSelectMedium}
+            />
+            {/* Progress bar */}
+            <AllocationTag
+              startDate={startDate}
+              endDate={endDate}
+              statisticTagsList={statisticTagsList}
+              statisticAllTeamCategoryList={statisticAllTeamCategoryList}
+              handleSelectOrganization={handleSelectOrganization}
+              handleSelectLarge={handleSelectLarge}
+              handleSelectMedium={handleSelectMedium}
+              handleSelectSmall={handleSelectSmall}
+            />
+            {/* Line chart */}
+            <LineChart
+              startDate={startDate}
+              endDate={endDate}
+              statisticTaskDurationsListTag={statisticTaskDurationsListTag}
+              statisticAllTeamTaskDurationsList={
+                statisticAllTeamTaskDurationsList
+              }
+              isFetchingStatisticTaskDurationsListTag={
+                isFetchingStatisticTaskDurationsListTag
+              }
+              isFetchingStatisticAllTeamTaskDurationsList={
+                isFetchingStatisticAllTeamTaskDurationsList
+              }
+              handleSelectOrganization={handleSelectOrganization}
+              handleSelectLarge={handleSelectLarge}
+              handleSelectMedium={handleSelectMedium}
+              handleSelectSmall={handleSelectSmall}
+            />
+            <StackedAreaChart
+              startDate={startDate}
+              endDate={endDate}
+              statisticTagsList={statisticTagsList}
+              statisticTaskDurationsList={statisticTaskDurationsListTag}
+              statisticAllTeamTaskDurationsList={
+                statisticAllTeamTaskDurationsList
+              }
+              isFetchingStatisticTaskDurationsListTag={
+                isFetchingStatisticTaskDurationsListTag
+              }
+              isFetchingStatisticAllTeamTaskDurationsList={
+                isFetchingStatisticAllTeamTaskDurationsList
+              }
+              handleSelectOrganization={handleSelectOrganization}
+              handleSelectLarge={handleSelectLarge}
+              handleSelectMedium={handleSelectMedium}
+              handleSelectSmall={handleSelectSmall}
+            />
+          </>
+        )}
+
+        {/* Task list */}
+        <TaskListStatisticTags
+          startDate={startDate}
+          endDate={endDate}
+          startDateCompare={startDateCompare}
+          endDateCompare={endDateCompare}
+          isCheckCompare={isCheckCompare}
+          handleSelectOrganization={handleSelectOrganization}
+          handleSelectLarge={handleSelectLarge}
+          handleSelectMedium={handleSelectMedium}
+          handleSelectSmall={handleSelectSmall}
+          creationDataStatisticData={creationDataCommonData?.myStatistics || []}
+        />
       </div>
-
-      {isCheckCompare ? (
-        <>
-          {/* Percentage of categories */}
-          <PercentageTagsCompare
-            startDate={startDate}
-            endDate={endDate}
-            startDateCompare={startDateCompare}
-            endDateCompare={endDateCompare}
-            statisticTagsList={statisticTagsList}
-            statisticTagsCompareList={statisticTagsListCompare}
-            statisticAllTeamCategoryList={statisticAllTeamCategoryList}
-            statisticAllTeamCategoryCompareList={
-              statisticAllTeamCategoryCompareList
-            }
-            handleSelectOrganization={handleSelectOrganization}
-            handleSelectLarge={handleSelectLarge}
-            handleSelectMedium={handleSelectMedium}
-            handleSelectSmall={handleSelectSmall}
-          />
-          {/* Progress bar */}
-          <AllocationTagCompare
-            startDate={startDate}
-            endDate={endDate}
-            startDateCompare={startDateCompare}
-            endDateCompare={endDateCompare}
-            statisticTagsList={statisticTagsList}
-            statisticTagsCompareList={statisticTagsListCompare}
-            statisticAllTeamCategoryList={statisticAllTeamCategoryList}
-            statisticAllTeamCategoryCompareList={
-              statisticAllTeamCategoryCompareList
-            }
-            handleSelectOrganization={handleSelectOrganization}
-            handleSelectLarge={handleSelectLarge}
-            handleSelectMedium={handleSelectMedium}
-            handleSelectSmall={handleSelectSmall}
-          />
-          {/* Line chart */}
-          <LineChartCompare
-            startDate={startDate}
-            endDate={endDate}
-            startDateCompare={startDateCompare}
-            endDateCompare={endDateCompare}
-            statisticTaskDurationsListTag={statisticTaskDurationsListTag}
-            statisticTagTaskDurationsCompareList={
-              statisticTagTaskDurationsCompareList
-            }
-            statisticAllTeamTaskDurationsList={
-              statisticAllTeamTaskDurationsList
-            }
-            statisticAllTeamTaskDurationsCompareList={
-              statisticAllTeamTaskDurationsCompareList
-            }
-            isFetchingStatisticTaskDurationsListTag={
-              isFetchingStatisticTaskDurationsListTag
-            }
-            isFetchingStatisticTagTaskDurationsCompareList={
-              isFetchingStatisticTagTaskDurationsCompareList
-            }
-            isFetchingStatisticAllTeamTaskDurationsList={
-              isFetchingStatisticAllTeamTaskDurationsList
-            }
-            isFetchingStatisticAllTeamTaskDurationsCompareList={
-              isFetchingStatisticAllTeamTaskDurationsCompareList
-            }
-            handleSelectOrganization={handleSelectOrganization}
-            handleSelectLarge={handleSelectLarge}
-            handleSelectMedium={handleSelectMedium}
-            handleSelectSmall={handleSelectSmall}
-          />
-        </>
-      ) : (
-        <>
-          {/* Percentage of categories */}
-          <PercentageTags
-            startDate={startDate}
-            endDate={endDate}
-            statisticTagsList={statisticTagsList}
-            statisticAllTeamCategoryList={statisticAllTeamCategoryList}
-            handleSelectOrganization={handleSelectOrganization}
-            handleSelectLarge={handleSelectLarge}
-            handleSelectSmall={handleSelectSmall}
-            handleSelectMedium={handleSelectMedium}
-          />
-          {/* Progress bar */}
-          <AllocationTag
-            startDate={startDate}
-            endDate={endDate}
-            statisticTagsList={statisticTagsList}
-            statisticAllTeamCategoryList={statisticAllTeamCategoryList}
-            handleSelectOrganization={handleSelectOrganization}
-            handleSelectLarge={handleSelectLarge}
-            handleSelectMedium={handleSelectMedium}
-            handleSelectSmall={handleSelectSmall}
-          />
-          {/* Line chart */}
-          <LineChart
-            startDate={startDate}
-            endDate={endDate}
-            statisticTaskDurationsListTag={statisticTaskDurationsListTag}
-            statisticAllTeamTaskDurationsList={
-              statisticAllTeamTaskDurationsList
-            }
-            isFetchingStatisticTaskDurationsListTag={
-              isFetchingStatisticTaskDurationsListTag
-            }
-            isFetchingStatisticAllTeamTaskDurationsList={
-              isFetchingStatisticAllTeamTaskDurationsList
-            }
-            handleSelectOrganization={handleSelectOrganization}
-            handleSelectLarge={handleSelectLarge}
-            handleSelectMedium={handleSelectMedium}
-            handleSelectSmall={handleSelectSmall}
-          />
-          <StackedAreaChart
-            startDate={startDate}
-            endDate={endDate}
-            statisticTagsList={statisticTagsList}
-            statisticTaskDurationsList={statisticTaskDurationsListTag}
-            statisticAllTeamTaskDurationsList={
-              statisticAllTeamTaskDurationsList
-            }
-            isFetchingStatisticTaskDurationsListTag={
-              isFetchingStatisticTaskDurationsListTag
-            }
-            isFetchingStatisticAllTeamTaskDurationsList={
-              isFetchingStatisticAllTeamTaskDurationsList
-            }
-            handleSelectOrganization={handleSelectOrganization}
-            handleSelectLarge={handleSelectLarge}
-            handleSelectMedium={handleSelectMedium}
-            handleSelectSmall={handleSelectSmall}
-          />
-        </>
-      )}
-
-      {/* Task list */}
-      <TaskListStatisticTags
-        startDate={startDate}
-        endDate={endDate}
-        startDateCompare={startDateCompare}
-        endDateCompare={endDateCompare}
-        isCheckCompare={isCheckCompare}
-        handleSelectOrganization={handleSelectOrganization}
-        handleSelectLarge={handleSelectLarge}
-        handleSelectMedium={handleSelectMedium}
-        handleSelectSmall={handleSelectSmall}
-        creationDataStatisticData={creationDataCommonData?.myStatistics || []}
-      />
     </div>
   );
 };
