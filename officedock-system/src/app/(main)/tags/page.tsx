@@ -10,7 +10,7 @@ const TagPage = () => {
     <MainLayout
       title={pageRouters.TAGS_MANAGEMENT.name}
       permission={PermissionsSystem.TAG_VIEW}
-      className="pl-8 pr-2 pt-8 !overflow-x-auto"
+      className="px-10 pt-[30px] pb-10 !overflow-x-auto"
       showFooter={false}>
       <div className="flex flex-col gap-6">
         <Suspense>

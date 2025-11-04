@@ -721,3 +721,7 @@ export enum PeriodClassification {
   BASE = 'BASE',
   COMPARISON = 'COMPARISON',
 }
+export enum ListVisibility {
+  HIDDEN = 'hidden',
+  VISIBLE = 'visible',
+}

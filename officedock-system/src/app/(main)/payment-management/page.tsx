@@ -11,7 +11,7 @@ const PaymentPage = () => {
       <MainLayout
         title={pageRouters.PAYMENT_MANAGEMENT.name}
         permission={PermissionsSystem.PAYMENT_MANAGEMENT_VIEW}
-        className="px-10 pt-[30px] !overflow-x-auto"
+        className="px-10 py-[30px] !overflow-x-auto"
         showFooter={false}>
         <PaymentDetail />
       </MainLayout>

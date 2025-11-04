@@ -10,9 +10,9 @@ const OrganizationPage = () => {
     <MainLayout
       title={pageRouters.ORGANIZATION_HIERARCHY.name}
       permission={PermissionsSystem.ORGANIZATION_HIERARCHY_UPDATE}
-      className="px-0 pt-8 !overflow-x-auto overflow-y-hidden"
+      className="px-0 pt-[30px] !overflow-x-auto overflow-y-hidden"
       showFooter={false}>
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-[27px]">
         <EditNode />
       </div>
     </MainLayout>

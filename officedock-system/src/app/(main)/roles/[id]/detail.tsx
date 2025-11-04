@@ -58,9 +58,9 @@ const DetailRoleTable = () => {
 
   return (
     <div>
-      <div className="flex items-center justify-between w-full mb-5">
+      <div className="flex items-center justify-between w-full mb-[30px]">
         <div className="flex items-center gap-5 w-full">
-          <p className="text-black font-medium text-[26px]">権限管理</p>
+          <p className="text-black font-medium text-[26px] leading-[1]">権限管理</p>
         </div>
         {!dataRoleDetail?.systemRole &&
           session?.user.permissions &&

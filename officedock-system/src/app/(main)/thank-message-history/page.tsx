@@ -7,7 +7,7 @@ const ThankMsgHistoryPage = () => {
   return (
     <MainLayout
       title={pageRouters.THANK_MESSAGE_MANAGEMENT.name}
-      className=" !px-10 !py-[30px]"
+      className="!px-10 !py-[30px]"
       permission={PermissionsSystem.THANKS_MESSAGE_MANAGEMENT_VIEW}>
       <ThankMsgHistoryList />
     </MainLayout>

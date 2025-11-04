@@ -45,6 +45,7 @@ import useTagList from '@hooks/useTagList';
 import { useErrorToast } from '@hooks/useErrorToast';
 import useDebounceText from '@hooks/useDebounceText';
 import useTagDetail from '@hooks/useTagDetail';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
@@ -56,7 +57,6 @@ import { Organizations } from '@interfaces/organization';
 import { hasPermissionInArray } from '@utils';
 
 import api from '@base/api';
-import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 const FilterOrganizationComponent = ({
   dataOrganizationList,
@@ -443,20 +443,43 @@ const ListTags = () => {
   return (
     <Fragment>
       <div className="flex justify-between">
-        <p className="text-black font-medium text-[26px]">タグ管理</p>
-        <div className="flex gap-2 items-center hover:cursor-pointer">
+        <div className="flex items-center gap-[10px]">
+          <p className="text-black font-medium text-[26px] leading-[1]">タグ管理</p>
+          {filterRequest.isHidden ? (
+            <div className="flex items-center">
+              <ImageRound
+                name="Hide"
+                src={'/icons/dark-close-eye.svg'}
+                className="w-[16px] h-[13px] hover:cursor-pointer"
+              />
+              <p className="ml-1 text-[#77858F] font-medium text-xs">
+                非表示一覧
+              </p>
+            </div>
+          ) : (
+            <></>
+          )}
+        </div>
+        <div
+          className="flex items-center hover:cursor-pointer"
+          onClick={() => {
+            setFilterRequest((prev) => ({
+              ...prev,
+              isHidden: !prev.isHidden,
+            }));
+          }}>
           {!filterRequest.isHidden && (
             <ImageRound
               name="Hide"
-              src={'/icons/close-eye.svg'}
-              className="w-[15px] h-[12px] hover:cursor-pointer"
+              src={'/icons/dark-close-eye.svg'}
+              className="w-[16px] h-[13px] hover:cursor-pointer"
             />
           )}
 
-          <p className="text-[#77858F] font-medium text-[12px]">
-            {!filterRequest.isHidden ? '非表示一覧' : '表示一覧'}
+          <p className="ml-1 text-[#77858F] font-medium text-xs">
+            {!filterRequest.isHidden ? '非表示一覧' : '表示中一覧'}
           </p>
-          <div className="flex justify-between p-[3px] rounded-full bg-white border-b">
+          <div className="ml-[6px] flex justify-between p-[3px] rounded-full bg-white border-b">
             <ImageRound
               name="Filter extend icon"
               src={'/icons/arrow-down.svg'}
@@ -467,10 +490,10 @@ const ListTags = () => {
         </div>
       </div>
       <div className="flex justify-between items-center mb-3">
-        <div className="flex gap-4 items-center">
+        <div className="flex gap-5 items-center">
           <InputSearch
             placeholder="タグを検索"
-            inputClassName="!w-[300px] !py-2 !rounded-[30px] text-sm !bg-[#FFF] border-none placeholder-[#77858F99]"
+            inputClassName="!w-[300px] !py-2 !rounded-[30px] text-sm !bg-[#FFF] border-none !placeholder-[#77858F99]"
             iconClassName="w-[14px] h-[14px]"
             register={register('name')}
           />
@@ -484,7 +507,7 @@ const ListTags = () => {
                     <ImageRound
                       src="/icons/filter.svg"
                       name="Filter icon"
-                      className="w-[14px] h-[14px] ml-2"
+                      className="w-[14px] h-[14px]"
                     />
                   </PopoverButton>
                 </div>
@@ -623,10 +646,10 @@ const ListTags = () => {
                 <tr key={index}>
                   <td className="w-[500px] text-black max-w-[500px] border-r-[1px] border-r-[#D2DBE1]">
                     <div className="flex justify-between items-center">
-                      <p className="text-left max-w-[calc(100%_-_50px)] break-all text-[16px] font-medium">
+                      <p className="text-left max-w-[calc(100%_-_70px)] break-all text-[16px] font-medium">
                         {element.name}
                       </p>
-                      <div className="flex gap-2 justify-end">
+                      <div className="flex gap-2 justify-end items-center">
                         {element.actions?.update ? (
                           <div
                             onClick={() => {
@@ -643,7 +666,6 @@ const ListTags = () => {
                         )}
                         {element.actions?.update ? (
                           <div
-                            className="hidden"
                             onClick={() => {
                               handleConfirmToggleHideTag({
                                 id: element.id,
@@ -652,12 +674,12 @@ const ListTags = () => {
                             }}>
                             <ImageRound
                               name="Hide"
-                              src={'/icons/close-eye-gray.svg'}
-                              className="w-[17px] h-[14px] hover:cursor-pointer"
+                              src={'/icons/dark-close-eye.svg'}
+                              className={`w-[16px] h-[13px] hover:cursor-pointer ${!element.isHidden && 'opacity-30'}`}
                             />
                           </div>
                         ) : (
-                          <div className="w-[17px]"></div>
+                          <div className="w-[16px]"></div>
                         )}
                         {element.actions?.delete ? (
                           <ImageRound

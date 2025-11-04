@@ -112,7 +112,7 @@ const PaymentDetail = () => {
   return (
     <>
       <div>
-        <p className="font-medium text-[26px]">お支払い管理</p>
+        <p className="font-medium text-[26px] leading-[1]">お支払い管理</p>
         {/* History payment */}
         <div className="mt-[30px] bg-[#F8FAFC] rounded-[30px] p-[30px]">
           <div className="flex items-center gap-5">

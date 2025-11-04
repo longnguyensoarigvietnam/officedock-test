@@ -545,7 +545,7 @@ export default function EditNode() {
   return (
     <>
       <div className="flex px-10 justify-between items-start">
-        <div className="flex gap-5 items-center mb-5 w-fit">
+        <div className="flex gap-5 items-center w-fit">
           <p className="text-black font-medium text-[26px]">チーム管理</p>
           <div className="flex justify-center items-center gap-2 bg-white w-fit p-[6px] rounded-[20px] ">
             <Button
@@ -580,7 +580,7 @@ export default function EditNode() {
           </Button>
         </div>
       </div>
-      <div className=" flex mt-5 flex-col gap-5 h-[calc(100vh_-_215px)] overflow-y-auto">
+      <div className=" flex flex-col gap-5 h-[calc(100vh_-_215px)] overflow-y-auto">
         <div className="px-10">
           <div
             className={`bg-[#F8FAFC] p-[30px] overflow-auto ${expanded ? 'max-w-[calc(100vw_-_288px)]' : 'max-w-[calc(100vw_-_172px)]'}  min-h-[538px] min-w-[1152px]  rounded-[30px]`}>
