@@ -16,7 +16,6 @@ import Image from 'next/image';
 import jaLocale from '@fullcalendar/core/locales/ja';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas-pro';
-import Link from 'next/link';
 
 import {
   useReactTable,
@@ -70,6 +69,8 @@ import './../styles/daily-report.css';
 import useDataStatistic from '@hooks/useDataStatistic';
 import { useErrorToast } from '@hooks/useErrorToast';
 import useDataStatisticPDF from '@hooks/useDataStatisticPdf';
+import { useDebounceCallback } from '@hooks/useDebounceCallback';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 import {
   ChildTask,
@@ -120,8 +121,7 @@ import { useToast } from '@providers/ToastProvider';
 import { TeamDailyStateContext } from '@providers/TeamDailyReportProvider';
 import { TaskContext } from '@providers/TaskProvider';
 import api from '@base/api';
-import { useDebounceCallback } from '@hooks/useDebounceCallback';
-import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 const DailyReportDetailBoard = () => {
   const { statusTaskSelected, setStatusTaskSelected } = useContext(TaskContext);
@@ -2050,15 +2050,21 @@ const DailyReportDetailBoard = () => {
     if (!userId) return;
 
     const params = new URLSearchParams(searchParams.toString());
-    const newUrl = `/daily-report-team/${userId}?${params.toString()}`;
+    const newUrl = `${pageRouters.DAILY_REPORT_TEAM_DETAIL.href(String(userId))}?${params.toString()}`;
+
+    router.push(newUrl, { scroll: false });
+  };
+  const handleNavigateList = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    const newUrl = `${pageRouters.DAILY_REPORT_TEAM.href}?${params.toString()}`;
 
     router.push(newUrl, { scroll: false });
   };
 
   const handleNextUser = () =>
-    dataStatistic?.nextUser && handleNavigateUser(dataStatistic?.nextUser);
+    dataStatistic?.nextUser && handleNavigateUser(dataStatistic?.nextUser.id);
   const handlePrevUser = () =>
-    dataStatistic?.prevUser && handleNavigateUser(dataStatistic?.prevUser);
+    dataStatistic?.prevUser && handleNavigateUser(dataStatistic?.prevUser.id);
 
   const detailDateInfo = getDateInfoFull(dataDatePicker);
 
@@ -2138,15 +2144,20 @@ const DailyReportDetailBoard = () => {
         </header>
         <div className="mb-[30px] flex items-center justify-between pr-10">
           <div className="flex items-center gap-5">
-            <ImageRound
-              onClick={handlePrevUser}
-              style={{
-                opacity: dataStatistic?.prevUser && organization ? 1 : 0,
-              }}
-              className="h-fit w-fit cursor-pointer relative top-[1px]"
-              src="/icons/left-statistic.svg"
-              name="left"
-            />
+            <DynamicTooltip
+              content={dataStatistic?.prevUser?.profile.fullName || ''}
+              placement="top">
+              <ImageRound
+                onClick={handlePrevUser}
+                style={{
+                  opacity: dataStatistic?.prevUser && organization ? 1 : 0,
+                }}
+                className="h-fit w-fit cursor-pointer relative top-[1px]"
+                src="/icons/left-statistic.svg"
+                name="left"
+              />
+            </DynamicTooltip>
+
             <div className="flex gap-5 items-center">
               <div className="flex flex-col gap-1 items-start w-10 text-xs  text-primary">
                 {dataDetailUser?.isConfirmed ? (
@@ -2177,17 +2188,22 @@ const DailyReportDetailBoard = () => {
                 </span>
               </div>
             </div>
-            <ImageRound
-              onClick={handleNextUser}
-              style={{
-                opacity: dataStatistic?.nextUser && organization ? 1 : 0,
-              }}
-              className="h-fit w-fit cursor-pointer relative top-[1px]"
-              src="/icons/right-statistic.svg"
-              name="right"
-            />
-            <Link
-              href={`${pageRouters.DAILY_REPORT_TEAM.href}?tabId=1`}
+            <DynamicTooltip
+              content={dataStatistic?.nextUser?.profile.fullName || ''}
+              placement="top">
+              <ImageRound
+                onClick={handleNextUser}
+                style={{
+                  opacity: dataStatistic?.nextUser && organization ? 1 : 0,
+                }}
+                className="h-fit w-fit cursor-pointer relative top-[1px]"
+                src="/icons/right-statistic.svg"
+                name="right"
+              />
+            </DynamicTooltip>
+
+            <div
+              onClick={handleNavigateList}
               className="bg-white relative top-[1px] flex items-center ml-[10px] justify-center gap-2 text-sm text-[#77858F] font-medium w-[158px] h-[34px] rounded-md">
               <span>チームの日報一覧</span>
               <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
@@ -2197,7 +2213,7 @@ const DailyReportDetailBoard = () => {
                   name="right"
                 />
               </div>
-            </Link>
+            </div>
           </div>
           <div className="flex gap-4 items-center">
             <div className="flex items-center gap-3">

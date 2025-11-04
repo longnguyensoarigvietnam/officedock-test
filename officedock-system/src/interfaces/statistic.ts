@@ -1,7 +1,7 @@
 import { StatisticChartType } from '@constants/enums';
 import { TagCreationStatisticType, Tags } from './tag';
 import { TodoItem } from './task';
-import { User } from './user';
+import { Profile, User } from './user';
 import { OptionDropdownType } from './common';
 
 export interface TaskTimeStatistic {
@@ -70,8 +70,22 @@ export interface dataStatisticResponse {
     user: User;
     organizationName: string;
   };
-  nextUser?: number;
-  prevUser?: number;
+  nextUser?: {
+    avatar: string | null;
+    avatarColor: string | null;
+    email: string;
+    id: number;
+    loginType: string;
+    profile: Profile;
+  };
+  prevUser?: {
+    avatar: string | null;
+    avatarColor: string | null;
+    email: string;
+    id: number;
+    loginType: string;
+    profile: Profile;
+  };
   totalDuration: string;
   organizationCategories: OrganizationCategories;
 }
