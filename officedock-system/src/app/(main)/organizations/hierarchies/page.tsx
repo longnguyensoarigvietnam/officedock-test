@@ -18,10 +18,10 @@ const OrganizationPage = () => {
     <MainLayout
       title={pageRouters.ORGANIZATION_HIERARCHY.name}
       permission={PermissionsSystem.ORGANIZATION_HIERARCHY_VIEW}
-      className="px-10 pt-8 !overflow-x-auto"
+      className="px-10 py-[30px] !overflow-x-auto"
       showFooter={false}>
       <div className="flex justify-between items-start">
-        <div className="flex gap-5 items-center mb-5 w-fit">
+        <div className="flex gap-5 items-center mb-[27px] w-fit">
           <p className="text-black font-medium text-[26px]">チーム管理</p>
           <div className="flex justify-center items-center gap-2 bg-white w-fit p-[6px] rounded-[20px] ">
             <Button

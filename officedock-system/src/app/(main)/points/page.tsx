@@ -26,7 +26,7 @@ const PointManagementPage = () => {
       className="!px-10 !py-[30px]"
       showFooter={false}
       permission={PermissionsSystem.POINT_MANAGEMENT_VIEW}>
-      <p className="text-black font-medium text-[26px] mb-[30px]">コイン設定</p>
+      <p className="text-black font-medium text-[26px] mb-[30px] leading-[1]">コイン設定</p>
       <div className="flex gap-[10px] items-center mb-5">
         <ImageRound
           src={`/icons/purple-company.svg`}

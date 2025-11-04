@@ -319,7 +319,7 @@ const ListLocation = () => {
   return (
     <div className="mb-5">
       <div className="flex justify-between items-center pb-[30px]">
-        <p className="text-[26px] font-medium">カレンダー設定</p>
+        <p className="text-[26px] font-medium leading-[1]">カレンダー設定</p>
         <div>
           <Checkbox
             label="カレンダーに祝日を表示"

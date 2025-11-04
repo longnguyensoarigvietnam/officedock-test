@@ -213,9 +213,9 @@ const EditRoleForm = () => {
 
   return (
     <div>
-      <div className="flex justify-between items-center w-full mb-5">
-        <p className="text-black font-medium text-[26px]">権限管理</p>
-        <div className="flex justify-end gap-3 items-center">
+      <div className="flex justify-between items-center w-full mb-[30px]">
+        <p className="text-black font-medium text-[26px] leading-[1]">権限管理</p>
+        <div className="flex justify-end gap-[10px] items-center">
           <Button
             variant="outline"
             className="w-[100px] !p-0 !h-[34px]"
@@ -224,7 +224,7 @@ const EditRoleForm = () => {
           </Button>
           <Button
             variant="primary"
-            className="w-[100px] !p-0 !h-[34px]"
+            className="w-[100px] !p-0 !h-[34px] border-none"
             style={{ boxShadow: '0px 1px 5px 0px #00000033' }}
             onClick={handleConfirmEditRole}>
             保存

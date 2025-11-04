@@ -167,7 +167,7 @@ const ListHierarchy = () => {
     <Fragment>
       <div className="sticky z-[21] top-[0px] px-10 pt-8 pb-3 bg-[#E6F3FB]">
         <div className="flex gap-4 items-center mb-5">
-          <p className="text-black font-medium text-[26px]">
+          <p className="text-black font-medium text-[26px] leading-[1]">
             業務カテゴリー設定
           </p>
           <div className="flex gap-2 bg-white w-fit p-[6px] rounded-[20px]">

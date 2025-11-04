@@ -20,8 +20,8 @@ const MVPManagementPage = () => {
       className="!px-10 !py-[30px]"
       showFooter={false}
       permission={PermissionsSystem.MVP_VOTING_MANAGEMENT_VIEW}>
-      <div className="flex gap-4 items-center mb-5">
-        <p className="text-black font-medium text-[26px]">MVP投票管理</p>
+      <div className="flex gap-4 items-center mb-[30px]">
+        <p className="text-black font-medium text-[26px] leading-[1]">MVP投票管理</p>
         <div className="flex gap-2 bg-white w-fit p-[6px] rounded-[20px]">
           <Button
             variant="primary"
