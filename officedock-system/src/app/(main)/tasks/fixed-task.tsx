@@ -72,7 +72,6 @@ const FixedTaskData = ({
   data,
   numberPagesData,
   searchValue,
-  orderTaskSave,
   tagSelected,
   orderingRequest,
   columnsKanbanData,
@@ -105,9 +104,6 @@ const FixedTaskData = ({
   const hasNext = numberPagesData.find(
     (page) => page.id === `${data.id}`,
   )?.hasMores;
-  const matchingTaskIds = orderTaskSave
-    .filter((task) => task.status?.id === data.id)
-    .map((task) => task.id);
 
   const onDragEnd = (result: DropResult): void => {
     const { source, destination } = result;
@@ -252,7 +248,6 @@ const FixedTaskData = ({
               totalCount={count || 0}
               hasNext={hasNext}
               searchValue={searchValue}
-              matchingTaskIds={matchingTaskIds}
               index={0}
               userId={`${session?.user.id}`}
               tagSelected={tagSelected}

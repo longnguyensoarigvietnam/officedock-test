@@ -15,6 +15,7 @@ import {
   DATE_TIME_FORMAT,
   DATE_TIME_LOCAL,
   DEFAULT_TIME_TEXT,
+  HOURS_IN_DAY,
 } from '@constants';
 import { DateInfo, OptionDropdownType } from '@interfaces/common';
 import { StatisticCategoryInfo } from '@interfaces/statistic';
@@ -1936,3 +1937,20 @@ export function formatJapaneseDateRangeSchedule(
     endWeek,
   };
 }
+/**
+ * Adjusts a time string by a given number of hours.
+ * @param timeString - The time in "HH:mm" format.
+ * @param offsetHours - The number of hours to add (can be negative).
+ * @returns The adjusted time string in "HH:mm" format.
+ */
+export const adjustHours = (timeString: string, offsetHours: number): string => {
+  if (!timeString) return '';
+
+  const [hours, minutes] = timeString.split(':').map(Number);
+  let newHour = (hours + offsetHours) % HOURS_IN_DAY;
+
+  if (newHour < 0) newHour += HOURS_IN_DAY; // handle negative wraparound (e.g., -1 → 23)
+
+  return `${String(newHour).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+};
+

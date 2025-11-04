@@ -45,7 +45,7 @@ export const pageRouters = {
 
   // ROLE
   ROLES_MANAGEMENT: {
-    name: 'ロール管理',
+    name: '権限管理',
     href: '/roles',
   },
   CREATE_ROLE: {
@@ -53,17 +53,17 @@ export const pageRouters = {
     href: '/roles/create',
   },
   EDIT_ROLE: {
-    name: 'ロール編集',
+    name: '権限編集',
     href: (id: string) => `/roles/${id}/edit`,
   },
   DETAIL_ROLE: {
-    name: 'ロール詳細',
+    name: '権限詳細',
     href: (id: string) => `/roles/${id}`,
   },
 
   // ORGANIZATION
   ORGANIZATION_MANAGEMENT: {
-    name: '組織管理',
+    name: 'チーム管理',
     href: '/organizations',
   },
   CREATE_ORGANIZATION: {
@@ -71,11 +71,11 @@ export const pageRouters = {
     href: '/organizations/create',
   },
   EDIT_ORGANIZATION: {
-    name: '組織編集',
+    name: 'チーム編集',
     href: (id: string) => `/organizations/${id}/edit`,
   },
   DETAIL_ORGANIZATION: {
-    name: '組織詳細',
+    name: 'チーム詳細',
     href: (id: string) => `/organizations/${id}`,
   },
   ORGANIZATION_HIERARCHY: {

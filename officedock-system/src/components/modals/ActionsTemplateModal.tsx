@@ -1107,7 +1107,7 @@ const ActionsTemplateModal = ({
                                         {!isCheckActionPermission &&
                                         todo.isChecked ? (
                                           <ImageRound
-                                            className="w-[19px] h-[17px] cursor-grab hover:cursor-pointer"
+                                            className="w-fit h-fit cursor-grab hover:cursor-pointer"
                                             src="/icons/complete-blue.svg"
                                             name="complete item"
                                             onClick={() => {
@@ -1116,7 +1116,7 @@ const ActionsTemplateModal = ({
                                           />
                                         ) : (
                                           <ImageRound
-                                            className="w-[19px] h-[17px] cursor-grab hover:cursor-pointer"
+                                            className="w-fit h-fit cursor-grab hover:cursor-pointer"
                                             src="/icons/complete.svg"
                                             name="complete item"
                                             onClick={() => {

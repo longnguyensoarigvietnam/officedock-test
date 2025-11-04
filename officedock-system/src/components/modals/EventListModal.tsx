@@ -331,11 +331,11 @@ export const EventListModal = ({
                         });
                       }
                     }}>
-                    <div className="flex items-center gap-[10px]">
+                    <div className="flex items-center gap-[10px] h-[48px]">
                       {event ? showEventAvatars(event) : <></>}
                       <div className="flex flex-col gap-[10px]">
                         <p
-                          className={`font-semibold max-w-[150px] truncate ${event?.id && event?.id.includes('holiday') && 'text-error'}`}>
+                          className={`font-semibold max-w-[150px] truncate leading-[1] ${event?.id && event?.id.includes('holiday') && 'text-error'}`}>
                           {event.title || ''}
                         </p>
                         <div className="flex gap-1">
