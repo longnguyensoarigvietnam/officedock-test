@@ -1034,6 +1034,7 @@ const AllocationTeamCategoryCompare = memo(
                             progressDataSmall.map((item, index) => (
                               <ProgressBarTeamStatisticCompare
                                 key={index}
+                                isLast
                                 startDate={startDate}
                                 endDate={endDate}
                                 startDateCompare={startDateCompare}

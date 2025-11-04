@@ -1117,6 +1117,7 @@ const AllocationTagTeamCompare = memo(
                               <div key={index}>
                                 <ProgressBarTeamTagCompare
                                   key={index}
+                                  isLast
                                   startDate={startDate}
                                   endDate={endDate}
                                   startDateCompare={startDateCompare}

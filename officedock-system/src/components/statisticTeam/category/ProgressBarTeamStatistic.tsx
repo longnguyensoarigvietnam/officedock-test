@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import ImageRound from '@components/common/ImageRound';
@@ -17,6 +17,7 @@ interface ProgressBarProps {
   value: number;
   id: number;
   duration: string;
+  isLast?: boolean;
   maxValue?: number;
   optionData: UserListStatisticType[];
   mergedItems?: {
@@ -66,12 +67,22 @@ const ProgressBarTeamStatistic = ({
   showInfo = true,
   startDate,
   endDate,
+  isLast,
   organizationId,
   handleClickChart,
   handleClickTooltip,
 }: ProgressBarProps) => {
   const [isExtendUser, setExtendUser] = useState(false);
   const percentage = Math.round(Math.min((value / maxValue) * 100, 100));
+
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isHovering, setHovering] = useState<boolean>(false);
+
+  // user
+  const containerUserRef = useRef<HTMLDivElement | null>(null);
+  const hoverTimeoutUserRef = useRef<NodeJS.Timeout | null>(null);
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
 
   return (
     <>
@@ -101,6 +112,18 @@ const ProgressBarTeamStatistic = ({
           )}
         </div>
         <div
+          ref={containerRef}
+          onMouseLeave={() => {
+            // If it really gets out of the whole container
+            hoverTimeoutRef.current = setTimeout(() => {
+              setHovering(false);
+            }, 1000);
+          }}
+          onMouseEnter={() => {
+            if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+            setHoverIndex(null);
+            setHovering(true);
+          }}
           className={`group w-full relative h-4 bg-gray-300 ${classProgressClass}`}>
           <div
             className="h-full transition-all duration-500 rounded-[4px]"
@@ -115,7 +138,27 @@ const ProgressBarTeamStatistic = ({
                   value: id || '',
                 });
             }}></div>
-          <div className="absolute -top-[25%] left-[40%] w-[250px] rounded-[14px] py-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
+          <div
+            onMouseEnter={() => {
+              if (hoverTimeoutRef.current)
+                clearTimeout(hoverTimeoutRef.current);
+            }}
+            onMouseLeave={(e) => {
+              const nextEl = e.relatedTarget as HTMLElement | null;
+              const container = containerRef.current;
+
+              // 🔍 If the next element is NOT in the container → it means it's really out
+              if (!container || (nextEl && container.contains(nextEl))) {
+                // Still in the chart area → DO NOT turn off the tooltip
+                return;
+              }
+
+              // Exit the chart area → hide the tooltip
+              hoverTimeoutRef.current = setTimeout(() => {
+                setHovering(false);
+              }, 1000);
+            }}
+            className={`absolute -top-[25%] ${isLast ? 'right-[100%]' : 'left-[100%]'} w-[250px] rounded-[14px] py-5 bg-white ${isHovering ? 'block' : 'hidden'} pointer-events-auto transition-opacity duration-300 shadow-lg z-10`}>
             {id != -1 ? (
               <div>
                 <div className="flex items-center gap-1 px-5">
@@ -249,13 +292,46 @@ const ProgressBarTeamStatistic = ({
             <div
               className={`w-full group relative h-[10px] bg-gray-300 ${classProgressUserClass}`}>
               <div
+                ref={containerUserRef}
+                onMouseLeave={() => {
+                  // If it really gets out of the whole container
+                  hoverTimeoutUserRef.current = setTimeout(() => {
+                    setHoverIndex(null);
+                  }, 1000);
+                }}
+                onMouseEnter={() => {
+                  if (hoverTimeoutUserRef.current)
+                    clearTimeout(hoverTimeoutUserRef.current);
+                  setHovering(false);
+                  setHoverIndex(index);
+                }}
                 className="h-full transition-all duration-500"
                 style={{
                   width: `${item.percent}%`,
                   backgroundColor: color,
                 }}></div>
-              {/*  Hover user compare */}
-              <div className="absolute -top-[25%] left-[40%] w-[288px] rounded-[14px] p-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
+              {/*  Hover user  */}
+              <div
+                onMouseEnter={() => {
+                  if (hoverTimeoutUserRef.current)
+                    clearTimeout(hoverTimeoutUserRef.current);
+                }}
+                onMouseLeave={(e) => {
+                  const nextEl = e.relatedTarget as HTMLElement | null;
+                  const container = containerUserRef.current;
+
+                  // 🔍 If the next element is NOT in the container → it means it's really out
+                  if (!container || (nextEl && container.contains(nextEl))) {
+                    // Still in the chart area → DO NOT turn off the tooltip
+                    return;
+                  }
+
+                  // Exit the chart area → hide the tooltip
+                  hoverTimeoutUserRef.current = setTimeout(() => {
+                    setHoverIndex(null);
+                  }, 1000);
+                }}
+                className={`absolute -top-[25%]  ${isLast ? 'right-[100%]' : 'left-[100%]'} w-[288px] ${hoverIndex === index ? 'block' : 'hidden'} rounded-[14px] p-5 bg-white pointer-events-auto transition-opacity duration-300 shadow-lg z-10`}>
                 <div className="flex items-center gap-2">
                   <CustomUserAvatar
                     avatarUrl={item.user.avatar || ''}

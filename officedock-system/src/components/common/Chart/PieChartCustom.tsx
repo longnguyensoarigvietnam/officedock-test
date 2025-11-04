@@ -256,12 +256,12 @@ const PieChartCustom = ({
           }}
           style={{
             position: 'absolute',
-            top: tooltipData.y,
-            left: tooltipData.x,
+            top: 10,
             backgroundColor: 'white',
             borderRadius: '14px',
             boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
             zIndex: 999,
+            ...(isLast ? { right: `100%` } : { left: `100%` }),
           }}>
           <ModalCustomTooltip
             onMouseEnter={() => {
