@@ -3155,191 +3155,173 @@ const ActionsTaskModal = ({
                 )}
               </div>
               {/* Todo list */}
-              {!isRoutineTaskModal &&
-                Number(watch('statusId')?.value) !=
-                  StatusValueTask.MY_ROUTINE && (
-                  <div className="mb-3">
-                    {showTodoSection ? (
-                      <>
-                        <div
-                          className="flex gap-2 items-center bg-[#EBF1F7] p-2 rounded-md mb-[14px] hover:cursor-pointer"
-                          onClick={() => setShowTodoSection(false)}>
-                          <ImageRound
-                            className="w-[17px] h-[17px] hover:cursor-pointer"
-                            src="/icons/collapse-description.svg"
-                            name="Collapse description icon"
-                          />
-                          <p className="text-primary text-sm">
-                            To Do リストを作成
-                          </p>
-                        </div>
-                        <div>
-                          <div className="mb-[14px]">
-                            <Button
-                              disabled={isCheckActionPermission}
-                              type="button"
-                              variant="outline"
-                              className="!px-2 !py-1 !text-sm"
-                              onClick={handleAddItem}>
-                              To Do リストを作成
-                            </Button>
-                          </div>
-                          <DragDropContext onDragEnd={handleOnDragEnd}>
-                            <Droppable droppableId="todo-list">
-                              {(provided) => (
-                                <ul
-                                  className="flex flex-col "
-                                  {...provided.droppableProps}
-                                  ref={provided.innerRef}>
-                                  {todoList.map((todo, index) => (
-                                    <Draggable
-                                      isDragDisabled={isCheckActionPermission}
-                                      key={todo.id ? todo.id : todo.customId}
-                                      draggableId={
-                                        todo.id
-                                          ? `${todo.id}`
-                                          : `${todo.customId}`
-                                      }
-                                      index={index}>
-                                      {(provided, snapshot) => {
-                                        const draggableElement = (
-                                          <>
-                                            <li
-                                              className={`mb-[6px] gap-3 flex items-center px-2.5 rounded-md bg-[#F8FAFC] ${snapshot.isDragging ? 'dragging' : ''}`}
-                                              ref={provided.innerRef}
-                                              {...provided.draggableProps}>
-                                              <div
-                                                className="w-4 h-[42px] flex items-center justify-center"
-                                                {...provided.dragHandleProps}>
-                                                <ImageRound
-                                                  className="w-[6px] h-[10px] cursor-grab hover:cursor-pointer"
-                                                  src="/icons/drag.svg"
-                                                  name="drag item"
-                                                />
-                                              </div>
-                                              <div className="w-5">
-                                                {!isCheckActionPermission &&
-                                                todo.isChecked ? (
-                                                  <ImageRound
-                                                    className="w-fit h-fit cursor-grab hover:cursor-pointer"
-                                                    src="/icons/complete-blue.svg"
-                                                    name="complete item"
-                                                    onClick={() => {
-                                                      handleCheck(index);
-                                                    }}
-                                                  />
-                                                ) : (
-                                                  <ImageRound
-                                                    className="w-fit h-fit cursor-grab hover:cursor-pointer"
-                                                    src="/icons/complete.svg"
-                                                    name="complete item"
-                                                    onClick={() => {
-                                                      handleCheck(index);
-                                                    }}
-                                                  />
-                                                )}
-                                              </div>
-                                              <TextareaAutosize
-                                                defaultValue={todo.content}
-                                                ref={(el) => {
-                                                  textareaRefs.current[index] =
-                                                    el;
+              <div className="mb-3">
+                {showTodoSection ? (
+                  <>
+                    <div
+                      className="flex gap-2 items-center bg-[#EBF1F7] p-2 rounded-md mb-[14px] hover:cursor-pointer"
+                      onClick={() => setShowTodoSection(false)}>
+                      <ImageRound
+                        className="w-[17px] h-[17px] hover:cursor-pointer"
+                        src="/icons/collapse-description.svg"
+                        name="Collapse description icon"
+                      />
+                      <p className="text-primary text-sm">To Do リストを作成</p>
+                    </div>
+                    <div>
+                      <div className="mb-[14px]">
+                        <Button
+                          disabled={isCheckActionPermission}
+                          type="button"
+                          variant="outline"
+                          className="!px-2 !py-1 !text-sm"
+                          onClick={handleAddItem}>
+                          To Do リストを作成
+                        </Button>
+                      </div>
+                      <DragDropContext onDragEnd={handleOnDragEnd}>
+                        <Droppable droppableId="todo-list">
+                          {(provided) => (
+                            <ul
+                              className="flex flex-col "
+                              {...provided.droppableProps}
+                              ref={provided.innerRef}>
+                              {todoList.map((todo, index) => (
+                                <Draggable
+                                  isDragDisabled={isCheckActionPermission}
+                                  key={todo.id ? todo.id : todo.customId}
+                                  draggableId={
+                                    todo.id ? `${todo.id}` : `${todo.customId}`
+                                  }
+                                  index={index}>
+                                  {(provided, snapshot) => {
+                                    const draggableElement = (
+                                      <>
+                                        <li
+                                          className={`mb-[6px] gap-3 flex items-center px-2.5 rounded-md bg-[#F8FAFC] ${snapshot.isDragging ? 'dragging' : ''}`}
+                                          ref={provided.innerRef}
+                                          {...provided.draggableProps}>
+                                          <div
+                                            className="w-4 h-[42px] flex items-center justify-center"
+                                            {...provided.dragHandleProps}>
+                                            <ImageRound
+                                              className="w-[6px] h-[10px] cursor-grab hover:cursor-pointer"
+                                              src="/icons/drag.svg"
+                                              name="drag item"
+                                            />
+                                          </div>
+                                          <div className="w-5">
+                                            {!isCheckActionPermission &&
+                                            todo.isChecked ? (
+                                              <ImageRound
+                                                className="w-fit h-fit cursor-grab hover:cursor-pointer"
+                                                src="/icons/complete-blue.svg"
+                                                name="complete item"
+                                                onClick={() => {
+                                                  handleCheck(index);
                                                 }}
-                                                disabled={
-                                                  isCheckActionPermission
-                                                }
-                                                placeholder={
-                                                  DEFAULT_VALUE_TODO_LIST
-                                                }
-                                                onBlur={(
-                                                  e: React.ChangeEvent<HTMLTextAreaElement>,
-                                                ) => {
-                                                  if (todo.id) {
-                                                    handleBlur({
-                                                      id: todo.id,
-                                                      content: e.target.value,
-                                                    });
-                                                  } else {
-                                                    handleBlur({
-                                                      customId: todo.customId,
-                                                      content: e.target.value,
-                                                    });
+                                              />
+                                            ) : (
+                                              <ImageRound
+                                                className="w-fit h-fit cursor-grab hover:cursor-pointer"
+                                                src="/icons/complete.svg"
+                                                name="complete item"
+                                                onClick={() => {
+                                                  handleCheck(index);
+                                                }}
+                                              />
+                                            )}
+                                          </div>
+                                          <TextareaAutosize
+                                            defaultValue={todo.content}
+                                            ref={(el) => {
+                                              textareaRefs.current[index] = el;
+                                            }}
+                                            disabled={isCheckActionPermission}
+                                            placeholder={
+                                              DEFAULT_VALUE_TODO_LIST
+                                            }
+                                            onBlur={(
+                                              e: React.ChangeEvent<HTMLTextAreaElement>,
+                                            ) => {
+                                              if (todo.id) {
+                                                handleBlur({
+                                                  id: todo.id,
+                                                  content: e.target.value,
+                                                });
+                                              } else {
+                                                handleBlur({
+                                                  customId: todo.customId,
+                                                  content: e.target.value,
+                                                });
+                                              }
+                                            }}
+                                            rows={3}
+                                            className={`resize-none  ${todo.isChecked && 'line-through'}  focus:outline-none focus:shadow-none focus:border-none focus:ring-0 placeholder-gray-300 border-[#F8FAFC] bg-[#F8FAFC] shadow-none w-full rounded-md`}
+                                          />
+                                          <div className="mt-[2.5px] ml-2 flex items-center">
+                                            {!isCheckActionPermission && (
+                                              <div
+                                                onClick={() => {
+                                                  setIsFormTouched(true);
+                                                  if (todo.customId) {
+                                                    const listData =
+                                                      todoList.filter(
+                                                        (item) =>
+                                                          item.customId !==
+                                                          todo.customId,
+                                                      );
+                                                    setTodoList([...listData]);
+                                                  } else if (todo.id) {
+                                                    const listData =
+                                                      todoList.filter(
+                                                        (item) =>
+                                                          item.id !== todo.id,
+                                                      );
+                                                    setTodoList([...listData]);
                                                   }
                                                 }}
-                                                rows={3}
-                                                className={`resize-none  ${todo.isChecked && 'line-through'}  focus:outline-none focus:shadow-none focus:border-none focus:ring-0 placeholder-gray-300 border-[#F8FAFC] bg-[#F8FAFC] shadow-none w-full rounded-md`}
-                                              />
-                                              <div className="mt-[2.5px] ml-2 flex items-center">
-                                                {!isCheckActionPermission && (
-                                                  <div
-                                                    onClick={() => {
-                                                      setIsFormTouched(true);
-                                                      if (todo.customId) {
-                                                        const listData =
-                                                          todoList.filter(
-                                                            (item) =>
-                                                              item.customId !==
-                                                              todo.customId,
-                                                          );
-                                                        setTodoList([
-                                                          ...listData,
-                                                        ]);
-                                                      } else if (todo.id) {
-                                                        const listData =
-                                                          todoList.filter(
-                                                            (item) =>
-                                                              item.id !==
-                                                              todo.id,
-                                                          );
-                                                        setTodoList([
-                                                          ...listData,
-                                                        ]);
-                                                      }
-                                                    }}
-                                                    className="h-3 flex items-center hover:cursor-pointer">
-                                                    <ImageRound
-                                                      className="!w-fit !h-fit hover:cursor-pointer"
-                                                      src="/icons/remove-item.svg"
-                                                      name="remove icon"
-                                                    />
-                                                  </div>
-                                                )}
+                                                className="h-3 flex items-center hover:cursor-pointer">
+                                                <ImageRound
+                                                  className="!w-fit !h-fit hover:cursor-pointer"
+                                                  src="/icons/remove-item.svg"
+                                                  name="remove icon"
+                                                />
                                               </div>
-                                            </li>
-                                          </>
-                                        );
-                                        return snapshot.isDragging
-                                          ? ReactDOM.createPortal(
-                                              draggableElement,
-                                              document.body,
-                                            )
-                                          : draggableElement;
-                                      }}
-                                    </Draggable>
-                                  ))}
-                                  {provided.placeholder}
-                                </ul>
-                              )}
-                            </Droppable>
-                          </DragDropContext>
-                        </div>
-                      </>
-                    ) : (
-                      <div
-                        className="flex gap-2 items-center bg-[#EBF1F7] p-2 rounded-md mb-3 hover:cursor-pointer"
-                        onClick={() => setShowTodoSection(true)}>
-                        <ImageRound
-                          className="w-[17px] h-[17px] hover:cursor-pointer"
-                          src="/icons/open-description.svg"
-                          name="Open description icon"
-                        />
-                        <p className="text-primary text-sm">
-                          To Do リストを作成
-                        </p>
-                      </div>
-                    )}
+                                            )}
+                                          </div>
+                                        </li>
+                                      </>
+                                    );
+                                    return snapshot.isDragging
+                                      ? ReactDOM.createPortal(
+                                          draggableElement,
+                                          document.body,
+                                        )
+                                      : draggableElement;
+                                  }}
+                                </Draggable>
+                              ))}
+                              {provided.placeholder}
+                            </ul>
+                          )}
+                        </Droppable>
+                      </DragDropContext>
+                    </div>
+                  </>
+                ) : (
+                  <div
+                    className="flex gap-2 items-center bg-[#EBF1F7] p-2 rounded-md mb-3 hover:cursor-pointer"
+                    onClick={() => setShowTodoSection(true)}>
+                    <ImageRound
+                      className="w-[17px] h-[17px] hover:cursor-pointer"
+                      src="/icons/open-description.svg"
+                      name="Open description icon"
+                    />
+                    <p className="text-primary text-sm">To Do リストを作成</p>
                   </div>
                 )}
+              </div>
               {/* Submit button */}
               {isPermissionAdd &&
                 (action === ActionTask.COPY ||

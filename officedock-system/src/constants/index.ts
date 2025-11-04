@@ -579,3 +579,5 @@ export const CALENDAR_VIEW_OPTIONS = [
     label: '年',
   },
 ];
+
+export const HOURS_IN_DAY = 24;

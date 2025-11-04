@@ -68,6 +68,7 @@ import { apiRouters } from '@constants/routers';
 import {
   addHoursToDate,
   addTimeToDate,
+  adjustHours,
   convertDateToStartDate,
   convertToMinutes,
   convertToTimeString,
@@ -1108,13 +1109,27 @@ const ActionsEventModal = ({
                                     }
                                   },
                                   onBlur: () => {
+                                    const endTime = getValues('endTime');
+
+                                    const formattedStart =
+                                      formatTimeInput(time);
+
                                     if (time) {
+                                      setValue('startTime', formattedStart, {
+                                        shouldDirty: true,
+                                      });
+                                    }
+
+                                    if (!endTime && formattedStart) {
                                       setValue(
-                                        'startTime',
-                                        formatTimeInput(time),
-                                        { shouldDirty: true },
+                                        'endTime',
+                                        adjustHours(formattedStart, 1),
+                                        {
+                                          shouldDirty: true,
+                                        },
                                       );
                                     }
+
                                     setTime('');
                                     handleConfirmCheckOverlappingLocation();
                                   },
@@ -1125,7 +1140,10 @@ const ActionsEventModal = ({
                                 disabled={isDisabled}
                                 options={optionTimeInput}
                                 onChangeDropdown={(e) => {
-                                  setValue('startTime', e.label, {
+                                  const endTime = getValues('endTime');
+                                  const startTime = e.label;
+
+                                  setValue('startTime', startTime, {
                                     shouldDirty: true,
                                   });
                                   if (getValues('startDate') === null) {
@@ -1137,6 +1155,15 @@ const ActionsEventModal = ({
                                         return today;
                                       })(),
                                       { shouldDirty: true },
+                                    );
+                                  }
+                                  if (!endTime && startTime) {
+                                    setValue(
+                                      'endTime',
+                                      adjustHours(startTime, 1),
+                                      {
+                                        shouldDirty: true,
+                                      },
                                     );
                                   }
                                   handleConfirmCheckOverlappingLocation();
@@ -1237,12 +1264,14 @@ const ActionsEventModal = ({
                                     }
                                   },
                                   onBlur: (e) => {
+                                    const startTime = getValues('startTime');
+
+                                    const formattedEnd = formatTimeInput(time);
+
                                     if (time) {
-                                      setValue(
-                                        'endTime',
-                                        formatTimeInput(time),
-                                        { shouldDirty: true },
-                                      );
+                                      setValue('endTime', formattedEnd, {
+                                        shouldDirty: true,
+                                      });
                                     }
 
                                     if (
@@ -1262,6 +1291,17 @@ const ActionsEventModal = ({
                                         });
                                       }
                                     }
+
+                                    if (!startTime && formattedEnd) {
+                                      setValue(
+                                        'startTime',
+                                        adjustHours(formattedEnd, -1),
+                                        {
+                                          shouldDirty: true,
+                                        },
+                                      );
+                                    }
+
                                     setTime('');
                                     handleConfirmCheckOverlappingLocation();
                                   },
@@ -1271,7 +1311,10 @@ const ActionsEventModal = ({
                                 disabled={isDisabled}
                                 options={optionTimeInput}
                                 onChangeDropdown={(e) => {
-                                  setValue('endTime', e.label, {
+                                  const startTime = getValues('startTime');
+                                  const endTime = e.label;
+
+                                  setValue('endTime', endTime, {
                                     shouldDirty: true,
                                   });
                                   if (getValues('endDate') === null) {
@@ -1293,6 +1336,16 @@ const ActionsEventModal = ({
                                       );
                                     }
                                   }
+                                  if (!startTime && endTime) {
+                                    setValue(
+                                      'startTime',
+                                      adjustHours(endTime, -1),
+                                      {
+                                        shouldDirty: true,
+                                      },
+                                    );
+                                  }
+
                                   handleConfirmCheckOverlappingLocation();
                                 }}
                               />
@@ -1835,7 +1888,9 @@ const ActionsEventModal = ({
           </div>
           {/* Event category */}
           <div className="flex justify-between">
-            <p className={`w-fit font-medium text-[14px] mt-9`}>予定カテゴリー</p>
+            <p className={`w-fit font-medium text-[14px] mt-9`}>
+              予定カテゴリー
+            </p>
             <div className="w-[518px]">
               <p className="text-[#7F8991] mb-[14px] font-medium text-sm flex items-end leading-none">
                 カレンダー
