@@ -2477,6 +2477,7 @@ const KanbanBoardTaskTeam = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [taskAddEmpty, selectedOrganizationSideBar, isConcurrently]);
+
   return (
     <>
       <div
@@ -2727,7 +2728,7 @@ const KanbanBoardTaskTeam = () => {
               onDragEnd={onDragEnd}>
               <div
                 ref={listContainerRef}
-                className={`flex gap-4  h-[calc(100vh_-_250px)] overflow-x-auto items-stretch  ${expanded ? 'w-[calc(100vw_-_270px)]' : 'w-[calc(100vw_-_120px)]'}`}>
+                className={`flex gap-8  h-[calc(100vh_-_235px)] overflow-x-auto items-stretch  ${expanded ? 'w-[calc(100vw_-_270px)]' : 'w-[calc(100vw_-_120px)]'}`}>
                 <NoSettingColumn
                   totalNoSetting={totalNoSetting}
                   setTotalNoSetting={setTotalNoSetting}

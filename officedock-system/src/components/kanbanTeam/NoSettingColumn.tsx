@@ -124,7 +124,7 @@ const NoSettingColumn = ({
         observer.unobserve(listTaskRef.current);
       }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [totalNoSetting, isFetching]);
 
   return (
@@ -222,69 +222,69 @@ const NoSettingColumn = ({
                 </DynamicTooltip>
               </div>
             </div>
-            <Droppable droppableId={COLUMN_ID_TASK}>
-              {(provided) => (
-                <div
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                  style={{
-                    paddingTop: `${(columnWidth / 247) * 22}px`,
-                    marginRight: `-${(columnWidth / 247) * 16}px`,
-                    boxShadow: `inset -${(columnWidth / 247) * 16}px 0 0 '#EBF1F7'`,
-                    minHeight: '700px',
-                    maxHeight: '2000px',
-                  }}
-                  className={`flex-grow overflow-y-auto w-[100%]
-                 overflow-x-hidden scrollbar-gutter-stable `}>
+            <div className="h-[calc(100vh_-_285px)] overflow-y-auto">
+              <Droppable droppableId={COLUMN_ID_TASK}>
+                {(provided) => (
                   <div
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
                     style={{
-                      paddingLeft: `${(columnWidth / 247) * 14}px`,
-                      paddingRight: `${(columnWidth / 247) * 14}px`,
-                      marginRight: `${(columnWidth / 247) * 9}px`,
-                      minHeight: '700px',
+                      paddingTop: `${(columnWidth / 247) * 22}px`,
+                      marginRight: `-${(columnWidth / 247) * 16}px`,
+                      boxShadow: `inset -${(columnWidth / 247) * 16}px 0 0 '#EBF1F7'`,
                     }}
-                    className={`flex flex-col overflow-x-hidden  h-full pt-[14px] bg-[#DAE8F1] rounded-lg`}>
-                    {listTaskNoSetting.map((item, index) => (
-                      <>
-                        <ItemNoSetting
-                          key={item.id}
-                          id={`${item.id}`}
-                          index={index}
-                          content={item}
-                          editTask={() => {}}
-                          handlePinItem={pinItemToTopNoSetting}
-                          handleActionEditTask={(id: number) => {
-                            handleSetParam({
-                              id: `${id}`,
-                              action: ActionTask.EDIT,
-                            });
-                          }}
-                          handleConfirmCopyTask={() => {}}
-                          handleUpdateItemInline={() => {}}
-                        />
-                      </>
-                    ))}
-                    {/* Make sure the placeholder is rendered here */}
-                    {provided.placeholder}
-                    {/* Loading spinner logic */}
-                    <div ref={listTaskRef}>
-                      {totalNoSetting?.hasNext ? (
-                        isLoadingMore && (
-                          <div className="h-7">
-                            <Spinner
-                              className="!h-fit py-3"
-                              iconClassName="h-6 w-6"
-                            />
-                          </div>
-                        )
-                      ) : (
-                        <div></div>
-                      )}
+                    className={`flex-grow overflow-y-auto w-[100%]
+                 overflow-x-hidden scrollbar-gutter-stable `}>
+                    <div
+                      style={{
+                        paddingLeft: `${(columnWidth / 247) * 14}px`,
+                        paddingRight: `${(columnWidth / 247) * 14}px`,
+                        marginRight: `${(columnWidth / 247) * 9}px`,
+                        minHeight: '700px',
+                      }}
+                      className={`flex flex-col overflow-x-hidden  h-full pt-[14px] bg-[#DAE8F1] rounded-lg`}>
+                      {listTaskNoSetting.map((item, index) => (
+                        <>
+                          <ItemNoSetting
+                            key={item.id}
+                            id={`${item.id}`}
+                            index={index}
+                            content={item}
+                            editTask={() => {}}
+                            handlePinItem={pinItemToTopNoSetting}
+                            handleActionEditTask={(id: number) => {
+                              handleSetParam({
+                                id: `${id}`,
+                                action: ActionTask.EDIT,
+                              });
+                            }}
+                            handleConfirmCopyTask={() => {}}
+                            handleUpdateItemInline={() => {}}
+                          />
+                        </>
+                      ))}
+                      {/* Make sure the placeholder is rendered here */}
+                      {provided.placeholder}
+                      {/* Loading spinner logic */}
+                      <div ref={listTaskRef}>
+                        {totalNoSetting?.hasNext ? (
+                          isLoadingMore && (
+                            <div className="h-7">
+                              <Spinner
+                                className="!h-fit py-3"
+                                iconClassName="h-6 w-6"
+                              />
+                            </div>
+                          )
+                        ) : (
+                          <div></div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </Droppable>
+                )}
+              </Droppable>
+            </div>
           </div>
         </div>
       ) : (

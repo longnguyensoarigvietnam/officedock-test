@@ -341,7 +341,6 @@ const TaskCard = ({
     const cursorY = e.clientY;
     const isNearBottom = viewportHeight - cursorY < 150;
     const nextTop = isNearBottom ? e.clientY - 150 : e.clientY;
-
     // --- ONLY CALCULATE LEFT BY EVENT ---
     // Get the host event FullCalendar (sure to get many views)
     const host =
@@ -517,11 +516,9 @@ const TaskCard = ({
         }}
         ref={containerRef}
         onMouseEnter={(e) => {
-          if (isShiftPressed || isInteracting) return;
-          const delay = getDelay();
-
-          timeoutId.current = setTimeout(() => {
-            handleMouseEnter(e);
+          if (isSmallItem) {
+            if (isShiftPressed || isInteracting) return;
+            const delay = getDelay();
 
             const fcEvent = containerRef.current?.closest(
               '.fc-event',
@@ -532,14 +529,14 @@ const TaskCard = ({
             if (resizer) {
               resizer.style.setProperty('opacity', '0', 'important');
             }
-
-            recordHover();
-          }, delay);
+            timeoutId.current = setTimeout(() => {
+              handleMouseEnter(e);
+              recordHover();
+            }, delay);
+          }
         }}
         onMouseLeave={() => {
           if (timeoutId.current) clearTimeout(timeoutId.current);
-          handleMouseLeave();
-
           const fcEvent = containerRef.current?.closest(
             '.fc-event',
           ) as HTMLElement | null;
@@ -549,33 +546,32 @@ const TaskCard = ({
           if (resizer) {
             resizer.style.setProperty('opacity', '1', 'important');
           }
+          handleMouseLeave();
         }}
         className={`h-full event-bottom  ${isSelect && '!opacity-30'} ${isStart && resourcePlan && '!border !border-[#3CABF3]'} flex relative z-30  bg-white card-schedule item-schedule-shadow ${isCalculation && '!bg-custom-gradient'} ${!resourcePlan && ' !text-white'} ${isEvent && '!text-primary'}    text-black rounded-[14px]   justify-between   px-2 border`}>
         <div className="flex w-full relative  h-full justify-between ">
           <div
             onMouseEnter={(e) => {
               if (isShiftPressed || isInteracting) return;
+              const fcEvent = containerRef.current?.closest(
+                '.fc-event',
+              ) as HTMLElement | null;
+              const resizer = fcEvent?.querySelector(
+                '.fc-event-resizer-end',
+              ) as HTMLElement | null;
+              if (resizer) {
+                resizer.style.setProperty('opacity', '0', 'important');
+              }
               const delay = getDelay();
 
               timeoutId.current = setTimeout(() => {
                 handleMouseEnter(e);
-
-                const fcEvent = containerRef.current?.closest(
-                  '.fc-event',
-                ) as HTMLElement | null;
-                const resizer = fcEvent?.querySelector(
-                  '.fc-event-resizer-end',
-                ) as HTMLElement | null;
-                if (resizer) {
-                  resizer.style.setProperty('opacity', '0', 'important');
-                }
 
                 recordHover();
               }, delay);
             }}
             onMouseLeave={() => {
               if (timeoutId.current) clearTimeout(timeoutId.current);
-              handleMouseLeave();
 
               const fcEvent = containerRef.current?.closest(
                 '.fc-event',
@@ -586,6 +582,7 @@ const TaskCard = ({
               if (resizer) {
                 resizer.style.setProperty('opacity', '1', 'important');
               }
+              handleMouseLeave();
             }}
             className={`group  flex items-end ${isTooSmall && 'flex-col justify-between'} h-full bg-transparent z-[20] w-full ${resourcePlan ? 'h-[calc(100%_-_27px)]' : 'h-[calc(100%_-_10px)]'} ${isSmallItem && '!h-full overflow-hidden'}`}>
             <div
