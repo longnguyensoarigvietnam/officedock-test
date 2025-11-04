@@ -586,6 +586,7 @@ const AllocationTeamCategory = memo(
                             progressDataSmall.map((item, index) => (
                               <ProgressBarTeamStatistic
                                 key={index}
+                                isLast
                                 startDate={startDate}
                                 endDate={endDate}
                                 classProgressClass="h-[20px] rounded-[4px]"

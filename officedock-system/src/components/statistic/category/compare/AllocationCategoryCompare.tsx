@@ -1212,6 +1212,7 @@ const AllocationCategoryCompare = memo(
                                     pair.main ? pair.main.mergedItems : []
                                   }
                                   showInfo={false}
+                                  isLast
                                   startDate={startDate}
                                   endDate={endDate}
                                 />
@@ -1241,6 +1242,7 @@ const AllocationCategoryCompare = memo(
                                     pair.compare ? pair.compare.mergedItems : []
                                   }
                                   showInfo={false}
+                                  isLast
                                   startDateCompare={startDateCompare}
                                   endDateCompare={endDateCompare}
                                 />

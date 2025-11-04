@@ -316,30 +316,57 @@ const TaskCard = ({
   const popupRef = useRef<HTMLDivElement>(null);
   const timeoutId = useRef<NodeJS.Timeout | null>(null);
 
+  const POPUP_WIDTH = 250; //  w-[250px]
+  const GAP = 10;
+
+  function computePopupLeftByEvent(host: HTMLElement) {
+    const rect = host.getBoundingClientRect();
+    const vw = window.innerWidth;
+
+    // Priority to display on the right side of the event
+    const rightSide = rect.right + GAP;
+    const leftSide = rect.left - POPUP_WIDTH - GAP;
+
+    // If the right edge overflows, move it to the left; otherwise, use the right side.
+    if (rightSide + POPUP_WIDTH > vw) {
+      // block from exceeding the left edge
+      return Math.max(GAP, leftSide);
+    }
+    // block from exceeding the right edge
+    return Math.min(rightSide, vw - POPUP_WIDTH - GAP);
+  }
+
   const handleMouseEnter = (e: any) => {
     const viewportHeight = window.innerHeight;
     const cursorY = e.clientY;
-
     const isNearBottom = viewportHeight - cursorY < 150;
-    setLocal({
-      clientX: e.clientX,
-      clientY: isNearBottom ? e.clientY - 150 : e.clientY,
-    });
+    const nextTop = isNearBottom ? e.clientY - 150 : e.clientY;
+
+    // --- ONLY CALCULATE LEFT BY EVENT ---
+    // Get the host event FullCalendar (sure to get many views)
+    const host =
+      (containerRef.current?.closest(
+        '.fc-timegrid-event, .fc-event, .fc-timeline-event',
+      ) as HTMLElement | null) ?? (e.currentTarget as HTMLElement | null);
+
+    // If event is found → track event; if not → fallback to mouse (same as before)
+    const nextLeft = host ? computePopupLeftByEvent(host) : e.clientX - 100;
+
+    // Update state: only change left according to event, top remains the same according to old logic
+    setLocal({ clientX: nextLeft, clientY: nextTop });
     setIsHovering(true);
   };
+  const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleMouseLeave = () => {
-    setTimeout(() => {
-      if (!popupRef.current?.matches(':hover')) {
-        setIsHovering(false);
-        setIsShowAction(false);
-      }
-    }, 1100);
-  };
+    // If there is an old timeout → clear it
+    if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
 
-  const handlePopupLeave = () => {
-    setTimeout(() => {
-      if (!popupRef.current?.matches(':hover')) {
+    // Set new timeout, but only hide if no hover event or popup
+    hideTimeoutRef.current = setTimeout(() => {
+      const isOverPopup = popupRef.current?.matches(':hover');
+      const isOverEvent = containerRef.current?.matches(':hover');
+      if (!isOverPopup && !isOverEvent) {
         setIsHovering(false);
         setIsShowAction(false);
       }
@@ -359,11 +386,12 @@ const TaskCard = ({
       <div
         className={`w-[250px]    fixed top-0 left-0 z-[999]  h-fit rounded-[14px] pl-5 pr-[10px] pt-[10px] pb-5 bg-white`}
         ref={popupRef}
-        onMouseLeave={handlePopupLeave}
+        onMouseLeave={handleMouseLeave}
         onMouseEnter={() => setIsHovering(true)}
         style={{
           top: local.clientY,
-          left: local.clientX - 100,
+          left:
+            view === ViewOptions.WEEK ? local.clientX - 30 : local.clientX - 15,
           boxShadow: '0px 2px 8px 0px #0000001A',
         }}>
         {isEvent ? (
@@ -489,65 +517,72 @@ const TaskCard = ({
         }}
         ref={containerRef}
         onMouseEnter={(e) => {
-          if (isSmallItem) {
-            if (isShiftPressed) return;
-            if (isInteracting) return;
+          if (isShiftPressed || isInteracting) return;
+          const delay = getDelay();
+
+          timeoutId.current = setTimeout(() => {
             handleMouseEnter(e);
+
             const fcEvent = containerRef.current?.closest(
               '.fc-event',
-            ) as HTMLElement;
+            ) as HTMLElement | null;
             const resizer = fcEvent?.querySelector(
               '.fc-event-resizer-end',
-            ) as HTMLElement;
+            ) as HTMLElement | null;
             if (resizer) {
               resizer.style.setProperty('opacity', '0', 'important');
             }
-          }
+
+            recordHover();
+          }, delay);
         }}
         onMouseLeave={() => {
-          if (isSmallItem) {
-            handleMouseLeave();
-            const fcEvent = containerRef.current?.closest(
-              '.fc-event',
-            ) as HTMLElement;
-            const resizer = fcEvent?.querySelector(
-              '.fc-event-resizer-end',
-            ) as HTMLElement;
-            if (resizer) {
-              resizer.style.setProperty('opacity', '1', 'important');
-            }
+          if (timeoutId.current) clearTimeout(timeoutId.current);
+          handleMouseLeave();
+
+          const fcEvent = containerRef.current?.closest(
+            '.fc-event',
+          ) as HTMLElement | null;
+          const resizer = fcEvent?.querySelector(
+            '.fc-event-resizer-end',
+          ) as HTMLElement | null;
+          if (resizer) {
+            resizer.style.setProperty('opacity', '1', 'important');
           }
         }}
         className={`h-full event-bottom  ${isSelect && '!opacity-30'} ${isStart && resourcePlan && '!border !border-[#3CABF3]'} flex relative z-30  bg-white card-schedule item-schedule-shadow ${isCalculation && '!bg-custom-gradient'} ${!resourcePlan && ' !text-white'} ${isEvent && '!text-primary'}    text-black rounded-[14px]   justify-between   px-2 border`}>
         <div className="flex w-full relative  h-full justify-between ">
           <div
             onMouseEnter={(e) => {
-              if (isShiftPressed) return;
-              if (isInteracting) return;
+              if (isShiftPressed || isInteracting) return;
               const delay = getDelay();
+
               timeoutId.current = setTimeout(() => {
                 handleMouseEnter(e);
+
                 const fcEvent = containerRef.current?.closest(
                   '.fc-event',
-                ) as HTMLElement;
+                ) as HTMLElement | null;
                 const resizer = fcEvent?.querySelector(
                   '.fc-event-resizer-end',
-                ) as HTMLElement;
+                ) as HTMLElement | null;
                 if (resizer) {
                   resizer.style.setProperty('opacity', '0', 'important');
                 }
+
                 recordHover();
               }, delay);
             }}
             onMouseLeave={() => {
               if (timeoutId.current) clearTimeout(timeoutId.current);
               handleMouseLeave();
+
               const fcEvent = containerRef.current?.closest(
                 '.fc-event',
-              ) as HTMLElement;
+              ) as HTMLElement | null;
               const resizer = fcEvent?.querySelector(
                 '.fc-event-resizer-end',
-              ) as HTMLElement;
+              ) as HTMLElement | null;
               if (resizer) {
                 resizer.style.setProperty('opacity', '1', 'important');
               }

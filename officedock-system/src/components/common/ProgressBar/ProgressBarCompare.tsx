@@ -96,7 +96,7 @@ const PercentageBarCompare = ({
               if (hoverTimeoutRef.current)
                 clearTimeout(hoverTimeoutRef.current);
             }}
-            className={`${isTag ? 'w-[220px]' : 'w-[280px]'}  h-[100px] mt-[14px] flex`}>
+            className={`${isTag ? 'w-[220px]' : 'w-[280px]'} relative  h-[100px] mt-[14px] flex`}>
             {data.length > 0 ? (
               data.map((item, index) => (
                 <div
@@ -114,7 +114,7 @@ const PercentageBarCompare = ({
                       clearTimeout(hoverTimeoutRef.current);
                     setHoverIndex(index);
                   }}
-                  className="flex group border-l border-white relative flex-col justify-center items-center text-white text-center py-2"
+                  className="flex group border-l border-white  flex-col justify-center items-center text-white text-center py-2"
                   style={{
                     width: isTag
                       ? `${item.percentage * 2.19}px`
@@ -155,7 +155,7 @@ const PercentageBarCompare = ({
                         setHoverIndex(null);
                       }, 1000);
                     }}
-                    className={`absolute top-0 ${isLast ? 'left-[-100px]' : 'left-[70%]'} z-30  w-[250px]  rounded-[14px] p-5 bg-white ${hoverIndex === index ? 'block' : 'hidden'} pointer-events-auto transition-opacity duration-300 shadow-lg `}>
+                    className={`absolute top-0 ${isLast ? (isTag ? 'right-[230px]' : 'right-[290px]') : isTag ? 'left-[230px]' : 'left-[290px]'} z-30  w-[250px]  rounded-[14px] p-5 bg-white ${hoverIndex === index ? 'block' : 'hidden'} pointer-events-auto transition-opacity duration-300 shadow-lg `}>
                     {item.mergedItems.length > 0 ? (
                       <>
                         <p className="text-xs text-start font-medium text-[#77858F] mb-5">
@@ -305,7 +305,7 @@ const PercentageBarCompare = ({
               if (hoverTimeoutCompareRef.current)
                 clearTimeout(hoverTimeoutCompareRef.current);
             }}
-            className={`${isTag ? 'w-[220px]' : 'w-[280px]'}  flex  h-[100px] mt-[30px]`}>
+            className={`${isTag ? 'w-[220px]' : 'w-[280px]'} relative  flex  h-[100px] mt-[30px]`}>
             {dataCompare.length > 0 ? (
               dataCompare.map((item, index) => (
                 <div
@@ -323,7 +323,7 @@ const PercentageBarCompare = ({
                       clearTimeout(hoverTimeoutCompareRef.current);
                     setHoverIndexCompare(index);
                   }}
-                  className="flex relative group border-l border-white flex-col justify-center items-center text-white text-center py-2"
+                  className="flex group border-l border-white flex-col justify-center items-center text-white text-center py-2"
                   style={{
                     width: isTag
                       ? `${item.percentage * 2.188}px`
@@ -365,7 +365,7 @@ const PercentageBarCompare = ({
                         setHoverIndexCompare(null);
                       }, 1000);
                     }}
-                    className={`absolute top-0 ${isLast ? 'left-[-125px]' : 'left-[70%]'} w-[250px] z-30  rounded-[14px] p-5 bg-white ${hoverIndexCompare === index ? 'block' : 'hidden'} pointer-events-auto transition-opacity duration-300 shadow-lg `}>
+                    className={`absolute top-0 ${isLast ? (isTag ? 'right-[230px]' : 'right-[290px]') : isTag ? 'left-[230px]' : 'left-[290px]'} w-[250px] z-30  rounded-[14px] p-5 bg-white ${hoverIndexCompare === index ? 'block' : 'hidden'} pointer-events-auto transition-opacity duration-300 shadow-lg `}>
                     {item.mergedItems.length > 0 ? (
                       <>
                         <p className="text-xs text-start font-medium text-[#77858F] mb-5">

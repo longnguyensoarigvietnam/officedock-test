@@ -33,6 +33,7 @@ interface ProgressBarProps {
   startDateCompare?: Date;
   endDateCompare?: Date | null;
   isAllTeam?: boolean;
+  isLast?: boolean;
   handleClickTooltip: (id: number | null, organizationId?: string) => void;
   handleClickChart?: (data: OptionDropdownType) => void;
 }
@@ -55,6 +56,7 @@ const ProgressBarStatistic = ({
   endDateCompare,
   organizationId,
   isAllTeam = false,
+  isLast,
   handleClickTooltip,
   handleClickChart,
 }: ProgressBarProps) => {
@@ -127,7 +129,7 @@ const ProgressBarStatistic = ({
                   setHovering(false);
                 }, 1000);
               }}
-              className={`absolute -top-[25%] left-[40%] w-[250px] rounded-[14px] py-5 bg-white ${isHovering ? 'block' : 'hidden'}  pointer-events-auto transition-opacity duration-300 shadow-lg z-10`}>
+              className={`absolute -top-[25%] ${isLast ? 'right-[100%]' : 'left-[100%]'} l w-[250px] rounded-[14px] py-5 bg-white ${isHovering ? 'block' : 'hidden'}  pointer-events-auto transition-opacity duration-300 shadow-lg z-10`}>
               {id != -1 ? (
                 <div className="px-5">
                   {startDate && endDate && (

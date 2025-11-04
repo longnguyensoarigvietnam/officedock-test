@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 
 import {
   formatShowStatisticTask,
@@ -43,6 +43,17 @@ const PercentageBarCompareTeam = ({
   isLoadingCompare,
   handleClickChart,
 }: Props) => {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+
+  // Compare
+  const [hoverIndexCompare, setHoverIndexCompare] = useState<number | null>(
+    null,
+  );
+  const containerCompareRef = useRef<HTMLDivElement | null>(null);
+  const hoverTimeoutCompareRef = useRef<NodeJS.Timeout | null>(null);
+
   return (
     <div>
       {isLoading ? (
@@ -70,7 +81,18 @@ const PercentageBarCompareTeam = ({
             )}
           </div>
           <div
-            className={`${isTag ? 'w-[220px]' : 'w-[280px]'} mt-[14px]  h-[100px] flex`}>
+            ref={containerRef}
+            onMouseLeave={() => {
+              // If it really gets out of the whole container
+              hoverTimeoutRef.current = setTimeout(() => {
+                setHoverIndex(null);
+              }, 1000);
+            }}
+            onMouseEnter={() => {
+              if (hoverTimeoutRef.current)
+                clearTimeout(hoverTimeoutRef.current);
+            }}
+            className={`${isTag ? 'w-[220px]' : 'w-[280px]'} relative mt-[14px]  h-[100px] flex`}>
             {data.length > 0 ? (
               data.map((item, index) => (
                 <div
@@ -83,7 +105,12 @@ const PercentageBarCompareTeam = ({
                       });
                     }
                   }}
-                  className="flex group border-l border-white relative flex-col justify-center items-center text-white text-center py-2"
+                  onMouseEnter={() => {
+                    if (hoverTimeoutRef.current)
+                      clearTimeout(hoverTimeoutRef.current);
+                    setHoverIndex(index);
+                  }}
+                  className="flex group border-l border-white  flex-col justify-center items-center text-white text-center py-2"
                   style={{
                     width: isTag
                       ? `${item.percentage * 2.188}px`
@@ -102,7 +129,29 @@ const PercentageBarCompareTeam = ({
                     style={{
                       boxShadow: '0px 2px 8px 0px #0000001A',
                     }}
-                    className={`absolute top-0 ${isLast ? 'left-[-100px]' : 'left-[70%]'}  w-[288px]  rounded-md py-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10`}>
+                    onMouseEnter={() => {
+                      if (hoverTimeoutRef.current)
+                        clearTimeout(hoverTimeoutRef.current);
+                    }}
+                    onMouseLeave={(e) => {
+                      const nextEl = e.relatedTarget as HTMLElement | null;
+                      const container = containerRef.current;
+
+                      // 🔍 If the next element is NOT in the container → it means it's really out
+                      if (
+                        !container ||
+                        (nextEl && container.contains(nextEl))
+                      ) {
+                        // Still in the chart area → DO NOT turn off the tooltip
+                        return;
+                      }
+
+                      // Exit the chart area → hide the tooltip
+                      hoverTimeoutRef.current = setTimeout(() => {
+                        setHoverIndex(null);
+                      }, 1000);
+                    }}
+                    className={`absolute top-0 ${isLast ? 'right-[100%]' : 'left-[100%]'}  w-[288px]  rounded-md py-5 bg-white ${hoverIndex === index ? 'block' : 'hidden'}  pointer-events-auto transition-opacity duration-300 shadow-lg z-10`}>
                     {item.mergedItems.length > 0 ? (
                       <>
                         <p className="text-xs text-start font-medium text-[#77858F] mb-5 px-5">
@@ -266,7 +315,18 @@ const PercentageBarCompareTeam = ({
       ) : (
         <>
           <div
-            className={`${isTag ? 'w-[220px]' : 'w-[280px]'} flex  h-[100px] mt-[30px]`}>
+            ref={containerCompareRef}
+            onMouseLeave={() => {
+              // If it really gets out of the whole container
+              hoverTimeoutCompareRef.current = setTimeout(() => {
+                setHoverIndexCompare(null);
+              }, 1000);
+            }}
+            onMouseEnter={() => {
+              if (hoverTimeoutCompareRef.current)
+                clearTimeout(hoverTimeoutCompareRef.current);
+            }}
+            className={`${isTag ? 'w-[220px]' : 'w-[280px]'} relative flex  h-[100px] mt-[30px]`}>
             {dataCompare.length > 0 ? (
               dataCompare.map((item, index) => (
                 <div
@@ -279,7 +339,12 @@ const PercentageBarCompareTeam = ({
                       });
                     }
                   }}
-                  className="flex relative border-l border-white group flex-col justify-center items-center text-white text-center py-2"
+                  onMouseEnter={() => {
+                    if (hoverTimeoutCompareRef.current)
+                      clearTimeout(hoverTimeoutCompareRef.current);
+                    setHoverIndexCompare(index);
+                  }}
+                  className="flex  border-l border-white group flex-col justify-center items-center text-white text-center py-2"
                   style={{
                     width: isTag
                       ? `${item.percentage * 2.188}px`
@@ -299,7 +364,29 @@ const PercentageBarCompareTeam = ({
                     style={{
                       boxShadow: '0px 2px 8px 0px #0000001A',
                     }}
-                    className={`absolute top-0 ${isLast ? 'left-[-100px]' : 'left-[70%]'}  w-[288px]  rounded-md py-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10`}>
+                    onMouseEnter={() => {
+                      if (hoverTimeoutCompareRef.current)
+                        clearTimeout(hoverTimeoutCompareRef.current);
+                    }}
+                    onMouseLeave={(e) => {
+                      const nextEl = e.relatedTarget as HTMLElement | null;
+                      const container = containerCompareRef.current;
+
+                      // 🔍 If the next element is NOT in the container → it means it's really out
+                      if (
+                        !container ||
+                        (nextEl && container.contains(nextEl))
+                      ) {
+                        // Still in the chart area → DO NOT turn off the tooltip
+                        return;
+                      }
+
+                      // Exit the chart area → hide the tooltip
+                      hoverTimeoutCompareRef.current = setTimeout(() => {
+                        setHoverIndexCompare(null);
+                      }, 1000);
+                    }}
+                    className={`absolute top-0 ${isLast ? 'right-[100%]' : 'left-[100%]'}  w-[288px]  rounded-md py-5 bg-white ${hoverIndexCompare === index ? 'block' : 'hidden'}  pointer-events-auto transition-opacity duration-300 shadow-lg z-10`}>
                     {item.mergedItems.length > 0 ? (
                       <>
                         <p className="text-xs text-start font-medium text-[#77858F] mb-5 px-5">

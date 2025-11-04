@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import ImageRound from '@components/common/ImageRound';
@@ -25,6 +25,7 @@ type ProgressDataType = {
 };
 
 interface ProgressBarProps {
+  isLast?: boolean;
   item: ProgressDataType;
   itemCompare?: ProgressDataType;
   classProgressClass?: string;
@@ -116,6 +117,7 @@ function buildUserCompareData(
 }
 
 const ProgressBarTeamTagCompare = ({
+  isLast,
   item,
   itemCompare,
   organizationId,
@@ -132,6 +134,27 @@ const ProgressBarTeamTagCompare = ({
   const [isExtendUser, setExtendUser] = useState(false);
 
   const userCompareRows = buildUserCompareData(item, itemCompare);
+
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isHovering, setHovering] = useState<boolean>(false);
+  // user
+  const containerUserRef = useRef<HTMLDivElement | null>(null);
+  const hoverTimeoutUserRef = useRef<NodeJS.Timeout | null>(null);
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+
+  // Compare
+  const containerCompareRef = useRef<HTMLDivElement | null>(null);
+  const hoverTimeoutCompareRef = useRef<NodeJS.Timeout | null>(null);
+  const [isCompareHovering, setCompareHovering] = useState<boolean>(false);
+
+  // User compare
+  const containerUserCompareRef = useRef<HTMLDivElement | null>(null);
+  const hoverTimeoutUserCompareRef = useRef<NodeJS.Timeout | null>(null);
+
+  const [hoverUserCompareIndex, setHoverUserCompareIndex] = useState<
+    number | null
+  >(null);
 
   return (
     <>
@@ -165,6 +188,21 @@ const ProgressBarTeamTagCompare = ({
           <div
             className={`group w-full relative h-4 bg-gray-300 ${classProgressClass}`}>
             <div
+              ref={containerRef}
+              onMouseLeave={() => {
+                // If it really gets out of the whole container
+                hoverTimeoutRef.current = setTimeout(() => {
+                  setHovering(false);
+                }, 1000);
+              }}
+              onMouseEnter={() => {
+                if (hoverTimeoutRef.current)
+                  clearTimeout(hoverTimeoutRef.current);
+                setCompareHovering(false);
+                setHoverUserCompareIndex(null);
+                setHoverIndex(null);
+                setHovering(true);
+              }}
               className="h-full transition-all duration-500 rounded-[4px]"
               style={{
                 width: `${item.value}%`,
@@ -177,7 +215,27 @@ const ProgressBarTeamTagCompare = ({
                     value: item.id || '',
                   });
               }}></div>
-            <div className="absolute -top-[25%] left-[40%] w-[288px] rounded-[14px] py-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
+            <div
+              onMouseEnter={() => {
+                if (hoverTimeoutRef.current)
+                  clearTimeout(hoverTimeoutRef.current);
+              }}
+              onMouseLeave={(e) => {
+                const nextEl = e.relatedTarget as HTMLElement | null;
+                const container = containerRef.current;
+
+                // 🔍 If the next element is NOT in the container → it means it's really out
+                if (!container || (nextEl && container.contains(nextEl))) {
+                  // Still in the chart area → DO NOT turn off the tooltip
+                  return;
+                }
+
+                // Exit the chart area → hide the tooltip
+                hoverTimeoutRef.current = setTimeout(() => {
+                  setHovering(false);
+                }, 1000);
+              }}
+              className={`absolute -top-[25%] ${isLast ? 'right-[100%]' : 'left-[100%]'} ${isHovering ? 'block' : 'hidden'} w-[288px] rounded-[14px] py-5 bg-white  pointer-events-auto transition-opacity duration-300 shadow-lg z-10`}>
               {item.id != -1 ? (
                 <div>
                   {startDate && endDate && (
@@ -326,6 +384,21 @@ const ProgressBarTeamTagCompare = ({
           <div
             className={`group w-full relative h-4 bg-gray-300 ${classProgressClass}`}>
             <div
+              ref={containerCompareRef}
+              onMouseLeave={() => {
+                // If it really gets out of the whole container
+                hoverTimeoutCompareRef.current = setTimeout(() => {
+                  setCompareHovering(false);
+                }, 1000);
+              }}
+              onMouseEnter={() => {
+                if (hoverTimeoutCompareRef.current)
+                  clearTimeout(hoverTimeoutCompareRef.current);
+                setHovering(false);
+                setHoverUserCompareIndex(null);
+                setHoverIndex(null);
+                setCompareHovering(true);
+              }}
               className="h-full transition-all duration-500 rounded-[4px]"
               style={{
                 width: `${itemCompare?.value}%`,
@@ -339,7 +412,27 @@ const ProgressBarTeamTagCompare = ({
                   });
               }}></div>
             {itemCompare && itemCompare?.value > 0 && (
-              <div className="absolute -top-[25%] left-[40%] w-[250px] rounded-[14px] py-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
+              <div
+                onMouseEnter={() => {
+                  if (hoverTimeoutCompareRef.current)
+                    clearTimeout(hoverTimeoutCompareRef.current);
+                }}
+                onMouseLeave={(e) => {
+                  const nextEl = e.relatedTarget as HTMLElement | null;
+                  const container = containerCompareRef.current;
+
+                  // 🔍 If the next element is NOT in the container → it means it's really out
+                  if (!container || (nextEl && container.contains(nextEl))) {
+                    // Still in the chart area → DO NOT turn off the tooltip
+                    return;
+                  }
+
+                  // Exit the chart area → hide the tooltip
+                  hoverTimeoutCompareRef.current = setTimeout(() => {
+                    setHovering(false);
+                  }, 1000);
+                }}
+                className={`absolute -top-[25%] ${isLast ? 'right-[100%]' : 'left-[100%]'} w-[250px] ${isCompareHovering ? 'block' : 'hidden'} rounded-[14px] py-5 bg-white pointer-events-auto transition-opacity duration-300 shadow-lg z-10`}>
                 {itemCompare.id != -1 ? (
                   <div>
                     {startDateCompare && endDateCompare && (
@@ -523,6 +616,21 @@ const ProgressBarTeamTagCompare = ({
               <div
                 className={`w-full group relative h-[10px] bg-gray-300 ${classProgressUserClass}`}>
                 <div
+                  ref={containerUserRef}
+                  onMouseLeave={() => {
+                    // If it really gets out of the whole container
+                    hoverTimeoutUserRef.current = setTimeout(() => {
+                      setHoverIndex(null);
+                    }, 1000);
+                  }}
+                  onMouseEnter={() => {
+                    if (hoverTimeoutUserRef.current)
+                      clearTimeout(hoverTimeoutUserRef.current);
+                    setHovering(false);
+                    setCompareHovering(false);
+                    setHoverUserCompareIndex(null);
+                    setHoverIndex(index);
+                  }}
                   className="h-full transition-all duration-500 "
                   style={{
                     width: `${itemUser.user.percent}%`,
@@ -530,7 +638,8 @@ const ProgressBarTeamTagCompare = ({
                   }}></div>
 
                 {/*  Hover user */}
-                <div className="absolute -top-[25%] left-[40%] w-[288px] rounded-[14px] p-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
+                <div
+                  className={`absolute -top-[25%] ${isLast ? 'right-[100%]' : 'left-[100%]'} w-[288px] ${hoverIndex === index ? 'block' : 'hidden'} rounded-[14px] p-5 bg-white pointer-events-auto transition-opacity duration-300 shadow-lg z-10`}>
                   <div className="flex items-center gap-2">
                     <CustomUserAvatar
                       avatarUrl={itemUser.user.user.avatar || ''}
@@ -613,13 +722,48 @@ const ProgressBarTeamTagCompare = ({
               <div
                 className={`w-full group relative h-[10px] bg-gray-300   ${classProgressUserClass}`}>
                 <div
+                  ref={containerUserCompareRef}
+                  onMouseLeave={() => {
+                    // If it really gets out of the whole container
+                    hoverTimeoutUserCompareRef.current = setTimeout(() => {
+                      setHoverUserCompareIndex(null);
+                    }, 1000);
+                  }}
+                  onMouseEnter={() => {
+                    if (hoverTimeoutUserCompareRef.current)
+                      clearTimeout(hoverTimeoutUserCompareRef.current);
+                    setHovering(false);
+                    setCompareHovering(false);
+                    setHoverIndex(null);
+                    setHoverUserCompareIndex(index);
+                  }}
                   className="h-full transition-all overflow-hidden duration-500 "
                   style={{
                     width: `${itemUser.userCompare.percent}%`,
                     backgroundColor: itemUser.userCompare.user.avatarColor,
                   }}></div>
                 {/*  Hover user compare */}
-                <div className="absolute -top-[25%] left-[40%] w-[288px] rounded-[14px] p-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10">
+                <div
+                  onMouseEnter={() => {
+                    if (hoverTimeoutUserCompareRef.current)
+                      clearTimeout(hoverTimeoutUserCompareRef.current);
+                  }}
+                  onMouseLeave={(e) => {
+                    const nextEl = e.relatedTarget as HTMLElement | null;
+                    const container = containerUserCompareRef.current;
+
+                    // 🔍 If the next element is NOT in the container → it means it's really out
+                    if (!container || (nextEl && container.contains(nextEl))) {
+                      // Still in the chart area → DO NOT turn off the tooltip
+                      return;
+                    }
+
+                    // Exit the chart area → hide the tooltip
+                    hoverTimeoutUserCompareRef.current = setTimeout(() => {
+                      setHoverUserCompareIndex(null);
+                    }, 1000);
+                  }}
+                  className={`absolute -top-[25%] ${isLast ? 'right-[100%]' : 'left-[100%]'} w-[288px] ${hoverUserCompareIndex === index ? 'block' : 'hidden'} rounded-[14px] p-5 bg-white hidden  group-hover:block group-hover:pointer-events-auto transition-opacity duration-300 shadow-lg z-10`}>
                   <div className="flex items-center gap-2">
                     <CustomUserAvatar
                       avatarUrl={itemUser.userCompare.user.avatar || ''}

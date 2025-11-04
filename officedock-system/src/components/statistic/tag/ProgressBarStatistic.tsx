@@ -130,7 +130,7 @@ const ProgressBarStatistic = ({
                   setHovering(false);
                 }, 1000);
               }}
-              className={`absolute -top-[25%] ${isLast ? 'left-[10%]' : 'left-[40%]'}  w-[250px] rounded-[14px] p-5 bg-white ${isHovering ? 'block' : 'hidden'} pointer-events-auto transition-opacity duration-300 shadow-lg z-10`}>
+              className={`absolute -top-[25%] ${isLast ? 'right-[100%]' : 'left-[100%]'}  w-[250px] rounded-[14px] p-5 bg-white ${isHovering ? 'block' : 'hidden'} pointer-events-auto transition-opacity duration-300 shadow-lg z-10`}>
               {id != -1 ? (
                 <div>
                   {startDate && endDate && (
