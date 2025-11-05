@@ -167,6 +167,12 @@ const DailyReportDetailBoard = () => {
       router.back();
     },
   });
+  const { creationDataCommonData } = useCreationDataCommon({
+    userId: `${userId}`,
+    options: {
+      get_organization_for_my_statistic: true,
+    },
+  });
   const [isLoadingDownload, setIsLoadingDownload] = useState(false);
 
   const { dataStatisticPDF, refetchDataStatisticPDF } = useDataStatisticPDF({
@@ -2447,6 +2453,15 @@ const DailyReportDetailBoard = () => {
                               <div className="text-left !pt-0 !pl-2">
                                 <ActionDetailDaily
                                   row={row}
+                                  optionsTag={
+                                    row.original.organization
+                                      ? creationDataCommonData?.myStatistics?.find(
+                                          (item) =>
+                                            String(item.id) ==
+                                            String(row.original.organization),
+                                        )
+                                      : undefined
+                                  }
                                   dataTagsList={row.original.tags.map(
                                     (org) => ({
                                       label: String(org.name),

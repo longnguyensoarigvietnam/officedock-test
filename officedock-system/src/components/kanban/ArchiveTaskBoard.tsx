@@ -15,12 +15,14 @@ import { EventWorkCategory } from '@constants/enums';
 
 interface Props {
   ordering: boolean;
+  searchValue?: string;
   handleActionEditTask: (id: number, type?: string) => void;
   handleActionDelete: (id: number) => void;
 }
 
 const ArchiveTaskBoard = ({
   ordering,
+  searchValue,
   handleActionEditTask,
   handleActionDelete,
 }: Props) => {
@@ -37,6 +39,7 @@ const ArchiveTaskBoard = ({
     isLoadingList,
     isFetchingNextPage,
   } = useTaskArchiveList({
+    search: searchValue,
     orderingOptions,
     ordering: ordering ? '-completed_at' : '-archived_at',
   });

@@ -114,6 +114,7 @@ import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 import api from '@base/api';
 import { TaskContext } from '@providers/TaskProvider';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 const DailyReportBoard = () => {
   const { statusTaskSelected, setStatusTaskSelected } = useContext(TaskContext);
@@ -141,6 +142,12 @@ const DailyReportBoard = () => {
     current_screen: 'daily_report',
   });
   const [isLoadingDownload, setIsLoadingDownload] = useState(false);
+
+  const { creationDataCommonData } = useCreationDataCommon({
+    options: {
+      get_organization_for_my_statistic: true,
+    },
+  });
 
   const { dataStatisticPDF, refetchDataStatisticPDF } = useDataStatisticPDF({
     date: formatDateServer(currentDate),
@@ -2274,6 +2281,15 @@ const DailyReportBoard = () => {
                               <div className="text-left !pt-0 !pl-2">
                                 <ActionDetailDaily
                                   row={row}
+                                  optionsTag={
+                                    row.original.organization
+                                      ? creationDataCommonData?.myStatistics?.find(
+                                          (item) =>
+                                            String(item.id) ==
+                                            String(row.original.organization),
+                                        )
+                                      : undefined
+                                  }
                                   dataTagsList={row.original.tags.map(
                                     (org) => ({
                                       label: String(org.name),

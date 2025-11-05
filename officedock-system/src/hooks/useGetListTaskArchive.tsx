@@ -22,6 +22,7 @@ interface UseListTaskArchiveProps {
     organization_ids: OptionDropdownType[];
   } | null;
   pagination?: PaginationProps;
+  search?: string;
   ordering?: string;
   onSuccess?: (success: BasePagination<TaskArchive[]>) => void;
   onError?: (error: AxiosError) => void;
@@ -31,6 +32,7 @@ interface UseListTaskArchiveProps {
 const useTaskArchiveList = ({
   orderingOptions,
   ordering,
+  search,
   onSuccess,
   onError,
   onSettled,
@@ -69,6 +71,7 @@ const useTaskArchiveList = ({
         ...(makeParam(orderingOptions?.tag_ids) && {
           tag_ids: makeParam(orderingOptions?.tag_ids)!,
         }),
+        ...(search && { search }),
         page: String(pageParam ?? 1),
         page_size: String(PAGINATION_PAGE_SIZE_MEDIUM),
       });
@@ -94,7 +97,7 @@ const useTaskArchiveList = ({
     isFetchingNextPage,
     isFetched,
   } = useInfiniteQuery({
-    queryKey: ['getTaskArchiveList', orderingOptions, ordering],
+    queryKey: ['getTaskArchiveList', orderingOptions, ordering, search],
     queryFn: ({ pageParam, signal }) =>
       getTaskArchiveList({ pageParam, signal }),
     enabled: !!token,
