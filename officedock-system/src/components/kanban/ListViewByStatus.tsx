@@ -310,17 +310,21 @@ const ListViewByStatus = ({
       </div>
       {extendByStatus.find((list) => list.id == listId)?.status &&
         (listId == StatusValueTask.MY_ROUTINE ? (
-          <div className="flex text-[#77858F] text-[12px] mb-4 px-1 font-medium">
-            <p className="w-[59%] border-r-[1px]">タスク名</p>
-            <p className="w-[20%] border-r-[1px] text-left pl-[14px]">
-              予定日時
+          <div className="flex items-center text-[#77858F] text-[12px] mb-[10px] px-1 font-medium">
+            <p className="w-[59%]">タスク名</p>
+            <div className="w-[1px] h-[9px] bg-[#D2DBE1]"></div>
+            <p className="w-[20%] text-left pl-[14px]">
+              締切
             </p>
           </div>
         ) : (
-          <div className="flex text-[#77858F] text-[12px] mb-4 px-1 font-medium">
-            <p className="w-[59%] border-r-[1px]">タスク名</p>
-            <p className="w-[15%] border-r-[1px] text-left pl-[14px]">締切</p>
-            <p className="w-[8%] border-r-[1px] text-center">重要</p>
+          <div className="w-[calc(100%_-_14px)] flex items-center text-[#77858F] text-[12px] mb-[10px] px-1 font-medium">
+            <p className="w-3/5">タスク名</p>
+            <div className="w-[1px] h-[9px] bg-[#D2DBE1]"></div>
+            <p className="w-[calc(16%-2px)] text-left pl-[14px]">締切</p>
+            <div className="w-[1px] h-[9px] bg-[#D2DBE1]"></div>
+            <p className="w-[calc(8%)] text-center">重要</p>
+            <div className="w-[1px] h-[9px] bg-[#D2DBE1]"></div>
             <p className="px-5">ステータス</p>
           </div>
         ))}
