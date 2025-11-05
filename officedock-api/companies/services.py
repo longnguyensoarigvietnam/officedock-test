@@ -8,6 +8,7 @@ from rest_framework.fields import ValidationError
 import stripe
 from base.messages import ERROR_MESSAGES
 from chat.constants import WebSocketEventType
+from common.constants import InvoiceStatus
 from common.services.stripe_service import StripeService
 from common.utils import (
     format_date,
@@ -25,6 +26,12 @@ from companies.constants import (
 )
 from companies.models import Company, CompanyTransaction
 from companies.utils import generate_contract_related_date_base_on_now
+from plans.constants import (
+    CUSTOM_PLAN,
+    LIMIT_PERSON_PLAN_11_20,
+    LIMIT_PERSON_PLAN_1_10,
+    LIMIT_PERSON_PLAN_21_30,
+)
 from plans.models import Plan, Tax
 from roles.constants import Screens, SelectionResultOptions
 from users.constants import LoginTypes, RoleTypes
@@ -164,32 +171,31 @@ class CompanyService:
         company.status = status
         company.save(update_fields=["status"])
 
-    def change_plan(self, company):
+    def custom_plan(self, company, validated_data):
         """
-        Change the company's subscription plan in Stripe and update the local CompanyPlan.
+        Change the company's subscription plan in Stripe and create the local custom plan.
 
         Raises:
             Exception: If Stripe subscription creation fails.
         """
-
-        if (
-            self.stripe_service.retrieve_subscription(
-                company.company_plan.stripe_subscription_id
-            )
-            is None
-        ):
-            # Create Stripe postpaid subscription and save IDs to company plan
-            subscription = (
-                self.stripe_service.create_postpaid_subscription_with_invoice(
-                    company
-                )
-            )
-        company.company_plan.stripe_subscription_id = subscription.id
-        company.company_plan.save(
-            update_fields=[
-                "stripe_subscription_id",
-            ]
+        plan, created = Plan.objects.get_or_create(
+            **validated_data,
+            defaults={"is_custom_plan": True, "name": CUSTOM_PLAN},
         )
+        if created:
+            (
+                stripe_product,
+                stripe_price,
+            ) = self.stripe_service.create_product_with_price(
+                name=plan.name,
+                amount=plan.monthly_fee,
+                currency="jpy",
+                interval="month",
+            )
+            plan.stripe_product_id = stripe_product.id
+            plan.stripe_price_id = stripe_price.id
+            plan.save(update_fields=["stripe_product_id", "stripe_price_id"])
+        self.upgrade_plan(company, plan, is_custom_plan=True)
 
     def cancellation_pending_contract(self, company):
         """
@@ -233,10 +239,22 @@ class CompanyService:
                 stripe_invoice = self.stripe_service.get_invoice(
                     invoice.stripe_invoice_id
                 )
-                if stripe_invoice:
+                if (
+                    stripe_invoice
+                    and stripe_invoice.status == InvoiceStatus.DRAFT.value
+                ):
                     self.stripe_service.update_invoice_finalize(
                         stripe_invoice, company
                     )
+                else:
+                    status = ""
+                    if stripe_invoice == InvoiceStatus.PAID.value:
+                        status = TransactionStatus.PAID.value
+                    elif stripe_invoice == InvoiceStatus.VOID.value:
+                        status = TransactionStatus.SKIP_PAYMENT.value
+                    if status:
+                        invoice.status = status
+                        invoice.save(update_fields=["status"])
 
     def handle_pay_invoice_failed_retry(self, company, stripe_pm_id=None):
         """
@@ -258,7 +276,7 @@ class CompanyService:
                         stripe_invoice, stripe_pm_id
                     )
 
-    def upgrade_plan(self, company, plan):
+    def upgrade_plan(self, company, plan, is_custom_plan=False):
         """
         Upgrade the company's plan both locally and in Stripe.
 
@@ -302,6 +320,7 @@ class CompanyService:
                 new_price=format(
                     invoice.amount_due if invoice else int(new_price), ","
                 ),
+                is_auto_upgrade=not is_custom_plan,
             )
             return True
         except stripe.error.StripeError as e:
@@ -394,12 +413,14 @@ class CompanyService:
         company_user_count = company.users.count()
         current_plan = company.company_plan.plan
         filter = Q()
-        if company_user_count <= 10:
-            filter = Q(limit_person=10)
-        elif company_user_count <= 20:
-            filter = Q(limit_person=20)
+        if company_user_count <= LIMIT_PERSON_PLAN_1_10:
+            filter = Q(limit_person=LIMIT_PERSON_PLAN_1_10)
+        elif company_user_count <= LIMIT_PERSON_PLAN_11_20:
+            filter = Q(limit_person=LIMIT_PERSON_PLAN_11_20)
+        elif company_user_count <= LIMIT_PERSON_PLAN_21_30:
+            filter = Q(limit_person=LIMIT_PERSON_PLAN_21_30)
         else:
-            filter = Q(limit_person=30)
+            return
         plan = Plan.objects.filter(filter).first()
         if plan != current_plan:
             self.stripe_service.change_price_of_subscription(company, plan)

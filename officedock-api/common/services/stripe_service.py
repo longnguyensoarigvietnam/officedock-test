@@ -92,11 +92,6 @@ class StripeService:
                 - stripe.Product: The created product object
                 - stripe.Price: The created price object
         """
-        if products := stripe.Product.search(query=f"name:'{name}'"):
-            product_ids = [product["id"] for product in products["data"]]
-            prices = stripe.Price.search(query=f"product:'{product_ids[0]}'")
-            return products["data"][0], prices["data"][0]
-
         product = stripe.Product.create(name=name)
 
         price_data = {
@@ -133,6 +128,10 @@ class StripeService:
         """
         customer = self.get_customer(company)
         if customer:
+            if customer.get("deleted"):
+                raise ValidationError(
+                    {"detail": ERROR_MESSAGES["cannot_updated"]}
+                )
             return customer.id
 
         new_customer = stripe.Customer.create(

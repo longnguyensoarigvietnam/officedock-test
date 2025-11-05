@@ -146,6 +146,7 @@ _ERROR_MESSAGES = {
         "stripe_customer_id_missing": _("Stripe customer ID not found."),
         "card_declined": _("Payment card declined."),
         "cannot_remove_card": _("Cannot remove this card"),
+        "limit_user": _("Amount of user is maximum, cannot create"),
         # Validate
         "must_be_array": _("{field} must be a array."),
         "cannot_edit_close_date": _(
@@ -259,6 +260,7 @@ _ERROR_MESSAGES = {
         "stripe_customer_id_missing": _("StripeIDが見つかりません。"),
         "card_declined": _("支払カードが拒否されました。"),
         "cannot_remove_card": _("使用しているカードは削除できません。"),
+        "limit_user": _("ユーザー数が上限に達しているため、作成できません。"),
         # Validate
         "must_be_array": _("{field}は配列でなければなりません。"),
         "cannot_edit_close_date": _("締日を変更できません。"),

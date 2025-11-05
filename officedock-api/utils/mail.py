@@ -298,15 +298,18 @@ class PaymentMailService(MailService):
         new_plan,
         start_month,
         new_price,
+        is_auto_upgrade=True,
     ):
         """
         Notification email when plan is automatically upgraded
         """
-        subject = f"【{self.SYSTEM_NAME}】ご利用プラン自動アップグレードのお知らせ"
+        auto_text = "自動" if is_auto_upgrade else ""
+        subject = f"【{self.SYSTEM_NAME}】ご利用プラン{auto_text}アップグレードのお知らせ"
+        auto_text = "自動的に" if is_auto_upgrade else ""
         message = f"""
             <p>{company_name}<br>{responsible_name} 様</p>
             <p>いつも{self.SYSTEM_NAME}をご利用いただき、誠にありがとうございます。</p>
-            <p>ご利用アカウント数の増加に伴い、貴社のご契約プランが以下の通り自動的にアップグレードされましたのでお知らせいたします。</p>
+            <p>ご利用アカウント数の増加に伴い、貴社のご契約プランが以下の通り{auto_text}アップグレードされましたのでお知らせいたします。</p>
             <p>
                 ■ プラン変更内容<br>
                 変更前プラン： {old_plan}<br>

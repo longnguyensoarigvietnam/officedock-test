@@ -415,5 +415,7 @@ def get_plans():
     """
     Get all plan in system
     """
-    plans = Plan.objects.values_list("name", flat=True)
+    plans = Plan.objects.filter(is_custom_plan=False).values_list(
+        "name", flat=True
+    )
     return plans
