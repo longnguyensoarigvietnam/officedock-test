@@ -39,7 +39,7 @@ import {
   TaskRepetitiveValue,
 } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
-  import { DELETED_EVENT_TITLE } from '@constants/message';
+import { DELETED_EVENT_TITLE } from '@constants/message';
 
 import {
   ChatDashboardMember,
@@ -503,6 +503,21 @@ export const MessageDetail = ({
                 width={20}
                 height={20}
                 className="inline-block align-middle mx-[2px] w-[20px] h-[20px]"
+              />,
+            );
+          }
+          // Fallback for unhandled inline tags
+          if (
+            !el.dataset.taskId &&
+            !el.dataset.quoteMsg &&
+            !el.dataset.quoteText &&
+            !el.dataset.msgReplyId &&
+            !el.classList.contains('mention')
+          ) {
+            children.push(
+              <span
+                key={`${index}-${i}-inline`}
+                dangerouslySetInnerHTML={{ __html: el.outerHTML }}
               />,
             );
           }

@@ -425,20 +425,23 @@ const ListViewItem = ({
               <div className="flex items-center w-2/5">
                 {content.status?.id !== StatusValueTask.MY_ROUTINE ? (
                   <>
+                    <div className="w-[1px] h-[22px] bg-[#D2DBE1]"></div>
                     <p
-                      className={`hover:cursor-pointer ${checkDeadline && 'text-primary'} border-x-[1px] w-2/5 text-left text-[13px] pl-[14px]`}>
+                      className={`hover:cursor-pointer ${checkDeadline && 'text-primary'} w-2/5 text-left text-[13px] pl-[14px]`}>
                       {content.deadline &&
                         formatShowDeadlineTask(content.deadline)}
                     </p>
+                    <div className="w-[1px] h-[22px] bg-[#D2DBE1]"></div>
                     {content.isImportant ? (
-                      <div className="w-1/5 border-r-[1px] flex items-center justify-center">
+                      <div className="w-1/5 flex items-center justify-center">
                         <p className="text-center font-medium text-primary bg-[#EBF1F7] rounded w-fit px-[6px] py-0.5">
                           重要
                         </p>
                       </div>
                     ) : (
-                      <div className="w-1/5 border-r-[1px]"></div>
+                      <div className="w-1/5"></div>
                     )}
+                    <div className="w-[1px] h-[22px] bg-[#D2DBE1]"></div>
 
                     <div
                       className="pl-4 w-20 max-w-20 h-[21px] rounded flex items-center justify-center"
@@ -500,7 +503,8 @@ const ListViewItem = ({
                   </>
                 ) : (
                   <>
-                    <p className="w-[calc(50%_+_7px)] text-left pl-[14px] border-x-[1px] text-[13px]">
+                    <div className="w-[1px] h-[22px] bg-[#D2DBE1]"></div>
+                    <p className="w-[calc(50%_+_7px)] text-left pl-[14px] text-[13px]">
                       {displayRoutineTaskScheduleTitle(content)}
                     </p>
                   </>
