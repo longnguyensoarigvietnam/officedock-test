@@ -2490,7 +2490,7 @@ const KanbanBoardTaskTeam = () => {
                   {selectedOrganization.imgComponent}
                 </div>
               )}
-              <p className="text-[26px] font-medium relative top-[0px] line-clamp-3 max-w-[350px] break-all ml-[10px] ">
+              <p className="text-[26px] font-medium relative top-[0px] line-clamp-2 max-w-[350px] break-all ml-[10px] ">
                 {selectedOrganization?.label}
               </p>
             </div>

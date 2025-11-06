@@ -204,7 +204,7 @@ export const SkillSetting = ({
                     leave="transition ease-in duration-150"
                     leaveFrom="opacity-100 translate-y-0"
                     leaveTo="opacity-0 translate-y-1">
-                    <PopoverPanel className="absolute left-0 z-10 min-w-[155px] max-w-[155px] transform">
+                    <PopoverPanel className="absolute left-0 z-30 min-w-[155px] max-w-[155px] transform">
                       <div className="bg-white !border-primary border-[1px] text-black rounded-[6px] mt-[6px] p-1 text-sm font-medium text-center">
                         <p
                           className="hover:cursor-pointer py-[12px] border-b-[1px] border-[#EBF1F7] !leading-none"

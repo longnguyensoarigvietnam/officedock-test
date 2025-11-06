@@ -16,17 +16,22 @@ import ImageRound from '@components/common/ImageRound';
 import { apiRouters } from '@constants/routers';
 import { PermissionsSystem } from '@constants/enums';
 
-import { dataTaskDailyTable } from '@interfaces/statistic';
+import {
+  CreationStatisticType,
+  dataTaskDailyTable,
+} from '@interfaces/statistic';
 import { TodoItem } from '@interfaces/task';
 import { OptionDropdownType } from '@interfaces/common';
 import { TagId } from '@interfaces/tag';
 
 import api from '@base/api';
 import { hasPermissionInArray } from '@utils';
+import Button from '@components/common/Button';
 
 interface DataActionType {
   row: Row<dataTaskDailyTable>;
   dataTagsList: OptionDropdownType[];
+  optionsTag: CreationStatisticType | undefined;
   setDataTaskDailyList: React.Dispatch<
     React.SetStateAction<dataTaskDailyTable[]>
   >;
@@ -35,11 +40,13 @@ interface DataActionType {
 const ActionDetailDaily = ({
   row,
   dataTagsList,
+  optionsTag,
   setDataTaskDailyList,
 }: DataActionType) => {
   const { data: session } = useSessionCache();
 
   const [todoList, setTodoList] = useState<TodoItem[]>([]);
+  const [isPreventAction, setPreventAction] = useState(false);
 
   // Display tag options list
   const tagIconRef = useRef<HTMLDivElement | null>(null);
@@ -52,6 +59,8 @@ const ActionDetailDaily = ({
     left: -9999,
   });
   const [isTagOptionsReady, setIsTagOptionsReady] = useState(false);
+  const [listTagActive, setListTagActive] =
+    useState<OptionDropdownType[]>(dataTagsList);
 
   // Display todo options list
   const todoIconRef = useRef<HTMLDivElement | null>(null);
@@ -71,6 +80,11 @@ const ActionDetailDaily = ({
       name: string;
     }[]
   >([]);
+  useEffect(() => {
+    if (dataTagsList) {
+      setListTagActive(dataTagsList);
+    }
+  }, [dataTagsList]);
 
   useEffect(() => {
     if (row) {
@@ -100,6 +114,7 @@ const ActionDetailDaily = ({
     todoList?: TodoItem[];
     tagIds?: TagId[];
   }) => {
+    setPreventAction(true);
     const { data } = await api.patch(
       apiRouters.TASK_DETAIL(`${dataTask.id}`),
       dataTask,
@@ -112,7 +127,9 @@ const ActionDetailDaily = ({
     {
       onSuccess: async () => {},
       onError: () => {},
-      onSettled: () => {},
+      onSettled: () => {
+        setPreventAction(false);
+      },
     },
   );
 
@@ -280,13 +297,68 @@ const ActionDetailDaily = ({
         <div className="relative flex w-[144px] rounded-md overflow-y-auto min-h-[144px] max-h-[144px] flex-col p-[14px]  gap-[10px] text-gray-700">
           <p className="text-xs font-medium text-[#77858F]">タグ</p>
           <div className="flex flex-col gap-4 max-h-[200px] overflow-y-auto">
-            {dataTagsList.map((item) => (
-              <div key={item.value} className="flex gap-2 items-start">
-                <div className="break-all text-left w-fit px-[10px] py-2 bg-[#EBF2F7] rounded-[20px]">
-                  {item.label}
+            {optionsTag &&
+              optionsTag.tags.map((item) => (
+                <div key={item.id} className="flex gap-3">
+                  <div className="w-fit h-fit flex-shrink-0">
+                    <Button
+                      variant="text"
+                      className="!w-fit !h-fit !p-0 !bg-transparent"
+                      disabled={
+                        (session?.user.permissions &&
+                          !hasPermissionInArray(
+                            session?.user.permissions,
+                            PermissionsSystem.STATISTIC_UPDATE,
+                          )) ||
+                        isPreventAction
+                      }
+                      onClick={() => {
+                        if (
+                          listTagActive.some(
+                            (tag) => String(tag.value) == String(item.id),
+                          )
+                        ) {
+                          const dataTag = listTagActive.filter(
+                            (tag) => String(tag.value) != String(item.id),
+                          );
+                          setListTagActive([...dataTag]);
+                          editTaskDailyInline({
+                            id: row.original.id,
+                            tagIds: dataTag.map((tag) => ({
+                              tagId: tag.value,
+                              name: tag.label,
+                            })),
+                          });
+                        } else {
+                          const dataTag = [
+                            ...listTagActive,
+                            {
+                              label: item.name,
+                              value: item.id,
+                            },
+                          ];
+                          setListTagActive(dataTag);
+                          editTaskDailyInline({
+                            id: row.original.id,
+                            tagIds: dataTag.map((tag) => ({
+                              tagId: tag.value,
+                              name: tag.label,
+                            })),
+                          });
+                        }
+                      }}>
+                      <ImageRound
+                        className="w-4 h-4"
+                        src={`/icons/${listTagActive.some((tag) => String(tag.value) == String(item.id)) ? 'ticket-active.svg' : 'ticket-no-active.svg'}`}
+                        name="icon tag"
+                      />
+                    </Button>
+                  </div>
+                  <div className="break-all text-left w-fit max-w-[100px]">
+                    {item.name}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
       </div>
@@ -331,11 +403,12 @@ const ActionDetailDaily = ({
                               <div className="w-4 h-6">
                                 <Checkbox
                                   disable={
-                                    session?.user.permissions &&
-                                    !hasPermissionInArray(
-                                      session?.user.permissions,
-                                      PermissionsSystem.STATISTIC_UPDATE,
-                                    )
+                                    (session?.user.permissions &&
+                                      !hasPermissionInArray(
+                                        session?.user.permissions,
+                                        PermissionsSystem.STATISTIC_UPDATE,
+                                      )) ||
+                                    isPreventAction
                                   }
                                   isChecked={todo.isChecked}
                                   onChange={() => handleCheck(index)}
@@ -405,7 +478,7 @@ const ActionDetailDaily = ({
           `}>
           <ImageRound
             className="w-4 h-4"
-            src={`/icons/${row.original.tags.length > 0 ? 'ticket-active.svg' : 'ticket-no-active.svg'}`}
+            src={`/icons/${listTagActive.length > 0 ? 'ticket-active.svg' : 'ticket-no-active.svg'}`}
             name="icon tag"
           />
         </div>

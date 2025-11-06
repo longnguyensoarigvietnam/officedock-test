@@ -684,15 +684,12 @@ const KanbanBoardTask = () => {
                   ...prevData,
                   [statusId]: {
                     ...prevData[statusId],
-                    items:
-                      matchedPageData && matchedPageData.hasMores
-                        ? [...prevData[statusId].items]
-                        : [
-                            ...prevData[statusId].items.filter(
-                              (item) => item.id !== newItem.id,
-                            ),
-                            newItem,
-                          ],
+                    items: [
+                      ...prevData[statusId].items.filter(
+                        (item) => item.id !== newItem.id,
+                      ),
+                      newItem,
+                    ].sort(compareItems),
                   },
                 };
               });
@@ -3550,6 +3547,7 @@ const KanbanBoardTask = () => {
                 {isArchiveTaskView ? (
                   <ArchiveTaskBoard
                     ordering={isSortComplete}
+                    searchValue={debouncedTaskSearch}
                     handleActionEditTask={handleActionEditTask}
                     handleActionDelete={(id: number) => {
                       setIdTaskArchiveDelete(id);
