@@ -1264,8 +1264,6 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                 durations=filter_with_category_durations,
                 users=[user],
             )
-            if not filter_durations:
-                continue
             user_total_duration = get_total_durations(filter_durations)
             user_durations = self._get_durations_by_range(
                 filter_durations, ranges, total_duration_by_range
@@ -1290,7 +1288,17 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
         for index, (start, end) in enumerate(ranges):
             start_date_min = datetime.combine(start, time.min)
             end_date_max = datetime.combine(end, time.max)
-            if total_duration_by_range[index] == timedelta(0):
+            if not total_duration_by_range or total_duration_by_range[
+                index
+            ] == timedelta(0):
+                durations.append(
+                    {
+                        "start_date": start_date_min.strftime(BASE_DATE_FORMAT),
+                        "end_date": end_date_max.strftime(BASE_DATE_FORMAT),
+                        "duration": format_duration(timedelta(0)),
+                        "percent_per_range": 0,
+                    }
+                )
                 continue
             duration = timedelta(0)
             # Get duration by range
