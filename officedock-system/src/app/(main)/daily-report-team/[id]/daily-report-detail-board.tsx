@@ -121,7 +121,6 @@ import { useToast } from '@providers/ToastProvider';
 import { TeamDailyStateContext } from '@providers/TeamDailyReportProvider';
 import { TaskContext } from '@providers/TaskProvider';
 import api from '@base/api';
-import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 const DailyReportDetailBoard = () => {
   const { statusTaskSelected, setStatusTaskSelected } = useContext(TaskContext);
@@ -2150,19 +2149,19 @@ const DailyReportDetailBoard = () => {
         </header>
         <div className="mb-[30px] flex items-center justify-between pr-10">
           <div className="flex items-center gap-5">
-            <DynamicTooltip
+            {/* TODO: Show tooltip user */}
+            {/* <DynamicTooltip
               content={dataStatistic?.prevUser?.profile.fullName || ''}
-              placement="top">
-              <ImageRound
-                onClick={handlePrevUser}
-                style={{
-                  opacity: dataStatistic?.prevUser && organization ? 1 : 0,
-                }}
-                className="h-fit w-fit cursor-pointer relative top-[1px]"
-                src="/icons/left-statistic.svg"
-                name="left"
-              />
-            </DynamicTooltip>
+              placement="top"></DynamicTooltip> */}
+            <ImageRound
+              onClick={handlePrevUser}
+              style={{
+                opacity: dataStatistic?.prevUser && organization ? 1 : 0,
+              }}
+              className="h-fit w-fit cursor-pointer relative top-[1px]"
+              src="/icons/left-statistic.svg"
+              name="left"
+            />
 
             <div className="flex gap-5 items-center">
               <div className="flex flex-col gap-1 items-start w-10 text-xs  text-primary">
@@ -2194,19 +2193,20 @@ const DailyReportDetailBoard = () => {
                 </span>
               </div>
             </div>
-            <DynamicTooltip
+            {/* TODO: Show tooltip user */}
+            {/* <DynamicTooltip
               content={dataStatistic?.nextUser?.profile.fullName || ''}
               placement="top">
-              <ImageRound
-                onClick={handleNextUser}
-                style={{
-                  opacity: dataStatistic?.nextUser && organization ? 1 : 0,
-                }}
-                className="h-fit w-fit cursor-pointer relative top-[1px]"
-                src="/icons/right-statistic.svg"
-                name="right"
-              />
-            </DynamicTooltip>
+            </DynamicTooltip> */}
+            <ImageRound
+              onClick={handleNextUser}
+              style={{
+                opacity: dataStatistic?.nextUser && organization ? 1 : 0,
+              }}
+              className="h-fit w-fit cursor-pointer relative top-[1px]"
+              src="/icons/right-statistic.svg"
+              name="right"
+            />
 
             <div
               onClick={handleNavigateList}

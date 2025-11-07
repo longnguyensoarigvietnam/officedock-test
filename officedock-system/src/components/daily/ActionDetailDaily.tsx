@@ -26,7 +26,6 @@ import { TagId } from '@interfaces/tag';
 
 import api from '@base/api';
 import { hasPermissionInArray } from '@utils';
-import Button from '@components/common/Button';
 
 interface DataActionType {
   row: Row<dataTaskDailyTable>;
@@ -40,7 +39,6 @@ interface DataActionType {
 const ActionDetailDaily = ({
   row,
   dataTagsList,
-  optionsTag,
   setDataTaskDailyList,
 }: DataActionType) => {
   const { data: session } = useSessionCache();
@@ -297,7 +295,8 @@ const ActionDetailDaily = ({
         <div className="relative flex w-[144px] rounded-md overflow-y-auto min-h-[144px] max-h-[144px] flex-col p-[14px]  gap-[10px] text-gray-700">
           <p className="text-xs font-medium text-[#77858F]">タグ</p>
           <div className="flex flex-col gap-4 max-h-[200px] overflow-y-auto">
-            {optionsTag &&
+            {/* TODO: Implement action tag */}
+            {/* {optionsTag &&
               optionsTag.tags.map((item) => (
                 <div key={item.id} className="flex gap-3">
                   <div className="w-fit h-fit flex-shrink-0">
@@ -358,7 +357,14 @@ const ActionDetailDaily = ({
                     {item.name}
                   </div>
                 </div>
-              ))}
+              ))} */}
+            {dataTagsList.map((item) => (
+              <div key={item.value} className="flex gap-2 items-start">
+                <div className="break-all text-left w-fit px-[10px] py-2 bg-[#EBF2F7] rounded-[20px]">
+                  {item.label}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

@@ -3390,9 +3390,10 @@ const KanbanBoardTask = () => {
                       inputClassName="h-[34px] bg-[#EBF1F7] border-none !rounded-[20px] text-sm placeholder-[#77858F]"
                       iconClassName="w-[14px] h-[14px]"
                       placeholder="タスク、キーワードを検索"
-                      onChange={(e) => {
-                        setSearchValue(e.target.value);
-                      }}
+                      // TODO : Implement search task
+                      // onChange={(e) => {
+                      //   setSearchValue(e.target.value);
+                      // }}
                     />
                   </div>
                   <div

@@ -120,7 +120,6 @@ const KanbanBoardTaskTeam = () => {
     setIsConcurrently,
     setDataOptionsStatus,
     valueSearch,
-    setValueSearch,
   } = useContext(TaskTeamStateContext);
 
   const { setIsLoading } = useContext(LoadingContext);
@@ -2670,9 +2669,10 @@ const KanbanBoardTaskTeam = () => {
               inputClassName="h-[34px] bg-white border-none !rounded-[20px] text-sm placeholder-[#77858F]"
               iconClassName="w-[14px] h-[14px]"
               placeholder="タスク、キーワードを検索"
-              onChange={(e) => {
-                setValueSearch(e.target.value);
-              }}
+              // TODO : Implement search task
+              // onChange={(e) => {
+              //   setValueSearch(e.target.value);
+              // }}
             />
 
             <div className="ml-3">

@@ -4,7 +4,6 @@ import { createPortal } from 'react-dom';
 import { useMutation } from 'react-query';
 import { Popover, PopoverButton } from '@headlessui/react';
 
-import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
 import { apiRouters } from '@constants/routers';
 
@@ -19,7 +18,7 @@ type Props = {
   optionsTag: CreationStatisticType | undefined;
 };
 
-const TagListInfo = ({ tagList, optionsTag, taskId }: Props) => {
+const TagListInfo = ({ tagList }: Props) => {
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const [position, setPosition] = useState<{ top: number; left: number }>({
     top: 0,
@@ -28,7 +27,7 @@ const TagListInfo = ({ tagList, optionsTag, taskId }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const [listTagActive, setListTagActive] =
     useState<OptionDropdownType[]>(tagList);
-  const [isPreventAction, setPreventAction] = useState(false);
+  const [_isPreventAction, setPreventAction] = useState(false);
 
   useEffect(() => {
     if (tagList) {
@@ -48,7 +47,7 @@ const TagListInfo = ({ tagList, optionsTag, taskId }: Props) => {
     );
     return data;
   };
-  const { mutate: editTaskDailyInline } = useMutation(
+  const { mutate: _editTaskDailyInline } = useMutation(
     'postEditDailyTaskInline',
     handleEditTaskInline,
     {
@@ -109,7 +108,8 @@ const TagListInfo = ({ tagList, optionsTag, taskId }: Props) => {
                 <p className="text-xs font-medium text-[#77858F] text-left">
                   タグ
                 </p>
-                {optionsTag &&
+                {/* TODO: Implement action tag */}
+                {/* {optionsTag &&
                   optionsTag.tags.map((item) => (
                     <div key={item.id} className="flex gap-3">
                       <div className="w-fit h-fit flex-shrink-0">
@@ -163,7 +163,14 @@ const TagListInfo = ({ tagList, optionsTag, taskId }: Props) => {
                         {item.name}
                       </div>
                     </div>
-                  ))}
+                  ))} */}
+                {tagList.map((tag) => (
+                  <div key={tag.value} className="flex gap-2 items-start">
+                    <div className="break-all text-left w-fit px-[10px] text-xs py-2 bg-[#EBF2F7] rounded-[20px]">
+                      {tag.label}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </>,
