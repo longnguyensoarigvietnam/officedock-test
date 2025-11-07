@@ -55,6 +55,7 @@ import {
   isTimeEarlier,
 } from '@utils/date';
 import api from '@base/api';
+import { ERROR_TIME_START_MESSAGE } from '@constants/message';
 
 const ShowTimeCounter = memo(
   ({ statusTaskSelected }: { statusTaskSelected: TaskDuration }) => {
@@ -112,7 +113,7 @@ const TaskPageDataHeader = () => {
   const [isShowWarningEmptyTask, setIsShowWarningEmptyTask] = useState(false);
 
   const [optionsTaskMe, setOptionsTaskMe] = useState<OptionDropdownType[]>([]);
-  const [_dataOverTimeWarning, setDataOverTimeWarning] = useState<{
+  const [dataOverTimeWarning, setDataOverTimeWarning] = useState<{
     id: string;
     type: string;
     isOverEstimate: boolean;
@@ -475,7 +476,7 @@ const TaskPageDataHeader = () => {
     });
   };
   // Function call API  cancel alert
-  const { mutate: _cancelAlert } = useMutation(
+  const { mutate: cancelAlert } = useMutation(
     'postCancelAlert',
     handleCancelAlert,
     {
@@ -879,8 +880,7 @@ const TaskPageDataHeader = () => {
               ) : (
                 <span className="text-[#77858F]">{DEFAULT_TIME_TEXT}</span>
               )}
-              {/* TODO: Close show nottify */}
-              {/* {statusTaskSelected?.isStart &&
+              {statusTaskSelected?.isStart &&
                 taskSelected?.value &&
                 dataOverTimeWarning &&
                 dataOverTimeWarning?.isOverEstimate &&
@@ -906,7 +906,7 @@ const TaskPageDataHeader = () => {
                     />
                     <p className="break-keep">{ERROR_TIME_START_MESSAGE}</p>
                   </div>
-                )} */}
+                )}
               <Button
                 variant="secondary"
                 className="whitespace-nowrap mt-1 min-w-[22px]  bg-transparent border-none hover:opacity-75  !px-0 !py-0 !rounded-lg"

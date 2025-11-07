@@ -14,6 +14,7 @@ import {
 import { convertToJapaneseTime } from '@utils/date';
 
 import { useDebounceCallback } from '@hooks/useDebounceCallback';
+import Button from '@components/common/Button';
 
 type Props = {
   userData: DataUserDetailDailyType;
@@ -66,8 +67,7 @@ const ItemListDaily = ({ userData, organization, handleConfirm }: Props) => {
       style={{
         boxShadow: '0px 2px 8px 0px #0000001A',
       }}
-      onClick={handleRedirect}
-      className="bg-white cursor-pointer p-4 rounded-[14px] font-medium flex gap-3 justify-between">
+      className="bg-white p-4 rounded-[14px] font-medium flex gap-3 justify-between">
       <div className="flex gap-5 flex-grow items-center">
         <div className="flex flex-col gap-1 items-center min-w-[50px] text-xs  text-primary">
           {isConfirm ? (
@@ -102,6 +102,11 @@ const ItemListDaily = ({ userData, organization, handleConfirm }: Props) => {
           {userData.totalDuration &&
             convertToJapaneseTime(userData.totalDuration)}
         </p>
+        <Button
+          onClick={handleRedirect}
+          className="!px-0 !py-0 h-9 w-[98px] items-center justify-center ml-[6px]">
+          日報を見る
+        </Button>
       </div>
     </div>
   );
