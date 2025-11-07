@@ -3,14 +3,8 @@ from django.db import transaction
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import (
-    Case,
     Count,
     Q,
-    IntegerField,
-    OuterRef,
-    Subquery,
-    Value,
-    When,
 )
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
@@ -56,7 +50,6 @@ from .serializers import (
 from .models import (
     Organization,
     OrganizationsStatisticCategories,
-    UsersOrganizations,
 )
 
 
@@ -1121,7 +1114,11 @@ class TeamViewSet(BaseAPIViewSet, mixins.ListModelMixin):
     API endpoint for Organization
     """
 
-    queryset = Organization.objects.annotate(user_count=Count("users")).all()
+    queryset = (
+        Organization.objects.annotate(user_count=Count("users"))
+        .order_by("-created_at")
+        .all()
+    )
     serializer_class = OrganizationForUserSerializer
     permission_classes = [ActionPermission]
     filter_backends = [FilterByPermission]
@@ -1164,33 +1161,9 @@ class TeamViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         """
         Return list of team
         """
-        user = self.request.user
         is_with_users = request.query_params.get("is_with_users", False)
         queryset = self.filter_queryset(self.get_queryset())
-        org_ids = list(user.organizations.values_list("id", flat=True))
-        # Order by joined organizations of user
-        whens = [
-            When(id=org_id, then=Value(index))
-            for index, org_id in enumerate(org_ids)
-        ]
-        # Get main organization and put to first of list organization
-        is_main_subquery = UsersOrganizations.objects.filter(
-            user=user,
-            organization=OuterRef("pk"),
-        ).values("is_main")[:1]
-        queryset = queryset.annotate(
-            priority=Case(
-                *whens,
-                default=Value(len(org_ids)),
-                output_field=IntegerField(),
-            ),
-            is_main_raw=Subquery(is_main_subquery),
-            is_main_value=Case(
-                When(is_main_raw=True, then=Value(1)),
-                default=Value(0),
-                output_field=IntegerField(),
-            ),
-        ).order_by("-is_main_value", "priority")
+
         if is_with_users:
             data = OrganizationMemberSerializer(queryset, many=True).data
         else:
