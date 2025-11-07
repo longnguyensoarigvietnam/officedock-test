@@ -68,7 +68,6 @@ import { apiRouters } from '@constants/routers';
 import {
   addHoursToDate,
   addTimeToDate,
-  adjustHours,
   convertDateToStartDate,
   convertToMinutes,
   convertToTimeString,
@@ -1109,7 +1108,8 @@ const ActionsEventModal = ({
                                     }
                                   },
                                   onBlur: () => {
-                                    const endTime = getValues('endTime');
+                                    // TODO: Update logic for updating end time
+                                    // const endTime = getValues('endTime');
 
                                     const formattedStart =
                                       formatTimeInput(time);
@@ -1120,15 +1120,16 @@ const ActionsEventModal = ({
                                       });
                                     }
 
-                                    if (!endTime && formattedStart) {
-                                      setValue(
-                                        'endTime',
-                                        adjustHours(formattedStart, 1),
-                                        {
-                                          shouldDirty: true,
-                                        },
-                                      );
-                                    }
+                                    // TODO: Update logic for updating end time
+                                    // if (!endTime && formattedStart) {
+                                    //   setValue(
+                                    //     'endTime',
+                                    //     adjustHours(formattedStart, 1),
+                                    //     {
+                                    //       shouldDirty: true,
+                                    //     },
+                                    //   );
+                                    // }
 
                                     setTime('');
                                     handleConfirmCheckOverlappingLocation();
@@ -1140,7 +1141,8 @@ const ActionsEventModal = ({
                                 disabled={isDisabled}
                                 options={optionTimeInput}
                                 onChangeDropdown={(e) => {
-                                  const endTime = getValues('endTime');
+                                  // TODO: Update logic for updating end time
+                                  // const endTime = getValues('endTime');
                                   const startTime = e.label;
 
                                   setValue('startTime', startTime, {
@@ -1157,15 +1159,16 @@ const ActionsEventModal = ({
                                       { shouldDirty: true },
                                     );
                                   }
-                                  if (!endTime && startTime) {
-                                    setValue(
-                                      'endTime',
-                                      adjustHours(startTime, 1),
-                                      {
-                                        shouldDirty: true,
-                                      },
-                                    );
-                                  }
+                                  // TODO: Update logic for updating end time
+                                  // if (!endTime && startTime) {
+                                  //   setValue(
+                                  //     'endTime',
+                                  //     adjustHours(startTime, 1),
+                                  //     {
+                                  //       shouldDirty: true,
+                                  //     },
+                                  //   );
+                                  // }
                                   handleConfirmCheckOverlappingLocation();
                                 }}
                               />
@@ -1264,7 +1267,8 @@ const ActionsEventModal = ({
                                     }
                                   },
                                   onBlur: (e) => {
-                                    const startTime = getValues('startTime');
+                                    // TODO: Update logic for updating start time
+                                    // const startTime = getValues('startTime');
 
                                     const formattedEnd = formatTimeInput(time);
 
@@ -1292,15 +1296,16 @@ const ActionsEventModal = ({
                                       }
                                     }
 
-                                    if (!startTime && formattedEnd) {
-                                      setValue(
-                                        'startTime',
-                                        adjustHours(formattedEnd, -1),
-                                        {
-                                          shouldDirty: true,
-                                        },
-                                      );
-                                    }
+                                    // TODO: Update logic for updating start time
+                                    // if (!startTime && formattedEnd) {
+                                    //   setValue(
+                                    //     'startTime',
+                                    //     adjustHours(formattedEnd, -1),
+                                    //     {
+                                    //       shouldDirty: true,
+                                    //     },
+                                    //   );
+                                    // }
 
                                     setTime('');
                                     handleConfirmCheckOverlappingLocation();
@@ -1311,7 +1316,8 @@ const ActionsEventModal = ({
                                 disabled={isDisabled}
                                 options={optionTimeInput}
                                 onChangeDropdown={(e) => {
-                                  const startTime = getValues('startTime');
+                                  // TODO: Update logic for updating start time
+                                  // const startTime = getValues('startTime');
                                   const endTime = e.label;
 
                                   setValue('endTime', endTime, {
@@ -1336,15 +1342,16 @@ const ActionsEventModal = ({
                                       );
                                     }
                                   }
-                                  if (!startTime && endTime) {
-                                    setValue(
-                                      'startTime',
-                                      adjustHours(endTime, -1),
-                                      {
-                                        shouldDirty: true,
-                                      },
-                                    );
-                                  }
+                                  // TODO: Update logic for updating start time
+                                  // if (!startTime && endTime) {
+                                  //   setValue(
+                                  //     'startTime',
+                                  //     adjustHours(endTime, -1),
+                                  //     {
+                                  //       shouldDirty: true,
+                                  //     },
+                                  //   );
+                                  // }
 
                                   handleConfirmCheckOverlappingLocation();
                                 }}
