@@ -35,7 +35,10 @@ import {
   formatTimeInputCustom,
   getFilteredTimeOptions,
 } from '@utils/date';
-import { showModalHeaderBackgroundColorByTime, sortChatParticipants } from '@utils';
+import {
+  showModalHeaderBackgroundColorByTime,
+  sortChatParticipants,
+} from '@utils';
 
 import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
@@ -397,7 +400,9 @@ const ActionsVotingModal = ({
         </header>
         {/* Candidate */}
         <div className="flex justify-between items-start mb-[29px]">
-          <p className="w-fit font-medium text-[14px] leading-none mt-3">候補メンバー</p>
+          <p className="w-fit font-medium text-[14px] leading-none mt-3">
+            候補メンバー
+          </p>
           <div className="w-[518px]">
             <div className="relative">
               <Input
@@ -551,20 +556,20 @@ const ActionsVotingModal = ({
                   .map((member) => {
                     return (
                       <div
-                        className={`flex items-center px-5 py-2 hover:cursor-pointer ${
+                        className={`flex items-center px-5 py-2 hover:cursor-pointer hover:bg-[#EBF1F7] ${
                           checkIsParticipantSelected(member) && 'bg-[#EBF1F7]'
                         }`}
                         key={member.id}
                         style={{
                           order: checkIsParticipantSelected(member) ? 0 : 1, // Sort checked user/org first
+                        }}
+                        onClick={() => {
+                          handleSelectEventParticipant(member);
                         }}>
                         <div>
                           <Checkbox
                             isChecked={checkIsParticipantSelected(member)}
                             boxLabelClass="ml-[14px]"
-                            onChange={() => {
-                              handleSelectEventParticipant(member);
-                            }}
                           />
                         </div>
                         {member.type == EventParticipantType.USER && (

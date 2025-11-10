@@ -1665,7 +1665,7 @@ const ChatDetail = ({
             />
           </div>
         );
-      case ChatRoomType.PRIVATE: {
+      default: {
         const memberInfo = dashboardMemberList.find((member) => {
           if (chatRoomDetail.type === ChatRoomType.PRIVATE) {
             return (

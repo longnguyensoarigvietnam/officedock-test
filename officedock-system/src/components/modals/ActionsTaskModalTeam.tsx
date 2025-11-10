@@ -905,6 +905,12 @@ const ActionsTaskModalTeam = ({
       });
       setTodoList(newTodoList);
       setShowTodoSection(newTodoList.length > 0);
+      setShowAdvancedSettings(
+        newTodoList.length > 0 ||
+          !!dataTask.description
+            ?.replace(HTML_TAG_REGEX, '') // remove HTML tags
+            .trim(),
+      );
     }
   }, [dataTask]);
   const handleBlur = ({

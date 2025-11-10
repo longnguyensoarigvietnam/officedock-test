@@ -2150,22 +2150,22 @@ const ActionsEventModal = ({
                       .map((member) => {
                         return (
                           <div
-                            className={`flex items-center px-5 py-2 hover:cursor-pointer ${
+                            className={`flex items-center px-5 py-2 hover:bg-[#EBF1F7] hover:cursor-pointer ${
                               checkIsParticipantSelected(member) &&
                               'bg-[#EBF1F7]'
                             }`}
                             style={{
                               order: checkIsParticipantSelected(member) ? 0 : 1, // Sort checked user/org first
                             }}
-                            key={member.id}>
+                            key={member.id}
+                            onClick={() => {
+                              handleSelectEventParticipant(member);
+                            }}>
                             <div>
                               <Checkbox
                                 isChecked={checkIsParticipantSelected(member)}
                                 boxLabelClass="ml-[14px]"
                                 disable={isDisabled}
-                                onChange={() => {
-                                  handleSelectEventParticipant(member);
-                                }}
                               />
                             </div>
                             {member.type == EventParticipantType.USER && (
