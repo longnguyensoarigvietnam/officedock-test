@@ -75,7 +75,7 @@ export type MessageDetailProps = {
         participants: ChatParticipant[];
       }
     | undefined;
-  setDataPreviewFile: Dispatch<
+  setDataPreviewFile?: Dispatch<
     SetStateAction<{
       msgId: string;
       file: ChatFileResponse;
@@ -457,7 +457,8 @@ export const MessageDetailBookmark = ({
                                 : messageDetail.message,
                               messageDetail.mentions || [],
                             )}
-                            {messageDetail?.chatFiles &&
+                            {setDataPreviewFile &&
+                              messageDetail?.chatFiles &&
                               messageDetail?.chatFiles.length > 0 && (
                                 <RenderFiles
                                   dashboardMemberList={dashboardMemberList}

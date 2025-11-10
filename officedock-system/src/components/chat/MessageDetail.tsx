@@ -679,7 +679,7 @@ export const MessageDetail = ({
                       {messageDetail.sender.fullName}
                       <span
                         data-id={messageDetail.uuid}
-                        className="font-medium text-xs text-[#77858F]">
+                        className="font-medium text-xs text-[#77858F] relative top-1">
                         {' '}
                         {messageDetail.sender?.organizations?.name}
                       </span>
