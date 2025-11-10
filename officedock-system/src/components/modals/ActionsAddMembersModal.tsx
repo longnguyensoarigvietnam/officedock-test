@@ -1,6 +1,13 @@
 'use client';
 
-import { ChangeEvent, Dispatch, memo, SetStateAction, useRef, useState } from 'react';
+import {
+  ChangeEvent,
+  Dispatch,
+  memo,
+  SetStateAction,
+  useRef,
+  useState,
+} from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { UseMutationResult } from 'react-query';
 
@@ -33,13 +40,13 @@ export type ActionsAddMembersModalProps = {
   dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
   dataOptionsParticipants: ChatParticipant[];
   onClose: () => void;
-  setOpenErrorUploadFileModal: Dispatch<SetStateAction<boolean>>
+  setOpenErrorUploadFileModal: Dispatch<SetStateAction<boolean>>;
   createChatMutation: UseMutationResult<
     ChatRoomItem,
     unknown,
     {
       name: string;
-      avatar?: File | null | undefined
+      avatar?: File | null | undefined;
       participantIds: number[];
       selectOrganizations: string;
     },
@@ -499,7 +506,7 @@ const ActionsAddMembersModal = memo(
                 .map((member) => {
                   return (
                     <div
-                      className={`flex gap-[10px] items-center py-2 px-5 hover:cursor-pointer ${
+                      className={`flex gap-[10px] items-center py-2 px-5 hover:cursor-pointer hover:bg-[#EBF1F7] ${
                         checkIsParticipantSelected(
                           member,
                           watch('members').filter(Boolean) ?? [],
@@ -515,6 +522,12 @@ const ActionsAddMembersModal = memo(
                         )
                           ? 0
                           : 1, // Sort checked user/org first
+                      }}
+                      onClick={() => {
+                        handleSelectChatParticipant(
+                          member,
+                          dataOptionsParticipants,
+                        );
                       }}>
                       <div>
                         <Controller
@@ -528,12 +541,6 @@ const ActionsAddMembersModal = memo(
                                 watch('organizations').filter(Boolean) ?? [],
                               )}
                               boxLabelClass="!ml-[4px]"
-                              onChange={() =>
-                                handleSelectChatParticipant(
-                                  member,
-                                  dataOptionsParticipants,
-                                )
-                              }
                             />
                           )}
                         />

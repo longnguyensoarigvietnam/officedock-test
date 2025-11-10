@@ -215,23 +215,23 @@ export const CalendarSidebar = ({
                   return (
                     <div
                       key={member.id}
-                      className={`flex items-center gap-[14px] px-3 ${
+                      className={`flex items-center gap-[14px] px-3 hover:bg-[#EBF1F7] ${
                         checkIsParticipantSelected(member) && 'bg-[#EBF1F7]'
                       }`}
                       style={{
                         order: checkIsParticipantSelected(member) ? 0 : 1, // Sort checked user/org first
+                      }}
+                      onClick={() => {
+                        handleFilterScheduleByUserIds(
+                          member,
+                          dataOptionsParticipants,
+                        );
                       }}>
                       <div className="w-4">
                         <Checkbox
                           label=""
                           className="mr-2"
                           isChecked={checkIsParticipantSelected(member)}
-                          onChange={() =>
-                            handleFilterScheduleByUserIds(
-                              member,
-                              dataOptionsParticipants,
-                            )
-                          }
                         />
                       </div>
                       <div

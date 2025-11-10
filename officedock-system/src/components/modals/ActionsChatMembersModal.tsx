@@ -464,7 +464,7 @@ const ActionsChatMembersModal = memo(
                       .map((member) => {
                         return (
                           <div
-                            className={`flex gap-[10px] items-center py-2 px-5 hover:cursor-pointer ${
+                            className={`flex gap-[10px] items-center py-2 px-5 hover:bg-[#EBF1F7] hover:cursor-pointer ${
                               checkIsParticipantSelected(
                                 member,
                                 watch('members').filter(Boolean) ?? [],
@@ -480,6 +480,12 @@ const ActionsChatMembersModal = memo(
                               )
                                 ? 0
                                 : 1, // Sort checked user/org first
+                            }}
+                            onClick={() => {
+                              handleSelectChatParticipant(
+                                member,
+                                dataOptionsParticipants,
+                              );
                             }}>
                             <div>
                               <Controller
@@ -494,12 +500,6 @@ const ActionsChatMembersModal = memo(
                                         [],
                                     )}
                                     boxLabelClass="!ml-[4px]"
-                                    onChange={() =>
-                                      handleSelectChatParticipant(
-                                        member,
-                                        dataOptionsParticipants,
-                                      )
-                                    }
                                   />
                                 )}
                               />
