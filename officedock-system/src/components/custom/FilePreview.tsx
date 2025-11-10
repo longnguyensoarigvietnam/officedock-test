@@ -20,7 +20,10 @@ interface filePreviewProp {
   msgId: string;
   createAt: string;
   onClose: () => void;
-  onGotoMessage: (data: { messageId: string | number }) => void;
+  onGotoMessage: (data: {
+    messageId: string | number;
+    roomCode?: string;
+  }) => void;
 }
 
 const FilePreview = ({
@@ -165,7 +168,16 @@ const FilePreview = ({
                               name="go file  icon"
                               onClick={() =>
                                 onGotoMessage({
-                                  messageId: fileDetail.chatMessageId,
+                                  messageId:
+                                    fileDetail.chatMessages &&
+                                    fileDetail.chatMessages.length > 0
+                                      ? fileDetail.chatMessages[0].id
+                                      : '',
+                                  roomCode:
+                                    fileDetail.chatMessages &&
+                                    fileDetail.chatMessages.length > 0
+                                      ? fileDetail.chatMessages[0].chatRoom
+                                      : '',
                                 })
                               }
                             />
@@ -236,7 +248,11 @@ const FilePreview = ({
                         name="go file  icon"
                         onClick={() =>
                           onGotoMessage({
-                            messageId: fileDetail.chatMessageId,
+                            messageId:
+                              fileDetail.chatMessages &&
+                              fileDetail.chatMessages.length > 0
+                                ? fileDetail.chatMessages[0].id
+                                : '',
                           })
                         }
                       />

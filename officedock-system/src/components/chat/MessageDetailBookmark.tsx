@@ -1,8 +1,7 @@
-import { Fragment } from 'react';
+import { Dispatch, Fragment, SetStateAction } from 'react';
 import { format } from 'date-fns';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
@@ -31,16 +30,22 @@ import {
   SubmitLevelStatus,
   TaskRepetitiveValue,
 } from '@constants/enums';
-import { pageRouters } from '@constants/routers';
+import { apiRouters, pageRouters } from '@constants/routers';
 import { DELETED_EVENT_TITLE } from '@constants/message';
 
-import { ChatMessageResponse, ChatParticipant } from '@interfaces/chat';
+import {
+  ChatDashboardMember,
+  ChatFileDetailResponse,
+  ChatFileResponse,
+  ChatMessageResponse,
+  ChatParticipant,
+} from '@interfaces/chat';
 import { Profile } from '@interfaces/user';
 
 import {
   displayRepetitiveEventTime,
   formatWithParagraphTags,
-  getFileURL,
+  handleDownloadFile,
   highlightTextSafely,
   renderEventDatetimeInChat,
   renderScheduleChangeInCalendarRoom,
@@ -51,6 +56,9 @@ import {
   getFormattedDateTime,
 } from '@utils/date';
 import { MessageHoverAllRoomsSearch } from './MessageHoverAllRoomsSearch';
+import RenderFiles from './renderFiles/RenderFiles';
+import api from '@base/api';
+import { useMutation } from 'react-query';
 
 export type MessageDetailProps = {
   isLastItem: boolean;
@@ -67,6 +75,14 @@ export type MessageDetailProps = {
         participants: ChatParticipant[];
       }
     | undefined;
+  setDataPreviewFile: Dispatch<
+    SetStateAction<{
+      msgId: string;
+      file: ChatFileResponse;
+      user: ChatDashboardMember;
+      createAt: string;
+    } | null>
+  >;
   handleActionEditTask?: (id: number) => void;
   handleConfirmGetDataDetailEvent: (id: string) => void;
   onGotoMessage: () => void;
@@ -80,6 +96,7 @@ export const MessageDetailBookmark = ({
   messageDetail,
   dashboardMemberList,
   chatRoomInfo,
+  setDataPreviewFile,
   handleActionEditTask,
   handleConfirmGetDataDetailEvent,
   onGotoMessage,
@@ -88,6 +105,16 @@ export const MessageDetailBookmark = ({
 }: MessageDetailProps) => {
   const { data: session } = useSessionCache();
   const router = useRouter();
+
+  let uuidListMain = [];
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(messageDetail?.message, 'text/html');
+  const pEl = doc.querySelector('p');
+
+  if (pEl) {
+    const raw = pEl.getAttribute('data-uuid');
+    uuidListMain = raw ? JSON.parse(raw) : [];
+  }
 
   // Render user avatar
   const renderAvatar = (senderId: number) => {
@@ -350,6 +377,27 @@ export const MessageDetailBookmark = ({
     );
   };
 
+  const handleDownloadFileName = async (fileUuid: string) => {
+    const apiUrl = apiRouters.FILE_DETAIL(`${fileUuid}`);
+
+    const { data } = await api.get<ChatFileDetailResponse>(apiUrl);
+    return data;
+  };
+
+  const { mutate: downloadFileName } = useMutation(
+    'downloadFileName',
+    handleDownloadFileName,
+    {
+      onSuccess: (data) => {
+        if (data.originalFile) {
+          handleDownloadFile(data?.originalFile || '', data?.fileName || '');
+        }
+      },
+      onError: () => {},
+      onSettled: () => {},
+    },
+  );
+
   return (
     <Fragment>
       <div className="group px-4">
@@ -411,62 +459,14 @@ export const MessageDetailBookmark = ({
                             )}
                             {messageDetail?.chatFiles &&
                               messageDetail?.chatFiles.length > 0 && (
-                                <div className="flex flex-col gap-2 !w-[100%]">
-                                  {messageDetail?.chatFiles &&
-                                    messageDetail?.chatFiles.length > 0 &&
-                                    messageDetail?.chatFiles.map(
-                                      (file, index) => {
-                                        return (
-                                          <div
-                                            key={index}
-                                            className="flex justify-between items-center !w-[100%]">
-                                            <div
-                                              className={`bg-white border-[#D2DBE1] border-[1px] rounded-[6px] p-[14px] flex gap-2 items-center ${!isSearchingMessages ? '!w-[calc(100%_-_100px)]' : 'w-full'}`}>
-                                              {file.fileType.includes(
-                                                'image',
-                                              ) && (
-                                                <div>
-                                                  <Image
-                                                    src={getFileURL(
-                                                      file?.compressedFile ||
-                                                        '',
-                                                    )}
-                                                    unoptimized={true}
-                                                    alt="Image"
-                                                    width={150}
-                                                    height={100}
-                                                  />
-                                                </div>
-                                              )}
-                                              <p
-                                                className={`text-primary font-medium text-[14px] break-all max-w-full ${
-                                                  file.fileType.includes(
-                                                    'image',
-                                                  )
-                                                    ? 'max-w-[calc(100%_-_200px)]'
-                                                    : 'max-w-[calc(100%)]'
-                                                }`}>
-                                                {file.fileName}
-                                              </p>
-                                            </div>
-                                            {((!isSearchingMessages &&
-                                              file.fileType.includes(
-                                                'image',
-                                              )) ||
-                                              file.fileType.includes(
-                                                'pdf',
-                                              )) && (
-                                              <Button
-                                                className="font-medium w-[84px] h-[30px] !rounded-[6px] text-xs !px-0"
-                                                variant="outline">
-                                                プレビュー
-                                              </Button>
-                                            )}
-                                          </div>
-                                        );
-                                      },
-                                    )}
-                                </div>
+                                <RenderFiles
+                                  dashboardMemberList={dashboardMemberList}
+                                  uuidList={uuidListMain}
+                                  uuidMain={uuidListMain}
+                                  messageDetail={messageDetail}
+                                  downloadFileName={downloadFileName}
+                                  setDataPreviewFile={setDataPreviewFile}
+                                />
                               )}
                           </div>
                         )}

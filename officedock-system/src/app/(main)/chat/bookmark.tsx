@@ -43,7 +43,11 @@ import {
 import { useErrorToast } from '@hooks/useErrorToast';
 import useBookMarkList from '@hooks/useBookMarkList';
 
-import { ChatMessageResponse } from '@interfaces/chat';
+import {
+  ChatDashboardMember,
+  ChatFileResponse,
+  ChatMessageResponse,
+} from '@interfaces/chat';
 import { Profile } from '@interfaces/user';
 import { BasePagination, OptionDropdownType } from '@interfaces/common';
 import { EventEditFormData, EventRequest } from '@interfaces/calendar';
@@ -55,6 +59,7 @@ import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 
 import api from '@base/api';
+import FilePreview from '@components/custom/FilePreview';
 
 interface BookmarkListProps {
   searchChatMsg: string;
@@ -85,6 +90,13 @@ const BookmarkList = ({
   const [dataMessageDetail, setDataMessageDetail] = useState<
     ChatMessageResponse[]
   >([]);
+  // Preview files
+  const [dataPreviewFile, setDataPreviewFile] = useState<{
+    msgId: string;
+    file: ChatFileResponse;
+    user: ChatDashboardMember;
+    createAt: string;
+  } | null>(null);
 
   // Params
   const searchParams = useSearchParams();
@@ -571,6 +583,7 @@ const BookmarkList = ({
                 handleConfirmGetDataDetailEvent={
                   handleConfirmGetDataDetailEvent
                 }
+                setDataPreviewFile={setDataPreviewFile}
                 handleActionEditTask={handleActionEditTask}
                 onGotoMessage={() => {
                   handleChangeRoom({
@@ -634,6 +647,28 @@ const BookmarkList = ({
             }
           }}
           backToEditing={backToEditing}
+        />
+      )}
+      {dataPreviewFile && (
+        <FilePreview
+          open={dataPreviewFile !== null}
+          file={dataPreviewFile.file}
+          user={dataPreviewFile.user}
+          msgId={dataPreviewFile.msgId}
+          createAt={dataPreviewFile.createAt}
+          onClose={() => setDataPreviewFile(null)}
+          onGotoMessage={(data: {
+            messageId: string | number;
+            roomCode?: string;
+          }) => {
+            setOpenSearchMessagesModal(false);
+
+            handleChangeRoom({
+              roomCode: String(data.roomCode),
+              messageId: String(data.messageId),
+            });
+            setDataPreviewFile(null);
+          }}
         />
       )}
       {openEventActionTypeModal.status && openEventActionTypeModal.type && (
