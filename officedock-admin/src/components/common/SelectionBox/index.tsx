@@ -167,7 +167,7 @@ const SelectionBox = ({
         {type === SelectionBoxType.MONO_SELECT && (
           <div className="relative" ref={wrapperRef}>
             <div
-              className={`w-full h-[45px] px-4 border rounded-md cursor-pointer flex justify-between items-center ${customStyleClassName}`}
+              className={`w-full h-[45px] pl-4 pr-2 border rounded-md cursor-pointer flex justify-between items-center ${customStyleClassName}`}
               onClick={() => setOpen((prev) => !prev)}>
               <span className="text-base text-gray-900">
                 {getDisplayLabel(selectedValue) || placeholder}
@@ -254,7 +254,7 @@ const SelectionBox = ({
         {type === SelectionBoxType.MULTIPLE_SELECT && (
           <div className="relative" ref={wrapperRef}>
             <div
-              className={`w-full h-[45px] px-4 border rounded-md cursor-pointer flex justify-between items-center bg-white ${customStyleClassName}`}
+              className={`w-full h-[45px] pl-4 pr-2 border rounded-md cursor-pointer flex justify-between items-center bg-white ${customStyleClassName}`}
               onClick={() => setOpen((prev) => !prev)}>
               <span className="text-base text-gray-900">
                 {getDisplayLabel(selectedValue)}

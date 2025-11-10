@@ -27,6 +27,16 @@ export const PASSWORD_NOT_MATCHED_MESSAGE = 'パスワードが一致しませ�
 export const PASSWORD_WRONG_FORMAT = 'このパスワードは一般的すぎます。';
 export const PHONE_NUMBER_WRONG_FORMAT = '電話番号の形式が正しくありません。';
 export const FIELD_MAX_LENGTH_255_MESSAGE = '255文字以内で入力してください。';
+export const MONTHLY_FEE_REQUIRED_MESSAGE = '利用料金は必須です。';
+export const MIN_MONTHLY_FEE_MESSAGE = '利用料金の最低金額は3,000円です。';
+export const MAX_MONTHLY_FEE_MESSAGE = '利用料金の最大金額は1,000,000円です。';
+export const LIMIT_PERSON_REQUIRED_MESSAGE = 'ユーザー作成上限は必須です。';
+export const MIN_LIMIT_PERSON_MESSAGE = 'ユーザー作成上限の最低値は1人です。';
+export const MAX_LIMIT_PERSON_MESSAGE = 'ユーザー作成上限の最大値は300人です。';
+export const MONTHLY_COIN_REQUIRED_MESSAGE = '毎月のコイン付与数は必須です。';
+export const MIN_MONTHLY_COIN_MESSAGE = '毎月のコイン付与数の最低値は300枚です。';
+export const MAX_MONTHLY_COIN_MESSAGE = '毎月のコイン付与数の最大値は100,000枚です。';
+
 
 // Success message
 export const SUCCESS_SENT_MAIL_MESSAGE = 'メール送信に成功しました';

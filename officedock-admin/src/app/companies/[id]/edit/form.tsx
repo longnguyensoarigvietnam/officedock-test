@@ -24,6 +24,15 @@ import {
   STATUS_REQUIRED_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
   SYSTEM_MAIN_PURPOSE_REQUIRED_MESSAGE,
+  MIN_MONTHLY_FEE_MESSAGE,
+  MONTHLY_FEE_REQUIRED_MESSAGE,
+  LIMIT_PERSON_REQUIRED_MESSAGE,
+  MIN_LIMIT_PERSON_MESSAGE,
+  MAX_LIMIT_PERSON_MESSAGE,
+  MONTHLY_COIN_REQUIRED_MESSAGE,
+  MIN_MONTHLY_COIN_MESSAGE,
+  MAX_MONTHLY_COIN_MESSAGE,
+  MAX_MONTHLY_FEE_MESSAGE,
 } from '@constants/message';
 import { apiRouters, pageRouters } from '@constants/routers';
 import {
@@ -31,15 +40,8 @@ import {
   SelectionBoxType,
   ServerStatusCode,
 } from '@constants/enums';
-import {
-  ONLY_DIGITS_REGEX,
-  PHONE_REGEX,
-} from '@constants/regex';
-import {
-  MAX_PHONE_NUMBER_LENGTH,
-  NAME_OTHER_OPTION,
-  OTHER_OPTION_VALUE,
-} from '@constants';
+import { PHONE_REGEX } from '@constants/regex';
+import { NAME_OTHER_OPTION, OTHER_OPTION_VALUE } from '@constants';
 
 import useCompanyDetail from '@hooks/useDetailCompany';
 import useCommonCreationData from '@hooks/useCommonCreationData';
@@ -52,7 +54,13 @@ import { OptionDropdownType } from '@interfaces/common';
 import { EditCompanyRequest } from '@interfaces/company';
 
 import { emailRules } from '@utils/validators';
-import { getErrorMessage, handleServerFormErrors, normalizeJapaneseText } from '@utils';
+import {
+  getErrorMessage,
+  handleHalfWidthInput,
+  handleHalfWidthPaste,
+  handleServerFormErrors,
+  normalizeJapaneseText,
+} from '@utils';
 
 import api from '@base/api';
 
@@ -75,6 +83,11 @@ interface EditCompanyType {
   };
   closeDate?: OptionDropdownType;
   editableAfterClosing?: OptionDropdownType;
+  customPlan: {
+    monthlyFee: number | null;
+    exchangeableAmount: number | null;
+    limitPerson: number | null;
+  };
 }
 
 const EditCompanyForm = () => {
@@ -158,6 +171,7 @@ const EditCompanyForm = () => {
     register,
     handleSubmit,
     setError,
+    clearErrors,
     formState: { errors },
   } = useForm<EditCompanyType>({
     mode: 'onSubmit',
@@ -186,6 +200,11 @@ const EditCompanyForm = () => {
         department: undefined,
         systemMainPurpose: undefined,
       },
+      customPlan: {
+        exchangeableAmount: null,
+        limitPerson: null,
+        monthlyFee: null,
+      },
       closeDate: closingDayOptions[closingDayOptions.length - 1],
       editableAfterClosing:
         editableAfterClosingOptions[editableAfterClosingOptions.length - 1],
@@ -207,6 +226,10 @@ const EditCompanyForm = () => {
       value.responsiblePersonMail = companyDetail?.responsiblePersonMail;
       value.contract.phone = companyDetail.contract?.phone;
       value.contract.address = companyDetail.contract?.address;
+      value.customPlan.exchangeableAmount =
+        companyDetail.plan?.exchangeableAmount ?? null;
+      value.customPlan.limitPerson = companyDetail.plan?.limitPerson ?? null;
+      value.customPlan.monthlyFee = companyDetail.plan?.monthlyFee ?? null;
 
       value.contract.industry = companyDetail.contract?.industry
         ? industryOptions.find(
@@ -260,7 +283,7 @@ const EditCompanyForm = () => {
     }
 
     return value;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyDetail, industryOptions, departmentOptions]);
 
   useEffect(() => {
@@ -298,7 +321,6 @@ const EditCompanyForm = () => {
   const onSubmit: SubmitHandler<EditCompanyType> = (data) => {
     setIsLoading(true);
     editCompany({
-      ...data,
       id: parseFloat(params.id),
       name: data?.name || '',
       status: data?.status?.value as string,
@@ -326,12 +348,32 @@ const EditCompanyForm = () => {
         companyDetail?.totalUsers && companyDetail?.totalUsers > 0
           ? undefined
           : (data.editableAfterClosing?.value as number),
+      ...(Number(data?.customPlan?.monthlyFee) &&
+      Number(data?.customPlan?.exchangeableAmount) &&
+      Number(data?.customPlan?.limitPerson)
+        ? {
+            customPlan: {
+              monthlyFee: Number(data?.customPlan?.monthlyFee) || null,
+              exchangeableAmount:
+                Number(data?.customPlan?.exchangeableAmount) || null,
+              limitPerson: Number(data?.customPlan?.limitPerson) || null,
+            },
+          }
+        : {}),
     });
   };
 
+  const isCustomPlan =
+    watch('customPlan.monthlyFee') ||
+    watch('customPlan.limitPerson') ||
+    watch('customPlan.exchangeableAmount');
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+      {/* ID */}
       <Input label="ID" register={register('id')} disabled={true} />
+
+      {/* Name */}
       <Input
         label="会社名"
         placeholder="会社名を入力してください"
@@ -345,6 +387,8 @@ const EditCompanyForm = () => {
         autoComplete="off"
         error={getErrorMessage(errors, 'name')}
       />
+
+      {/* Status */}
       {watch('status.value') == CompanyStatus.ACTIVE_CONTRACT ||
       watch('status.value') == CompanyStatus.TEMPORARY_USAGE ? (
         <Controller
@@ -369,12 +413,17 @@ const EditCompanyForm = () => {
         <></>
       )}
 
+      {/* Plan */}
       <Input label="契約プラン" register={register('plan')} disabled={true} />
+
+      {/* Payment method */}
       <Input
         label="決済方法"
         register={register('paymentMethod')}
         disabled={true}
       />
+
+      {/* Responsible person name */}
       <Input
         label="担当責任者名"
         placeholder="担当責任者名を入力してください"
@@ -388,6 +437,8 @@ const EditCompanyForm = () => {
         autoComplete="off"
         error={getErrorMessage(errors, 'responsiblePersonName')}
       />
+
+      {/* Responsible person mail */}
       <Input
         label="メールアドレス"
         placeholder="メールアドレスを入力してください"
@@ -395,6 +446,8 @@ const EditCompanyForm = () => {
         autoComplete="off"
         error={getErrorMessage(errors, 'responsiblePersonMail')}
       />
+
+      {/* Phone */}
       <Input
         label="電話番号"
         placeholder="電話番号を入力してください"
@@ -410,24 +463,13 @@ const EditCompanyForm = () => {
             message: PHONE_NUMBER_WRONG_FORMAT,
           },
         })}
-        onInput={(e) => {
-          e.currentTarget.value = e.currentTarget.value.replace(/\D/g, ''); // remove non-digits
-
-          // If the value is longer than 11, remove the last added character
-          if (e.currentTarget.value.length > MAX_PHONE_NUMBER_LENGTH) {
-            e.currentTarget.value = e.currentTarget.value.replace(/.$/, '');
-          }
-        }}
-        onPaste={(e) => {
-          const pasted = e.clipboardData.getData('text');
-          // block paste if it contains anything other than ASCII digits
-          if (!ONLY_DIGITS_REGEX.test(pasted)) {
-            e.preventDefault();
-          }
-        }}
+        onInput={(e) => handleHalfWidthInput(e, true)}
+        onPaste={handleHalfWidthPaste}
         autoComplete="off"
         error={getErrorMessage(errors, 'contract.phone')}
       />
+
+      {/* Address */}
       <Input
         label="住所"
         placeholder="住所を入力してください"
@@ -441,6 +483,8 @@ const EditCompanyForm = () => {
         autoComplete="off"
         error={getErrorMessage(errors, 'contract.address')}
       />
+
+      {/* Industry */}
       <Controller
         control={control}
         name="contract.industry"
@@ -532,6 +576,8 @@ const EditCompanyForm = () => {
         }}
         rules={{ required: INDUSTRY_REQUIRED_MESSAGE }}
       />
+
+      {/* System main purpose */}
       <Controller
         control={control}
         name="contract.systemMainPurpose"
@@ -588,6 +634,7 @@ const EditCompanyForm = () => {
         rules={{ required: SYSTEM_MAIN_PURPOSE_REQUIRED_MESSAGE }}
       />
 
+      {/* Department */}
       <Controller
         control={control}
         name="contract.department"
@@ -693,6 +740,7 @@ const EditCompanyForm = () => {
         }}
         rules={{ required: DEPARTMENT_REQUIRED_MESSAGE }}
       />
+
       {/* Close Date */}
       <Controller
         control={control}
@@ -717,7 +765,8 @@ const EditCompanyForm = () => {
           );
         }}
       />
-      {/* editableAfterClosing */}
+
+      {/* Editable After Closing */}
       <Controller
         control={control}
         name="editableAfterClosing"
@@ -741,6 +790,87 @@ const EditCompanyForm = () => {
             />
           );
         }}
+      />
+
+      {/* Monthly fee */}
+      <Input
+        label="利用料金"
+        type="number"
+        placeholder="利用料金を入力してください"
+        register={register('customPlan.monthlyFee', {
+          required: isCustomPlan ? MONTHLY_FEE_REQUIRED_MESSAGE : false,
+          min: isCustomPlan
+            ? {
+                value: 3000,
+                message: MIN_MONTHLY_FEE_MESSAGE,
+              }
+            : undefined,
+          max: isCustomPlan
+            ? {
+                value: 1000000,
+                message: MAX_MONTHLY_FEE_MESSAGE,
+              }
+            : undefined,
+          onChange: () => clearErrors('customPlan.monthlyFee'),
+        })}
+        error={getErrorMessage(errors, 'customPlan.monthlyFee')}
+        onWheel={(e) => e.currentTarget.blur()}
+        onInput={handleHalfWidthInput}
+        onPaste={handleHalfWidthPaste}
+      />
+
+      {/* Limit */}
+      <Input
+        label="ユーザー作成上限"
+        type="number"
+        placeholder="ユーザー作成上限を入力してください"
+        register={register('customPlan.limitPerson', {
+          required: isCustomPlan ? LIMIT_PERSON_REQUIRED_MESSAGE : false,
+          min: isCustomPlan
+            ? {
+                value: 1,
+                message: MIN_LIMIT_PERSON_MESSAGE,
+              }
+            : undefined,
+          max: isCustomPlan
+            ? {
+                value: 300,
+                message: MAX_LIMIT_PERSON_MESSAGE,
+              }
+            : undefined,
+          onChange: () => clearErrors('customPlan.limitPerson'),
+        })}
+        error={getErrorMessage(errors, 'customPlan.limitPerson')}
+        onWheel={(e) => e.currentTarget.blur()}
+        onInput={handleHalfWidthInput}
+        onPaste={handleHalfWidthPaste}
+      />
+
+      {/* Exchangeable coins */}
+      <Input
+        label="毎月のコイン付与数"
+        type="number"
+        placeholder="毎月のコイン付与数を入力してください"
+        register={register('customPlan.exchangeableAmount', {
+          required: isCustomPlan ? MONTHLY_COIN_REQUIRED_MESSAGE : false,
+          min: isCustomPlan
+            ? {
+                value: 300,
+                message: MIN_MONTHLY_COIN_MESSAGE,
+              }
+            : undefined,
+          max: isCustomPlan
+            ? {
+                value: 100000,
+                message: MAX_MONTHLY_COIN_MESSAGE,
+              }
+            : undefined,
+          onChange: () => clearErrors('customPlan.exchangeableAmount'),
+        })}
+        error={getErrorMessage(errors, 'customPlan.exchangeableAmount')}
+        onWheel={(e) => e.currentTarget.blur()}
+        onInput={handleHalfWidthInput}
+        onPaste={handleHalfWidthPaste}
       />
 
       <div className="flex justify-center">

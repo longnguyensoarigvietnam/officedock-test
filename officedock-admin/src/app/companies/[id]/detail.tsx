@@ -147,6 +147,24 @@ const CompanyDetailInfo = () => {
               `${companyDetail ? companyDetail.editableAfterClosing : ''}日間` ||
               '',
           },
+          {
+            label: '利用料金',
+            value: companyDetail?.plan?.monthlyFee
+              ? `${companyDetail?.plan?.monthlyFee}円`
+              : '',
+          },
+          {
+            label: 'ユーザー作成上限',
+            value: companyDetail?.plan?.limitPerson
+              ? `${companyDetail?.plan?.limitPerson}人`
+              : '',
+          },
+          {
+            label: '毎月のコイン付与数',
+            value: companyDetail?.plan?.exchangeableAmount
+              ? `${companyDetail?.plan?.exchangeableAmount}`
+              : '',
+          },
         ]}
       />
       <InformationSection
