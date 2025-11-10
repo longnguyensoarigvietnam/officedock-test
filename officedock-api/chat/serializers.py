@@ -273,7 +273,15 @@ class BaseChatFileDetailSerializer(serializers.ModelSerializer):
 
     def get_chat_messages(self, obj):
         """Get list chat messages of file"""
-        return obj.chat_messages.values("id", "uuid")
+        values = obj.chat_messages.values("id", "uuid", "chat_room__code")
+        return [
+            {
+                "id": v["id"],
+                "uuid": v["uuid"],
+                "chat_room": v["chat_room__code"],
+            }
+            for v in values
+        ]
 
 
 class ChatFileDetailSerializer(BaseChatFileDetailSerializer):
