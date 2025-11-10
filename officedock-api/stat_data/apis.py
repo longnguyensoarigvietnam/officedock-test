@@ -98,13 +98,9 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                     }
                 )
             # Get previous and next users safely
-            prev_user = users[index - 1] if index > 0 else None
-            prev_user = (
-                BaseUserSerializer(prev_user).data if prev_user else None
-            )
-            next_user = users[index + 1] if index < len(users) - 1 else None
+            prev_user = {"id": users[index - 1].id} if index > 0 else None
             next_user = (
-                BaseUserSerializer(next_user).data if next_user else None
+                {"id": users[index + 1].id} if index < len(users) - 1 else None
             )
 
         date = (

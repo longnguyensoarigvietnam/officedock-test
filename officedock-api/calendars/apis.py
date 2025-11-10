@@ -584,10 +584,10 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             and recurring_event_option
             and (is_difference_repeat_option or is_difference_repeat_date)
         ):
-            serializer_data["parent"] = instance.parent or instance
             if not is_difference_repeat_date:
                 instance = serializer.save()
             else:
+                serializer_data["parent"] = instance.parent or instance
                 instance = self._handle_recurring_event_option(
                     recurring_event_option,
                     serializer_data,
@@ -682,15 +682,20 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             repeat_type
             and recurring_event_option == ScheduleRepeatOption.THIS_EVENT.value
         ):
+            repeat_schedule.plan_start_date = start_date
+            repeat_schedule.plan_end_date = end_date
             repeat_schedule.schedule = instance
-            repeat_schedule.save()
+            repeat_schedule.save(
+                update_fields=["plan_start_date", "plan_end_date", "schedule"]
+            )
+            return
         # Update recurring time
         if is_change_time_recurring:
             self._update_time_recurring(instance, start_date, end_date)
 
         # Create repeat schedule base on repeat type
         if repeat_type:
-            # Delete paren when change repeat type and recurring of event
+            # Delete parent when change repeat type and recurring of event
             if is_change_recurring:
                 instance.parent = None
                 instance.save()
