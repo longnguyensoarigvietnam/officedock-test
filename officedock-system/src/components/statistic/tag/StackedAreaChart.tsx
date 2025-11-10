@@ -247,16 +247,18 @@ const StackedAreaChart = ({
             }
           }
         }
+        const len = normalizeDataObject.durations.length;
 
-        const isAddFirstValue =
-          normalizeDataObject.durations[0]?.startDate !==
-          normalizeDataObject.durations[0]?.endDate;
+        const isAddLastValue =
+          len > 0 &&
+          normalizeDataObject.durations[len - 1]?.startDate ===
+            normalizeDataObject.durations[len - 1]?.endDate;
 
         const chartData = Array.from(tagMap.entries()).map(([name, data]) => {
           const firstValue = data.at(0) ?? 0;
           return {
             name,
-            data: isAddFirstValue ? [firstValue, ...data] : [...data],
+            data: isAddLastValue ? [...data] : [firstValue, ...data],
           };
         });
 

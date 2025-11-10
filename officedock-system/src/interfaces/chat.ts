@@ -287,8 +287,6 @@ export interface DataChatFileMemo {
   uuid: string;
 }
 export interface ChatFileDetailResponse {
-  chatMessageId: number;
-  chatMessageUuid: string;
   createdAt: string;
   fileName: string;
   fileSize: number;
@@ -300,4 +298,9 @@ export interface ChatFileDetailResponse {
     nextFile: ChatFileDetailResponse | null;
     previousFile: ChatFileDetailResponse | null;
   };
+  chatMessages?: {
+    chatRoom?: string;
+    id: number;
+    uuid: string;
+  }[];
 }
