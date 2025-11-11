@@ -1038,7 +1038,7 @@ const Header = ({ className }: HeaderProps) => {
   return (
     <>
       <header
-        className={`sticky 2xl:fixed top-0 z-30 bg-white w-full h-[70px]  p-3 flex justify-between item-center ${className}`}
+        className={`sticky 2xl:fixed top-0 z-40 bg-white w-full h-[70px]  p-3 flex justify-between item-center ${className}`}
         style={{ boxShadow: '0px 4px 8px 0px #1D2D3F0A' }}>
         <div className="flex gap-8 justify-between w-full">
           <div className="flex flex-grow items-center gap-8">
@@ -1051,7 +1051,7 @@ const Header = ({ className }: HeaderProps) => {
             <TaskPageDataHeader />
           </div>
           <div className="flex items-center gap-4 w-fit pr-3">
-            <Popover className="relative">
+            <Popover className="relative z-[9999]">
               {({ open, close }) => (
                 <>
                   <div className="flex gap-2 items-center">
@@ -1077,7 +1077,7 @@ const Header = ({ className }: HeaderProps) => {
                     leave="transition ease-in duration-150"
                     leaveFrom="opacity-100 translate-y-0"
                     leaveTo="opacity-0 translate-y-1">
-                    <PopoverPanel className="absolute -right-[14px] top-[44px] z-10 w-fit transform">
+                    <PopoverPanel className="absolute -right-[14px] top-[44px] z-40 w-fit transform">
                       <div className="overflow-hidden bg-[#5B6770] rounded-lg shadow-common w-[150px] p-[6px]">
                         <div className="relative flex flex-col gap-1 text-white text-[14px] font-medium">
                           {SETTING_MENU.map((item) =>
@@ -1160,7 +1160,7 @@ const Header = ({ className }: HeaderProps) => {
                       leave="transition ease-in duration-150"
                       leaveFrom="opacity-100 translate-y-0"
                       leaveTo="opacity-0 translate-y-1">
-                      <PopoverPanel className="absolute -right-[14px] top-[44px] z-10 w-fit transform">
+                      <PopoverPanel className="absolute -right-[14px] top-[44px] z-40 w-fit transform">
                         <div className="overflow-hidden bg-[#5B6770] rounded-lg shadow-common w-[200px] p-[6px]">
                           <div className="relative flex flex-col gap-1 text-white text-[14px] font-medium">
                             {companyItems

@@ -108,7 +108,7 @@ export const convertToTimeString = (date: string): string => {
   return `${hours}:${minutes}`;
 };
 //  Format time
-export const formatTimeInput = (value: string): string => {
+export const formatTimeInput = (value: string, isSpace?: boolean): string => {
   let hours: number, minutes: number;
   if (value.length === 3) {
     hours = parseInt(value.substring(0, 1), 10);
@@ -127,6 +127,7 @@ export const formatTimeInput = (value: string): string => {
   }
   const formattedHours = String(hours).padStart(2, '0');
   const formattedMinutes = String(minutes).padStart(2, '0');
+  if (isSpace) return `${formattedHours} : ${formattedMinutes}`;
   return `${formattedHours}:${formattedMinutes}`;
 };
 export const formatTimeInputCustom = (value: string): string => {
@@ -1943,7 +1944,10 @@ export function formatJapaneseDateRangeSchedule(
  * @param offsetHours - The number of hours to add (can be negative).
  * @returns The adjusted time string in "HH:mm" format.
  */
-export const adjustHours = (timeString: string, offsetHours: number): string => {
+export const adjustHours = (
+  timeString: string,
+  offsetHours: number,
+): string => {
   if (!timeString) return '';
 
   const [hours, minutes] = timeString.split(':').map(Number);
@@ -1953,4 +1957,3 @@ export const adjustHours = (timeString: string, offsetHours: number): string => 
 
   return `${String(newHour).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 };
-

@@ -696,16 +696,16 @@ const DailyReportDetailBoard = () => {
     typeAction: string,
     startedAt?: string,
   ): void => {
-    let value = e.target.value.replace(/\D/g, '');
-    if (value.length > 4) {
-      value = value.substring(0, 4);
-    }
+    const value = e.target.value;
     const updatedTasks = dataTaskDailyList.map((task) => {
       let updatedTask =
         `${task.idEdit}` === `${id}`
           ? {
               ...task,
-              startedAt: formatTimeInput(`${convertToMinutesNumber(value)}`),
+              startedAt: formatTimeInput(
+                `${convertToMinutesNumber(value)}`,
+                true,
+              ),
             }
           : task;
 
@@ -713,7 +713,10 @@ const DailyReportDetailBoard = () => {
         `${child.idEdit}` === `${id}`
           ? {
               ...child,
-              startedAt: formatTimeInput(`${convertToMinutesNumber(value)}`),
+              startedAt: formatTimeInput(
+                `${convertToMinutesNumber(value)}`,
+                true,
+              ),
             }
           : child,
       );
@@ -753,16 +756,17 @@ const DailyReportDetailBoard = () => {
     type: string,
     endTimeAt: string,
   ): void => {
-    let value = e.target.value.replace(/\D/g, '');
-    if (value.length > 4) {
-      value = value.substring(0, 4);
-    }
+    const value = e.target.value;
+
     const updatedTasks = dataTaskDailyList.map((task) => {
       let updatedTask =
         `${task.idEdit}` === `${id}`
           ? {
               ...task,
-              pausedAt: formatTimeInput(`${convertToMinutesNumber(value)}`),
+              pausedAt: formatTimeInput(
+                `${convertToMinutesNumber(value)}`,
+                true,
+              ),
             }
           : task;
 
@@ -770,7 +774,10 @@ const DailyReportDetailBoard = () => {
         `${child.idEdit}` === `${id}`
           ? {
               ...child,
-              pausedAt: formatTimeInput(`${convertToMinutesNumber(value)}`),
+              pausedAt: formatTimeInput(
+                `${convertToMinutesNumber(value)}`,
+                true,
+              ),
             }
           : child,
       );
@@ -2008,7 +2015,7 @@ const DailyReportDetailBoard = () => {
     }
     // save pdf
     pdf.save(
-      `${formatShowDateJapanese(dataDatePicker)}_${dataDetailUser && dataDetailUser?.fullName}_集計.pdf`,
+      `${formatShowDateJapanese(dataDatePicker)}_${dataDetailUser && dataDetailUser?.fullName}_日報.pdf`,
     );
     // cleanup
     divRef.current.style.visibility = 'hidden';
