@@ -463,6 +463,8 @@ const PercentageCategory = ({
     }
   };
 
+  const [hasHover, setHasHover] = useState<string>('');
+
   return (
     <>
       <div
@@ -536,6 +538,10 @@ const PercentageCategory = ({
                           {dataChartLarge.data.length > 0 ? (
                             <PieChartCustom
                               isClickTooltip
+                              hasHover={hasHover != EventWorkCategory.LARGE}
+                              onActionHover={() =>
+                                setHasHover(EventWorkCategory.LARGE)
+                              }
                               mergedItems={dataChartLarge?.mergedItems || []}
                               colors={dataChartLarge.colors}
                               data={dataChartLarge?.data}
@@ -617,6 +623,10 @@ const PercentageCategory = ({
                           {dataChartMedium.data.length > 0 ? (
                             <PieChartCustom
                               isClickTooltip
+                              hasHover={hasHover != EventWorkCategory.MEDIUM}
+                              onActionHover={() =>
+                                setHasHover(EventWorkCategory.MEDIUM)
+                              }
                               mergedItems={dataChartMedium?.mergedItems || []}
                               colors={dataChartMedium.colors}
                               data={dataChartMedium?.data}
@@ -699,6 +709,10 @@ const PercentageCategory = ({
                               colors={dataChartSmall.colors}
                               data={dataChartSmall?.data}
                               isLast
+                              hasHover={hasHover != EventWorkCategory.SMALL}
+                              onActionHover={() =>
+                                setHasHover(EventWorkCategory.SMALL)
+                              }
                               labels={dataChartSmall?.labels}
                               mergedItems={dataChartSmall?.mergedItems || []}
                               actualValues={dataChartSmall?.actualValue}

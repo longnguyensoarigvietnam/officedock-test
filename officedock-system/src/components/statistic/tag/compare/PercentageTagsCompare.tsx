@@ -318,6 +318,8 @@ const PercentageTagsCompare = ({
     }
   };
 
+  const [hasHover, setHasHover] = useState<string>('');
+
   return (
     <>
       <div
@@ -409,6 +411,10 @@ const PercentageTagsCompare = ({
                             organizationId,
                           );
                         }}
+                        hasHover={hasHover != EventWorkCategory.LARGE}
+                        onActionHover={() =>
+                          setHasHover(EventWorkCategory.LARGE)
+                        }
                       />
                     </div>
                   </div>
@@ -459,6 +465,10 @@ const PercentageTagsCompare = ({
                             isCompare,
                           );
                         }}
+                        hasHover={hasHover != EventWorkCategory.MEDIUM}
+                        onActionHover={() =>
+                          setHasHover(EventWorkCategory.MEDIUM)
+                        }
                       />
                     </div>
                   </div>
@@ -513,6 +523,10 @@ const PercentageTagsCompare = ({
                             isCompare,
                           );
                         }}
+                        hasHover={hasHover != EventWorkCategory.SMALL}
+                        onActionHover={() =>
+                          setHasHover(EventWorkCategory.SMALL)
+                        }
                       />
                     </div>
                   </div>
@@ -568,6 +582,10 @@ const PercentageTagsCompare = ({
                             isCompare,
                           );
                         }}
+                        hasHover={hasHover != EventWorkCategory.CATEGORY}
+                        onActionHover={() =>
+                          setHasHover(EventWorkCategory.CATEGORY)
+                        }
                       />
                     </div>
                   </div>

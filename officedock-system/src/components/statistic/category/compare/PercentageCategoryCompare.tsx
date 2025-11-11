@@ -444,6 +444,8 @@ const PercentageCategoryCompare = ({
     }
   };
 
+  const [hasHover, setHasHover] = useState<string>('');
+
   return (
     <>
       <div
@@ -519,6 +521,10 @@ const PercentageCategoryCompare = ({
                         isAllTeamOption={
                           selectedOrganization?.value == ALL_TEAM_STATISTIC
                         }
+                        hasHover={hasHover != EventWorkCategory.LARGE}
+                        onActionHover={() =>
+                          setHasHover(EventWorkCategory.LARGE)
+                        }
                         handleClickChart={(data: OptionDropdownType) => {
                           if (
                             selectedOrganization?.value === ALL_TEAM_STATISTIC
@@ -582,6 +588,10 @@ const PercentageCategoryCompare = ({
                         data={dataChartMedium}
                         startDate={startDate}
                         endDate={endDate}
+                        hasHover={hasHover != EventWorkCategory.MEDIUM}
+                        onActionHover={() =>
+                          setHasHover(EventWorkCategory.MEDIUM)
+                        }
                         isLoading={isLoadingLarge}
                         isLoadingCompare={isLoadingLargeCompare}
                         startDateCompare={startDateCompare}
@@ -648,6 +658,10 @@ const PercentageCategoryCompare = ({
                         data={dataChartSmall}
                         startDate={startDate}
                         endDate={endDate}
+                        hasHover={hasHover != EventWorkCategory.SMALL}
+                        onActionHover={() =>
+                          setHasHover(EventWorkCategory.SMALL)
+                        }
                         isLoading={isLoadingMedium}
                         isLoadingCompare={isLoadingMediumCompare}
                         startDateCompare={startDateCompare}

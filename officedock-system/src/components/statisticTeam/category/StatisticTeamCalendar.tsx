@@ -880,7 +880,7 @@ function StatisticTeamCalendar() {
                     className="gap-3 flex items-center mt-[6px]">
                     <span>開始日</span>
                     <div
-                      className={`w-[135px] h-[34px] flex items-center justify-center rounded-md border ${dataStartDateCompare ? 'border-[#e95062]' : 'border-[#77858F]'} ${isErrorDataCompare.start && '!border-red-500'}`}>
+                      className={`w-[135px] h-[34px] flex items-center justify-center rounded-md border ${dataStartDateCompare ? 'border-primary' : 'border-[#77858F]'} ${isErrorDataCompare.start && '!border-red-500'}`}>
                       {dataStartDateCompare &&
                         formatShowDateJapanese(dataStartDateCompare)}
                     </div>
@@ -896,7 +896,7 @@ function StatisticTeamCalendar() {
                     className="gap-3 flex items-center mt-[6px]">
                     <span>終了日</span>
                     <div
-                      className={`w-[135px] h-[34px] flex items-center justify-center rounded-md border ${dataEndDateCompare ? 'border-[#e95062]' : 'border-[#77858F]'} ${isErrorDataCompare.end && '!border-red-500'}`}>
+                      className={`w-[135px] h-[34px] flex items-center justify-center rounded-md border ${dataEndDateCompare ? 'border-primary' : 'border-[#77858F]'} ${isErrorDataCompare.end && '!border-red-500'}`}>
                       {dataEndDateCompare &&
                         formatShowDateJapanese(dataEndDateCompare)}
                     </div>

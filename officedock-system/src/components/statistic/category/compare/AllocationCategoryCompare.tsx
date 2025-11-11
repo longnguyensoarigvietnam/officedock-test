@@ -648,6 +648,24 @@ const AllocationCategoryCompare = memo(
       }
     };
 
+    const [activeBarLargeId, setActiveBarLargeId] = useState<number | null>(
+      null,
+    );
+    const [activeBarLargeCompareId, setActiveBarLargeCompareId] = useState<
+      number | null
+    >(null);
+    const [activeBarMediumId, setActiveBarMediumId] = useState<number | null>(
+      null,
+    );
+    const [activeBarMediumCompareId, setActiveBarMediumCompareId] = useState<
+      number | null
+    >(null);
+    const [activeBarSmallId, setActiveBarSmallId] = useState<number | null>(
+      null,
+    );
+    const [activeBarSmallCompareId, setActiveBarSmallCompareId] = useState<
+      number | null
+    >(null);
     return (
       <>
         <div
@@ -798,6 +816,19 @@ const AllocationCategoryCompare = memo(
                                       organizationId,
                                     );
                                   }}
+                                  isActive={activeBarLargeId === pair.main?.id}
+                                  onActivate={(id: number) => {
+                                    setActiveBarLargeId(id);
+                                    setActiveBarLargeCompareId(null);
+                                    setActiveBarMediumId(null);
+                                    setActiveBarMediumCompareId(null);
+                                    setActiveBarSmallId(null);
+                                    setActiveBarSmallCompareId(null);
+                                  }}
+                                  onDeactivate={(id: number) => {
+                                    if (activeBarLargeId === id)
+                                      setActiveBarLargeId(null);
+                                  }}
                                   isAllTeam={
                                     selectedOrganization?.value ==
                                     ALL_TEAM_STATISTIC
@@ -883,6 +914,21 @@ const AllocationCategoryCompare = memo(
                                     pair.main?.organizationId ||
                                     pair.compare?.organizationId
                                   }
+                                  isActive={
+                                    activeBarLargeCompareId === pair.compare?.id
+                                  }
+                                  onActivate={(id: number) => {
+                                    setActiveBarLargeId(null);
+                                    setActiveBarLargeCompareId(id);
+                                    setActiveBarMediumId(null);
+                                    setActiveBarMediumCompareId(null);
+                                    setActiveBarSmallId(null);
+                                    setActiveBarSmallCompareId(null);
+                                  }}
+                                  onDeactivate={(id: number) => {
+                                    if (activeBarLargeCompareId === id)
+                                      setActiveBarLargeCompareId(null);
+                                  }}
                                 />
                               </div>
                             );
@@ -1033,6 +1079,19 @@ const AllocationCategoryCompare = memo(
                                   showInfo={false}
                                   startDate={startDate}
                                   endDate={endDate}
+                                  isActive={activeBarMediumId === pair.main?.id}
+                                  onActivate={(id: number) => {
+                                    setActiveBarLargeId(null);
+                                    setActiveBarLargeCompareId(null);
+                                    setActiveBarMediumId(id);
+                                    setActiveBarMediumCompareId(null);
+                                    setActiveBarSmallId(null);
+                                    setActiveBarSmallCompareId(null);
+                                  }}
+                                  onDeactivate={(id: number) => {
+                                    if (activeBarMediumId === id)
+                                      setActiveBarMediumId(null);
+                                  }}
                                 />
                                 <ProgressBarStatistic
                                   key={index}
@@ -1072,6 +1131,22 @@ const AllocationCategoryCompare = memo(
                                   showInfo={false}
                                   startDateCompare={startDateCompare}
                                   endDateCompare={endDateCompare}
+                                  isActive={
+                                    activeBarMediumCompareId ===
+                                    pair.compare?.id
+                                  }
+                                  onActivate={(id: number) => {
+                                    setActiveBarLargeId(null);
+                                    setActiveBarLargeCompareId(null);
+                                    setActiveBarMediumId(null);
+                                    setActiveBarMediumCompareId(id);
+                                    setActiveBarSmallId(null);
+                                    setActiveBarSmallCompareId(null);
+                                  }}
+                                  onDeactivate={(id: number) => {
+                                    if (activeBarMediumCompareId === id)
+                                      setActiveBarMediumCompareId(null);
+                                  }}
                                 />
                               </div>
                             );
@@ -1215,6 +1290,19 @@ const AllocationCategoryCompare = memo(
                                   isLast
                                   startDate={startDate}
                                   endDate={endDate}
+                                  isActive={activeBarSmallId === pair.main?.id}
+                                  onActivate={(id: number) => {
+                                    setActiveBarLargeId(null);
+                                    setActiveBarLargeCompareId(null);
+                                    setActiveBarMediumId(null);
+                                    setActiveBarMediumCompareId(null);
+                                    setActiveBarSmallId(id);
+                                    setActiveBarSmallCompareId(null);
+                                  }}
+                                  onDeactivate={(id: number) => {
+                                    if (activeBarSmallId === id)
+                                      setActiveBarSmallId(null);
+                                  }}
                                 />
                                 <ProgressBarStatistic
                                   key={index}
@@ -1245,6 +1333,21 @@ const AllocationCategoryCompare = memo(
                                   isLast
                                   startDateCompare={startDateCompare}
                                   endDateCompare={endDateCompare}
+                                  isActive={
+                                    activeBarSmallCompareId === pair.compare?.id
+                                  }
+                                  onActivate={(id: number) => {
+                                    setActiveBarLargeId(null);
+                                    setActiveBarLargeCompareId(null);
+                                    setActiveBarMediumId(null);
+                                    setActiveBarMediumCompareId(null);
+                                    setActiveBarSmallId(null);
+                                    setActiveBarSmallCompareId(id);
+                                  }}
+                                  onDeactivate={(id: number) => {
+                                    if (activeBarSmallCompareId === id)
+                                      setActiveBarSmallCompareId(null);
+                                  }}
                                 />
                               </div>
                             );

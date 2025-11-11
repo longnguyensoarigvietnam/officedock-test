@@ -431,6 +431,8 @@ const PercentageTags = ({
     }
   };
 
+  const [hasHover, setHasHover] = useState<string>('');
+
   return (
     <>
       <div
@@ -504,6 +506,10 @@ const PercentageTags = ({
                       ) : dataChartLarge.data.length > 0 ? (
                         <PieChartCustom
                           isClickTooltip
+                          hasHover={hasHover != EventWorkCategory.LARGE}
+                          onActionHover={() =>
+                            setHasHover(EventWorkCategory.LARGE)
+                          }
                           mergedItems={dataChartLarge.mergedItems || []}
                           colors={dataChartLarge.colors}
                           data={dataChartLarge?.data}
@@ -569,6 +575,10 @@ const PercentageTags = ({
                       ) : dataChartMedium.data.length > 0 ? (
                         <PieChartCustom
                           isClickTooltip
+                          hasHover={hasHover != EventWorkCategory.MEDIUM}
+                          onActionHover={() =>
+                            setHasHover(EventWorkCategory.MEDIUM)
+                          }
                           mergedItems={dataChartMedium.mergedItems || []}
                           colors={dataChartMedium.colors}
                           data={dataChartMedium?.data}
@@ -638,6 +648,10 @@ const PercentageTags = ({
                             handleClickTooltip(id, EventWorkCategory.MEDIUM);
                           }}
                           isClickTooltip
+                          hasHover={hasHover != EventWorkCategory.SMALL}
+                          onActionHover={() =>
+                            setHasHover(EventWorkCategory.LARGE)
+                          }
                         />
                       ) : (
                         <div className="w-[220px] h-[220px]  rounded-full bg-[#EBF1F7]"></div>
@@ -696,6 +710,10 @@ const PercentageTags = ({
                             handleClickTooltip(id, EventWorkCategory.SMALL);
                           }}
                           isClickTooltip
+                          hasHover={hasHover != EventWorkCategory.CATEGORY}
+                          onActionHover={() =>
+                            setHasHover(EventWorkCategory.CATEGORY)
+                          }
                         />
                       ) : (
                         <div className="w-[220px] h-[220px]  rounded-full bg-[#EBF1F7]"></div>

@@ -223,6 +223,16 @@ const AllocationCategory = memo(
       }
     };
 
+    const [activeBarLargeId, setActiveBarLargeId] = useState<number | null>(
+      null,
+    );
+    const [activeBarMediumId, setActiveBarMediumId] = useState<number | null>(
+      null,
+    );
+    const [activeBarSmallId, setActiveBarSmallId] = useState<number | null>(
+      null,
+    );
+
     return (
       <>
         <div
@@ -314,6 +324,16 @@ const AllocationCategory = memo(
                                   selectedOrganization?.value ==
                                   ALL_TEAM_STATISTIC
                                 }
+                                isActive={activeBarLargeId === item.id}
+                                onActivate={(id: number) => {
+                                  setActiveBarSmallId(null);
+                                  setActiveBarMediumId(null);
+                                  setActiveBarLargeId(id);
+                                }}
+                                onDeactivate={(id: number) => {
+                                  if (activeBarLargeId === id)
+                                    setActiveBarLargeId(null);
+                                }}
                                 organizationId={item.organizationId}
                                 handleClickChart={(
                                   data: OptionDropdownType,
@@ -395,6 +415,16 @@ const AllocationCategory = memo(
                                     handleSelectMedium(data);
                                   }
                                 }}
+                                isActive={activeBarMediumId === item.id}
+                                onActivate={(id: number) => {
+                                  setActiveBarSmallId(null);
+                                  setActiveBarLargeId(null);
+                                  setActiveBarMediumId(id);
+                                }}
+                                onDeactivate={(id: number) => {
+                                  if (activeBarMediumId === id)
+                                    setActiveBarMediumId(null);
+                                }}
                                 {...item}
                               />
                             ))}
@@ -457,6 +487,16 @@ const AllocationCategory = memo(
                                     id,
                                     EventWorkCategory.MEDIUM,
                                   );
+                                }}
+                                isActive={activeBarSmallId === item.id}
+                                onActivate={(id: number) => {
+                                  setActiveBarSmallId(id);
+                                  setActiveBarMediumId(null);
+                                  setActiveBarLargeId(null);
+                                }}
+                                onDeactivate={(id: number) => {
+                                  if (activeBarSmallId === id)
+                                    setActiveBarSmallId(null);
                                 }}
                                 {...item}
                               />

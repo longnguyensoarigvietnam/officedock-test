@@ -18,6 +18,7 @@ import { lightenColor } from '@utils';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 import FilterTeamStatistic from '../filter/FilterTeamStatistic';
 import { ALL_TEAM_STATISTIC, SUB_TEAMS } from '@constants';
+import { EventWorkCategory } from '@constants/enums';
 
 type Props = {
   startDate: Date;
@@ -307,6 +308,8 @@ const PercentageTeamCategoryCompare = ({
     }
   }, [statisticAllTeamCategoryCompareList, selectedOrganization?.value]);
 
+  const [hasHover, setHasHover] = useState<string>('');
+
   return (
     <>
       <div
@@ -371,6 +374,10 @@ const PercentageTeamCategoryCompare = ({
                           data={dataChartLarge}
                           startDate={startDate}
                           endDate={endDate}
+                          hasHover={hasHover != EventWorkCategory.LARGE}
+                          onActionHover={() =>
+                            setHasHover(EventWorkCategory.LARGE)
+                          }
                           totalDuration={totalDurationLarge}
                           isLoading={isLoadingOrganization}
                           isLoadingCompare={isLoadingOrganizationCompare}
@@ -389,6 +396,10 @@ const PercentageTeamCategoryCompare = ({
                           data={dataChartLarge}
                           startDate={startDate}
                           endDate={endDate}
+                          hasHover={hasHover != EventWorkCategory.LARGE}
+                          onActionHover={() =>
+                            setHasHover(EventWorkCategory.LARGE)
+                          }
                           isLoading={isLoadingOrganization}
                           isLoadingCompare={isLoadingOrganizationCompare}
                           totalDuration={totalDurationLarge}
@@ -439,6 +450,10 @@ const PercentageTeamCategoryCompare = ({
                         data={dataChartMedium}
                         startDate={startDate}
                         endDate={endDate}
+                        hasHover={hasHover != EventWorkCategory.MEDIUM}
+                        onActionHover={() =>
+                          setHasHover(EventWorkCategory.MEDIUM)
+                        }
                         startDateCompare={startDateCompare}
                         endDateCompare={endDateCompare}
                         isLoading={isLoadingLarge}
@@ -489,6 +504,10 @@ const PercentageTeamCategoryCompare = ({
                         data={dataChartSmall}
                         startDate={startDate}
                         endDate={endDate}
+                        hasHover={hasHover != EventWorkCategory.SMALL}
+                        onActionHover={() =>
+                          setHasHover(EventWorkCategory.SMALL)
+                        }
                         isLoading={isLoadingMedium}
                         isLoadingCompare={isLoadingMediumCompare}
                         startDateCompare={startDateCompare}

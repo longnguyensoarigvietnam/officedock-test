@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import {
   formatShowStatisticTask,
@@ -23,6 +23,8 @@ interface Props {
   totalDuration: string;
   totalDurationCompare: string;
   isAllTeamOption?: boolean;
+  hasHover?: boolean;
+  onActionHover?: () => void;
   handleClickTooltip: (
     id: number | null,
     isCompare: boolean,
@@ -43,6 +45,8 @@ const PercentageBarCompare = ({
   totalDuration,
   totalDurationCompare,
   isAllTeamOption = false,
+  hasHover,
+  onActionHover,
   handleClickTooltip,
   handleClickChart,
   isLoading,
@@ -58,6 +62,13 @@ const PercentageBarCompare = ({
   );
   const containerCompareRef = useRef<HTMLDivElement | null>(null);
   const hoverTimeoutCompareRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (hasHover) {
+      setHoverIndex(null);
+      setHoverIndexCompare(null);
+    }
+  }, [hasHover]);
   return (
     <div>
       {isLoading ? (
@@ -93,6 +104,8 @@ const PercentageBarCompare = ({
               }, 1000);
             }}
             onMouseEnter={() => {
+              onActionHover && onActionHover();
+              setHoverIndexCompare(null);
               if (hoverTimeoutRef.current)
                 clearTimeout(hoverTimeoutRef.current);
             }}
@@ -155,7 +168,7 @@ const PercentageBarCompare = ({
                         setHoverIndex(null);
                       }, 1000);
                     }}
-                    className={`absolute top-0 ${isLast ? (isTag ? 'right-[230px]' : 'right-[290px]') : isTag ? 'left-[230px]' : 'left-[290px]'} z-30  w-[250px]  rounded-[14px] p-5 bg-white ${hoverIndex === index ? 'block' : 'hidden'} pointer-events-auto transition-opacity duration-300 shadow-lg `}>
+                    className={`absolute top-0 ${isLast ? (isTag ? 'right-[230px]' : 'right-[290px]') : isTag ? 'left-[230px]' : 'left-[290px]'} z-20  w-[250px]  rounded-[14px] p-5 bg-white ${hoverIndex === index ? 'block' : 'hidden'} pointer-events-auto transition-opacity duration-300 shadow-lg `}>
                     {item.mergedItems.length > 0 ? (
                       <>
                         <p className="text-xs text-start font-medium text-[#77858F] mb-5">
@@ -302,6 +315,9 @@ const PercentageBarCompare = ({
               }, 1000);
             }}
             onMouseEnter={() => {
+              setHoverIndex(null);
+              onActionHover && onActionHover();
+
               if (hoverTimeoutCompareRef.current)
                 clearTimeout(hoverTimeoutCompareRef.current);
             }}
@@ -365,7 +381,7 @@ const PercentageBarCompare = ({
                         setHoverIndexCompare(null);
                       }, 1000);
                     }}
-                    className={`absolute top-0 ${isLast ? (isTag ? 'right-[230px]' : 'right-[290px]') : isTag ? 'left-[230px]' : 'left-[290px]'} w-[250px] z-30  rounded-[14px] p-5 bg-white ${hoverIndexCompare === index ? 'block' : 'hidden'} pointer-events-auto transition-opacity duration-300 shadow-lg `}>
+                    className={`absolute top-0 ${isLast ? (isTag ? 'right-[230px]' : 'right-[290px]') : isTag ? 'left-[230px]' : 'left-[290px]'} w-[250px] z-20  rounded-[14px] p-5 bg-white ${hoverIndexCompare === index ? 'block' : 'hidden'} pointer-events-auto transition-opacity duration-300 shadow-lg `}>
                     {item.mergedItems.length > 0 ? (
                       <>
                         <p className="text-xs text-start font-medium text-[#77858F] mb-5">

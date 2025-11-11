@@ -258,6 +258,19 @@ const AllocationTeamTag = memo(
       }
     };
 
+    const [activeBarLargeId, setActiveBarLargeId] = useState<number | null>(
+      null,
+    );
+    const [activeBarMediumId, setActiveBarMediumId] = useState<number | null>(
+      null,
+    );
+    const [activeBarSmallId, setActiveBarSmallId] = useState<number | null>(
+      null,
+    );
+    const [activeBarCategoryId, setActiveBarCategoryId] = useState<
+      number | null
+    >(null);
+
     return (
       <>
         <div
@@ -343,6 +356,17 @@ const AllocationTeamTag = memo(
                                 classProgressClass="h-[20px] rounded-[4px]"
                                 handleClickTooltip={() => {}}
                                 isAllTeam
+                                isActive={activeBarLargeId === item.id}
+                                onActivate={(id: number) => {
+                                  setActiveBarSmallId(null);
+                                  setActiveBarMediumId(null);
+                                  setActiveBarLargeId(id);
+                                  setActiveBarCategoryId(null);
+                                }}
+                                onDeactivate={(id: number) => {
+                                  if (activeBarLargeId === id)
+                                    setActiveBarLargeId(null);
+                                }}
                                 organizationId={item.organizationId}
                                 handleClickChart={() => {}}
                                 {...item}
@@ -355,6 +379,22 @@ const AllocationTeamTag = memo(
                                 key={index}
                                 classProgressClass="h-[20px] rounded-[4px]"
                                 organizationId={item.organizationId}
+                                hasHover={!!activeBarLargeId}
+                                isActive={activeBarLargeId === item.id}
+                                onActivate={(id: number) => {
+                                  setActiveBarCategoryId(null);
+
+                                  setActiveBarSmallId(null);
+                                  setActiveBarMediumId(null);
+                                  setActiveBarLargeId(id);
+                                }}
+                                onDeactivate={(id: number) => {
+                                  if (activeBarLargeId === id)
+                                    setActiveBarLargeId(null);
+                                }}
+                                onDeactivateUser={() => {
+                                  setActiveBarLargeId(null);
+                                }}
                                 handleClickTooltip={({
                                   userId,
                                   tagId,
@@ -423,6 +463,21 @@ const AllocationTeamTag = memo(
                               <ProgressBarTeamTagStatistic
                                 key={index}
                                 classProgressClass="h-[20px] rounded-[4px]"
+                                hasHover={!!activeBarMediumId}
+                                isActive={activeBarMediumId === item.id}
+                                onActivate={(id: number) => {
+                                  setActiveBarCategoryId(null);
+                                  setActiveBarSmallId(null);
+                                  setActiveBarMediumId(id);
+                                  setActiveBarLargeId(null);
+                                }}
+                                onDeactivate={(id: number) => {
+                                  if (activeBarMediumId === id)
+                                    setActiveBarMediumId(null);
+                                }}
+                                onDeactivateUser={() => {
+                                  setActiveBarMediumId(null);
+                                }}
                                 handleClickTooltip={({
                                   userId,
                                   tagId,
@@ -506,6 +561,22 @@ const AllocationTeamTag = memo(
                                     type: EventWorkCategory.MEDIUM,
                                   });
                                 }}
+                                hasHover={!!activeBarSmallId}
+                                isActive={activeBarSmallId === item.id}
+                                onActivate={(id: number) => {
+                                  setActiveBarCategoryId(null);
+
+                                  setActiveBarSmallId(id);
+                                  setActiveBarMediumId(null);
+                                  setActiveBarLargeId(null);
+                                }}
+                                onDeactivate={(id: number) => {
+                                  if (activeBarSmallId === id)
+                                    setActiveBarSmallId(null);
+                                }}
+                                onDeactivateUser={() => {
+                                  setActiveBarSmallId(null);
+                                }}
                                 {...item}
                               />
                             ))}
@@ -572,6 +643,22 @@ const AllocationTeamTag = memo(
                                     userId,
                                     type: EventWorkCategory.SMALL,
                                   });
+                                }}
+                                hasHover={!!activeBarCategoryId}
+                                isActive={activeBarCategoryId === item.id}
+                                onActivate={(id: number) => {
+                                  setActiveBarCategoryId(id);
+
+                                  setActiveBarSmallId(null);
+                                  setActiveBarMediumId(null);
+                                  setActiveBarLargeId(null);
+                                }}
+                                onDeactivate={(id: number) => {
+                                  if (activeBarCategoryId === id)
+                                    setActiveBarCategoryId(null);
+                                }}
+                                onDeactivateUser={() => {
+                                  setActiveBarCategoryId(null);
                                 }}
                                 {...item}
                               />

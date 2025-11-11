@@ -19,6 +19,7 @@ import { getRandomColor, lightenColor } from '@utils';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 import FilterTeamStatistic from './filter/FilterTeamStatistic';
 import { ALL_TEAM_STATISTIC, SUB_TEAMS } from '@constants';
+import { EventWorkCategory } from '@constants/enums';
 
 type Props = {
   startDate: Date;
@@ -362,6 +363,8 @@ const PercentageCategoryTeam = ({
     }
   }, [statisticAllTeamCategoryList, selectedOrganization?.value]);
 
+  const [hasHover, setHasHover] = useState<string>('');
+
   return (
     <>
       <div
@@ -435,6 +438,10 @@ const PercentageCategoryTeam = ({
                         <PieChart
                           isClickTooltip
                           isTeam
+                          hasHover={hasHover != EventWorkCategory.LARGE}
+                          onActionHover={() =>
+                            setHasHover(EventWorkCategory.LARGE)
+                          }
                           mergedItems={dataChartLarge.mergedItems || []}
                           colors={dataChartLarge.colors}
                           data={dataChartLarge?.data}
@@ -498,6 +505,10 @@ const PercentageCategoryTeam = ({
                         <PieChart
                           isClickTooltip
                           isTeam
+                          hasHover={hasHover != EventWorkCategory.MEDIUM}
+                          onActionHover={() =>
+                            setHasHover(EventWorkCategory.MEDIUM)
+                          }
                           mergedItems={dataChartMedium.mergedItems || []}
                           colors={dataChartMedium.colors}
                           data={dataChartMedium?.data}
@@ -566,6 +577,10 @@ const PercentageCategoryTeam = ({
                           optionsData={dataChartSmall.optionData}
                           listIdData={dataChartSmall.listId}
                           isClickTooltip
+                          hasHover={hasHover != EventWorkCategory.SMALL}
+                          onActionHover={() =>
+                            setHasHover(EventWorkCategory.SMALL)
+                          }
                         />
                       ) : (
                         <div className="w-[280px] h-[280px]  rounded-full bg-[#EBF1F7]"></div>

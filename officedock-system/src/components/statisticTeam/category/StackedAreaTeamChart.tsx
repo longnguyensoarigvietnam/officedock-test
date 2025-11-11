@@ -1468,7 +1468,7 @@ const StackedAreaTeamChart = ({
                                     dataDetail[0]?.endDate as string,
                                   )}
                               </p>
-                              <p className="text-start px-5 mt-4">
+                              <p className="text-start px-5 mt-4 break-words">
                                 {selectedCategory?.name}
                               </p>
                               <div className="flex text-base my-3 font-normal gap-[10px] px-5">
@@ -1518,7 +1518,7 @@ const StackedAreaTeamChart = ({
                                     dataDetailAllTeam.endDate,
                                   )}
                               </p>
-                              <p className="text-start px-5 mt-4">
+                              <p className="text-start px-5 mt-4 break-words">
                                 {selectedOptionOrganizationInTable ==
                                 OptionOrganizationStatisticType.MAIN_TEAM
                                   ? selectedOrganizationSideBar?.label
