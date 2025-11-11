@@ -1388,7 +1388,11 @@ const ActionsEventModal = ({
                   </div>
                 )}
 
-              <div className="flex gap-2 items-center !w-full mt-4">
+              <div
+                className={`flex gap-2 items-center !w-full ${
+                  (watch('repeatType') as OptionDropdownType)?.label ==
+                    TaskRepetitiveType.ONCE && 'mt-4'
+                }`}>
                 {watch('repeatType') &&
                   (watch('repeatType') as OptionDropdownType)?.label ==
                     TaskRepetitiveType.ONCE && (
