@@ -288,6 +288,15 @@ const Sidebar = ({ className }: Props) => {
           firstTab: `${href}?view=day`,
         };
       });
+    } else if (href === pageRouters.CALENDAR_MANAGEMENT.href) {
+      params.delete('room');
+      router.push(`${href}?view=month`);
+      setLastVisitedByTab((prev) => {
+        return {
+          ...prev,
+          firstTab: `${href}?view=month`,
+        };
+      });
     } else {
       params.delete('view');
       params.delete('room'); // Delete the 'room' parameter when moving from the chat page to another page. When navigating to the chat page, the 'room' parameter is already added to the URL.

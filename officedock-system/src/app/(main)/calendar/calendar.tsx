@@ -89,6 +89,7 @@ import {
 import { apiRouters } from '@constants/routers';
 import {
   ActionsEvent,
+  CalendarViewLabel,
   CalendarViewOptions,
   EventActionType,
   EventCalendarType,
@@ -204,7 +205,7 @@ const EventCalendar = () => {
   const router = useRouter();
   const actionType = searchParams.get('action');
   const eventIdURL = searchParams.get('event');
-  const views = searchParams.get('view');
+  const viewURL = searchParams.get('view');
   const eventDetailId = eventIdURL?.replace('event', '');
   const repeatScheduleIdURL = searchParams.get('repeat-schedule');
 
@@ -269,20 +270,6 @@ const EventCalendar = () => {
         }
         return [...prevCurrentResources];
       });
-      const currentView = searchParams.get('view');
-      switch (currentView) {
-        case ViewOptions.WEEK:
-          handleViewChange(CalendarViewOptions.VIEW_BY_WEEK);
-          break;
-        case ViewOptions.DAY:
-          handleViewChange(CalendarViewOptions.VIEW_BY_DAY);
-          break;
-        case ViewOptions.YEAR:
-          handleViewChange(CalendarViewOptions.VIEW_BY_YEAR);
-          break;
-        default:
-          handleViewChange(CalendarViewOptions.VIEW_BY_MONTH);
-      }
     },
   });
 
@@ -579,16 +566,6 @@ const EventCalendar = () => {
   const handleViewChange = async (calendarView: string) => {
     if (calendarRef.current) {
       const calendarApi = calendarRef.current.getApi();
-      if (calendarView === CalendarViewOptions.VIEW_BY_WEEK) {
-        params.set('view', ViewOptions.WEEK);
-      } else if (calendarView === CalendarViewOptions.VIEW_BY_YEAR) {
-        params.set('view', ViewOptions.YEAR);
-      } else if (calendarView === CalendarViewOptions.VIEW_BY_DAY) {
-        params.set('view', ViewOptions.DAY);
-      } else {
-        params.set('view', ViewOptions.MONTH);
-      }
-      router.push(`?${params.toString()}`);
       calendarApi.changeView(calendarView);
       const startDateISOString = formatQueryStartDateForCalendar(
         calendarApi.view.activeStart,
@@ -598,6 +575,35 @@ const EventCalendar = () => {
       );
 
       calendarRef.current?.getApi().refetchEvents();
+      switch (calendarView) {
+        case CalendarViewOptions.VIEW_BY_WEEK:
+          setValue('calendarView', {
+            value: CalendarViewOptions.VIEW_BY_WEEK,
+            label: CalendarViewLabel.WEEK,
+          });
+          break;
+
+        case CalendarViewOptions.VIEW_BY_YEAR:
+          setValue('calendarView', {
+            value: CalendarViewOptions.VIEW_BY_YEAR,
+            label: CalendarViewLabel.YEAR,
+          });
+          break;
+
+        case CalendarViewOptions.VIEW_BY_DAY:
+          setValue('calendarView', {
+            value: CalendarViewOptions.VIEW_BY_DAY,
+            label: CalendarViewLabel.DAY,
+          });
+          break;
+
+        default:
+          setValue('calendarView', {
+            value: CalendarViewOptions.VIEW_BY_MONTH,
+            label: CalendarViewLabel.MONTH,
+          });
+          break;
+      }
 
       if (calendarView !== CalendarViewOptions.VIEW_BY_YEAR) {
         const updatedUserIds: string[] = selectedScheduleUserIds
@@ -1424,7 +1430,9 @@ const EventCalendar = () => {
     }
   };
 
-  const { control, watch } = useForm({
+  const { control, watch, setValue } = useForm<{
+    calendarView: OptionDropdownType;
+  }>({
     mode: 'onSubmit',
   });
 
@@ -1678,6 +1686,7 @@ const EventCalendar = () => {
             return updatedEvents;
           });
         }
+        setSelectedEventInfo(null);
         showToast({
           description: SUCCESS_CREATE_MESSAGE,
         });
@@ -2002,6 +2011,29 @@ const EventCalendar = () => {
     router.replace(`?${params.toString()}`);
   };
 
+  useEffect(() => {
+    const currentView = searchParams.get('view');
+    switch (currentView) {
+      case ViewOptions.WEEK:
+        handleViewChange(CalendarViewOptions.VIEW_BY_WEEK);
+        break;
+      case ViewOptions.MONTH:
+        handleViewChange(CalendarViewOptions.VIEW_BY_MONTH);
+        break;
+      case ViewOptions.DAY:
+        handleViewChange(CalendarViewOptions.VIEW_BY_DAY);
+        break;
+      case ViewOptions.YEAR:
+        handleViewChange(CalendarViewOptions.VIEW_BY_YEAR);
+        break;
+      default: {
+        handleViewChange(CalendarViewOptions.VIEW_BY_MONTH);
+        break;
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewURL]);
+
   // Get default calendar view
   const getDefaultCalendarView = () => {
     let defaultView = CALENDAR_VIEW_OPTIONS[2];
@@ -2070,6 +2102,7 @@ const EventCalendar = () => {
         setEvents(newDataTimeList);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slotHeight, searchParams]);
 
   const calculateSlotHeight = (value: number): number => {
@@ -2099,7 +2132,10 @@ const EventCalendar = () => {
     if (!hasInitializedCalendar.current) {
       return;
     }
-    if (calendarRef.current) {
+    if (
+      calendarRef.current &&
+      watch('calendarView').value !== CalendarViewOptions.VIEW_BY_YEAR
+    ) {
       setIsEventRendering(true);
       setEvents([]);
       const calendarApi = calendarRef.current.getApi() as any;
@@ -2117,6 +2153,7 @@ const EventCalendar = () => {
         keySearch: keySearch,
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch]);
 
   useEffect(() => {
@@ -2139,7 +2176,7 @@ const EventCalendar = () => {
     };
     // Call the function after FullCalendar renders
     setTimeout(updateSlotLineColors, 100);
-  }, [views]);
+  }, [viewURL]);
   return (
     <Fragment>
       <div className="flex mb-3 overflow-y-hidden" ref={containerRef}>
@@ -2253,7 +2290,26 @@ const EventCalendar = () => {
                       labelOptionClass="!text-sm font-medium"
                       onChange={(e) => {
                         onChange(e);
-                        handleViewChange(e.value as string);
+                        const calendarView = e.value as string;
+                        switch (calendarView) {
+                          case CalendarViewOptions.VIEW_BY_WEEK:
+                            params.set('view', ViewOptions.WEEK);
+                            break;
+
+                          case CalendarViewOptions.VIEW_BY_YEAR:
+                            params.set('view', ViewOptions.YEAR);
+                            break;
+
+                          case CalendarViewOptions.VIEW_BY_DAY:
+                            params.set('view', ViewOptions.DAY);
+                            break;
+
+                          default:
+                            params.set('view', ViewOptions.MONTH);
+                            break;
+                        }
+
+                        router.push(`?${params.toString()}`);
                         setIsCalendarLoading(true);
                         setTimeout(() => setIsCalendarLoading(false), 1500);
                       }}
@@ -2568,7 +2624,7 @@ const EventCalendar = () => {
           setDefaultCreateStartDate={setDefaultCreateStartDate}
           calendarView={
             watch('calendarView')
-              ? watch('calendarView')?.value
+              ? (watch('calendarView')?.value as CalendarViewOptions)
               : CalendarViewOptions.VIEW_BY_MONTH
           }
         />

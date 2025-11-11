@@ -725,3 +725,9 @@ export enum ListVisibility {
   HIDDEN = 'hidden',
   VISIBLE = 'visible',
 }
+export enum CalendarViewLabel {
+  WEEK = '週',
+  YEAR = '年',
+  DAY = '日',
+  MONTH = '月',
+}
