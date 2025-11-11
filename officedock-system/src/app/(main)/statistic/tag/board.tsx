@@ -555,7 +555,7 @@ const StatisticTagBoard = () => {
 
   return (
     <div className="font-medium ">
-      <div className="sticky z-[21] top-[0px] px-10 py-[27px] bg-[#E6F3FB] flex items-center justify-between ">
+      <div className="sticky z-[30] top-[0px] px-10 py-[27px] bg-[#E6F3FB] flex items-center justify-between ">
         <div className="flex items-center gap-5 ">
           <span className="text-[26px] font-medium relative top-[-2px]">
             集計

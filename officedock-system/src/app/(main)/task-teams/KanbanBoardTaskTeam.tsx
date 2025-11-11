@@ -2769,7 +2769,7 @@ const KanbanBoardTaskTeam = () => {
               </div>
             </DragDropContext>
           ) : (
-            <div className="h-[calc(100vh_-_257px)] w-full">
+            <div className="h-[calc(100vh_-_235px)] w-full">
               <ColumnsSkeleton numberOfColumns={4} />
             </div>
           )}

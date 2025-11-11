@@ -1317,7 +1317,7 @@ const ListChatUsers = ({
       </div>
       {!searchRoomType && (
         <div
-          className={`flex-grow w-full pr-4 mt-3 h-[calc(100vh_-_205px)] ${dataChatList.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden !h-[calc(100vh_-_200px)]'} overflow-x-hidden scrollbar-gutter-stable`}>
+          className={`flex-grow w-full pr-4 mt-3 h-[calc(100vh_-_205px)]  overflow-y-auto overflow-x-hidden scrollbar-gutter-stable`}>
           {dataChatList && dataChatList.length > 0 ? (
             dataChatList.map((item) => (
               <div
@@ -1384,10 +1384,17 @@ const ListChatUsers = ({
           <div ref={listRoomRef} className="h-7">
             <div>
               {initialLoad ? (
-                <RowSkeleton
-                  numberOfRows={20}
-                  className="!h-[50px] !bg-[#E6F3FB]"
-                />
+                dataChatList.length > 0 ? (
+                  <RowSkeleton
+                    numberOfRows={2}
+                    className="!h-[50px] !bg-[#E6F3FB]"
+                  />
+                ) : (
+                  <RowSkeleton
+                    numberOfRows={20}
+                    className="!h-[50px] !bg-[#E6F3FB]"
+                  />
+                )
               ) : (
                 <div className="w-full h-6"></div>
               )}
@@ -1399,7 +1406,7 @@ const ListChatUsers = ({
       {searchRoomType && (
         <>
           <div
-            className={`flex-grow w-full pr-4 mt-3 h-[calc(100vh_-_205px)]  ${filteredChatList.length > 0 && !initialLoadSearch ? 'overflow-y-auto' : 'overflow-y-hidden'} overflow-x-hidden scrollbar-gutter-stable`}>
+            className={`flex-grow w-full pr-4 mt-3 h-[calc(100vh_-_205px)]  overflow-y-auto overflow-x-hidden scrollbar-gutter-stable`}>
             {filteredChatList && filteredChatList.length > 0 ? (
               filteredChatList.map((item) => (
                 <div
@@ -1462,10 +1469,17 @@ const ListChatUsers = ({
             <div ref={listSearchRoomRef} className="h-7">
               <div>
                 {initialLoadSearch ? (
-                  <RowSkeleton
-                    numberOfRows={20}
-                    className="!h-[50px] !bg-[#E6F3FB]"
-                  />
+                  filteredChatList.length > 0 ? (
+                    <RowSkeleton
+                      numberOfRows={2}
+                      className="!h-[50px] !bg-[#E6F3FB]"
+                    />
+                  ) : (
+                    <RowSkeleton
+                      numberOfRows={20}
+                      className="!h-[50px] !bg-[#E6F3FB]"
+                    />
+                  )
                 ) : (
                   <div className="w-full h-6"></div>
                 )}
