@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import ImageRound from '@components/common/ImageRound';
@@ -35,6 +35,8 @@ interface ProgressBarProps {
   endDate?: Date | null;
   startDateCompare?: Date;
   endDateCompare?: Date | null;
+  hasHover?: boolean;
+  onActionHover?: () => void;
   handleClickTooltip: ({
     userId,
     categoryId,
@@ -130,6 +132,8 @@ const ProgressBarTeamStatisticCompare = ({
   endDate,
   startDateCompare,
   endDateCompare,
+  hasHover,
+  onActionHover,
   handleClickChart,
   handleClickTooltip,
 }: ProgressBarProps) => {
@@ -156,6 +160,15 @@ const ProgressBarTeamStatisticCompare = ({
   const [hoverUserCompareIndex, setHoverUserCompareIndex] = useState<
     number | null
   >(null);
+
+  useEffect(() => {
+    if (hasHover) {
+      setHovering(false);
+      setCompareHovering(false);
+      setHoverIndex(null);
+      setHoverUserCompareIndex(null);
+    }
+  }, [hasHover]);
 
   return (
     <>
@@ -197,6 +210,7 @@ const ProgressBarTeamStatisticCompare = ({
                 }, 1000);
               }}
               onMouseEnter={() => {
+                onActionHover && onActionHover();
                 if (hoverTimeoutRef.current)
                   clearTimeout(hoverTimeoutRef.current);
                 setCompareHovering(false);
@@ -399,6 +413,8 @@ const ProgressBarTeamStatisticCompare = ({
                 }, 1000);
               }}
               onMouseEnter={() => {
+                onActionHover && onActionHover();
+
                 if (hoverTimeoutCompareRef.current)
                   clearTimeout(hoverTimeoutCompareRef.current);
                 setHovering(false);

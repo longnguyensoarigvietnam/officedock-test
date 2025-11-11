@@ -198,6 +198,7 @@ export enum EventWorkCategory {
   MEDIUM = 'MEDIUM',
   SMALL = 'SMALL',
   ALL = 'ALL',
+  CATEGORY = 'CATEGORY',
 }
 
 export enum TermType {

@@ -28,6 +28,7 @@ interface PieChartProps {
   showLegend?: boolean;
   showTooltip?: boolean;
   isLast?: boolean;
+  hasHover?: boolean;
   optionsData?: {
     label: string;
     percent?: number;
@@ -38,7 +39,7 @@ interface PieChartProps {
   listIdData?: (string | number)[];
   mergedItems: StatisticCategoryInfo[];
   dataOrganization?: string[];
-
+  onActionHover?: () => void;
   handleClickTooltip?: (id: number | null, organizationId?: string) => void;
   handleClickChart?: (data: OptionDropdownType) => void;
   isGradient?: boolean;
@@ -65,6 +66,8 @@ const PieChartCustom = ({
   listIdData,
   dataOrganization,
   isAllTeamOption = false,
+  hasHover,
+  onActionHover,
   handleClickChart,
   handleClickTooltip,
   isGradient = true,
@@ -168,11 +171,21 @@ const PieChartCustom = ({
             tooltip.caretX + isLast ? tooltip.caretX - 90 : tooltip.caretX + 10;
           const tooltipY = tooltip.caretY - 20;
           if (!tooltipData || tooltipData?.value !== dataIndex) {
-            setTooltipData({
-              x: tooltipX,
-              y: tooltipY,
-              value: dataIndex as number,
-            });
+            if (hoverTimeoutRef.current) {
+              clearTimeout(hoverTimeoutRef.current);
+              hoverTimeoutRef.current = null;
+            }
+            setIsHovered(false);
+            setTooltipData(null);
+
+            setTimeout(() => {
+              setIsHovered(true);
+              setTooltipData({
+                x: tooltipX,
+                y: tooltipY,
+                value: dataIndex as number,
+              });
+            }, 0);
           }
         },
       },
@@ -228,6 +241,12 @@ const PieChartCustom = ({
 
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  useEffect(() => {
+    if (hasHover) {
+      setTooltipData(null);
+    }
+  }, [hasHover]);
+
   return (
     <div
       onClick={(e: any) => {
@@ -243,6 +262,8 @@ const PieChartCustom = ({
           }, 1000);
         }}
         onMouseEnter={() => {
+          onActionHover && onActionHover();
+
           if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
         }}
         data={chartData}
@@ -260,7 +281,7 @@ const PieChartCustom = ({
             backgroundColor: 'white',
             borderRadius: '14px',
             boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
-            zIndex: 999,
+            zIndex: 20,
             ...(isLast ? { right: `100%` } : { left: `100%` }),
           }}>
           <ModalCustomTooltip

@@ -471,6 +471,21 @@ const AllocationTagTeamCompare = memo(
       }
     };
 
+    const [hasHoverLarge, setHasHoverLarge] = useState<number | null>(null);
+    const [hasHoverMedium, setHasHoverMedium] = useState<number | null>(null);
+    const [hasHoverSmall, setHasHoverSmall] = useState<number | null>(null);
+    const [hasHoverCategory, setHasHoverCategory] = useState<number | null>(
+      null,
+    );
+
+    // All team
+    const [activeBarLargeId, setActiveBarLargeId] = useState<number | null>(
+      null,
+    );
+    const [activeBarLargeCompareId, setActiveBarLargeCompareId] = useState<
+      number | null
+    >(null);
+
     return (
       <>
         <div
@@ -629,6 +644,20 @@ const AllocationTagTeamCompare = memo(
                                   <ProgressBarStatistic
                                     key={index}
                                     isAllTeam
+                                    isActive={
+                                      activeBarLargeId === pair.main?.id
+                                    }
+                                    onActivate={(id: number) => {
+                                      setActiveBarLargeId(id);
+                                      setActiveBarLargeCompareId(null);
+                                      setHasHoverLarge(index);
+                                      setHasHoverMedium(null);
+                                      setHasHoverSmall(null);
+                                    }}
+                                    onDeactivate={(id: number) => {
+                                      if (activeBarLargeId === id)
+                                        setActiveBarLargeId(null);
+                                    }}
                                     classProgressClass="h-[20px] rounded-[4px]"
                                     handleClickTooltip={() => {}}
                                     handleClickChart={() => {}}
@@ -658,6 +687,19 @@ const AllocationTagTeamCompare = memo(
                                   <ProgressBarStatistic
                                     key={index}
                                     isAllTeam
+                                    isActive={
+                                      activeBarLargeCompareId ===
+                                      pair.compare?.id
+                                    }
+                                    onActivate={(id: number) => {
+                                      setActiveBarLargeId(null);
+
+                                      setActiveBarLargeCompareId(id);
+                                    }}
+                                    onDeactivate={(id: number) => {
+                                      if (activeBarLargeCompareId === id)
+                                        setActiveBarLargeCompareId(null);
+                                    }}
                                     classProgressClass="h-[20px] rounded-[4px]"
                                     handleClickTooltip={() => {}}
                                     handleClickChart={() => {}}
@@ -746,6 +788,13 @@ const AllocationTagTeamCompare = memo(
                                           handleSelectMedium(select);
                                         }
                                       }
+                                    }}
+                                    hasHover={hasHoverLarge !== index}
+                                    onActionHover={() => {
+                                      setHasHoverCategory(null);
+                                      setHasHoverLarge(index);
+                                      setHasHoverMedium(null);
+                                      setHasHoverSmall(null);
                                     }}
                                     {...item}
                                   />
@@ -869,6 +918,13 @@ const AllocationTagTeamCompare = memo(
                                       type: EventWorkCategory.LARGE,
                                       isCompare,
                                     });
+                                  }}
+                                  hasHover={hasHoverMedium !== index}
+                                  onActionHover={() => {
+                                    setHasHoverCategory(null);
+                                    setHasHoverLarge(null);
+                                    setHasHoverMedium(index);
+                                    setHasHoverSmall(null);
                                   }}
                                   {...item}
                                 />
@@ -1010,6 +1066,13 @@ const AllocationTagTeamCompare = memo(
                                         handleSelectMedium(select);
                                       }
                                     }
+                                  }}
+                                  hasHover={hasHoverSmall !== index}
+                                  onActionHover={() => {
+                                    setHasHoverCategory(null);
+                                    setHasHoverLarge(null);
+                                    setHasHoverMedium(null);
+                                    setHasHoverSmall(index);
                                   }}
                                   {...item}
                                 />
@@ -1154,6 +1217,14 @@ const AllocationTagTeamCompare = memo(
                                         handleSelectMedium(select);
                                       }
                                     }
+                                  }}
+                                  hasHover={hasHoverCategory !== index}
+                                  onActionHover={() => {
+                                    setHasHoverLarge(null);
+                                    setHasHoverMedium(null);
+
+                                    setHasHoverCategory(index);
+                                    setHasHoverSmall(null);
                                   }}
                                   {...item}
                                 />

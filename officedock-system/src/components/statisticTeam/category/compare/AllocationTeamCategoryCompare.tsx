@@ -525,6 +525,17 @@ const AllocationTeamCategoryCompare = memo(
         element.scrollIntoView({ behavior: 'smooth' });
       }
     };
+    const [hasHoverLarge, setHasHoverLarge] = useState<number | null>(null);
+    const [hasHoverMedium, setHasHoverMedium] = useState<number | null>(null);
+    const [hasHoverSmall, setHasHoverSmall] = useState<number | null>(null);
+
+    // All team
+    const [activeBarLargeId, setActiveBarLargeId] = useState<number | null>(
+      null,
+    );
+    const [activeBarLargeCompareId, setActiveBarLargeCompareId] = useState<
+      number | null
+    >(null);
 
     return (
       <>
@@ -672,6 +683,20 @@ const AllocationTeamCategoryCompare = memo(
                                   <ProgressBarStatistic
                                     key={index}
                                     isAllTeam
+                                    isActive={
+                                      activeBarLargeId === pair.main?.id
+                                    }
+                                    onActivate={(id: number) => {
+                                      setActiveBarLargeId(id);
+                                      setActiveBarLargeCompareId(null);
+                                      setHasHoverLarge(index);
+                                      setHasHoverMedium(null);
+                                      setHasHoverSmall(null);
+                                    }}
+                                    onDeactivate={(id: number) => {
+                                      if (activeBarLargeId === id)
+                                        setActiveBarLargeId(null);
+                                    }}
                                     classProgressClass="h-[20px] rounded-[4px]"
                                     handleClickTooltip={() => {}}
                                     handleClickChart={() => {}}
@@ -701,6 +726,19 @@ const AllocationTeamCategoryCompare = memo(
                                   <ProgressBarStatistic
                                     key={index}
                                     isAllTeam
+                                    isActive={
+                                      activeBarLargeCompareId ===
+                                      pair.compare?.id
+                                    }
+                                    onActivate={(id: number) => {
+                                      setActiveBarLargeId(null);
+
+                                      setActiveBarLargeCompareId(id);
+                                    }}
+                                    onDeactivate={(id: number) => {
+                                      if (activeBarLargeCompareId === id)
+                                        setActiveBarLargeCompareId(null);
+                                    }}
                                     classProgressClass="h-[20px] rounded-[4px]"
                                     handleClickTooltip={() => {}}
                                     handleClickChart={() => {}}
@@ -781,6 +819,12 @@ const AllocationTeamCategoryCompare = memo(
                                   ) {
                                     handleSelectLarge(data);
                                   }
+                                }}
+                                hasHover={hasHoverLarge !== index}
+                                onActionHover={() => {
+                                  setHasHoverLarge(index);
+                                  setHasHoverMedium(null);
+                                  setHasHoverSmall(null);
                                 }}
                                 {...item}
                               />
@@ -893,6 +937,12 @@ const AllocationTeamCategoryCompare = memo(
                                   endDate={endDate}
                                   startDateCompare={startDateCompare}
                                   endDateCompare={endDateCompare}
+                                  hasHover={hasHoverMedium !== index}
+                                  onActionHover={() => {
+                                    setHasHoverLarge(null);
+                                    setHasHoverMedium(index);
+                                    setHasHoverSmall(null);
+                                  }}
                                   classProgressClass="h-[20px] rounded-[4px]"
                                   handleClickTooltip={({
                                     userId,
@@ -1037,6 +1087,12 @@ const AllocationTeamCategoryCompare = memo(
                                 isLast
                                 startDate={startDate}
                                 endDate={endDate}
+                                hasHover={hasHoverSmall !== index}
+                                onActionHover={() => {
+                                  setHasHoverLarge(null);
+                                  setHasHoverMedium(null);
+                                  setHasHoverSmall(index);
+                                }}
                                 startDateCompare={startDateCompare}
                                 endDateCompare={endDateCompare}
                                 classProgressClass="h-[20px] rounded-[4px]"

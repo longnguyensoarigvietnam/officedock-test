@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import {
   formatShowStatisticTask,
@@ -23,6 +23,8 @@ interface Props {
   isLoading: boolean;
   isLoadingCompare: boolean;
   isAllTeam?: boolean;
+  hasHover?: boolean;
+  onActionHover?: () => void;
   handleClickTooltip: (id: number | null, isCompare: boolean) => void;
   handleClickChart: (data: OptionDropdownType) => void;
 }
@@ -41,6 +43,8 @@ const PercentageBarCompareTeam = ({
   totalDurationCompare,
   isLoading,
   isLoadingCompare,
+  hasHover,
+  onActionHover,
   handleClickChart,
 }: Props) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -53,6 +57,13 @@ const PercentageBarCompareTeam = ({
   );
   const containerCompareRef = useRef<HTMLDivElement | null>(null);
   const hoverTimeoutCompareRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (hasHover) {
+      setHoverIndex(null);
+      setHoverIndexCompare(null);
+    }
+  }, [hasHover]);
 
   return (
     <div>
@@ -89,6 +100,8 @@ const PercentageBarCompareTeam = ({
               }, 1000);
             }}
             onMouseEnter={() => {
+              onActionHover && onActionHover();
+              setHoverIndexCompare(null);
               if (hoverTimeoutRef.current)
                 clearTimeout(hoverTimeoutRef.current);
             }}
@@ -323,6 +336,9 @@ const PercentageBarCompareTeam = ({
               }, 1000);
             }}
             onMouseEnter={() => {
+              setHoverIndex(null);
+              onActionHover && onActionHover();
+
               if (hoverTimeoutCompareRef.current)
                 clearTimeout(hoverTimeoutCompareRef.current);
             }}
@@ -340,6 +356,7 @@ const PercentageBarCompareTeam = ({
                     }
                   }}
                   onMouseEnter={() => {
+                    setHoverIndex(null);
                     if (hoverTimeoutCompareRef.current)
                       clearTimeout(hoverTimeoutCompareRef.current);
                     setHoverIndexCompare(index);

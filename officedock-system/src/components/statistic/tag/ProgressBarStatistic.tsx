@@ -7,7 +7,7 @@ import {
   formatTimeToJapanese,
   getJapaneseDayName,
 } from '@utils/date';
-import React, { useContext, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 
 interface ProgressBarProps {
   label: string;
@@ -34,6 +34,10 @@ interface ProgressBarProps {
   startDateCompare?: Date;
   isLast?: boolean;
   endDateCompare?: Date | null;
+  isActive?: boolean;
+  onActivate?: (id: number) => void;
+  onDeactivate?: (id: number) => void;
+
   handleClickTooltip: (id: number | null, organizationId?: string) => void;
   handleClickChart?: (data: OptionDropdownType) => void;
 }
@@ -56,6 +60,9 @@ const ProgressBarStatistic = ({
   endDate,
   startDateCompare,
   endDateCompare,
+  isActive,
+  onActivate,
+  onDeactivate,
   handleClickTooltip,
   handleClickChart,
 }: ProgressBarProps) => {
@@ -66,6 +73,14 @@ const ProgressBarStatistic = ({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isHovering, setHovering] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+    setHovering(!!isActive);
+  }, [isActive]);
   return (
     <>
       <div className={`font-medium text-sm text-black ${className}`}>
@@ -87,15 +102,19 @@ const ProgressBarStatistic = ({
           <div
             ref={containerRef}
             onMouseLeave={() => {
-              // If it really gets out of the whole container
+              // leave the container completely → count 1s before turning off to avoid flicker
+              if (hoverTimeoutRef.current)
+                clearTimeout(hoverTimeoutRef.current);
               hoverTimeoutRef.current = setTimeout(() => {
-                setHovering(false);
+                onDeactivate && onDeactivate(id as number);
               }, 1000);
             }}
             onMouseEnter={() => {
-              if (hoverTimeoutRef.current)
+              if (hoverTimeoutRef.current) {
                 clearTimeout(hoverTimeoutRef.current);
-              setHovering(true);
+                hoverTimeoutRef.current = null;
+              }
+              onActivate && onActivate(id as number);
             }}
             className="h-full transition-all duration-500 rounded-[4px]"
             style={{
@@ -118,16 +137,14 @@ const ProgressBarStatistic = ({
               onMouseLeave={(e) => {
                 const nextEl = e.relatedTarget as HTMLElement | null;
                 const container = containerRef.current;
+                // If still in container → do not shut down
+                if (container && nextEl && container.contains(nextEl)) return;
 
-                // 🔍 If the next element is NOT in the container → it means it's really out
-                if (!container || (nextEl && container.contains(nextEl))) {
-                  // Still in the chart area → DO NOT turn off the tooltip
-                  return;
-                }
-
-                // Exit the chart area → hide the tooltip
+                // Leave completely → count 1s then turn off
+                if (hoverTimeoutRef.current)
+                  clearTimeout(hoverTimeoutRef.current);
                 hoverTimeoutRef.current = setTimeout(() => {
-                  setHovering(false);
+                  onDeactivate && onDeactivate(id as number);
                 }, 1000);
               }}
               className={`absolute -top-[25%] ${isLast ? 'right-[100%]' : 'left-[100%]'}  w-[250px] rounded-[14px] p-5 bg-white ${isHovering ? 'block' : 'hidden'} pointer-events-auto transition-opacity duration-300 shadow-lg z-10`}>

@@ -358,6 +358,8 @@ const PercentageTeamTagsCompare = ({
     }
   };
 
+  const [hasHover, setHasHover] = useState<string>('');
+
   return (
     <>
       <div
@@ -437,6 +439,10 @@ const PercentageTeamTagsCompare = ({
                         startDate={startDate}
                         endDate={endDate}
                         isAllTeam
+                        hasHover={hasHover != EventWorkCategory.LARGE}
+                        onActionHover={() =>
+                          setHasHover(EventWorkCategory.LARGE)
+                        }
                         isLoading={isLoadingOrganization}
                         isLoadingCompare={isLoadingOrganizationCompare}
                         totalDuration={totalDurationLarge}
@@ -484,6 +490,10 @@ const PercentageTeamTagsCompare = ({
                     <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompareTeam
                         isTag
+                        hasHover={hasHover != EventWorkCategory.MEDIUM}
+                        onActionHover={() =>
+                          setHasHover(EventWorkCategory.MEDIUM)
+                        }
                         data={dataChartMedium}
                         startDate={startDate}
                         endDate={endDate}
@@ -538,6 +548,10 @@ const PercentageTeamTagsCompare = ({
                     <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompareTeam
                         isTag
+                        hasHover={hasHover != EventWorkCategory.SMALL}
+                        onActionHover={() =>
+                          setHasHover(EventWorkCategory.SMALL)
+                        }
                         data={dataChartSmall}
                         startDate={startDate}
                         endDate={endDate}
@@ -593,6 +607,10 @@ const PercentageTeamTagsCompare = ({
                       <PercentageBarCompareTeam
                         isTag
                         isLast
+                        hasHover={hasHover != EventWorkCategory.CATEGORY}
+                        onActionHover={() =>
+                          setHasHover(EventWorkCategory.CATEGORY)
+                        }
                         data={dataChartCategory}
                         startDate={startDate}
                         endDate={endDate}

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import ImageRound from '@components/common/ImageRound';
@@ -38,6 +38,11 @@ interface ProgressBarProps {
   showInfo?: boolean;
   startDate?: Date;
   endDate?: Date | null;
+  isActive?: boolean;
+  hasHover?: boolean;
+  onActivate?: (id: number) => void;
+  onDeactivate?: (id: number) => void;
+  onDeactivateUser?: () => void;
   handleClickChart?: (data: OptionDropdownType) => void;
   handleClickTooltip: ({
     userId,
@@ -69,6 +74,11 @@ const ProgressBarTeamStatistic = ({
   endDate,
   isLast,
   organizationId,
+  isActive,
+  hasHover,
+  onActivate,
+  onDeactivate,
+  onDeactivateUser,
   handleClickChart,
   handleClickTooltip,
 }: ProgressBarProps) => {
@@ -83,6 +93,19 @@ const ProgressBarTeamStatistic = ({
   const containerUserRef = useRef<HTMLDivElement | null>(null);
   const hoverTimeoutUserRef = useRef<NodeJS.Timeout | null>(null);
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+    setHovering(!!isActive);
+  }, [isActive]);
+  useEffect(() => {
+    if (hasHover) {
+      setHoverIndex(null);
+    }
+  }, [hasHover]);
 
   return (
     <>
@@ -113,16 +136,22 @@ const ProgressBarTeamStatistic = ({
         </div>
         <div
           ref={containerRef}
-          onMouseLeave={() => {
-            // If it really gets out of the whole container
-            hoverTimeoutRef.current = setTimeout(() => {
-              setHovering(false);
-            }, 1000);
-          }}
           onMouseEnter={() => {
-            if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+            if (hoverTimeoutRef.current) {
+              clearTimeout(hoverTimeoutRef.current);
+              hoverTimeoutRef.current = null;
+            }
+            // tell parent to enable tooltip for this item → other items will automatically close
+            onActivate && onActivate(id as number);
             setHoverIndex(null);
-            setHovering(true);
+            // setHovering(true) will be synchronized via isActive right after tick
+          }}
+          onMouseLeave={() => {
+            // leave the container completely → count 1s before turning off to avoid flicker
+            if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+            hoverTimeoutRef.current = setTimeout(() => {
+              onDeactivate && onDeactivate(id as number);
+            }, 1000);
           }}
           className={`group w-full relative h-4 bg-gray-300 ${classProgressClass}`}>
           <div
@@ -300,6 +329,7 @@ const ProgressBarTeamStatistic = ({
                   }, 1000);
                 }}
                 onMouseEnter={() => {
+                  onDeactivateUser && onDeactivateUser();
                   if (hoverTimeoutUserRef.current)
                     clearTimeout(hoverTimeoutUserRef.current);
                   setHovering(false);

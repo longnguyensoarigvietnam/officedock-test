@@ -240,6 +240,19 @@ const AllocationTag = memo(
       }
     };
 
+    const [activeBarLargeId, setActiveBarLargeId] = useState<number | null>(
+      null,
+    );
+    const [activeBarMediumId, setActiveBarMediumId] = useState<number | null>(
+      null,
+    );
+    const [activeBarSmallId, setActiveBarSmallId] = useState<number | null>(
+      null,
+    );
+    const [activeBarCategoryId, setActiveBarCategoryId] = useState<
+      number | null
+    >(null);
+
     return (
       <>
         <div
@@ -332,6 +345,17 @@ const AllocationTag = memo(
                                 handleClickChart={(
                                   _data: OptionDropdownType,
                                 ) => {}}
+                                isActive={activeBarLargeId === item.id}
+                                onActivate={(id: number) => {
+                                  setActiveBarSmallId(null);
+                                  setActiveBarMediumId(null);
+                                  setActiveBarLargeId(id);
+                                  setActiveBarCategoryId(null);
+                                }}
+                                onDeactivate={(id: number) => {
+                                  if (activeBarLargeId === id)
+                                    setActiveBarLargeId(null);
+                                }}
                                 {...item}
                               />
                             ))}
@@ -390,6 +414,17 @@ const AllocationTag = memo(
                                 handleClickChart={(
                                   _data: OptionDropdownType,
                                 ) => {}}
+                                isActive={activeBarMediumId === item.id}
+                                onActivate={(id: number) => {
+                                  setActiveBarSmallId(null);
+                                  setActiveBarLargeId(null);
+                                  setActiveBarMediumId(id);
+                                  setActiveBarCategoryId(null);
+                                }}
+                                onDeactivate={(id: number) => {
+                                  if (activeBarMediumId === id)
+                                    setActiveBarMediumId(null);
+                                }}
                                 {...item}
                               />
                             ))}
@@ -446,6 +481,17 @@ const AllocationTag = memo(
                                     id,
                                     type: EventWorkCategory.MEDIUM,
                                   });
+                                }}
+                                isActive={activeBarSmallId === item.id}
+                                onActivate={(id: number) => {
+                                  setActiveBarMediumId(null);
+                                  setActiveBarLargeId(null);
+                                  setActiveBarSmallId(id);
+                                  setActiveBarCategoryId(null);
+                                }}
+                                onDeactivate={(id: number) => {
+                                  if (activeBarSmallId === id)
+                                    setActiveBarSmallId(null);
                                 }}
                                 {...item}
                               />
@@ -504,6 +550,17 @@ const AllocationTag = memo(
                                     id,
                                     type: EventWorkCategory.SMALL,
                                   });
+                                }}
+                                isActive={activeBarCategoryId === item.id}
+                                onActivate={(id: number) => {
+                                  setActiveBarMediumId(null);
+                                  setActiveBarLargeId(null);
+                                  setActiveBarSmallId(null);
+                                  setActiveBarCategoryId(id);
+                                }}
+                                onDeactivate={(id: number) => {
+                                  if (activeBarCategoryId === id)
+                                    setActiveBarCategoryId(null);
                                 }}
                                 {...item}
                               />

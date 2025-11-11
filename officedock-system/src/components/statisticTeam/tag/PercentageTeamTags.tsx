@@ -436,6 +436,8 @@ const PercentageTeamTags = ({
     }
   };
 
+  const [hasHover, setHasHover] = useState<string>('');
+
   return (
     <>
       <div
@@ -514,6 +516,10 @@ const PercentageTeamTags = ({
                           isAllTeamOption={
                             selectedOrganization?.value == ALL_TEAM_STATISTIC
                           }
+                          hasHover={hasHover != EventWorkCategory.LARGE}
+                          onActionHover={() =>
+                            setHasHover(EventWorkCategory.LARGE)
+                          }
                           mergedItems={dataChartLarge.mergedItems || []}
                           colors={dataChartLarge.colors}
                           data={dataChartLarge?.data}
@@ -571,6 +577,10 @@ const PercentageTeamTags = ({
                         <PieChart
                           isClickTooltip
                           isTeam
+                          hasHover={hasHover != EventWorkCategory.MEDIUM}
+                          onActionHover={() =>
+                            setHasHover(EventWorkCategory.MEDIUM)
+                          }
                           mergedItems={dataChartLarge.mergedItems || []}
                           colors={dataChartMedium.colors}
                           data={dataChartMedium?.data}
@@ -631,6 +641,10 @@ const PercentageTeamTags = ({
                       ) : dataChartSmall.data.length > 0 ? (
                         <PieChart
                           isTeam
+                          hasHover={hasHover != EventWorkCategory.SMALL}
+                          onActionHover={() =>
+                            setHasHover(EventWorkCategory.SMALL)
+                          }
                           mergedItems={dataChartLarge.mergedItems || []}
                           colors={dataChartSmall.colors}
                           data={dataChartSmall?.data}
@@ -692,6 +706,10 @@ const PercentageTeamTags = ({
                         <PieChart
                           isTeam
                           isLast
+                          hasHover={hasHover != EventWorkCategory.CATEGORY}
+                          onActionHover={() =>
+                            setHasHover(EventWorkCategory.CATEGORY)
+                          }
                           mergedItems={dataChartLarge.mergedItems || []}
                           colors={dataChartCategory.colors}
                           data={dataChartCategory?.data}
