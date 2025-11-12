@@ -740,7 +740,7 @@ class ChatRoomViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                     company_id=chat_room.company_id,
                     room=chat_room,
                     message=message,
-                    uuids=file_uuids,
+                    uuids=set(file_uuids),
                 )
             chat_room = ChatRoom.objects.prefetch_related("participants").get(
                 pk=chat_room.pk

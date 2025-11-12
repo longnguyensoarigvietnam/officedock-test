@@ -33,6 +33,12 @@ from common.utils import (
 )
 from companies.models import Company, Contract
 from companies.services import CompanyService
+from plans.constants import (
+    CUSTOM_PLAN,
+    LIMIT_PERSON_PLAN_11_20,
+    LIMIT_PERSON_PLAN_1_10,
+    LIMIT_PERSON_PLAN_21_30,
+)
 from plans.models import Plan
 from submit_levels.models import SubmitLevelHistory
 from users.constants import (
@@ -768,6 +774,22 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         """
         current_user = self.request.user
         serializer_data = serializer.validated_data
+        company = current_user.company
+        # Handle check max user
+        company_user_count = company.users.count()
+        current_plan = company.company_plan.plan
+        # Check is current plan over highest plan limit person
+        is_over_limit_default_plan = (
+            company_user_count
+            >= current_plan.limit_person
+            == LIMIT_PERSON_PLAN_21_30
+        )
+        is_over_limit_custom_plan = (
+            current_plan.name == CUSTOM_PLAN
+            and company_user_count == current_plan.limit_person
+        )
+        if is_over_limit_default_plan or is_over_limit_custom_plan:
+            raise ValidationError({"detail": [ERROR_MESSAGES["limit_user"]]})
         email = serializer_data.get("email", None)
         username = serializer_data.get("username", None)
         username_alias = get_username_alias(login_text=email or username)
@@ -792,7 +814,6 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         ) == LoginTypes.EMAIL.value else serializer_data.pop("email", None)
 
         # Save data to User and Profile
-        company = current_user.company
         password = get_random_string(8)
         user = serializer.save(
             company=company, password=password, username_alias=username_alias
@@ -856,24 +877,23 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 new_user_name=user.full_name,
                 new_user_email=new_user_email,
             )
-
-        # Handle check max user
-        company_user_count = company.users.count()
-        current_plan = company.company_plan.plan
+        company_user_count += 1
+        # Store max user at in contract period
         if company_user_count > company.max_user_in_contract_period:
             company.max_user_in_contract_period = company_user_count
             company.max_user_at = datetime.now()
             company.save(
                 update_fields=["max_user_in_contract_period", "max_user_at"]
             )
+        # Upgrade plan
         if company_user_count > current_plan.limit_person:
             filter = Q()
-            if company_user_count <= 10:
-                filter = Q(limit_person=10)
-            elif company_user_count <= 20:
-                filter = Q(limit_person=20)
-            else:
-                filter = Q(limit_person=30)
+            if company_user_count <= LIMIT_PERSON_PLAN_1_10:
+                filter = Q(limit_person=LIMIT_PERSON_PLAN_1_10)
+            elif company_user_count <= LIMIT_PERSON_PLAN_11_20:
+                filter = Q(limit_person=LIMIT_PERSON_PLAN_11_20)
+            elif company_user_count <= LIMIT_PERSON_PLAN_21_30:
+                filter = Q(limit_person=LIMIT_PERSON_PLAN_21_30)
             plan = Plan.objects.filter(filter).first()
             if plan != current_plan:
                 CompanyService().upgrade_plan(company, plan)

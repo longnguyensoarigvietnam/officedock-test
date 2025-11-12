@@ -9,6 +9,12 @@ from companies.models import (
     Contract,
 )
 from base.messages import ERROR_MESSAGES
+from plans.constants import (
+    MAX_LIMIT_PERSON,
+    MAX_MONTHLY_FEE,
+    MIN_EXCHANGEABLE_AMOUNT,
+    MIN_MONTHLY_FEE,
+)
 from plans.models import Plan
 from plans.serializers import PlanSerializer
 from users.models import User
@@ -80,6 +86,32 @@ class BaseCompanySerializer(serializers.ModelSerializer):
         read_only_fields = ["is_show_holidays_calendar"]
 
 
+class CustomPlanSerializer(serializers.Serializer):
+    """
+    Serializer for custom plan of company
+    """
+
+    monthly_fee = serializers.IntegerField(
+        min_value=MIN_MONTHLY_FEE, max_value=MAX_MONTHLY_FEE
+    )
+    exchangeable_amount = serializers.IntegerField(
+        min_value=MIN_EXCHANGEABLE_AMOUNT, max_value=MAX_MONTHLY_FEE
+    )
+    limit_person = serializers.IntegerField(max_value=MAX_LIMIT_PERSON)
+
+    def validate(self, attrs):
+        fields = ["monthly_fee", "exchangeable_amount", "limit_person"]
+        provided = [f for f in fields if attrs.get(f) is not None]
+
+        if 0 < len(provided) < 3:
+            missing = [f for f in fields if f not in provided]
+            raise serializers.ValidationError(
+                {f: ERROR_MESSAGES["field_required"] for f in missing}
+            )
+
+        return attrs
+
+
 class CompanySerializer(serializers.ModelSerializer):
     """
     Serializer for Company model.
@@ -88,6 +120,7 @@ class CompanySerializer(serializers.ModelSerializer):
     contract = ContractSerializer(required=False)
     total_users = serializers.SerializerMethodField(read_only=True)
     plan = serializers.SerializerMethodField(read_only=True)
+    custom_plan = CustomPlanSerializer(required=False)
 
     class Meta:
         model = Company
@@ -103,6 +136,7 @@ class CompanySerializer(serializers.ModelSerializer):
             "responsible_person_name",
             "close_date",
             "editable_after_closing",
+            "custom_plan",
         ]
         read_only_fields = ["is_show_holidays_calendar"]
 
@@ -206,7 +240,7 @@ class CreationCompanySerializer(serializers.Serializer):
     responsible_person_mail = serializers.EmailField(required=False)
     plan = serializers.SlugRelatedField(
         slug_field="name",
-        queryset=Plan.objects.all(),
+        queryset=Plan.objects.filter(is_custom_plan=False).all(),
         error_messages={
             "does_not_exist": ERROR_MESSAGES["plan_does_not_exists"],
             "invalid": ERROR_MESSAGES["plan_invalid"],

@@ -38,6 +38,7 @@ from .serializers import (
     CompanyTransactionSerializer,
     ContractSerializer,
     CreationCompanySerializer,
+    CustomPlanSerializer,
     RetrieveCompanySerializer,
 )
 
@@ -78,6 +79,8 @@ class CompanyViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         current_company = serializer.instance
         old_name = current_company.name
         old_email = current_company.responsible_person_mail
+        serializer_data = serializer.validated_data
+        custom_plan = serializer_data.pop("custom_plan", None)
         company = serializer.save()
         self.company_service.handle_invoice_base_on_status(company)
         if (
@@ -85,6 +88,15 @@ class CompanyViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             or old_email != company.responsible_person_mail
         ):
             StripeService().update_customer(company)
+        if custom_plan:
+            if company.status in [
+                CompanyStatus.CONTRACT_TERMINATED.value,
+                CompanyStatus.PENDING_APPROVAL.value,
+            ]:
+                raise ValidationError(
+                    {"detail": ERROR_MESSAGES["cannot_updated"]}
+                )
+            self.company_service.custom_plan(company, custom_plan)
 
     @action(
         url_path="active",
@@ -108,19 +120,27 @@ class CompanyViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         return self.response_ok()
 
     @action(
-        url_path="change-plan",
+        url_path="custom-plan",
         detail=True,
         methods=["POST"],
-        serializer_class=EmptySerializer,
+        serializer_class=CustomPlanSerializer,
     )
     @transaction.atomic()
-    def handle_change_plan_company(self, request, pk):
+    def handle_custom_plan_company(self, request, pk):
         """
         Activate a company by creating its admin user, assigning roles,
         setting up Stripe subscription, and updating contract status.
         """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        validated_data = serializer.validated_data
         company = self.get_object()
-        self.company_service.change_plan(company)
+        if company.status in [
+            CompanyStatus.CONTRACT_TERMINATED.value,
+            CompanyStatus.PENDING_APPROVAL.value,
+        ]:
+            raise ValidationError({"detail": ERROR_MESSAGES["cannot_create"]})
+        self.company_service.custom_plan(company, validated_data)
         return self.response_ok()
 
     @extend_schema(

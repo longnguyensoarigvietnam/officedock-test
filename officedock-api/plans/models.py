@@ -16,6 +16,7 @@ class Plan(BaseModel):
         default=0
     )  # Amount convertible to DotMoney
     limit_person = models.IntegerField(default=0)
+    is_custom_plan = models.BooleanField(default=False)
 
 
 class Tax(BaseModel):

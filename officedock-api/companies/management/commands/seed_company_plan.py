@@ -12,6 +12,11 @@ from companies.constants import (
 )
 from companies.models import Company, CompanyPlan
 from companies.utils import generate_contract_related_date_base_on_now
+from plans.constants import (
+    LIMIT_PERSON_PLAN_11_20,
+    LIMIT_PERSON_PLAN_1_10,
+    LIMIT_PERSON_PLAN_21_30,
+)
 from plans.models import Plan
 from users.constants import RoleTypes
 
@@ -52,12 +57,13 @@ class Command(BaseCommand):
                 company.contract.save(update_fields=contract_data.keys())
             # # Seed data Company plan
             if not CompanyPlan.objects.filter(company=company).exists():
-                if total_user <= 10:
-                    filter = Q(limit_person=10)
-                elif total_user <= 20:
-                    filter = Q(limit_person=20)
-                else:
-                    filter = Q(limit_person=30)
+                if total_user <= LIMIT_PERSON_PLAN_1_10:
+                    filter = Q(limit_person=LIMIT_PERSON_PLAN_1_10)
+                elif total_user <= LIMIT_PERSON_PLAN_11_20:
+                    filter = Q(limit_person=LIMIT_PERSON_PLAN_11_20)
+                elif total_user <= LIMIT_PERSON_PLAN_21_30:
+                    filter = Q(limit_person=LIMIT_PERSON_PLAN_21_30)
+
                 plan = Plan.objects.filter(filter).first()
                 CompanyPlan.objects.create(plan=plan, company=company)
                 # Seed data Company transaction
