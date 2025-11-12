@@ -106,7 +106,9 @@ const FilePreview = ({
             </DynamicTooltip>
           </div>
         )}
-        {!isFetchingFileDetail && previewUrl ? (
+        {isFetchingFileDetail ? (
+          <SkeletonElement className="min-h-[500px]" />
+        ) : previewUrl ? (
           <div className="preview-container">
             {/* Preview Image with Zoom */}
             {fileDetail?.fileType.startsWith('image/') && (
@@ -283,7 +285,13 @@ const FilePreview = ({
             )}
           </div>
         ) : (
-          <SkeletonElement className="min-h-[500px]" />
+          <div className="w-full h-full flex items-center justify-center">
+            <ImageRound
+              className={` w-fit h-fit min-h-[500px]  `}
+              src="/icons/no-image.pnp"
+              name="No Image"
+            />
+          </div>
         )}
       </div>
     </Modal>

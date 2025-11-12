@@ -2728,7 +2728,7 @@ const KanbanBoardTaskTeam = () => {
               onDragEnd={onDragEnd}>
               <div
                 ref={listContainerRef}
-                className={`flex gap-8  h-[calc(100vh_-_235px)] overflow-x-auto items-stretch  ${expanded ? 'w-[calc(100vw_-_270px)]' : 'w-[calc(100vw_-_120px)]'}`}>
+                className={`flex gap-8  h-[calc(100vh_-_235px)] overflow-x-auto overflow-y-hidden items-stretch  ${expanded ? 'w-[calc(100vw_-_270px)]' : 'w-[calc(100vw_-_120px)]'}`}>
                 <NoSettingColumn
                   totalNoSetting={totalNoSetting}
                   setTotalNoSetting={setTotalNoSetting}
@@ -2769,7 +2769,7 @@ const KanbanBoardTaskTeam = () => {
               </div>
             </DragDropContext>
           ) : (
-            <div className="h-[calc(100vh_-_235px)] w-full">
+            <div className="h-[calc(100vh_-_250px)] w-full">
               <ColumnsSkeleton numberOfColumns={4} />
             </div>
           )}
