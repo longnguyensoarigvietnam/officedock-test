@@ -398,7 +398,7 @@ const Item = ({
                     </div>
                   ) : (
                     <div
-                      style={{ backgroundColor: largeColor || 'white' }}
+                      style={{ backgroundColor: largeColor || '#BFBFBF' }}
                       className="w-2 h-2 rounded-full mt-[5px] flex-shrink-0"></div>
                   )}
                   <p
@@ -637,7 +637,7 @@ const Item = ({
                     </div>
                   ) : (
                     <div
-                      style={{ backgroundColor: largeColor || 'white' }}
+                      style={{ backgroundColor: largeColor || '#BFBFBF' }}
                       className="w-2 h-2 rounded-full mt-[5px] flex-shrink-0"></div>
                   )}
                   <p

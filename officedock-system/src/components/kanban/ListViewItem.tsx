@@ -345,7 +345,7 @@ const ListViewItem = ({
                       className={`w-4 min-w-4 flex items-center justify-center`}>
                       <div
                         className="w-2 h-2 rounded-full"
-                        style={{ background: largeColor }}></div>
+                        style={{ background: largeColor || '#BFBFBF' }}></div>
                     </div>
                   )}
                   <p className="font-bold text-[15px] max-w-[calc(100%_-_16px)] truncate">

@@ -349,12 +349,11 @@ const ScheduleTeamBoard = () => {
             <div className="overflow-hidden">
               <div
                 className={`  font-medium px-1 pt-1 text-[14px] flex gap-[6px]`}>
-                {selectedOptionShow !== ItemScheduleTitleType.ACTUAL &&
-                  largeColor && (
-                    <div
-                      style={{ backgroundColor: largeColor || 'white' }}
-                      className="w-2 h-2 rounded-full mt-[7px] flex-shrink-0"></div>
-                  )}
+                {selectedOptionShow !== ItemScheduleTitleType.ACTUAL && (
+                  <div
+                    style={{ backgroundColor: largeColor || '#BFBFBF' }}
+                    className="w-2 h-2 rounded-full mt-[7px] flex-shrink-0"></div>
+                )}
                 <p
                   className={`truncate max-w-[calc(100%)] font-semibold min-h-5 ${eventContent.event.extendedProps.type !== ItemStartType.TASK && '!text-primary'}`}>
                   {eventContent.event.extendedProps.isCrossTeamTask

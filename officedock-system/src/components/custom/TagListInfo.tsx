@@ -11,6 +11,7 @@ import { OptionDropdownType } from '@interfaces/common';
 import { CreationStatisticType } from '@interfaces/statistic';
 import { TagId } from '@interfaces/tag';
 import api from '@base/api';
+import Button from '@components/common/Button';
 
 type Props = {
   tagList: OptionDropdownType[];
@@ -18,7 +19,7 @@ type Props = {
   optionsTag: CreationStatisticType | undefined;
 };
 
-const TagListInfo = ({ tagList }: Props) => {
+const TagListInfo = ({ tagList, optionsTag, taskId }: Props) => {
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const [position, setPosition] = useState<{ top: number; left: number }>({
     top: 0,
@@ -27,7 +28,7 @@ const TagListInfo = ({ tagList }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
   const [listTagActive, setListTagActive] =
     useState<OptionDropdownType[]>(tagList);
-  const [_isPreventAction, setPreventAction] = useState(false);
+  const [isPreventAction, setPreventAction] = useState(false);
 
   useEffect(() => {
     if (tagList) {
@@ -47,7 +48,7 @@ const TagListInfo = ({ tagList }: Props) => {
     );
     return data;
   };
-  const { mutate: _editTaskDailyInline } = useMutation(
+  const { mutate: editTaskDailyInline } = useMutation(
     'postEditDailyTaskInline',
     handleEditTaskInline,
     {
@@ -108,8 +109,7 @@ const TagListInfo = ({ tagList }: Props) => {
                 <p className="text-xs font-medium text-[#77858F] text-left">
                   タグ
                 </p>
-                {/* TODO: Implement action tag */}
-                {/* {optionsTag &&
+                {optionsTag &&
                   optionsTag.tags.map((item) => (
                     <div key={item.id} className="flex gap-3">
                       <div className="w-fit h-fit flex-shrink-0">
@@ -163,14 +163,7 @@ const TagListInfo = ({ tagList }: Props) => {
                         {item.name}
                       </div>
                     </div>
-                  ))} */}
-                {tagList.map((tag) => (
-                  <div key={tag.value} className="flex gap-2 items-start">
-                    <div className="break-all text-left w-fit px-[10px] text-xs py-2 bg-[#EBF2F7] rounded-[20px]">
-                      {tag.label}
-                    </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             </div>
           </>,

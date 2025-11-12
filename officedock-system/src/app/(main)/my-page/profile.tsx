@@ -142,7 +142,6 @@ const MyPage = () => {
         avatarUrl={authenticatedUser?.avatar || ''}
         avatarColor={authenticatedUser?.avatarColor || ''}
         size={46}
-        isZoom={true}
       />
     );
   };
@@ -333,49 +332,49 @@ const MyPage = () => {
         }}
         className="w-full flex flex-col rounded-bl-[30px] rounded-r-[30px]">
         <div className="flex ">
-          <div className="h-[9vh] bg-white w-fit px-[1.39vw] py-[1.80vh] text-[#77858F] font-medium flex items-center gap-[1.39vw] rounded-br-[2.08vw]">
+          <div className="h-20 bg-white w-fit px-5 py-4 text-[#77858F] font-medium flex items-center gap-5 rounded-br-[30px]">
             <div>{session?.user.id && renderBoxUser()}</div>
 
-            <div className="flex items-center gap-[0.69vw]">
-              <p className="break-all max-w-[6.94vw] line-clamp-2 text-[0.97vw]">
+            <div className="flex items-center gap-[10px]">
+              <p className="break-all max-w-[100px] line-clamp-2 text-sm">
                 名前
               </p>
-              <p className="break-all text-[1.53vw] text-black max-w-[6.94vw] line-clamp-2">
+              <p className="break-all text-[22px] text-black max-w-[100px] line-clamp-2">
                 {session?.user.profile.fullName}
               </p>
             </div>
 
-            <div className="h-[1.8vh] border-l border-[#D2DBE1]"></div>
+            <div className="h-4 border-l border-[#D2DBE1]"></div>
 
-            <div className="flex items-center text-[0.97vw] font-medium gap-[0.69vw]">
+            <div className="flex items-center text-sm font-medium gap-[10px]">
               <p>ID</p>
-              <p className="text-[1.11vw] text-black">{session?.user.id}</p>
+              <p className="text-base text-black">{session?.user.id}</p>
             </div>
           </div>
 
-          <div className="w-fit px-[1.39vw] shadow-common mt-[2.25vh] ml-[1.39vw] font-bold text-[1.11vw] bg-white rounded-full h-[4.49vh] flex items-center justify-center gap-[0.63vw]">
+          <div className="w-fit px-5 shadow-common mt-5 ml-5 font-bold text-base bg-white rounded-full h-10 flex items-center justify-center gap-[9px]">
             <ImageRound
               name="Badge icon"
               src={'/icons/badge.svg'}
-              className="w-[2.25vh] h-[2.25vh]"
+              className="w-fit h-fit"
             />
             <p>{totalCoins || 0}</p>
 
             <ImageRound
               name="Pearl icon"
               src={'/icons/pearl.svg'}
-              className="w-[2.25vh] h-[2.25vh] ml-[0.69vw]"
+              className="w-fit h-fit ml-[10px]"
             />
             <p>{totalPearls || 0}</p>
 
             <p
               onClick={() => router.push(pageRouters.HISTORY_POINT.href)}
-              className="text-[0.97vw] text-primary underline ml-[0.76vw] cursor-pointer hover:opacity-80">
+              className="text-sm text-primary underline ml-[0.76vw] cursor-pointer hover:opacity-80">
               ポイント履歴/交換
             </p>
           </div>
         </div>
-        <div className="mt-[3.37vh] ml-[2.08vw]">
+        <div className="mt-[30px] ml-[30px]">
           <SkillSetting
             myPageSkillList={myPageSkillList}
             setSkillIdToUpdate={setSkillIdToUpdate}
@@ -384,7 +383,7 @@ const MyPage = () => {
             setOpenConfirmDeleteSkillModal={setOpenConfirmDeleteSkillModal}
           />
         </div>
-        <div className="absolute top-[23.13vh] left-[2.08vw] z-[20]">
+        <div className="absolute top-[219px] left-[30px] z-[20]">
           {/* Menu */}
           <MyPageMenu
             onClickSettingSurvey={() => setOpenSettingSurvey(true)}
@@ -431,11 +430,11 @@ const MyPage = () => {
 
             {/* Seagull icon */}
             {receivedThanksMessageList?.length ? (
-              <div className="absolute bottom-0 left-[63.58vh]">
+              <div className="absolute bottom-0 left-[610px]">
                 <ImageRound
                   name="Seagull"
                   src="/icons/seagull.svg"
-                  className="w-[22.61vh] h-[35.62vh] cursor-pointer"
+                  className="w-[201px] h-[317px] cursor-pointer"
                   onClick={() => setShowReceiveEnvelopeAnimation(true)}
                 />
               </div>
@@ -445,8 +444,8 @@ const MyPage = () => {
           {/* Tweet icon */}
           <ImageRound
             name="Tweet icon"
-            src="/icons/tweet.svg"
-            className="w-[10.34vh] h-[11.12vh] z-10 hover:cursor-pointer absolute -bottom-[5vh] right-[1.12vh]"
+            src={'/icons/tweet.svg'}
+            className={`w-[88px] h-[94px] z-10 hover:cursor-pointer absolute bottom-[0px] right-[20px]`}
             onClick={() => setOpenCreateTweetModal(true)}
           />
         </div>

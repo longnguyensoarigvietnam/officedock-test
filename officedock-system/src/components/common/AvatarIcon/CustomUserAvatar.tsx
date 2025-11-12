@@ -1,8 +1,6 @@
 import { memo, useMemo } from 'react';
 import Image from 'next/image';
 
-import { DESIGN_WIDTH } from '@constants';
-
 import { getFileURL } from '@utils';
 
 export type CustomUserAvatarProps = {
@@ -12,7 +10,6 @@ export type CustomUserAvatarProps = {
   customClassName?: string;
   avatarClassName?: string;
   isCalendarScreen?: boolean;
-  isZoom?: boolean;
 };
 
 const CustomUserAvatar = memo(
@@ -22,20 +19,15 @@ const CustomUserAvatar = memo(
     size,
     avatarClassName,
     customClassName,
-    isZoom = false,
   }: CustomUserAvatarProps) => {
     const clipId = useMemo(() => `clip-${Math.random()}`, []);
-
-    const scale = (size / DESIGN_WIDTH) * 100;
-    const widthStyle = isZoom ? `${scale}vw` : `${size}px`;
-    const heightStyle = isZoom ? `${scale}vw` : `${size}px`;
 
     return (
       <div className={customClassName}>
         {avatarUrl ? (
           <div
             className="relative rounded-full overflow-hidden bg-white"
-            style={{ width: widthStyle, height: heightStyle }}>
+            style={{ width: `${size}px`, height: `${size}px` }}>
             <Image
               src={getFileURL(avatarUrl)}
               className={`hover:cursor-pointer object-cover object-center ${avatarClassName || ''}`}
@@ -46,8 +38,8 @@ const CustomUserAvatar = memo(
           </div>
         ) : (
           <svg
-            width={widthStyle}
-            height={heightStyle}
+            width={`${size}px`}
+            height={`${size}px`}
             viewBox={`0 0 ${size} ${size}`}
             fill="none"
             xmlns="http://www.w3.org/2000/svg">

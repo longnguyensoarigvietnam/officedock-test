@@ -151,7 +151,9 @@ const ArchiveTaskBoard = ({
                           className={`w-4 min-w-4 flex items-center justify-center`}>
                           <div
                             className="w-2 h-2 rounded-full"
-                            style={{ background: largeColor }}></div>
+                            style={{
+                              background: largeColor || '#BFBFBF',
+                            }}></div>
                         </div>
                         <p className="font-bold text-sm max-w-[calc(100%_-_16px)] break-all line-clamp-3">
                           {task.title}
