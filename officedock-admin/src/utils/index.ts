@@ -5,9 +5,11 @@ import { FieldErrors, Path, UseFormSetError } from 'react-hook-form';
 import {
   DATE_FORMAT,
   DATE_FORMAT_SERVER,
+  MAX_PHONE_NUMBER_LENGTH,
   MONTH_FORMAT_SERVER,
 } from '@constants';
 import { UNREGISTERED } from '@constants/message';
+import { ONLY_DIGITS_REGEX } from '@constants/regex';
 
 import { JwtDecode } from '@interfaces/auth';
 
@@ -183,4 +185,22 @@ export const handleServerFormErrors = <T extends Record<string, any>>(
       message: messages[0],
     });
   });
+};
+
+export const handleHalfWidthInput = (e: React.FormEvent<HTMLInputElement>, isPhoneField: boolean = false) => {
+  e.currentTarget.value = e.currentTarget.value.replace(/\D/g, ''); // remove non-digits
+
+  // If the value is longer than 11, remove the last added character
+  if (isPhoneField && e.currentTarget.value.length > MAX_PHONE_NUMBER_LENGTH) {
+    e.currentTarget.value = e.currentTarget.value.replace(/.$/, '');
+  }
+};
+
+export const handleHalfWidthPaste = (
+  e: React.ClipboardEvent<HTMLInputElement>,
+) => {
+  const pasted = e.clipboardData.getData('text');
+  if (!ONLY_DIGITS_REGEX.test(pasted)) {
+    e.preventDefault();
+  }
 };

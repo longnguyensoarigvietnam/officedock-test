@@ -72,6 +72,11 @@ export interface EditCompanyRequest {
     systemMainPurpose?: string[] | null;
     department?: string[] | null;
   };
+  customPlan?: {
+    monthlyFee: number | null;
+    exchangeableAmount: number | null;
+    limitPerson: number | null;
+  };
   closeDate?: number;
   editableAfterClosing?: number;
 }
