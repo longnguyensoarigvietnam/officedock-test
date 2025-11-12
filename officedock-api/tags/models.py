@@ -18,7 +18,6 @@ class Tag(BaseModel):
         related_name="tags",
         on_delete=models.CASCADE,
     )
-    is_hidden = models.BooleanField(default=False)
 
     def get_calendar_organization(self):
         """

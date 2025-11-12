@@ -91,7 +91,9 @@ def get_tags(company, organization=None):
     if organization:
         tags = tags.filter(organizations=organization)
 
-    return BaseTagSerializer(tags.filter(is_hidden=False), many=True).data
+    return BaseTagSerializer(
+        tags.filter(deleted_at__isnull=True), many=True
+    ).data
 
 
 def get_task_status():
@@ -222,7 +224,7 @@ def get_data_organization_team_statistic(user, company, organization):
     # Insert option all team to pulldown choose organization for statistic to start of a list
     tags = (
         company.tags.filter(
-            is_hidden=False,
+            deleted_at__isnull=True,
             organizations__in=organizations_by_role,
         )
         .order_by("created_at")
@@ -259,7 +261,9 @@ def get_data_organization_my_statistic(user, organizations, company):
         ).data
     )
     tags = (
-        company.tags.filter(is_hidden=False, organizations__in=organizations)
+        company.tags.filter(
+            deleted_at__isnull=True, organizations__in=organizations
+        )
         .all()
         .distinct()
     )

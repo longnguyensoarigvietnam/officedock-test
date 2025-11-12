@@ -38,6 +38,14 @@ class BaseAPIViewSet(viewsets.GenericViewSet):
 
         return Response(data=data, status=status.HTTP_201_CREATED)
 
+    @staticmethod
+    def response_deleted(data: Dict = None) -> Response:
+        """
+        Custom default response created for ViewSet.
+        """
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
     def response_pagination(
         self,
         request,

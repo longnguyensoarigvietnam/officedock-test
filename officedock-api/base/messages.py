@@ -280,6 +280,7 @@ _KEYWORDS = {
         "category": "Category",
         "skill": "Skill",
         "skill_map": "Skill map",
+        "deleted": "(Deleted)",
     },
     "ja": {
         "term_of_use": "利用規約",
@@ -289,6 +290,7 @@ _KEYWORDS = {
         "category": "カテゴリー",
         "skill": "スキル",
         "skill_map": "スキルマップ",
+        "deleted": "(削除済)",
     },
 }
 

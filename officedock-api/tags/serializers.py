@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from base.messages import ERROR_MESSAGES
+from base.messages import ERROR_MESSAGES, KEYWORDS
 from common.serializers import CreationDataOrganizationSerializer
 from organizations.models import Organization
 from roles.constants import Actions, Screens
@@ -14,9 +14,18 @@ class BaseTagSerializer(serializers.ModelSerializer):
     Serializer for Base Tag
     """
 
+    name = serializers.SerializerMethodField()
+
     class Meta:
         model = Tag
         fields = ["id", "name"]
+
+    def get_name(self, obj):
+        return (
+            obj.name
+            if obj.deleted_at == None
+            else f"{obj.name}{KEYWORDS['deleted']}"
+        )
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -42,6 +51,7 @@ class TagSerializer(serializers.ModelSerializer):
         read_only=True
     )
     actions = serializers.SerializerMethodField(read_only=True)
+    deleted_at = serializers.DateTimeField(allow_null=True)
 
     class Meta:
         model = Tag
@@ -51,9 +61,9 @@ class TagSerializer(serializers.ModelSerializer):
             "organization_ids",
             "organizations",
             "actions",
-            "is_hidden",
             "calendar_organization_check",
             "is_calendar_organization_check",
+            "deleted_at",
         ]
 
     def validate(self, data):
