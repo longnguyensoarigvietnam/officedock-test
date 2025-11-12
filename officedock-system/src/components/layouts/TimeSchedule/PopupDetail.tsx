@@ -145,7 +145,7 @@ const PopupDetail = ({
       <div className="flex gap-x-1 items-center mt-[10px]">
         <div
           style={{
-            backgroundColor: largeColor,
+            backgroundColor: largeColor || '#BFBFBF',
           }}
           className="w-3 h-3 rounded-full"></div>
         <span className="text-black max-w-[180px] font-bold text-base truncate">

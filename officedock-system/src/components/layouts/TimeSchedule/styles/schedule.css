@@ -366,7 +366,7 @@
 }
 /* Ensure events don't overlap */
 .schedule-custom .fc-timegrid-event-harness {
-  transform: scaleX(0.85);
+  transform: scaleX(0.97);
   transform-origin: center;
 }
 .schedule-custom .fc-resourceTimeGridDay-view .fc-timegrid-col-events {
@@ -695,7 +695,21 @@
 .schedule-custom .fc-day-header {
   font-size: 20px !important;
 }
-.schedule-custom .fc-event .icon-circle {
+
+.schedule-custom .fc-timeGridWeek-view .fc-timegrid-event-harness {
+  transform: scaleX(0.85);
+  transform-origin: center;
+}
+.schedule-custom .fc-timeGridWeek-view .fc-event .icon-circle {
   transform: scaleX(1.1765);
+  transform-origin: center;
+}
+
+.schedule-custom .fc-resourceTimeGridDay-view .fc-timegrid-event-harness {
+  transform: scaleX(0.96);
+  transform-origin: center;
+}
+.schedule-custom .fc-resourceTimeGridDay-view .fc-event .icon-circle {
+  transform: scaleX(1.0417);
   transform-origin: center;
 }

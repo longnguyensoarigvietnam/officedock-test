@@ -7,7 +7,7 @@ import RowSkeleton from '@components/skeleton/RowSkeleton';
 
 import { TweetDetail } from '@interfaces/tweet';
 
-import { DESIGN_WIDTH, SYSTEM_TWEET_NAME } from '@constants';
+import { SYSTEM_TWEET_NAME } from '@constants';
 
 import {
   convertToCurrentTimezone,
@@ -77,19 +77,16 @@ export const TimeLine = ({
           avatarColor={avatarColor || ''}
           size={30}
           avatarClassName={'hover:!cursor-default'}
-          isZoom={true}
         />
       </div>
     );
   };
 
-  const iconScale = (30 / DESIGN_WIDTH) * 100;
-
   return (
-    <div className="w-[24.44vw] h-[calc(100%_-_8.76vh)] py-[3.48vh] px-[1.32vw] absolute top-[3.37vh] right-[2.08vw] border-[0.07vw] border-white bg-[#3599D8CC] rounded-[1.67vw] space-y-[2.81vh]">
+    <div className="w-[352px] h-[90%] py-[31px] px-[19px] absolute top-1/2 -translate-y-1/2 right-[30px] border-[1px] border-white bg-[#3599D8CC] rounded-[24px] space-y-5">
       {/* Header */}
-      <div className="border-b-[1px] border-b-white pb-[1.91vh]">
-        <p className="text-[1.25vw] text-white font-semibold leading-none">
+      <div className="border-b-[1px] border-b-white pb-3">
+        <p className="text-[18px] text-white font-semibold leading-none">
           OFFICE DOCK タイムライン
         </p>
       </div>
@@ -97,24 +94,16 @@ export const TimeLine = ({
       {/* Messages */}
       <div
         ref={resultsContainerRef}
-        className={`customized-scrollbar ${isLoadingList && tweetList.length == 0 ? 'overflow-y-hidden' : 'overflow-y-auto'} max-h-[calc(100%_-_5.62vh)] flex flex-col-reverse gap-[4.49vh] !w-full`}>
+        className={`customized-scrollbar ${isLoadingList && tweetList.length == 0 ? 'overflow-y-hidden' : 'overflow-y-auto'} max-h-[calc(100%_-_50px)] flex flex-col-reverse gap-10 !w-full`}>
         {isLoadingList && tweetList.length == 0 ? (
           <div className="flex flex-col items-start ml-3 space-y-2">
-            <RowSkeleton
-              className={`!h-[11.24vh] w-[12.5vw] !bg-[#248bcacc]`}
-            />
-            <RowSkeleton
-              className={`!h-[22.47vh] w-[19.44vw] !bg-[#248bcacc]`}
-            />
-            <RowSkeleton
-              className={`!h-[11.24vh] w-[12.5vw] !bg-[#248bcacc]`}
-            />
-            <RowSkeleton
-              className={`!h-[22.47vh] w-[19.44vw] !bg-[#248bcacc]`}
-            />
+            <RowSkeleton className={`!h-[100px] w-[180px] !bg-[#248bcacc]`} />
+            <RowSkeleton className={`!h-[200px] w-[280px] !bg-[#248bcacc]`} />
+            <RowSkeleton className={`!h-[100px] w-[180px] !bg-[#248bcacc]`} />
+            <RowSkeleton className={`!h-[200px] w-[280px] !bg-[#248bcacc]`} />
             <RowSkeleton
               numberOfRows={4}
-              className={`!h-[5.62vh] w-[18.06vw] !bg-[#248bcacc]`}
+              className={`!h-[50px] w-[260px] !bg-[#248bcacc]`}
             />
           </div>
         ) : (
@@ -130,18 +119,12 @@ export const TimeLine = ({
             return (
               <div
                 key={tweet.id}
-                className="space-y-[1.12vh] text-white !w-full px-[0.69vw]">
+                className="space-y-2 text-white !w-full px-[10px]">
                 <div className="flex items-center justify-between">
-                  <div className={`flex gap-[0.63vw] items-center`}>
-                    <div
-                      style={{
-                        width: `${iconScale}vw`,
-                        height: `${iconScale}vw`,
-                      }}>
+                  <div className={`flex gap-[9px] items-center`}>
+                    <div className="h-[30px]">
                       {tweet.isSystem ? (
-                        <div
-                          className="relative overflow-hidden"
-                          style={{ width: `${iconScale}vw`, height: `${iconScale}vw` }}>
+                        <div className="relative overflow-hidden h-[30px] w-[30px]">
                           <Image
                             src={'/icons/blue-company.svg'}
                             className={`hover:cursor-pointer object-cover object-center`}
@@ -157,7 +140,7 @@ export const TimeLine = ({
                         )
                       )}
                     </div>
-                    <p className="text-[1.11vw] font-medium !break-all !max-w-full">
+                    <p className="text-base font-medium !break-all !max-w-full">
                       {tweet.isSystem
                         ? SYSTEM_TWEET_NAME
                         : tweet?.user?.fullName || ''}
@@ -177,12 +160,12 @@ export const TimeLine = ({
                 </div>
 
                 <p
-                  className="!break-all !max-w-full text-[0.97vw] font-semibold"
+                  className="!break-all !max-w-full text-sm font-semibold"
                   dangerouslySetInnerHTML={{
                     __html: formatWithParagraphTags(tweet.content),
                   }}></p>
 
-                <p className="text-[0.83vw]">
+                <p className="text-xs">
                   {tweet.createdAt &&
                     formatCheckDate(
                       getFormattedDateTime(
@@ -197,10 +180,7 @@ export const TimeLine = ({
           <></>
         )}
         {isFetchingNextPage && (
-          <Spinner
-            className="!h-fit py-[0.34vh]"
-            iconClassName="h-[0.67vw] w-[0.67vw]"
-          />
+          <Spinner className="!h-fit py-3" iconClassName="h-6 w-6" />
         )}
       </div>
     </div>

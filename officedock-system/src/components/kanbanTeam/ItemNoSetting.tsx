@@ -329,7 +329,7 @@ const ItemNoSetting = ({
                     </div>
                   ) : (
                     <div
-                      style={{ backgroundColor: largeColor || 'white' }}
+                      style={{ backgroundColor: largeColor || '#BFBFBF' }}
                       className="w-2 h-2 rounded-full mt-[6px]"></div>
                   )}
                   <p

@@ -294,15 +294,6 @@ const TaskCard = ({
     });
   };
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-
-  const baseHeight =
-    isOptionZoomSchedule === '00:05:00'
-      ? 20
-      : isOptionZoomSchedule === '01:00:00'
-        ? 90
-        : 46;
-
   const [isShowAction, setIsShowAction] = useState(false);
 
   const [local, setLocal] = useState({
@@ -502,12 +493,31 @@ const TaskCard = ({
     }
   }, [isOptionZoomSchedule, slotHeight, event]);
 
+  const [isTooSmallHeight, setIsTooSmallHeight] = useState(false);
+
+  useEffect(() => {
+    if (containerRef.current) {
+      const height = containerRef.current.offsetHeight;
+      if (height > 40) {
+        setIsTooSmallHeight(false);
+      } else {
+        setIsTooSmallHeight(true);
+      }
+    }
+  }, [isOptionZoomSchedule, slotHeight, event]);
+
   return (
     <>
       <div
         style={{
-          paddingTop: `${Math.min((slotHeight / baseHeight) * 7, 8)}px`,
-          paddingBottom: `${Math.min((slotHeight / baseHeight) * 8, 8)}px`,
+          paddingTop: resourcePlan
+            ? `${isTooSmallHeight ? 5 : 12}px`
+            : `${isTooSmallHeight ? 5 : 10}px`,
+          paddingBottom: resourcePlan
+            ? `${isTooSmallHeight ? 5 : 12}px`
+            : `${isTooSmallHeight ? 5 : 10}px`,
+          paddingLeft: resourcePlan ? '12px' : '10px',
+          paddingRight: resourcePlan ? '12px' : '10px',
           background: resourcePlan
             ? 'white'
             : largeColor
@@ -548,7 +558,7 @@ const TaskCard = ({
           }
           handleMouseLeave();
         }}
-        className={`h-full event-bottom  ${isSelect && '!opacity-30'} ${isStart && resourcePlan && '!border !border-[#3CABF3]'} flex relative z-30  bg-white card-schedule item-schedule-shadow ${isCalculation && '!bg-custom-gradient'} ${!resourcePlan && ' !text-white'} ${isEvent && '!text-primary'}    text-black rounded-[14px]   justify-between   px-2 border`}>
+        className={`h-full event-bottom  ${isSelect && '!opacity-30'} ${isStart && resourcePlan && '!border !border-[#3CABF3]'} flex relative z-30  bg-white card-schedule item-schedule-shadow ${isCalculation && '!bg-custom-gradient'} ${!resourcePlan && ' !text-white'} ${isEvent && '!text-primary'}    text-black rounded-[14px]   justify-between  border`}>
         <div className="flex w-full relative  h-full justify-between ">
           <div
             onMouseEnter={(e) => {
@@ -588,9 +598,9 @@ const TaskCard = ({
             <div
               className={`${isTooSmall && 'hidden'} flex overflow-hidden h-full flex-col   flex-grow gap-[10px]`}>
               <div className="flex items-center gap-[6px] w-full">
-                {!isEvent && resourcePlan == true && largeColor && (
+                {!isEvent && resourcePlan == true && (
                   <div
-                    style={{ backgroundColor: largeColor || 'white' }}
+                    style={{ backgroundColor: largeColor || '#BFBFBF' }}
                     className="w-2 h-2 rounded-full  flex-shrink-0"></div>
                 )}
                 <p
@@ -650,14 +660,11 @@ const TaskCard = ({
             {isTooSmall && (
               <div className="w-full">
                 <div className="flex items-center gap-[6px] w-full">
-                  {!isEvent &&
-                    resourcePlan &&
-                    isShowSmallData &&
-                    largeColor && (
-                      <div
-                        style={{ backgroundColor: largeColor || 'white' }}
-                        className="w-2 h-2 rounded-full flex-shrink-0"></div>
-                    )}
+                  {!isEvent && resourcePlan && isShowSmallData && (
+                    <div
+                      style={{ backgroundColor: largeColor || '#BFBFBF' }}
+                      className="w-2 h-2 rounded-full flex-shrink-0"></div>
+                  )}
                   {!isShowSmallData ? (
                     <p>...</p>
                   ) : (
@@ -674,7 +681,7 @@ const TaskCard = ({
                             : '0'
                           : '0',
                       }}
-                      className="font-bold  text-sm break-all truncate  w-full   ">
+                      className="font-bold  text-sm break-all truncate min-h-5  w-full   ">
                       {event?.event instanceof Error
                         ? ''
                         : event?.event?.title || event?.event?.title != ''
@@ -683,43 +690,6 @@ const TaskCard = ({
                     </p>
                   )}
                 </div>
-                {/* TODO: UPDATE UI if item too small */}
-                {/* <div className="text-[11px] flex gap-2">
-                  <p
-                    style={{
-                      width: resourcePlan ? '100%' : 'fit-content',
-                    }}
-                    className=" h-full w-fit">
-                    {!isCalculation ? (
-                      event.timeText && isEvent ? (
-                        <p className="w-[80%] break-all">
-                          {extendedPropsData &&
-                            convertToTimeString(
-                              extendedPropsData.planStartDate,
-                            )}
-                          ~
-                          {extendedPropsData &&
-                            convertToTimeString(
-                              extendedPropsData.planEndDate,
-                            )}{' '}
-                        </p>
-                      ) : (
-                        event.timeText &&
-                        differentTime &&
-                        event.timeText.replace(' - ', ' ~')
-                      )
-                    ) : (
-                      <>
-                        {convertToTimeString(`${event.event.start}`)} ~ 計測中
-                      </>
-                    )}
-                  </p>
-                  {!resourcePlan && !isCalculation && (
-                    <p className="break-all">
-                      {getMinuteDifference(event.timeText)}分
-                    </p>
-                  )}
-                </div> */}
               </div>
             )}
 
