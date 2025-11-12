@@ -1,6 +1,6 @@
 from django.db import transaction
 from django.db.models import Q
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import viewsets
 from rest_framework.exceptions import ValidationError
 
@@ -19,7 +19,6 @@ from roles.serializers import (
     RolePermissionSerializer,
 )
 from roles.utils import create_role_with_permissions
-from users.constants import RoleTypes
 from users.models import LoginToken, Role
 from base.apis import BaseAPIViewSet
 from base.messages import ERROR_MESSAGES
@@ -163,23 +162,26 @@ class RoleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             )
 
         if instance.users.exists():
-            normal_role = Role.objects.filter(
-                name=RoleTypes.GENERAL.value
-            ).first()
-            for user in instance.users.all():
-                if user.roles.count() == 1:
-                    user.roles.add(
-                        normal_role,
-                        through_defaults={"company_id": user.company_id},
-                    )
-                # Block access token for logged user
-                LoginToken.objects.filter(user=user).delete()
-                send_web_socket_event(
-                    {
-                        "is_change_role": True,
-                        "action": WebSocketEventType.CHANGE_ROLE.value,
-                    },
-                    user=user,
-                )
+            raise ValidationError({"detail": ERROR_MESSAGES["cannot_delete"]})
+        instance.soft_delete()
+        return self.response_deleted()
 
-        return super().perform_destroy(instance)
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("is_hidden", type=bool),
+        ]
+    )
+    def list(self, request):
+        """
+        Return list of roles
+        """
+        queryset = self.filter_queryset(self.get_queryset())
+
+        if request.query_params.get("is_hidden", "").lower() == "true":
+            queryset = queryset.filter(deleted_at__isnull=False)
+        else:
+            queryset = queryset.filter(deleted_at__isnull=True)
+
+        return self.response_pagination(
+            request, queryset.distinct(), RolePermissionSerializer
+        )

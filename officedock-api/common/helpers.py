@@ -63,7 +63,10 @@ def get_roles(company):
     Get list roles by company
     """
     roles = (
-        Role.objects.filter(Q(system_role=True) | Q(company_id=company.id))
+        Role.objects.filter(
+            (Q(system_role=True) | Q(company_id=company.id))
+            & Q(deleted_at__isnull=True)
+        )
         .order_by("id")
         .all()
     )
