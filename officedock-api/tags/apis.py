@@ -118,9 +118,9 @@ class TagViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         queryset = self.filter_queryset(self.get_queryset())
 
         if request.query_params.get("is_hidden", "").lower() == "true":
-            queryset = queryset.filter(is_hidden=True)
+            queryset = queryset.filter(deleted_at__isnull=False)
         else:
-            queryset = queryset.filter(is_hidden=False)
+            queryset = queryset.filter(deleted_at__isnull=True)
 
         if organization_ids := request.query_params.get("organization_ids"):
             if ids := split_id_from_string(organization_ids):
@@ -129,3 +129,7 @@ class TagViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         return self.response_pagination(
             request, queryset.distinct(), TagSerializer
         )
+
+    def perform_destroy(self, instance):
+        instance.soft_delete()
+        return self.response_deleted()
