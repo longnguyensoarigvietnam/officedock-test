@@ -365,13 +365,21 @@
   left: 52%; /* Always aligned to the right */
 }
 /* Ensure events don't overlap */
+.schedule-custom .fc-timegrid-event-harness {
+  transform: scaleX(0.85);
+  transform-origin: center;
+}
+.schedule-custom .fc-resourceTimeGridDay-view .fc-timegrid-col-events {
+  left: 21px !important;
+}
 .schedule-custom .fc-event {
   z-index: 2; /* Ensure event sits above the divider */
-  padding: 0 12px 0 !important;
+  /* padding: 0 12px 0 !important; */
+  left: 0 !important;
 }
 .schedule-custom .fc-timeGridWeek-view .fc-event {
   z-index: 2; /* Ensure event sits above the divider */
-  padding: 0 18px 0 !important;
+  /* padding: 0 18px 0 !important; */
   left: 0 !important;
 }
 .schedule-custom .hour-line::after {
@@ -660,7 +668,7 @@
   padding-left: 12px;
 }
 .schedule-custom .fc-resourceTimeGridDay-view .fc-event-main {
-  left: 10px !important;
+  /* left: 10px !important; */
   top: 5px;
 }
 .schedule-custom .fc-daygrid-day-frame .fc-event-main {
@@ -686,4 +694,8 @@
 }
 .schedule-custom .fc-day-header {
   font-size: 20px !important;
+}
+.schedule-custom .fc-event .icon-circle {
+  transform: scaleX(1.1765);
+  transform-origin: center;
 }

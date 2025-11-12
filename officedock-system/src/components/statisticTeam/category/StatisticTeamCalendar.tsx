@@ -902,7 +902,7 @@ function StatisticTeamCalendar() {
                     </div>
                   </div>
                   <div className="mt-[30px] h-8"></div>
-                  <div className="flex gap-[10px] mt-[60px]">
+                  <div className="flex gap-[10px] mt-[30px]">
                     <Button
                       variant="outline"
                       onClick={handleReset}
