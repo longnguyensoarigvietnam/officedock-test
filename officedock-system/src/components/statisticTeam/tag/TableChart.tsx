@@ -546,7 +546,7 @@ const TableChart = ({
                   info.row.original.type === EventCalendarType.TASK
                 }
                 options={
-                  selectedOrganization?.label === ALL_TEAM_STATISTIC
+                  (selectedOrganization?.label === ALL_TEAM_STATISTIC
                     ? rowData.organizationType !==
                       OrganizationStatisticType.CALENDAR
                       ? listOptionAllTeamOrg?.filter(
@@ -557,11 +557,34 @@ const TableChart = ({
                       : listOptionAllTeamOrg?.filter(
                           (org) => org.label !== ALL_TEAM_STATISTIC,
                         )
-                    : listOptionsOrganization.filter(
+                    : listOptionsOrganization?.filter(
                         (org) =>
                           org.label !== ALL_TEAM_STATISTIC &&
                           org?.type !== OrganizationStatisticType.CALENDAR,
                       )
+                  )?.length
+                    ? selectedOrganization?.label === ALL_TEAM_STATISTIC
+                      ? rowData.organizationType !==
+                        OrganizationStatisticType.CALENDAR
+                        ? listOptionAllTeamOrg?.filter(
+                            (org) =>
+                              org.label !== ALL_TEAM_STATISTIC &&
+                              org?.type !== OrganizationStatisticType.CALENDAR,
+                          )
+                        : listOptionAllTeamOrg?.filter(
+                            (org) => org.label !== ALL_TEAM_STATISTIC,
+                          )
+                      : listOptionsOrganization?.filter(
+                          (org) =>
+                            org.label !== ALL_TEAM_STATISTIC &&
+                            org?.type !== OrganizationStatisticType.CALENDAR,
+                        )
+                    : [
+                        {
+                          label: rowData.organizationName,
+                          value: rowData.organization,
+                        },
+                      ]
                 }
                 isDisabled={
                   rowData.organizationType ===

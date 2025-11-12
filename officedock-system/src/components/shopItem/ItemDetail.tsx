@@ -42,7 +42,7 @@ const ItemGroupCard = ({
   return (
     <>
       <div
-        className={`flex items-center justify-between px-4 py-4 hover:bg-[#F6F6F6] group rounded-[20px] ${isCheckAllOwned && 'opacity-50'}`}>
+        className={`flex items-center justify-between gap-5  px-4 py-4 hover:bg-[#F6F6F6] group rounded-[20px] ${isCheckAllOwned && 'opacity-50'}`}>
         {/* Left: icon + tên */}
         <div className={`flex gap-4 items-center ${isHasBuy && 'opacity-50'}`}>
           <div className="flex w-[72px] h-[72px] items-center justify-center bg-white rounded-[10px] border border-[#D2DBE1]">
@@ -63,7 +63,7 @@ const ItemGroupCard = ({
         </div>
 
         {/* Right: colors + price */}
-        <div className="flex items-center justify-end gap-[42px] flex-grow flex-shrink-0">
+        <div className="flex items-center justify-between flex-shrink-0  gap-[32px] flex-grow">
           <div className="grid grid-cols-5 gap-[3px] w-[132px] flex-shrink-0">
             {group.items.map((item) => {
               return selectedItem?.id === item.id ? (
