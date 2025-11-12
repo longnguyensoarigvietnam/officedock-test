@@ -650,7 +650,7 @@ const PercentageTags = ({
                           isClickTooltip
                           hasHover={hasHover != EventWorkCategory.SMALL}
                           onActionHover={() =>
-                            setHasHover(EventWorkCategory.LARGE)
+                            setHasHover(EventWorkCategory.SMALL)
                           }
                         />
                       ) : (

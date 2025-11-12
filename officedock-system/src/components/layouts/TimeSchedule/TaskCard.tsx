@@ -730,7 +730,7 @@ const TaskCard = ({
                     <ImageRound
                       src={`/icons/lock.svg`}
                       name="icon lock"
-                      className={` w-3 h-3 relative   top-[-5px] `}
+                      className={` w-3 h-3 relative   top-[-5px] icon-circle `}
                     />
                   )}
                   <div
@@ -744,7 +744,7 @@ const TaskCard = ({
                           `${event.event.end}`,
                         ) && isOptionZoomSchedule === '01:00:00'
                       }
-                      className={`!w-fit  !h-fit  z-[30]   hover:cursor-pointer`}
+                      className={`!w-fit  !h-fit  z-[30] icon-circle   hover:cursor-pointer`}
                       onClick={handleStartStopTask}
                     />
                   </div>
