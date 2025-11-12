@@ -351,17 +351,17 @@ const ListTags = () => {
     });
   };
 
-  // Hide tag
-  const handleToggleHideTag = async (data: Tags) => {
+  // Restore tag
+  const handleRestoreTag = async (tagId: number) => {
     setIsLoading(true);
-    return await api.patch(apiRouters.TAG_DETAIL(String(data.id)), {
-      isHidden: data.isHidden,
+    return await api.patch(apiRouters.TAG_DETAIL(String(tagId)), {
+      deletedAt: null,
     });
   };
 
-  const { mutate: toggleHideTag } = useMutation(
-    'handleToggleHideTag',
-    handleToggleHideTag,
+  const { mutate: restoreTag } = useMutation(
+    'handleRestoreTag',
+    handleRestoreTag,
     {
       onSuccess: () => {
         showToast({
@@ -377,13 +377,6 @@ const ListTags = () => {
       },
     },
   );
-
-  const handleConfirmToggleHideTag = (data: Tags) => {
-    toggleHideTag({
-      id: data.id,
-      isHidden: Boolean(data.isHidden),
-    });
-  };
 
   // Delete tag
   const handleOpenDeleteTagModal = (tag: Tags) => {
@@ -444,7 +437,9 @@ const ListTags = () => {
     <Fragment>
       <div className="flex justify-between">
         <div className="flex items-center gap-[10px]">
-          <p className="text-black font-medium text-[26px] leading-[1]">タグ管理</p>
+          <p className="text-black font-medium text-[26px] leading-[1]">
+            タグ管理
+          </p>
           {filterRequest.isHidden ? (
             <div className="flex items-center">
               <ImageRound
@@ -646,7 +641,7 @@ const ListTags = () => {
                 <tr key={index}>
                   <td className="w-[500px] text-black max-w-[500px] border-r-[1px] border-r-[#D2DBE1]">
                     <div className="flex justify-between items-center">
-                      <p className="text-left max-w-[calc(100%_-_70px)] break-all text-[16px] font-medium">
+                      <p className="text-left max-w-[calc(100%_-_50px)] break-all text-[16px] font-medium">
                         {element.name}
                       </p>
                       <div className="flex gap-2 justify-end items-center">
@@ -666,22 +661,22 @@ const ListTags = () => {
                         )}
                         {element.actions?.update ? (
                           <div
-                            onClick={() => {
-                              handleConfirmToggleHideTag({
-                                id: element.id,
-                                isHidden: !element.isHidden,
-                              });
-                            }}>
+                            onClick={() =>
+                              element.deletedAt
+                                ? restoreTag(Number(element.id))
+                                : deleteTag(Number(element.id))
+                            }>
                             <ImageRound
                               name="Hide"
                               src={'/icons/dark-close-eye.svg'}
-                              className={`w-[16px] h-[13px] hover:cursor-pointer ${!element.isHidden && 'opacity-30'}`}
+                              className={`w-[16px] h-[13px] hover:cursor-pointer ${!element.deletedAt && 'opacity-30'}`}
                             />
                           </div>
                         ) : (
                           <div className="w-[16px]"></div>
                         )}
-                        {element.actions?.delete ? (
+                        {/* TODO: Temporarily comment these lines of code for delete feat to wait for client's reply */}
+                        {/* {element.actions?.delete ? (
                           <ImageRound
                             name="Delete"
                             src={'/icons/delete-gray.svg'}
@@ -690,7 +685,7 @@ const ListTags = () => {
                           />
                         ) : (
                           <div className="w-[12px]"></div>
-                        )}
+                        )} */}
                       </div>
                     </div>
                   </td>

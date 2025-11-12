@@ -146,7 +146,7 @@ const ActionsTagModal = ({
               <></>
             ) : (
               <ImageRound
-                className="mt-1 w-[14px] h-[17px] hover:cursor-pointer"
+                className="mt-1 w-[14px] h-[17px] hover:cursor-pointer hidden"
                 src="/icons/delete-event.svg"
                 name="Delete icon"
                 onClick={handleDeleteTag}
