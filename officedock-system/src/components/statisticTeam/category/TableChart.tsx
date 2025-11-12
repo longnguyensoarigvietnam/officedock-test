@@ -515,14 +515,20 @@ const TableChart = ({
                 className="statistic-custom border-none shadow-none w-[100%] h-[30px] !bg-[#EBF1F7] rounded-md"
                 defaultValue={
                   selectedOrganization?.value === ALL_TEAM_STATISTIC
-                    ? listOptionAllTeamOrg &&
-                      listOptionAllTeamOrg.find(
-                        (element) => element.value === rowData.organization,
-                      )
-                    : listOptionsOrganization &&
-                      listOptionsOrganization.find(
-                        (element) => element.value === rowData.organization,
-                      )
+                    ? (listOptionAllTeamOrg &&
+                        listOptionAllTeamOrg.find(
+                          (element) => element.value === rowData.organization,
+                        )) || {
+                        label: rowData.organizationName,
+                        value: rowData.organization,
+                      }
+                    : (listOptionsOrganization &&
+                        listOptionsOrganization.find(
+                          (element) => element.value === rowData.organization,
+                        )) || {
+                        label: rowData.organizationName,
+                        value: rowData.organization,
+                      }
                 }
                 placeholder=""
                 showArrow={
