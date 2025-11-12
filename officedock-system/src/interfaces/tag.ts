@@ -5,8 +5,8 @@ export interface Tags {
   id?: number;
   name?: string;
   organizations?: Organizations[];
-  isHidden?: boolean;
-  createdAt?: Date | string;
+  deletedAt?: Date | string | null;
+  createdAt?: Date | string | null;
   actions?: {
     update: boolean;
     delete: boolean;

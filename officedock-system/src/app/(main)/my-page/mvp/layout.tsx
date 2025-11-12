@@ -57,7 +57,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <ImageRound
                 name="MVP Crown"
                 src={'/icons/mvp-crown.svg'}
-                className="w-[26px] h-[26px] ml-5 cursor-pointer"
+                className="w-[26px] h-[26px] ml-5"
               />
               <p className="text-[22px] font-medium ml-[10px]">MVP</p>
             </div>

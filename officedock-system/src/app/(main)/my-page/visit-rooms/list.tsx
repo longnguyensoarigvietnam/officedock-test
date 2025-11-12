@@ -57,7 +57,7 @@ const RoomList = () => {
                   <ImageRound
                     name="Visit room icon"
                     src={'/icons/visit-room.svg'}
-                    className={`w-[26px] h-[26px]  cursor-pointer`}
+                    className={`w-[26px] h-[26px]`}
                   />
                   <p className="text-[22px] font-medium">
                     他の人の部屋へ出かける

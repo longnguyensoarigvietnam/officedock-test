@@ -888,9 +888,13 @@ const EditActualDurationsForm = () => {
                           classNameOption="!text-sm"
                           classNameTextData="!text-sm"
                           options={unSelectedTagIdsOptions}
-                          selectedOption={dataOptionsTagIds.find(
-                            (element) => element.value == value?.value,
-                          )}
+                          selectedOption={
+                            value.value
+                              ? dataOptionsTagIds.find(
+                                  (element) => element.value == value?.value,
+                                ) || value
+                              : undefined
+                          }
                           onChange={(option: OptionDropdownType) => {
                             onChange(option);
                             handleSelectedTagIds(index, option);
