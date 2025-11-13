@@ -26,13 +26,13 @@ class UserAuthService:
         """
 
         if is_admin:
-            user = User.objects.filter(
+            user = User.active_objects.filter(
                 email=serializer_data["email"],
                 roles__name=RoleTypes.OPERATION_ADMIN.value,
             ).first()
         else:
             user = (
-                User.objects.filter(
+                User.active_objects.filter(
                     Q(email=serializer_data["username"])
                     | Q(username=serializer_data["username"])
                 )
@@ -97,7 +97,7 @@ class UserAuthService:
         # Send OTP code to user email
         email_service = MailService()
         email_service.send_system_login_otp(
-            user.profile.full_name, user.two_factor_auth_email, otp_code
+            user.full_name, user.two_factor_auth_email, otp_code
         )
         user_verification.save()
 
@@ -125,7 +125,7 @@ class UserAuthService:
         # Send OTP code to user email
         email_service = MailService()
         email_service.send_system_login_otp(
-            user.profile.full_name, user.two_factor_auth_email, otp_code
+            user.full_name, user.two_factor_auth_email, otp_code
         )
         user_verification.save()
 
@@ -245,12 +245,12 @@ class UserAuthService:
         email = serializer_data["email"]
 
         if is_admin:
-            user = User.objects.filter(
+            user = User.active_objects.filter(
                 email=email, roles__name=RoleTypes.OPERATION_ADMIN.value
             ).first()
         else:
             user = (
-                User.objects.filter(email=email)
+                User.active_objects.filter(email=email)
                 .exclude(roles__name=RoleTypes.OPERATION_ADMIN.value)
                 .first()
             )
@@ -262,7 +262,7 @@ class UserAuthService:
 
         mail_service = MailService()
         mail_service.send_system_forgot_password(
-            user.profile.full_name, email, reset_password.token, is_admin
+            user.full_name, email, reset_password.token, is_admin
         )
 
     def reset_password(self, serializer_data):

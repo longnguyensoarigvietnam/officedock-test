@@ -533,7 +533,7 @@ class OrganizationMemberSerializer(BaseOrganizationSerializer):
         """Get users in organization"""
         from common.serializers import CreationDataUserSerializer
 
-        users = obj.users.all().order_by("created_at")
+        users = obj.users.filter(deleted_at__isnull=True).order_by("created_at")
 
         if search := self.context.get("search"):
             users = users.filter(profile__full_name__icontains=search)

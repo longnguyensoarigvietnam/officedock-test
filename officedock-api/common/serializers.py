@@ -17,17 +17,9 @@ class CreationDataUserSerializer(BaseUserSerializer):
     Serializer for creation data person in charge.
     """
 
-    full_name = serializers.SerializerMethodField()
-
     class Meta:
         model = User
-        fields = ["id", "full_name", "avatar_color", "avatar"]
-
-    def get_full_name(self, obj):
-        """
-        Return full name of user.
-        """
-        return obj.profile.full_name
+        fields = ["id", "full_name", "avatar_color", "avatar", "deleted_at"]
 
 
 class CreationDataOrganizationSerializer(BaseOrganizationSerializer):
@@ -118,7 +110,14 @@ class CreationDataUserWithMainOrganizationSerializer(
 
     class Meta:
         model = User
-        fields = ["id", "full_name", "avatar_color", "avatar", "organizations"]
+        fields = [
+            "id",
+            "full_name",
+            "avatar_color",
+            "avatar",
+            "organizations",
+            "deleted_at",
+        ]
 
     def get_organizations(self, obj):
         """Return main organization of user"""

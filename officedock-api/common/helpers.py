@@ -11,7 +11,10 @@ from common.serializers import (
     CreationDataUserSerializer,
     CreationDataUserWithMainOrganizationSerializer,
 )
-from common.utils import transform_statistic_categories
+from common.utils import (
+    filter_include_deleted_user,
+    transform_statistic_categories,
+)
 from companies.constants import CompanyStatus
 from companies.serializers import CompanySerializer
 from mvp_votes.constants import MVPVoteTypes
@@ -74,14 +77,18 @@ def get_roles(company):
     return RoleSerializer(roles, many=True).data
 
 
-def get_members(company, organization=None):
+def get_members(company, organization=None, request=None):
     """
     Get list users of company
     """
     if organization:
-        users = organization.users.order_by("created_at")
+        users = organization.users.filter(
+            filter_include_deleted_user(request)
+        ).order_by("created_at")
     else:
-        users = company.users.order_by("created_at")
+        users = company.users.filter(
+            filter_include_deleted_user(request)
+        ).order_by("created_at")
 
     return CreationDataUserWithMainOrganizationSerializer(users, many=True).data
 

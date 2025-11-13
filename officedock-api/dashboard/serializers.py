@@ -538,7 +538,7 @@ class ActualDurationListSerializer(serializers.ModelSerializer):
 
     def get_staffs(self, obj):
         """Get staffs of task or event"""
-        return [obj.user.profile.full_name] if obj.user else []
+        return [obj.user.full_name] if obj.user else []
 
 
 class ActualDurationDetailSerializer(ActualDurationListSerializer):

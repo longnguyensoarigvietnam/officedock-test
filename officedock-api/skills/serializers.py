@@ -513,8 +513,11 @@ class BaseOrganizationWithUserSkillMapSerializer(BaseOrganizationSerializer):
         Handle check user with skill map
         """
         data = []
-        skills = obj.skills.filter(parent__isnull=True).all()
+
+        # Get data in fetched (no query)
+        skills = obj.skills.all()
         users = obj.users.all()
+
         for user in users:
             user_data = CreationDataUserWithMainOrganizationSerializer(
                 user

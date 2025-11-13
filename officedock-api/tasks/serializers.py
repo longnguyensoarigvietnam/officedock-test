@@ -950,7 +950,9 @@ class TaskTeamdockSerializer(BaseUserSerializer):
             "avatar_color",
             "avatar",
             "profile",
+            "full_name",
             "status",
+            "deleted_at",
         ]
 
     def get_status(self, obj):

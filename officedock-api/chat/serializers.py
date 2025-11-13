@@ -27,18 +27,18 @@ class CreationDataUserForChatSerializer(BaseUserSerializer):
     Serializer for creation data user for chat.
     """
 
-    full_name = serializers.SerializerMethodField()
     organizations = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ["id", "full_name", "avatar_color", "avatar", "organizations"]
-
-    def get_full_name(self, obj):
-        """
-        Return full name of user.
-        """
-        return obj.profile.full_name
+        fields = [
+            "id",
+            "full_name",
+            "avatar_color",
+            "avatar",
+            "organizations",
+            "deleted_at",
+        ]
 
     def get_organizations(self, obj):
         """
@@ -173,12 +173,10 @@ class ChatRoomDetailSerializer(ChatRoomSerializer):
         user = self.context.get("request").user
         match obj.type:
             case ChatRoomTypes.SELF.value:
-                room_name = user.profile.full_name
+                room_name = user.full_name
             case ChatRoomTypes.PRIVATE.value:
                 receive_user = obj.participants.exclude(id=user.id).first()
-                room_name = (
-                    receive_user.profile.full_name if receive_user else None
-                )
+                room_name = receive_user.full_name if receive_user else None
             case __:
                 room_name = obj.name
 
@@ -668,14 +666,12 @@ class ChatRoomsParticipantsSerializer(serializers.ModelSerializer):
 
         match chat_room.type:
             case ChatRoomTypes.SELF.value:
-                room_name = obj.user.profile.full_name
+                room_name = obj.user.full_name
             case ChatRoomTypes.PRIVATE.value:
                 receive_user = chat_room.participants.exclude(
                     id=obj.user.id
                 ).first()
-                room_name = (
-                    receive_user.profile.full_name if receive_user else None
-                )
+                room_name = receive_user.full_name if receive_user else None
             case __:
                 room_name = chat_room.name
 
@@ -788,3 +784,33 @@ class ChunkFileSerializer(serializers.ModelSerializer):
                 )
 
         return attrs
+
+
+"""
+Serializer for build payload message
+"""
+
+
+class UserPayloadMsgSerializer(BaseUserSerializer):
+    """
+    Serializer for user payload message.
+    """
+
+    organizations = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "full_name",
+            "avatar_color",
+            "avatar",
+            "organizations",
+            "deleted_at",
+        ]
+
+    def get_organizations(self, obj):
+        """
+        Get the main organization.
+        """
+        return self.context.get("organizations")

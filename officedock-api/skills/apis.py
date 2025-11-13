@@ -1,5 +1,5 @@
 from django.db import transaction
-from django.db.models import Q, Case, When, Value, IntegerField
+from django.db.models import Q, Case, Prefetch, When, Value, IntegerField
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, OpenApiParameter
@@ -14,6 +14,7 @@ from base.permissions import ActionPermission
 from chat.models import ChatMessage
 from common.serializers import CreationDataUserWithMainOrganizationSerializer
 from common.utils import (
+    filter_include_deleted_user,
     get_user_organizations_with_descendants,
     split_id_from_string,
 )
@@ -270,30 +271,48 @@ class ManageSkillMapViewSet(
                 items=data,
             )
 
-    @extend_schema(parameters=[OpenApiParameter("organization_id", type=int)])
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("organization_id", type=int),
+            OpenApiParameter("has_include_deleted_user", type=bool),
+        ]
+    )
     def list(self, request, *args, **kwargs):
         """
         Handle get list skill map
         """
-        organization_id = request.query_params.get("organization_id", None)
         user = request.user
-        # FIXME: Check role permissions for get list organizations
-        organizations = Organization.objects.filter(
-            company_id=user.company_id,
-        ).order_by("-created_at")
+        organization_id = request.query_params.get("organization_id")
+
+        user_qs = (
+            User.objects.filter(filter_include_deleted_user(request))
+            .select_related("profile")
+            .order_by("id")
+        )
+        organizations = (
+            Organization.objects.filter(company_id=user.company_id)
+            .prefetch_related(
+                Prefetch("users", queryset=user_qs),
+                Prefetch(
+                    "skills",
+                    queryset=Skill.objects.filter(parent__isnull=True).order_by(
+                        "id"
+                    ),
+                ),
+            )
+            .order_by("-created_at")
+        )
+
         if organization_id:
-            organizations = organizations.filter(id=organization_id).all()
+            organizations = organizations.filter(id=organization_id)
 
         # Handle filter data by role permissions
         organizations = self.filter_queryset(organizations)
 
-        data = []
-        for organization in organizations:
-            data.append(
-                BaseOrganizationWithUserSkillMapSerializer(organization).data
-            )
-
-        return self.response_ok(data)
+        serializer = BaseOrganizationWithUserSkillMapSerializer(
+            organizations, many=True
+        )
+        return self.response_ok(serializer.data)
 
 
 @extend_schema(tags=["System > Skill Map"])

@@ -185,6 +185,8 @@ class User(AbstractBaseUser, BaseModel, PermissionsMixin):
 
     @property
     def full_name(self):
+        if self.deleted_at:
+            return f"{self.profile.full_name}（削除済）"
         return self.profile.full_name
 
     def save(self, *args, **kwargs):
@@ -620,7 +622,7 @@ class ResetPassword(BaseModel):
 
         jwt_service = JWTService()
         token_decode = jwt_service.decode_token(token)
-        user = User.objects.filter(pk=token_decode.get("id")).first()
+        user = User.active_objects.filter(pk=token_decode.get("id")).first()
         if not user:
             return None
 
