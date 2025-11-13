@@ -18,7 +18,7 @@ const MainRootLayout = async ({ children }: { children: React.ReactNode }) => {
       <TermAgreeModal />
       <div className={`relative h-screen flex flex-col min-w-[1280px]  w-full`}>
         <Header />
-        <div className="flex-grow overflow-x-hidden flex w-full 2xl:mt-[70px] h-[calc(100vh_-_70px)]   bg-[#E6F3FB]">
+        <div className="flex-grow overflow-x-hidden flex w-full 2xl:mt-[70px] h-[calc(100vh_-_70px)] bg-transparent">
           <Sidebar />
           <div className="w-full">{children}</div>
         </div>

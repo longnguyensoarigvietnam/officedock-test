@@ -25,7 +25,7 @@ import ErrorMessage from '@components/common/ErrorMessage';
 import Checkbox from '@components/common/Checkbox';
 import Drawer from '@components/common/Drawers';
 
-import { OptionDropdownType } from '@interfaces/common';
+import { CreationDataCommon, OptionDropdownType } from '@interfaces/common';
 import {
   EventEditFormData,
   EventFormData,
@@ -68,6 +68,7 @@ import { apiRouters } from '@constants/routers';
 import {
   addHoursToDate,
   addTimeToDate,
+  combineDateAndTime,
   convertDateToStartDate,
   convertToMinutes,
   convertToTimeString,
@@ -154,7 +155,7 @@ const ActionsEventModal = ({
 
   // Creation data
   const [dashboardMemberList, setDashboardMemberList] = useState<Profile[]>([]);
-  useCreationDataCommon({
+  const { creationDataCommonData } = useCreationDataCommon({
     options: {
       get_all_members: true,
       get_organization_with_users: true,
@@ -201,7 +202,12 @@ const ActionsEventModal = ({
           })),
         ]);
       }
-      setDataOptionsParticipants([...eventOrganizations, ...eventMembers]);
+
+      if (defaultStartDate || dataEvent) {
+        handleValidateUser(data);
+      } else {
+        setDataOptionsParticipants([...eventOrganizations, ...eventMembers]);
+      }
 
       if (data?.eventLocations) {
         setDataOptionsEventLocation([
@@ -917,6 +923,99 @@ const ActionsEventModal = ({
     });
   };
 
+  const handleValidateUser = (dataCommon?: CreationDataCommon) => {
+    const creationDataCommonDataCustom = creationDataCommonData || dataCommon;
+    if (!creationDataCommonDataCustom) return;
+
+    const repeatType = watch('repeatType') as OptionDropdownType | undefined;
+
+    const startDateStr = watch('startDate');
+    const startTimeStr = watch('startTime');
+
+    // If startDate is missing → return
+    if (!startDateStr) return;
+
+    // build eventStart
+    let eventStart: Date | null = null;
+    if (startDateStr && startTimeStr) {
+      eventStart = new Date(combineDateAndTime(startDateStr, startTimeStr));
+    } else {
+      eventStart = startDateStr;
+    }
+
+    const participantIds = watch('participantIds') || [];
+
+    let eventMembers: EventParticipant[] = [];
+    let eventOrganizations: EventParticipant[] = [];
+
+    // --- Members ---
+    if (creationDataCommonDataCustom.allMembers) {
+      let rawMembers = creationDataCommonDataCustom.allMembers;
+
+      if (
+        repeatType?.label === TaskRepetitiveType.ONCE &&
+        eventStart instanceof Date
+      ) {
+        rawMembers = rawMembers.filter((member) => {
+          if (!member.deletedAt) return true;
+
+          const deletedAtDate = new Date(member.deletedAt);
+          const isValid = deletedAtDate > eventStart; // true = keep
+
+          // If invalid → remove from participantIds if existing
+          if (!isValid && participantIds.includes(member.id)) {
+            setValue(
+              'participantIds',
+              participantIds.filter((id) => id !== member.id),
+            );
+          }
+
+          return isValid;
+        });
+      }
+
+      eventMembers = rawMembers.map((member) => ({
+        id: `${EventParticipantType.USER}-${member.id}`,
+        fullName: member.fullName,
+        type: EventParticipantType.USER,
+        mainOrganization: member.organizations ? member.organizations.name : '',
+        color: member.avatarColor || '',
+        avatarUrl: member.avatar || '',
+      }));
+    }
+
+    // --- Orgs ---
+    if (creationDataCommonDataCustom.organizationUsers) {
+      const rawOrgs = creationDataCommonDataCustom.organizationUsers;
+
+      eventOrganizations = rawOrgs.map((org) => ({
+        id: `${EventParticipantType.ORGANIZATION}-${org.id}`,
+        fullName: org.name,
+        type: EventParticipantType.ORGANIZATION,
+        userIds: org.users ? org.users.map((u) => u.id) : [],
+        color: org.iconColor || '#228CDB',
+        avatarUrl: org.icon || '',
+      }));
+
+      setDataOptionsOrganizations(
+        rawOrgs.map((org) => ({
+          value: org.id || '',
+          label: org.name,
+          userIds: org.users ? org.users.map((u) => u.id) : [],
+          iconColor: org.iconColor || '#228CDB',
+          avatarUrl: org.icon || '',
+        })),
+      );
+    }
+    setDataOptionsParticipants([...eventOrganizations, ...eventMembers]);
+  };
+  useEffect(() => {
+    if (dataEvent && creationDataCommonData) {
+      handleValidateUser();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dataEvent, creationDataCommonData]);
+
   return (
     <Drawer
       open={open}
@@ -1073,6 +1172,7 @@ const ActionsEventModal = ({
                                       shouldDirty: true,
                                     });
                                     handleConfirmCheckOverlappingLocation();
+                                    handleValidateUser();
                                   }}
                                 />
                               )}
@@ -1133,6 +1233,7 @@ const ActionsEventModal = ({
 
                                     setTime('');
                                     handleConfirmCheckOverlappingLocation();
+                                    handleValidateUser();
                                   },
                                 })}
                                 autoComplete="off"
@@ -1170,6 +1271,7 @@ const ActionsEventModal = ({
                                   //   );
                                   // }
                                   handleConfirmCheckOverlappingLocation();
+                                  handleValidateUser();
                                 }}
                               />
                             </div>
@@ -1456,6 +1558,7 @@ const ActionsEventModal = ({
                                   setValue('month', undefined, {
                                     shouldDirty: true,
                                   });
+                                  handleValidateUser();
                                 }}
                               />
                             );

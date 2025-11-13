@@ -62,6 +62,7 @@ const ListData = () => {
 
   const { listDailyReport } = useListDailyReport({
     date: formatDateServer(dataDatePicker),
+    has_include_deleted_user: 'false',
     organization_ids:
       selectedOrganization.value !== 'ALL'
         ? [selectedOrganization]

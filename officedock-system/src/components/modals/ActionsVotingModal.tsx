@@ -94,6 +94,7 @@ const ActionsVotingModal = ({
     options: {
       get_all_members: true,
       get_organization_with_users: true,
+      has_include_deleted_user: 'false',
     },
     onSuccess: (data) => {
       let eventMembers: EventParticipant[] = [];

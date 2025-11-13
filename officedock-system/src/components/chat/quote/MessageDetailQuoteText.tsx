@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 
 import ImageRound from '@components/common/ImageRound';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
@@ -11,10 +11,12 @@ import {
 
 import { Profile } from '@interfaces/user';
 import { ChatMessageResponse } from '@interfaces/chat';
+import { ChatContext } from '@providers/ChatProvider';
+import { getUserNameById } from '@utils';
 
 type Props = {
   messageDetail: ChatMessageResponse;
-  dashboardMemberList: Omit<Profile, "birthday" | "gender">[]
+  dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
   title: string;
   uuidQuote: string;
 };
@@ -26,6 +28,8 @@ const MessageDetailQuoteText = ({
   uuidQuote,
 }: Props) => {
   // Render avatar
+  const { listAllMember } = useContext(ChatContext);
+
   const renderAvatar = (senderId: number) => {
     const memberInfo = dashboardMemberList.find(
       (member) => member.id === senderId,
@@ -54,7 +58,11 @@ const MessageDetailQuoteText = ({
         <div className="flex w-full gap-2 items-baseline pb-2">
           <div className="flex w-fit  gap-2 items-baseline font-semibold text-[15px] pr-2">
             <div className="w-fit min-w-0 break-all text-[13px] text-[#77858F] whitespace-normal line-clamp-3">
-              {messageDetail.sender.fullName}
+              {messageDetail.sender.id &&
+                getUserNameById({
+                  users: listAllMember,
+                  id: messageDetail.sender.id,
+                })}
               <span className="font-medium text-xs text-[#77858F]">
                 {' '}
                 {messageDetail.sender?.organizations?.name}

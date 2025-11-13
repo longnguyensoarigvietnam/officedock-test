@@ -151,6 +151,7 @@ const ScheduleTeamBoard = () => {
       (selectedOrganization?.value as string) || organizationId || '',
     options: {
       get_organization_members: true,
+      has_include_deleted_user: 'false',
     },
     onSuccess: (data) => {
       if (data.organizationMembers) {

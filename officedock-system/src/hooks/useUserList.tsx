@@ -22,6 +22,7 @@ interface FilterProps {
   fullName?: string;
   organizationId?: string;
   role?: string;
+  is_deleted?: string;
 }
 
 interface PaginationProps {
@@ -44,10 +45,27 @@ const useUserList = (
   const getUserList = async () => {
     setIsLoading(true);
 
-    // TODO: Confirm with BE about how many and how to use param
+    const params = new URLSearchParams();
+
+    if (pagination?.page) {
+      params.append('page', String(pagination.page));
+      params.append(
+        'page_size',
+        String(pagination.pageSize || PAGINATION_PAGE_SIZE_SMALL),
+      );
+    }
+
+    if (ordering) params.append('ordering', ordering);
+    if (filter?.fullName) params.append('full_name', filter.fullName);
+    if (filter?.companyName) params.append('company_name', filter.companyName);
+    if (filter?.organizationId)
+      params.append('organization_id', String(filter.organizationId));
+    if (filter?.role) params.append('role_id', String(filter.role));
+    if (filter?.is_deleted) params.append('is_deleted', filter?.is_deleted);
+
     const apiUrl = pagination?.page
-      ? `${apiRouters.USER_LIST}?page=${pagination.page}&page_size=${pagination.pageSize || PAGINATION_PAGE_SIZE_SMALL}${ordering ? `&ordering=${ordering}` : ''}${filter?.fullName ? `&full_name=${encodeURIComponent(filter.fullName)}` : ''}${filter?.companyName ? `&company_name=${encodeURIComponent(filter.companyName)}` : ''}${filter?.organizationId ? `&organization_id=${encodeURIComponent(filter.organizationId)}` : ''}${filter?.role ? `&role_id=${encodeURIComponent(filter.role)}` : ''}`
-      : `${apiRouters.USER_LIST}`;
+      ? `${apiRouters.USER_LIST}?${params.toString()}`
+      : apiRouters.USER_LIST;
 
     const { data } = await api.get<BasePagination<User[]>>(apiUrl);
     return data;

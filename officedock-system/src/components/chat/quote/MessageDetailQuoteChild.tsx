@@ -1,4 +1,4 @@
-import { Dispatch, Fragment, SetStateAction } from 'react';
+import { Dispatch, Fragment, SetStateAction, useContext } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
@@ -44,6 +44,7 @@ import { useSessionCache } from '@providers/SessionCacheProvider';
 import {
   displayRepetitiveEventTime,
   formatWithParagraphTags,
+  getUserNameById,
   renderEventDatetimeInChat,
   renderScheduleChangeInCalendarRoom,
 } from '@utils';
@@ -56,6 +57,7 @@ import { MessageDetailQuote } from './MessageDetailQuote';
 import MessageDetailQuoteText from './MessageDetailQuoteText';
 import { DELETED_EVENT_TITLE } from '@constants/message';
 import RenderFiles from '../renderFiles/RenderFiles';
+import { ChatContext } from '@providers/ChatProvider';
 
 export type MessageDetailProps = {
   uuidList: any[];
@@ -89,6 +91,7 @@ export const MessageDetailQuoteChild = ({
 }: MessageDetailProps) => {
   const { data: session } = useSessionCache();
   const router = useRouter();
+  const { listAllMember } = useContext(ChatContext);
 
   // Render avatar
   const renderAvatar = (senderId: number) => {
@@ -459,7 +462,11 @@ export const MessageDetailQuoteChild = ({
                 <div className="flex w-full gap-2 items-baseline pb-2">
                   <div className="flex   gap-2 items-baseline font-semibold text-[15px] pr-2">
                     <div className=" min-w-0 break-all text-[13px] text-[#77858F] whitespace-normal line-clamp-3">
-                      {messageDetail.sender.fullName}
+                      {messageDetail.sender.id &&
+                        getUserNameById({
+                          users: listAllMember,
+                          id: messageDetail.sender.id,
+                        })}
                       <span className="font-medium text-xs text-[#77858F]">
                         {' '}
                         {messageDetail.sender?.organizations?.name}
@@ -533,7 +540,11 @@ export const MessageDetailQuoteChild = ({
                                 className={`text-xs font-normal bg-[#eaf8ff] !w-[100%] p-4 `}>
                                 <div className={`flex flex-col items-start`}>
                                   <p className="w-fit font-semibold text-black max-w-full break-all">
-                                    {messageDetail.sender.fullName}{' '}
+                                    {messageDetail.sender.id &&
+                                      getUserNameById({
+                                        users: listAllMember,
+                                        id: messageDetail.sender.id,
+                                      })}{' '}
                                     {EVENT_DELETED}
                                   </p>
                                   <p className="font-semibold mt-2">日時</p>
@@ -573,7 +584,11 @@ export const MessageDetailQuoteChild = ({
                                 className={`text-xs font-normal bg-[#eaf8ff] !w-[100%] p-4 `}>
                                 <div className={`flex flex-col items-start`}>
                                   <p className="w-fit font-semibold text-black max-w-full break-all">
-                                    {messageDetail.sender.fullName}{' '}
+                                    {messageDetail.sender.id &&
+                                      getUserNameById({
+                                        users: listAllMember,
+                                        id: messageDetail.sender.id,
+                                      })}{' '}
                                     {EVENT_EDITED}
                                   </p>
                                   <p className="mt-2">
@@ -641,7 +656,11 @@ export const MessageDetailQuoteChild = ({
                                     </p>
                                   ) : (
                                     <p className="mt-2 italic text-gray-600">
-                                      {messageDetail.sender.fullName}{' '}
+                                      {messageDetail.sender.id &&
+                                        getUserNameById({
+                                          users: listAllMember,
+                                          id: messageDetail.sender.id,
+                                        })}{' '}
                                       {EVENT_DELETED}
                                     </p>
                                   )}
@@ -663,7 +682,11 @@ export const MessageDetailQuoteChild = ({
                                 className={`text-xs font-normal bg-[#eaf8ff] !w-[100%] p-4 `}>
                                 <div className={`flex flex-col items-start`}>
                                   <p className="font-semibold text-black max-w-full break-all">
-                                    {messageDetail.sender.fullName}{' '}
+                                    {messageDetail.sender.id &&
+                                      getUserNameById({
+                                        users: listAllMember,
+                                        id: messageDetail.sender.id,
+                                      })}{' '}
                                     {EVENT_CREATED}
                                   </p>
                                   <p className="font-semibold mt-2">日時</p>
@@ -687,7 +710,11 @@ export const MessageDetailQuoteChild = ({
                                     </p>
                                   ) : (
                                     <p className="mt-2 italic text-gray-600">
-                                      {messageDetail.sender.fullName}{' '}
+                                      {messageDetail.sender.id &&
+                                        getUserNameById({
+                                          users: listAllMember,
+                                          id: messageDetail.sender.id,
+                                        })}{' '}
                                       {EVENT_DELETED}
                                     </p>
                                   )}
@@ -775,7 +802,11 @@ export const MessageDetailQuoteChild = ({
                       <p className="font-semibold text-sm">タスクカード</p>
                     ) : (
                       <p className="max-w-full break-all">
-                        {messageDetail.sender.fullName}{' '}
+                        {messageDetail.sender.id &&
+                          getUserNameById({
+                            users: listAllMember,
+                            id: messageDetail.sender.id,
+                          })}{' '}
                         <span className="font-medium text-xs text-[#77858F]">
                           {messageDetail.sender?.organizations?.name}
                         </span>
@@ -882,7 +913,11 @@ export const MessageDetailQuoteChild = ({
                 <div className="flex w-full gap-2 items-baseline pb-2">
                   <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
                     <p className="max-w-full break-all text-[13px] text-[#77858F]">
-                      {messageDetail.sender.fullName}{' '}
+                      {messageDetail.sender.id &&
+                        getUserNameById({
+                          users: listAllMember,
+                          id: messageDetail.sender.id,
+                        })}{' '}
                       <span className="font-medium text-xs text-[#77858F]">
                         {messageDetail.sender?.organizations?.name}
                       </span>
@@ -982,7 +1017,11 @@ export const MessageDetailQuoteChild = ({
                 <div className="flex gap-2 w-full items-baseline pb-2">
                   <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
                     <p className="max-w-full break-all text-[13px] text-[#77858F]">
-                      {messageDetail.sender.fullName}{' '}
+                      {messageDetail.sender.id &&
+                        getUserNameById({
+                          users: listAllMember,
+                          id: messageDetail.sender.id,
+                        })}{' '}
                       <span className="font-medium text-xs text-[#77858F]">
                         {messageDetail.sender?.organizations?.name}
                       </span>
@@ -1024,7 +1063,11 @@ export const MessageDetailQuoteChild = ({
                       </div>
                       <div className="flex gap-1 text-sm font-medium">
                         <p className="text-primary break-all max-w-full">
-                          {messageDetail.sender.fullName}
+                          {messageDetail.sender.id &&
+                            getUserNameById({
+                              users: listAllMember,
+                              id: messageDetail.sender.id,
+                            })}
                           <span className="text-black">
                             {messageDetail.type === MessageType.REMOVE_SCHEDULE
                               ? EVENT_DELETED

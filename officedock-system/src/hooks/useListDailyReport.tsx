@@ -13,6 +13,7 @@ import { OptionDropdownType } from '@interfaces/common';
 
 interface UseListDailyReportHooksProps {
   date: string;
+  has_include_deleted_user?: string;
   organization_ids?: OptionDropdownType[];
   onSuccess?: (success: DataListDailyType[]) => void;
   onError?: (error: AxiosError) => void;
@@ -22,6 +23,7 @@ interface UseListDailyReportHooksProps {
 const useListDailyReport = ({
   date,
   organization_ids,
+  has_include_deleted_user,
   onSuccess,
   onError,
   onSettled,
@@ -33,7 +35,21 @@ const useListDailyReport = ({
   // Handle call API get list daily report
   const getListDailyReport = async () => {
     setIsLoading(true);
-    const apiUrl = `${apiRouters.STAT_DATA}?date=${date}${organization_ids ? `&organization_ids=${organization_ids.map((item) => item.value).join(',')}` : ''}`;
+
+    const params = new URLSearchParams();
+    params.append('date', date);
+
+    if (organization_ids?.length) {
+      params.append(
+        'organization_ids',
+        organization_ids.map((item) => item.value).join(','),
+      );
+    }
+    if (has_include_deleted_user) {
+      params.append('has_include_deleted_user', has_include_deleted_user);
+    }
+
+    const apiUrl = `${apiRouters.STAT_DATA}?${params.toString()}`;
 
     const { data } = await api.get<DataListDailyType[]>(apiUrl);
     return data;

@@ -9,20 +9,19 @@ import ImageRound from '@components/common/ImageRound';
 import { Table, TableBody, TableHeader } from '@components/common/Table';
 import Pagination from '@components/common/Pagination';
 import Dropdown from '@components/common/Dropdown';
-import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 import InputSearch from '@components/common/InputSearch';
+import ConfirmRestoreModal from '@components/modals/ConfirmRestoreModal';
 
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
-import { RoleStateContext } from '@providers/RoleProvider';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { apiRouters, pageRouters } from '@constants/routers';
 import { PermissionsSystem } from '@constants/enums';
 import { NO_DATA_AVAILABLE, PAGE_SIZE_OPTIONS } from '@constants';
 import {
-  ERROR_DELETE_MESSAGE,
-  SUCCESS_DELETE_MESSAGE,
+  ERROR_RESTORE_MESSAGE,
+  SUCCESS_RESTORE_MESSAGE,
 } from '@constants/message';
 
 import useDebounceText from '@hooks/useDebounceText';
@@ -35,13 +34,13 @@ import { hasPermissionInArray } from '@utils';
 
 import api from '@base/api';
 
-const ListRoles = () => {
-  const [openConfirmDeleteModal, setOpenConfirmDeleteModal] = useState(false);
+const ListRolesDelete = () => {
+  const [openConfirmRestoreModal, setOpenConfirmRestoreModal] = useState(false);
   const [dataRoles, setDataRoles] = useState<RoleDetail[]>([]);
 
   const [pageSize, setPageSize] = useState<number>(10);
   const [totalPages, setTotalPages] = useState<number>(1);
-  const [selectedRoleToDelete, setSelectedRoleToDelete] =
+  const [selectedRoleToRestore, setSelectedRoleToRestore] =
     useState<RoleDetail | null>(null);
 
   const [searchRoleName, setSearchRoleName] = useState('');
@@ -53,7 +52,6 @@ const ListRoles = () => {
   });
 
   const { setIsLoading } = useContext(LoadingContext);
-  const { setDataRoleDetail } = useContext(RoleStateContext);
   const { data: session } = useSessionCache();
   const { showToast } = useToast();
 
@@ -72,7 +70,7 @@ const ListRoles = () => {
     },
     {
       name: debouncedParams.search,
-      is_hidden: 'false',
+      is_hidden: 'true',
     },
   );
   const showErrorToast = useErrorToast();
@@ -84,28 +82,30 @@ const ListRoles = () => {
     }
   }, [roleList]);
 
-  // Delete role
-  const handleOpenDeleteRoleModal = (role: RoleDetail) => {
-    setOpenConfirmDeleteModal(true);
-    setSelectedRoleToDelete(role);
+  // Restore role
+  const handleOpenRestoreRoleModal = (role: RoleDetail) => {
+    setOpenConfirmRestoreModal(true);
+    setSelectedRoleToRestore(role);
   };
 
-  const handleConfirmDeleteRole = () => {
-    if (selectedRoleToDelete) {
+  const handleConfirmRestoreRole = () => {
+    if (selectedRoleToRestore) {
       setIsLoading(true);
-      deleteRole(selectedRoleToDelete.id);
+      restoreRole(selectedRoleToRestore.id);
     }
   };
 
-  const postDeleteRole = async (id: number) => {
-    const { data: response } = await api.delete(apiRouters.ROLE_DETAIL(id));
+  const postRestoreRole = async (id: number) => {
+    const { data: response } = await api.patch(apiRouters.ROLE_DETAIL(id), {
+      deletedAt: null,
+    });
     return response;
   };
 
-  const { mutate: deleteRole } = useMutation(postDeleteRole, {
+  const { mutate: restoreRole } = useMutation(postRestoreRole, {
     onSuccess: async () => {
       showToast({
-        description: SUCCESS_DELETE_MESSAGE,
+        description: SUCCESS_RESTORE_MESSAGE,
       });
       if (roleList?.results.length === 1 && debouncedParams.page > 1) {
         // If change current page, useRoleList auto recall, just don't need using refetchRoleList
@@ -116,36 +116,14 @@ const ListRoles = () => {
       } else {
         refetchRoleList();
       }
-      setOpenConfirmDeleteModal(false);
+      setOpenConfirmRestoreModal(false);
     },
     onError: (error: AxiosError<any>) => {
-      showErrorToast(error, ERROR_DELETE_MESSAGE);
-      setOpenConfirmDeleteModal(false);
+      showErrorToast(error, ERROR_RESTORE_MESSAGE);
+      setOpenConfirmRestoreModal(false);
       setIsLoading(false);
     },
   });
-
-  const showDeleteIcon = (role: boolean) => {
-    return (
-      !role &&
-      session?.user.permissions &&
-      hasPermissionInArray(
-        session.user.permissions,
-        PermissionsSystem.ROLE_DELETE,
-      )
-    );
-  };
-
-  const showUpdateIcon = (role: boolean) => {
-    return (
-      !role &&
-      session?.user.permissions &&
-      hasPermissionInArray(
-        session.user.permissions,
-        PermissionsSystem.ROLE_UPDATE,
-      )
-    );
-  };
 
   return (
     <Fragment>
@@ -203,31 +181,12 @@ const ListRoles = () => {
                   </td>
                   <td className="w-[220px]">
                     <div className="flex w-full gap-2 justify-end pr-3 items-center">
-                      {showUpdateIcon(element?.systemRole || false) ? (
-                        <Link
-                          onClick={() => {
-                            setDataRoleDetail(element);
-                          }}
-                          href={pageRouters.EDIT_ROLE.href(`${element.id}`)}>
-                          <ImageRound
-                            name="Edit"
-                            src={'/icons/edit-gray.svg'}
-                            className={`w-3 h-3 hover:cursor-pointer opacity-30`}
-                          />
-                        </Link>
-                      ) : (
-                        <div className="w-3 h-3"></div>
-                      )}
-                      {showDeleteIcon(element?.systemRole || false) ? (
-                        <ImageRound
-                          name="Hide"
-                          src={'/icons/dark-close-eye.svg'}
-                          className={`w-[16px] h-[13px] hover:cursor-pointer ml-1`}
-                          onClick={() => handleOpenDeleteRoleModal(element)}
-                        />
-                      ) : (
-                        <div className="w-[12px]"></div>
-                      )}
+                      <ImageRound
+                        name="Hide"
+                        src={'/icons/eye.svg'}
+                        className={`w-[16px] h-[13px] hover:cursor-pointer ml-1`}
+                        onClick={() => handleOpenRestoreRoleModal(element)}
+                      />
                       <Link
                         href={pageRouters.DETAIL_ROLE.href(`${element.id}`)}>
                         <div className="flex gap-1 items-center">
@@ -295,15 +254,15 @@ const ListRoles = () => {
           </div>
         </div>
       </div>
-      <ConfirmDeleteModal
-        open={openConfirmDeleteModal}
-        name={selectedRoleToDelete?.name || ''}
+      <ConfirmRestoreModal
+        open={openConfirmRestoreModal}
+        name={selectedRoleToRestore?.name || ''}
         type="権限"
-        onConfirm={handleConfirmDeleteRole}
-        onClose={() => setOpenConfirmDeleteModal(false)}
+        onConfirm={handleConfirmRestoreRole}
+        onClose={() => setOpenConfirmRestoreModal(false)}
       />
     </Fragment>
   );
 };
 
-export default ListRoles;
+export default ListRolesDelete;

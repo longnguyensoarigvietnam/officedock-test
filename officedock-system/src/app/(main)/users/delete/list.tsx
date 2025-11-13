@@ -3,6 +3,7 @@ import { Fragment, useContext, useEffect, useRef, useState } from 'react';
 import { useMutation } from 'react-query';
 import { signOut } from 'next-auth/react';
 import { AxiosError } from 'axios';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { Table, TableBody, TableHeader } from '@components/common/Table';
@@ -11,8 +12,8 @@ import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import ActionsUserModal from '@components/modals/ActionsUserModal';
 import Pagination from '@components/common/Pagination';
-import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 import InputSearch from '@components/common/InputSearch';
+import ConfirmRestoreModal from '@components/modals/ConfirmRestoreModal';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
 import { apiRouters, pageRouters } from '@constants/routers';
@@ -26,11 +27,11 @@ import {
 import {
   ERROR_COMMON_MESSAGE,
   ERROR_CREATE_MESSAGE,
-  ERROR_DELETE_MESSAGE,
+  ERROR_RESTORE_MESSAGE,
   ERROR_UPDATE_MESSAGE,
   ERROR_UPDATE_ORGANIZATION_MESSAGE,
   SUCCESS_CREATE_MESSAGE,
-  SUCCESS_DELETE_MESSAGE,
+  SUCCESS_RESTORE_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
 
@@ -56,9 +57,8 @@ import {
 import { ResponseError } from '@interfaces/response';
 
 import api from '@base/api';
-import Link from 'next/link';
 
-const ListUsers = () => {
+const ListUsersDelete = () => {
   const { data: session } = useSessionCache();
   const { setIsLoading } = useContext(LoadingContext);
 
@@ -102,11 +102,10 @@ const ListUsers = () => {
     fullName: '',
   });
 
-  // Set ID user for delete
-  const [selectedUserToDelete, setSelectedUserToDelete] = useState<User | null>(
-    null,
-  );
-  const [openConfirmDeleteModal, setOpenConfirmDeleteModal] = useState(false);
+  // Set ID user for Restore
+  const [selectedUserToRestore, setSelectedUserToRestore] =
+    useState<User | null>(null);
+  const [openConfirmRestoreModal, setOpenConfirmRestoreModal] = useState(false);
 
   // Params
   const searchParams = useSearchParams();
@@ -138,36 +137,35 @@ const ListUsers = () => {
     }));
   }, [debouncedSearch]);
 
-  const { creationDataCommonData, refetchCreationDataCommon } =
-    useCreationDataCommon({
-      options: {
-        get_roles: true,
-        get_all_organizations: true,
-        get_company: true,
-      },
-      onSuccess: (data) => {
-        setRoleUserOptions([
-          {
-            label: '選択',
-            value: '',
-          },
-          ...(data.roles?.map((org) => ({
-            label: org.name,
-            value: org.id,
-          })) || []),
-        ]);
-        setOrganizationUserOptions([
-          {
-            label: '選択',
-            value: '',
-          },
-          ...(data.allOrganizations?.map((item) => ({
-            label: item.name,
-            value: Number(item.id),
-          })) || []),
-        ]);
-      },
-    });
+  const { refetchCreationDataCommon } = useCreationDataCommon({
+    options: {
+      get_roles: true,
+      get_all_organizations: true,
+      get_company: true,
+    },
+    onSuccess: (data) => {
+      setRoleUserOptions([
+        {
+          label: '選択',
+          value: '',
+        },
+        ...(data.roles?.map((org) => ({
+          label: org.name,
+          value: org.id,
+        })) || []),
+      ]);
+      setOrganizationUserOptions([
+        {
+          label: '選択',
+          value: '',
+        },
+        ...(data.allOrganizations?.map((item) => ({
+          label: item.name,
+          value: Number(item.id),
+        })) || []),
+      ]);
+    },
+  });
 
   const { userList, refetchUserList } = useUserList(
     {
@@ -179,7 +177,7 @@ const ListUsers = () => {
       companyName: debouncedParams.companyName,
       organizationId: debouncedParams.organizationId,
       role: debouncedParams.role,
-      is_deleted: 'false',
+      is_deleted: 'true',
     },
   );
 
@@ -192,31 +190,29 @@ const ListUsers = () => {
     }
   }, [userList]);
 
-  // Delete user
-  const handleOpenDeleteUserModal = (user: User) => {
-    setOpenConfirmDeleteModal(true);
-    setSelectedUserToDelete(user);
+  // Restore user
+  const handleOpenRestoreUserModal = (user: User) => {
+    setOpenConfirmRestoreModal(true);
+    setSelectedUserToRestore(user);
   };
 
-  const handleConfirmDeleteUser = () => {
-    if (selectedUserToDelete) {
+  const handleConfirmRestoreUser = () => {
+    if (selectedUserToRestore) {
       setIsLoading(true);
-      deleteUser(selectedUserToDelete.id);
+      restoreUser(selectedUserToRestore.id);
       return;
     }
   };
 
-  const postDeleteUser = async (id: number) => {
-    const { data: response } = await api.delete(
-      apiRouters.USER_DETAIL(`${id}`),
-    );
+  const postRestoreUser = async (id: number) => {
+    const { data: response } = await api.post(apiRouters.USER_RESTORE(`${id}`));
     return response;
   };
 
-  const { mutate: deleteUser } = useMutation(postDeleteUser, {
+  const { mutate: restoreUser } = useMutation(postRestoreUser, {
     onSuccess: async () => {
       showToast({
-        description: SUCCESS_DELETE_MESSAGE,
+        description: SUCCESS_RESTORE_MESSAGE,
       });
       if (userList?.results.length === 1 && debouncedParams.page > 1) {
         // If change current page, useUserList auto recall, just don't need using refetchUserList
@@ -228,12 +224,12 @@ const ListUsers = () => {
         refetchUserList();
       }
       refetchCreationDataCommon();
-      setOpenConfirmDeleteModal(false);
+      setOpenConfirmRestoreModal(false);
       setOriginalUserCount(originalUserCount - 1);
     },
     onError: (error: AxiosError<any>) => {
-      showErrorToast(error, ERROR_DELETE_MESSAGE);
-      setOpenConfirmDeleteModal(false);
+      showErrorToast(error, ERROR_RESTORE_MESSAGE);
+      setOpenConfirmRestoreModal(false);
       setIsLoading(false);
     },
   });
@@ -478,7 +474,6 @@ const ListUsers = () => {
         username?: string[];
         email?: string[];
         profile?: { fullName?: string[] };
-        detail?: string[];
       }>) => {
         const errorData = response?.data || {};
 
@@ -495,12 +490,8 @@ const ListUsers = () => {
 
         // Flatten remaining keys and check if any unknown error exists
         const hasOtherErrors = Object.keys(rest).length > 0;
-        if (errorData.detail && errorData.detail.length > 0) {
-          showToast({
-            variant: 'error',
-            description: errorData.detail[0],
-          });
-        } else if (hasOtherErrors) {
+
+        if (hasOtherErrors) {
           showToast({
             variant: 'error',
             description: ERROR_CREATE_MESSAGE,
@@ -589,33 +580,23 @@ const ListUsers = () => {
   return (
     <Fragment>
       <div>
-        <div className="flex  items-center justify-between">
-          <div className="font-medium text-sm text-[#77858F] flex items-center gap-5 ">
-            <div className=" flex items-center  gap-5">
-              <p className="text-black text-[26px]">ユーザー管理</p>
-              <span>{creationDataCommonData?.company?.name || ''}</span>
-              <span>
-                全メンバー{originalUserCount}人 /
-                {creationDataCommonData?.company?.plan?.limitPerson || 0}
-              </span>
-            </div>
-            <div className="flex gap-[10px] font-medium items-center">
-              <p className="text-xs ">現在のプラン</p>
-              <div className="w-[100px] h-[34px] cursor-pointer  bg-white rounded-lg text-black text-xs flex items-center justify-center ">
-                {creationDataCommonData?.company?.plan?.name}
-              </div>
+        <div className="font-medium text-sm text-[#77858F] flex items-center gap-5  justify-between">
+          <div className=" flex items-center  gap-5">
+            <p className="text-black text-[26px]">ユーザー管理</p>
+            <div className="text-xs flex items-center gap-1">
+              <ImageRound
+                name="Hide"
+                src={'/icons/dark-close-eye.svg'}
+                className={`w-[16px] h-[13px]`}
+              />
+              <span>削除ユーザー一覧</span>
             </div>
           </div>
           <Link
-            href={pageRouters.USERS_MANAGEMENT_HIDDEN.href}
+            href={pageRouters.USERS_MANAGEMENT.href}
             className="flex items-center hover:cursor-pointer">
-            <ImageRound
-              name="Hide"
-              src={'/icons/dark-close-eye.svg'}
-              className={`w-[16px] h-[13px] hover:cursor-pointer ml-1`}
-            />
             <p className="ml-1 text-[#77858F] font-medium text-xs">
-              削除ユーザー一覧
+              ユーザー管理へもどる
             </p>
             <div className="ml-[6px] flex justify-between p-[3px] rounded-full bg-white border-b">
               <ImageRound
@@ -755,7 +736,7 @@ const ListUsers = () => {
                           {element.profile.fullName}
                         </p>
                       </div>
-                      <div className="flex items-center gap-2 w-10 pt-2">
+                      <div className="flex items-center gap-2 w-fit pt-2">
                         {element.actions && element.actions.update && (
                           <>
                             <div
@@ -774,14 +755,12 @@ const ListUsers = () => {
                             </div>
                           </>
                         )}
-                        {element.actions && element.actions.delete && (
-                          <ImageRound
-                            name="Hide"
-                            onClick={() => handleOpenDeleteUserModal(element)}
-                            src={'/icons/dark-close-eye.svg'}
-                            className={`w-[16px] h-[13px] hover:cursor-pointer opacity-30`}
-                          />
-                        )}
+                        <ImageRound
+                          name="Hide"
+                          onClick={() => handleOpenRestoreUserModal(element)}
+                          src={'/icons/eye.svg'}
+                          className={`w-[16px] h-[13px] hover:cursor-pointer`}
+                        />
                       </div>
                     </div>
                   </td>
@@ -858,15 +837,14 @@ const ListUsers = () => {
         </div>
       </div>
 
-      <ConfirmDeleteModal
-        open={openConfirmDeleteModal}
+      <ConfirmRestoreModal
+        open={openConfirmRestoreModal}
         type="ユーザー"
-        message="紐づいている要素からも削除されます。"
-        name={selectedUserToDelete?.profile.fullName}
-        userColor={selectedUserToDelete?.avatarColor}
-        userAvatarUrl={selectedUserToDelete?.avatar}
-        onConfirm={handleConfirmDeleteUser}
-        onClose={() => setOpenConfirmDeleteModal(false)}
+        name={selectedUserToRestore?.profile.fullName}
+        userColor={selectedUserToRestore?.avatarColor}
+        userAvatarUrl={selectedUserToRestore?.avatar}
+        onConfirm={handleConfirmRestoreUser}
+        onClose={() => setOpenConfirmRestoreModal(false)}
       />
       {openActionsUserModal &&
         actionTypeParam &&
@@ -900,7 +878,7 @@ const ListUsers = () => {
               setResetRoleField(false);
             }}
             onDelete={(userToDelete: User) => {
-              handleOpenDeleteUserModal(userToDelete);
+              handleOpenRestoreUserModal(userToDelete);
               setUserEditDetail(null);
               setOpenActionsUserModal(false);
               setUserEditId(null);
@@ -922,4 +900,4 @@ const ListUsers = () => {
   );
 };
 
-export default ListUsers;
+export default ListUsersDelete;

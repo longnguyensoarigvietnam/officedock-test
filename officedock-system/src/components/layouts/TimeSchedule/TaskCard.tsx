@@ -12,9 +12,11 @@ import PopupDetailEvent from './PopupDetailEvent';
 
 import { NO_SETTING } from '@constants';
 import { ItemScheduleType, ItemStartType, ViewOptions } from '@constants/enums';
+
 import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
 import { TaskContext } from '@providers/TaskProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
+
 import {
   compareWithCurrentDate,
   convertToTimeString,
@@ -22,9 +24,9 @@ import {
   isMoreThanFifteenMinutes,
   isMoreThanThirtyMinutes,
 } from '@utils/date';
+import { generateVerticalGradient } from '@utils';
 import { TaskTimeSchedule } from '@interfaces/task';
 import { EventEditFormData } from '@interfaces/calendar';
-import { generateVerticalGradient } from '@utils';
 import { CreationDataCommon } from '@interfaces/common';
 
 interface TaskCardProps {
@@ -381,7 +383,7 @@ const TaskCard = ({
         style={{
           top: local.clientY,
           left:
-            view === ViewOptions.WEEK ? local.clientX - 30 : local.clientX - 15,
+            view === ViewOptions.WEEK ? local.clientX - 10 : local.clientX - 15,
           boxShadow: '0px 2px 8px 0px #0000001A',
         }}>
         {isEvent ? (
@@ -498,7 +500,7 @@ const TaskCard = ({
   useEffect(() => {
     if (containerRef.current) {
       const height = containerRef.current.offsetHeight;
-      if (height > 40) {
+      if (height > 50) {
         setIsTooSmallHeight(false);
       } else {
         setIsTooSmallHeight(true);
@@ -594,9 +596,9 @@ const TaskCard = ({
               }
               handleMouseLeave();
             }}
-            className={`group  flex items-end ${isTooSmall && 'flex-col justify-between'} h-full bg-transparent z-[20] w-full ${resourcePlan ? 'h-[calc(100%_-_27px)]' : 'h-[calc(100%_-_10px)]'} ${isSmallItem && '!h-full overflow-hidden'}`}>
+            className={`group  flex flex-col ${isTooSmallHeight && '!flex-row'} items-end justify-between h-full bg-transparent z-[20] w-full ${resourcePlan ? 'h-[calc(100%_-_27px)]' : 'h-[calc(100%_-_10px)]'} ${isSmallItem && '!h-full overflow-hidden'}`}>
             <div
-              className={`${isTooSmall && 'hidden'} flex overflow-hidden h-full flex-col   flex-grow gap-[10px]`}>
+              className={`${isTooSmall && 'hidden'} w-full flex overflow-hidden h-full flex-col   flex-grow gap-[10px]`}>
               <div className="flex items-center gap-[6px] w-full">
                 {!isEvent && resourcePlan == true && (
                   <div
@@ -693,7 +695,8 @@ const TaskCard = ({
               </div>
             )}
 
-            <div className="h-fit flex gap-[6px] items-end w-fit flex-shrink-0">
+            <div
+              className={`h-fit ${isTooSmallHeight ? '!w-fit flex flex-shrink-0' : 'flex-shrink-0'} w-full flex gap-[6px] items-end justify-end  `}>
               {resourcePlan == true && (
                 <>
                   {isEvent && (
@@ -704,7 +707,7 @@ const TaskCard = ({
                     />
                   )}
                   <div
-                    className={`w-[30px] h-[30px] flex items-center justify-center relative top-[5px] right-[-5px]`}>
+                    className={`w-[30px] h-[30px] ${isTooSmallHeight && 'flex-shrink-0 !w-[34px] !top-[3px]'}  ${isTooSmall && 'flex-shrink-0'} flex items-center justify-center relative top-[5px] right-[-5px]`}>
                     <ImageRound
                       src={`/icons/${isStart ? 'pause-task' : 'play-task'}.svg`}
                       name="Start task"

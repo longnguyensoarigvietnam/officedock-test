@@ -18,6 +18,7 @@ import api from '@base/api';
 
 interface FilterProps {
   name?: string;
+  is_hidden?: string;
 }
 
 interface PaginationProps {
@@ -40,10 +41,23 @@ const useRoleList = (
   const getRoleList = async () => {
     setIsLoading(true);
 
-    // TODO: Confirm with BE about how many and how to use param
+    const params = new URLSearchParams();
+
+    if (pagination?.page) {
+      params.append('page', String(pagination.page));
+      params.append(
+        'page_size',
+        String(pagination.pageSize || PAGINATION_PAGE_SIZE_DEFAULT),
+      );
+    }
+
+    if (ordering) params.append('ordering', ordering);
+    if (filter?.name) params.append('name', filter.name);
+    if (filter?.is_hidden) params.append('is_hidden', filter?.is_hidden);
+
     const apiUrl = pagination?.page
-      ? `${apiRouters.ROLE_LIST}?page=${pagination.page}&page_size=${pagination.pageSize || PAGINATION_PAGE_SIZE_DEFAULT}${ordering ? `&ordering=${ordering}` : ''}${filter?.name ? `&name=${filter.name}` : ''}`
-      : `${apiRouters.ROLE_LIST}`;
+      ? `${apiRouters.ROLE_LIST}?${params.toString()}`
+      : apiRouters.ROLE_LIST;
 
     const { data } = await api.get<BasePagination<RoleDetail[]>>(apiUrl);
     return data;

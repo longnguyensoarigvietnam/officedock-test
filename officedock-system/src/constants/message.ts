@@ -71,6 +71,7 @@ export const SUCCESS_CREATE_MESSAGE = '作成に成功しました。';
 export const SUCCESS_DELETE_MESSAGE = '削除に成功しました。';
 export const SUCCESS_PIN_MESSAGE = 'タスクをピン止めしました。';
 export const SUCCESS_UNPIN_MESSAGE = 'ピン止めを解除しました。';
+export const SUCCESS_RESTORE_MESSAGE = '復元に成功しました。';
 
 export const SUCCESS_SAVE_MESSAGE = '保存に成功しました。';
 export const SUCCESS_EXPORT_MESSAGE = 'ファイルを正常にエクスポートしました。';
@@ -81,6 +82,8 @@ export const ERROR_SENT_MAIL_MESSAGE = 'メール送信に失敗しました。'
 export const INVALID_URL_MESSAGE = 'URLの形式で入力してください。';
 export const ERROR_UPDATE_MESSAGE = '更新に失敗しました。';
 export const ERROR_SAVE_MESSAGE = '保存に失敗しました。';
+export const ERROR_RESTORE_MESSAGE = '復元に失敗しました。';
+
 export const ERROR_TIME_START_MESSAGE = '予定時間をオーバーしています';
 export const ERROR_DELETE_TASK_RUNNING = '計測中のカードを削除できません。';
 export const ERROR_UPDATE_ORGANIZATION_MESSAGE =

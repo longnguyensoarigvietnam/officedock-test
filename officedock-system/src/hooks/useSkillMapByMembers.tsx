@@ -18,6 +18,7 @@ import api from '@base/api';
 
 interface FilterProps {
   organizationId?: number | null;
+  has_include_deleted_user?: string;
 }
 
 const useSkillMapByMembers = (filter?: FilterProps) => {
@@ -31,9 +32,23 @@ const useSkillMapByMembers = (filter?: FilterProps) => {
   const getSkillMapListByMembers = async () => {
     setIsLoading(true);
 
-    const { data } = await api.get<SkillMapByMembers[]>(
-      `${apiRouters.MANAGE_SKILL_MAPS}${filter?.organizationId ? `?organization_id=${filter?.organizationId}` : ''}`,
-    );
+    const params = new URLSearchParams();
+
+    if (filter?.organizationId) {
+      params.append('organization_id', String(filter.organizationId));
+    }
+    if (filter?.has_include_deleted_user) {
+      params.append(
+        'has_include_deleted_user',
+        filter.has_include_deleted_user,
+      );
+    }
+
+    const apiUrl = params.toString()
+      ? `${apiRouters.MANAGE_SKILL_MAPS}?${params.toString()}`
+      : apiRouters.MANAGE_SKILL_MAPS;
+
+    const { data } = await api.get<SkillMapByMembers[]>(apiUrl);
     return data;
   };
 
