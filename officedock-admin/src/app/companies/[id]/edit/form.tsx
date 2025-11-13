@@ -41,7 +41,11 @@ import {
   ServerStatusCode,
 } from '@constants/enums';
 import { PHONE_REGEX } from '@constants/regex';
-import { NAME_OTHER_OPTION, OTHER_OPTION_VALUE } from '@constants';
+import {
+  CUSTOM_PLAN_LABEL,
+  NAME_OTHER_OPTION,
+  OTHER_OPTION_VALUE,
+} from '@constants';
 
 import useCompanyDetail from '@hooks/useDetailCompany';
 import useCommonCreationData from '@hooks/useCommonCreationData';
@@ -227,9 +231,17 @@ const EditCompanyForm = () => {
       value.contract.phone = companyDetail.contract?.phone;
       value.contract.address = companyDetail.contract?.address;
       value.customPlan.exchangeableAmount =
-        companyDetail.plan?.exchangeableAmount ?? null;
-      value.customPlan.limitPerson = companyDetail.plan?.limitPerson ?? null;
-      value.customPlan.monthlyFee = companyDetail.plan?.monthlyFee ?? null;
+        companyDetail.plan?.name == CUSTOM_PLAN_LABEL
+          ? companyDetail.plan?.exchangeableAmount ?? null
+          : null;
+      value.customPlan.limitPerson =
+        companyDetail.plan?.name == CUSTOM_PLAN_LABEL
+          ? companyDetail.plan?.limitPerson ?? null
+          : null;
+      value.customPlan.monthlyFee =
+        companyDetail.plan?.name == CUSTOM_PLAN_LABEL
+          ? companyDetail.plan?.monthlyFee ?? null
+          : null;
 
       value.contract.industry = companyDetail.contract?.industry
         ? industryOptions.find(

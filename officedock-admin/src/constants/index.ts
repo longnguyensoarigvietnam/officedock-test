@@ -26,4 +26,6 @@ export const MAX_PHONE_NUMBER_LENGTH = 11;
 
 export const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
 
+export const CUSTOM_PLAN_LABEL = 'カスタムプラン'
+
 
