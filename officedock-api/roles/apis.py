@@ -109,7 +109,7 @@ class RoleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             )
 
         validated_data = serializer.validated_data
-        permissions = validated_data.pop("permissions")
+        permissions = validated_data.pop("permissions", None)
         before_role_details = sorted(
             list(
                 role.role_details.values("selection_result", "permission__name")
@@ -117,41 +117,43 @@ class RoleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             key=lambda x: (x["permission__name"], x["selection_result"]),
         )
         serializer.save()
+        if permissions:
+            # Compare specified permissions with request data
+            permissions_to_update = {}
+            for key, action in permissions.items():
+                if key == Screens.SKILL_MAP.value:
+                    skillmap_permisions = SKILL_MAP_ROLE_PERMISSION_BY_OPTIONS[
+                        action["actions"]
+                    ]
+                    for k, ac in skillmap_permisions.items():
+                        permissions_to_update[k] = ac
+                else:
+                    permissions_to_update[key] = ROLE_PERMISSION_BY_OPTIONS[
+                        action["actions"]
+                    ]
 
-        # Compare specified permissions with request data
-        permissions_to_update = {}
-        for key, action in permissions.items():
-            if key == Screens.SKILL_MAP.value:
-                skillmap_permisions = SKILL_MAP_ROLE_PERMISSION_BY_OPTIONS[
-                    action["actions"]
-                ]
-                for k, ac in skillmap_permisions.items():
-                    permissions_to_update[k] = ac
-            else:
-                permissions_to_update[key] = ROLE_PERMISSION_BY_OPTIONS[
-                    action["actions"]
-                ]
+            create_role_with_permissions(role, permissions_to_update)
 
-        create_role_with_permissions(role, permissions_to_update)
+            after_role_details = sorted(
+                list(
+                    role.role_details.values(
+                        "selection_result", "permission__name"
+                    )
+                ),
+                key=lambda x: (x["permission__name"], x["selection_result"]),
+            )
 
-        after_role_details = sorted(
-            list(
-                role.role_details.values("selection_result", "permission__name")
-            ),
-            key=lambda x: (x["permission__name"], x["selection_result"]),
-        )
-
-        if before_role_details != after_role_details:
-            for user in role.users.all():
-                # Block access token for logged user
-                LoginToken.objects.filter(user=user).delete()
-                send_web_socket_event(
-                    {
-                        "is_change_role": True,
-                        "action": WebSocketEventType.CHANGE_ROLE.value,
-                    },
-                    user=user,
-                )
+            if before_role_details != after_role_details:
+                for user in role.users.all():
+                    # Block access token for logged user
+                    LoginToken.objects.filter(user=user).delete()
+                    send_web_socket_event(
+                        {
+                            "is_change_role": True,
+                            "action": WebSocketEventType.CHANGE_ROLE.value,
+                        },
+                        user=user,
+                    )
 
     def perform_destroy(self, instance):
         """

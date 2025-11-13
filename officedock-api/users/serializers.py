@@ -8,7 +8,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from base.messages import ERROR_MESSAGES
+from base.messages import ERROR_MESSAGES, KEYWORDS
 from common.utils import calculate_company_dates, get_signed_url
 from common.constants import (
     AVATAR_GCS_EXPIRATION_SECONDS,
@@ -339,6 +339,7 @@ class OrganizationForUserSerializer(OrganizationSerializer):
 
     is_main = serializers.SerializerMethodField(read_only=True)
     has_task_reference = serializers.SerializerMethodField(read_only=True)
+    name = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Organization
@@ -373,6 +374,16 @@ class OrganizationForUserSerializer(OrganizationSerializer):
         user = self.context.get("user")
         return (
             obj.tasks.filter(people_in_charge=user).exists() if user else False
+        )
+
+    def get_name(self, obj):
+        """
+        Check status of organization and return name
+        """
+        return (
+            obj.name
+            if obj.deleted_at == None
+            else f"{obj.name}{KEYWORDS['deleted']}"
         )
 
 
@@ -747,42 +758,42 @@ class SystemUserInviteSerializer(BaseUserSerializer):
         )
         return super().validate(value)
 
-    def validate_organization_ids(self, value):
-        """
-        Validate that organizations linked to tasks cannot be removed from the user's organizations.
-        """
-        instance = self.instance
+    # def validate_organization_ids(self, value):
+    #     """
+    #     Validate that organizations linked to tasks cannot be removed from the user's organizations.
+    #     """
+    #     instance = self.instance
 
-        if instance and value is not None:
-            # Collect the set of organization IDs provided in the input
-            old_org = set(instance.organizations.values_list("id", flat=True))
-            orgs_to_update = set(item["organization"].id for item in value)
+    #     if instance and value is not None:
+    #         # Collect the set of organization IDs provided in the input
+    #         old_org = set(instance.organizations.values_list("id", flat=True))
+    #         orgs_to_update = set(item["organization"].id for item in value)
 
-            if orgs_to_update != old_org:
-                # Collect the set of organization IDs where the user is in charge of tasks
-                orgs_with_tasks = set(
-                    instance.in_charge_tasks.filter(
-                        organization__isnull=False, deleted_at__isnull=True
-                    ).values_list("organization", flat=True)
-                )
-                # Find organizations with tasks that are being removed
-                orgs_being_removed = orgs_with_tasks - orgs_to_update
+    #         if orgs_to_update != old_org:
+    #             # Collect the set of organization IDs where the user is in charge of tasks
+    #             orgs_with_tasks = set(
+    #                 instance.in_charge_tasks.filter(
+    #                     organization__isnull=False, deleted_at__isnull=True
+    #                 ).values_list("organization", flat=True)
+    #             )
+    #             # Find organizations with tasks that are being removed
+    #             orgs_being_removed = orgs_with_tasks - orgs_to_update
 
-                if orgs_being_removed:
-                    names = (
-                        Organization.objects.filter(
-                            id__in=list(orgs_being_removed)
-                        )
-                        .order_by("created_at")
-                        .values_list("name", flat=True)
-                    )
-                    raise serializers.ValidationError(
-                        ERROR_MESSAGES["organization_linked_to_task"].format(
-                            name=", ".join(list(names))
-                        )
-                    )
+    #             if orgs_being_removed:
+    #                 names = (
+    #                     Organization.objects.filter(
+    #                         id__in=list(orgs_being_removed)
+    #                     )
+    #                     .order_by("created_at")
+    #                     .values_list("name", flat=True)
+    #                 )
+    #                 raise serializers.ValidationError(
+    #                     ERROR_MESSAGES["organization_linked_to_task"].format(
+    #                         name=", ".join(list(names))
+    #                     )
+    #                 )
 
-        return super().validate(value)
+    #     return super().validate(value)
 
 
 class AdminUserInviteSerializer(serializers.ModelSerializer):

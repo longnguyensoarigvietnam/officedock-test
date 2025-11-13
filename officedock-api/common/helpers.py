@@ -60,8 +60,10 @@ def get_all_organizations(company, organizations):
     Get list organization without calendar organization
     """
     if organizations:
-        return organizations
-    return company.organizations.order_by("created_at")
+        return organizations.filter(deleted_at__isnull=True)
+    return company.organizations.filter(deleted_at__isnull=True).order_by(
+        "created_at"
+    )
 
 
 def get_roles(company):
@@ -192,7 +194,9 @@ def get_organizations_of_user_by_screen_role(
         return None
     selection_results = [item.selection_result for item in role_permissions]
     if SelectionResultOptions.ALLOWED.value in selection_results:
-        organizations = Organization.objects.filter(users=user).all()
+        organizations = Organization.objects.filter(
+            users=user, deleted_at__isnull=True
+        ).all()
         if is_return_orgs:
             return organizations
         return CreationDataOrganizationWithMainSerializer(
@@ -211,7 +215,9 @@ def get_organizations_of_user_by_screen_role(
 
         _get_children(user)
         org_ids = set(org_ids)
-    organizations = Organization.all_objects.filter(id__in=org_ids).all()
+    organizations = Organization.all_objects.filter(
+        id__in=org_ids, deleted_at__isnull=True
+    ).all()
     if is_return_orgs:
         return organizations
     return CreationDataOrganizationWithMainSerializer(
@@ -279,7 +285,7 @@ def get_data_organization_my_statistic(user, organizations, company):
     """
     Get data for filter my statistic
     """
-    organizations = organizations.filter(users=user)
+    organizations = user.organizations.order_by("-deleted_at")
     orgs = CreationDataOrganizationWithStructCategorySerializer(
         organizations, many=True, context={"user": user}
     ).data
@@ -430,7 +436,9 @@ def get_is_have_mvp_vote(company):
 
 def get_organizations_for_all_team_statistic(user):
     """"""
-    organizations = Organization.all_objects.filter(users=user).all()
+    organizations = Organization.all_objects.filter(
+        users=user, deleted_at__isnull=True
+    ).all()
     return CreationDataOrganizationWithStructCategorySerializer(
         organizations, many=True, context={"user": user}
     ).data

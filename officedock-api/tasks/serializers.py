@@ -20,7 +20,7 @@ from common.utils import (
     get_large_statistic_category_color,
 )
 from organizations.models import Organization
-from organizations.serializers import OrganizationSerializer
+from organizations.serializers import BaseOrganizationSerializer
 from skills.models import StatisticCategory
 from tags.serializers import BaseTagSerializer, TagsForCreationSerializer
 from tasks.models import (
@@ -313,7 +313,7 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
             ChatMessageTypes.EDIT_TASK.value,
         ],
     )
-    organization = OrganizationSerializer(read_only=True)
+    organization = BaseOrganizationSerializer(read_only=True)
     organization_id = serializers.PrimaryKeyRelatedField(
         source="organization",
         queryset=Organization.objects.all(),
