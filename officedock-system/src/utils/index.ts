@@ -2707,6 +2707,7 @@ export const handleServerFormErrors = <T extends Record<string, any>>(
   error: any,
   setError: UseFormSetError<T>,
   control?: any,
+  allowNestedFields: boolean = false,
 ) => {
   if (!error?.response?.data) return;
 
@@ -2719,8 +2720,18 @@ export const handleServerFormErrors = <T extends Record<string, any>>(
   Object.entries(flattened).forEach(([field, messages]) => {
     const formKey = mapServerErrorKeyToFormKey(field) as Path<T>;
 
-    if (registeredFields.length > 0 && !registeredFields.includes(formKey)) {
-      return; // ignore unknown fields like "detail"
+    if (registeredFields.length > 0) {
+      let isRegistered = false;
+
+      if (allowNestedFields) {
+        isRegistered = registeredFields.some(
+          (registeredField) => formKey === registeredField || formKey.startsWith(`${registeredField}.`),
+        );
+      } else {
+        isRegistered = registeredFields.includes(formKey);
+      }
+
+      if (!isRegistered) return; // ignore unknown fields
     }
 
     setError(formKey, {

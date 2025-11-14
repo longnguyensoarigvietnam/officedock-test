@@ -1,6 +1,6 @@
 'use client';
 import { useMutation } from 'react-query';
-import React, { Fragment, useContext, useEffect, useState } from 'react';
+import React, { Fragment, useContext, useEffect, useRef, useState } from 'react';
 import { AxiosError } from 'axios';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSessionCache } from '@providers/SessionCacheProvider';
@@ -8,7 +8,7 @@ import { useSessionCache } from '@providers/SessionCacheProvider';
 import Link from 'next/link';
 
 import Button from '@components/common/Button';
-import ActionsSkillMapModal from '@components/modals/ActionsSkillMapModal';
+import ActionsSkillMapModal, { ActionsSkillMapModalRef } from '@components/modals/ActionsSkillMapModal';
 import { OrganizationSkillDetail } from './organization-skill-detail';
 import Dropdown from '@components/common/Dropdown';
 
@@ -56,6 +56,7 @@ const ListSkillsMap = () => {
   const showErrorToast = useErrorToast();
   const { data: session } = useSessionCache();
   const { showToast } = useToast();
+  const modalRef = useRef<ActionsSkillMapModalRef>(null);
 
   // Router
   const searchParams = useSearchParams();
@@ -368,6 +369,8 @@ const ListSkillsMap = () => {
       },
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_CREATE_MESSAGE);
+
+        modalRef.current?.setServerErrors(error);
       },
       onSettled: () => {
         setIsLoading(false);
@@ -564,6 +567,7 @@ const ListSkillsMap = () => {
         actionTypeParam &&
         (hasAddPermission || hasUpdatePermission) && (
           <ActionsSkillMapModal
+            ref={modalRef}
             action={actionTypeParam}
             step={Number(currentStepParam)}
             open={openSkillMapActionsModal}

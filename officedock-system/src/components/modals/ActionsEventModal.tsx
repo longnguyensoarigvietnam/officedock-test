@@ -972,7 +972,7 @@ const ActionsEventModal = ({
           <div className="w-full">
             <Input
               autoCompleteInput
-              className="shadow-none text-[22px] leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[42px] focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md"
+              className={`shadow-none text-[22px] leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[42px] focus:!shadow-none focus:border ${errors.title ? '!border-error' : '!border-[#77858F]'} !border-[1px] rounded-md`}
               register={register('title', {
                 required: watch('title') !== null ? true : false,
                 maxLength: {
@@ -1812,68 +1812,94 @@ const ActionsEventModal = ({
               ) && (
                 <div className="!w-full flex justify-between mt-2">
                   <div className="flex gap-2">
-                    <div className="w-[72px] z-[20] relative">
-                      <Input
-                        isShowClockIcon={true}
-                        autoFocus={false}
-                        disabled={isDisabled}
-                        type="text"
-                        options={optionTimeInput}
-                        valueInput={watch(`startTime`)}
-                        register={register('startTime', {
-                          onChange: (e) => {
-                            handleChange(e, 'startTime');
-                          },
-                          onBlur: () => {
-                            if (time) {
-                              setValue('startTime', formatTimeInput(time), {
-                                shouldDirty: true,
-                              });
-                            }
-                            setTime('');
-                          },
-                        })}
-                        className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
-                        onChangeDropdown={(e) => {
-                          setValue('startTime', e.label, { shouldDirty: true });
-                        }}
-                      />
+                    <div className="z-[20] relative">
+                      <div className="w-[72px]">
+                        <Input
+                          isShowClockIcon={true}
+                          autoFocus={false}
+                          disabled={isDisabled}
+                          type="text"
+                          options={optionTimeInput}
+                          valueInput={watch(`startTime`)}
+                          register={register('startTime', {
+                            required: true,
+                            onChange: (e) => {
+                              handleChange(e, 'startTime');
+                            },
+                            onBlur: () => {
+                              if (time) {
+                                setValue('startTime', formatTimeInput(time), {
+                                  shouldDirty: true,
+                                });
+                              }
+                              setTime('');
+                            },
+                          })}
+                          className={`h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] ${errors.startTime ? '!border-error' : '!border-[#77858F]'} rounded-md`}
+                          onChangeDropdown={(e) => {
+                            setValue('startTime', e.label, {
+                              shouldDirty: true,
+                            });
+                          }}
+                        />
+                      </div>
+
+                      {errors.startTime?.message ? (
+                        <ErrorMessage
+                          error={errors.startTime?.message}
+                          className="mt-[5px] mb-[5px] text-xs"
+                        />
+                      ) : (
+                        <></>
+                      )}
                     </div>
                     <div className="h-[34px] flex items-center">〜</div>
-                    <div className="w-[72px] z-[20] relative">
-                      <Input
-                        isShowClockIcon={true}
-                        autoFocus={false}
-                        disabled={isDisabled}
-                        type="text"
-                        options={optionTimeInput}
-                        valueInput={watch(`endTime`)}
-                        register={register('endTime', {
-                          onChange: (e) => {
-                            handleChange(e, 'endTime');
-                          },
-                          onBlur: () => {
-                            if (time) {
-                              setValue('endTime', formatTimeInput(time), {
-                                shouldDirty: true,
-                              });
-                            }
-                            setTime('');
-                          },
-                          validate: (value) => {
-                            if (!watch('repeatType')) return true;
-                            return (
-                              convertToMinutes(String(value)) >
-                                convertToMinutes(`${watch('startTime')}`) ||
-                              END_DATE_WRONG_SELECTED
-                            );
-                          },
-                        })}
-                        className="h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] !border-[#77858F] rounded-md"
-                        onChangeDropdown={(e) => {
-                          setValue('endTime', e.label, { shouldDirty: true });
-                        }}
-                      />
+                    <div className="z-[20] relative">
+                      <div className="w-[72px]">
+                        <Input
+                          isShowClockIcon={true}
+                          autoFocus={false}
+                          disabled={isDisabled}
+                          type="text"
+                          options={optionTimeInput}
+                          valueInput={watch(`endTime`)}
+                          register={register('endTime', {
+                            required: true,
+                            onChange: (e) => {
+                              handleChange(e, 'endTime');
+                            },
+                            onBlur: () => {
+                              if (time) {
+                                setValue('endTime', formatTimeInput(time), {
+                                  shouldDirty: true,
+                                });
+                              }
+                              setTime('');
+                            },
+                            validate: (value) => {
+                              if (!watch('repeatType')) return true;
+                              return (
+                                convertToMinutes(String(value)) >
+                                  convertToMinutes(`${watch('startTime')}`) ||
+                                END_DATE_WRONG_SELECTED
+                              );
+                            },
+                          })}
+                          className={`h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] ${errors.endTime?.message ? '!border-error' : '!border-[#77858F]'} rounded-md`}
+                          onChangeDropdown={(e) => {
+                            setValue('endTime', e.label, { shouldDirty: true });
+                          }}
+                        />
+                      </div>
+
+                      {errors.endTime?.message ? (
+                        <ErrorMessage
+                          error={errors.endTime?.message}
+                          className="mt-[5px] mb-[5px] text-xs"
+                        />
+                      ) : (
+                        <></>
+                      )}
                     </div>
                   </div>
 

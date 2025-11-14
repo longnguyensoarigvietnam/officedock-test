@@ -420,7 +420,7 @@ export const MessageDetailBookmark = ({
                     <ImageRound
                       name="Save"
                       src={`/icons/save-active.svg`}
-                      className="w-[10px] h-[12px]  relative top-[4px] hover:cursor-pointer"
+                      className="w-[10px] h-[12px] relative top-[2px] hover:cursor-pointer"
                     />
                   )}
                 </div>
@@ -723,7 +723,7 @@ export const MessageDetailBookmark = ({
             className={`flex relative !box-border border-b border-[#D2DBE1] group-hover:bg-[#FFFFFF] p-[14px] group-hover:rounded-md`}>
             {messageDetail.type !== MessageType.MESSAGE ? (
               <ImageRound
-                className="w-10 h-10"
+                className="w-[30px] h-[30px]"
                 src="/icons/document.svg"
                 border="full"
                 name="Task"

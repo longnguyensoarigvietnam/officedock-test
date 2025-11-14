@@ -759,7 +759,7 @@ export const MessageDetailQuote = ({
               className={`flex !box-border ${String(messageDetail.id) == highlightedMessageId && 'bg-white'} group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
               {messageDetail.type !== MessageType.MESSAGE ? (
                 <ImageRound
-                  className="w-10 h-10"
+                  className="w-[22px] h-[22px]"
                   src="/icons/document.svg"
                   border="full"
                   name="Task"
