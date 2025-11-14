@@ -1881,28 +1881,6 @@ const ChatDetail = ({
       editor.chain().focus().insertContent({ type: 'paragraph' }).run();
     });
   };
-
-  // Quote msg
-  const handleQuoteMsgUserText = useCallback(
-    (data: { uuid: string; title: string }) => {
-      if (!editor) return;
-
-      editor
-        .chain()
-        .focus()
-        .insertContent({
-          type: 'msgQuoteText',
-          attrs: {
-            id: data.uuid.toString(),
-            title: data.title,
-          },
-        })
-        .run();
-
-      editor.chain().focus().insertContent({ type: 'paragraph' }).run();
-    },
-    [editor],
-  );
   const tryParse = (maybeString: any) => {
     if (typeof maybeString !== 'string') return maybeString;
     try {
@@ -1911,6 +1889,30 @@ const ChatDetail = ({
       return maybeString;
     }
   };
+
+  // Quote msg
+  const handleQuoteMsgUserText = useCallback(
+    (data: { uuid: string; title: string }) => {
+      if (!editor) return;
+      const findMsg = dataMessageDetail.find((item) => item.uuid == data.uuid);
+      if (!findMsg) return;
+      editor
+        .chain()
+        .focus()
+        .insertContent({
+          type: 'msgQuoteText',
+          attrs: {
+            id: data.uuid.toString(),
+            title: data.title,
+            data: tryParse(findMsg),
+          },
+        })
+        .run();
+
+      editor.chain().focus().insertContent({ type: 'paragraph' }).run();
+    },
+    [editor, dataMessageDetail],
+  );
 
   const handleQuoteMsgIcon = (payload: {
     data: ChatMessageResponse;
@@ -2018,7 +2020,7 @@ const ChatDetail = ({
       quoteButtonRef.current = null;
       lastSelectedMessageIdRef.current = null;
     };
-  }, [handleQuoteMsgUserText]);
+  }, [handleQuoteMsgUserText, dataMessageDetail]);
 
   const handleSetParam = ({
     id,

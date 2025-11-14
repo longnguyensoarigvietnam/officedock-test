@@ -59,6 +59,9 @@ import { MessageHoverAllRoomsSearch } from './MessageHoverAllRoomsSearch';
 import RenderFiles from './renderFiles/RenderFiles';
 import api from '@base/api';
 import { useMutation } from 'react-query';
+import MessageDetailQuoteText from './quote/MessageDetailQuoteText';
+import { MessageDetailQuote } from './quote/MessageDetailQuote';
+import Image from 'next/image';
 
 export type MessageDetailProps = {
   isLastItem: boolean;
@@ -75,7 +78,7 @@ export type MessageDetailProps = {
         participants: ChatParticipant[];
       }
     | undefined;
-  setDataPreviewFile?: Dispatch<
+  setDataPreviewFile: Dispatch<
     SetStateAction<{
       msgId: string;
       file: ChatFileResponse;
@@ -83,7 +86,7 @@ export type MessageDetailProps = {
       createAt: string;
     } | null>
   >;
-  handleActionEditTask?: (id: number) => void;
+  handleActionEditTask: (id: number) => void;
   handleConfirmGetDataDetailEvent: (id: string) => void;
   onGotoMessage: () => void;
   handleRemoveItemBookmark?: (uuid: string) => void;
@@ -115,6 +118,7 @@ export const MessageDetailBookmark = ({
     const raw = pEl.getAttribute('data-uuid');
     uuidListMain = raw ? JSON.parse(raw) : [];
   }
+  const uuidList = messageDetail?.chatFiles;
 
   // Render user avatar
   const renderAvatar = (senderId: number) => {
@@ -218,82 +222,207 @@ export const MessageDetailBookmark = ({
       highlightedMessage,
       'text/html',
     );
-
     const nodes = Array.from(dom.body.childNodes);
 
-    const processNode = (node: ChildNode, index: number) => {
-      if (node.nodeType === 1) {
-        const element = node as HTMLElement;
+    const processPElement = (element: HTMLElement, index: number) => {
+      const children: React.ReactNode[] = [];
 
-        if (element.tagName === 'P') {
-          const taskQuote = element.querySelector('span[data-task-id]');
-
-          if (taskQuote) {
-            const taskId = taskQuote.getAttribute('data-task-id');
-            const restOfContent = element.innerHTML.replace(
-              taskQuote.outerHTML,
-              '',
+      element.childNodes.forEach((child, i) => {
+        if (child.nodeType === Node.TEXT_NODE) {
+          const text = child.textContent?.trim();
+          if (text) {
+            children.push(
+              <span key={`${index}-${i}-text`} className="whitespace-pre-wrap">
+                {text}
+              </span>,
             );
+          }
+        }
 
+        if (child.nodeType === Node.ELEMENT_NODE) {
+          const el = child as HTMLElement;
+          if (el.dataset.taskId) {
+            const taskId = el.dataset.taskId;
             const parser = new DOMParser();
-            const doc = parser.parseFromString(
-              taskQuote.innerHTML,
-              'text/html',
-            );
-
+            const doc = parser.parseFromString(el.innerHTML, 'text/html');
             const spans = doc.querySelectorAll('span');
-
             const targetSpan = spans[1]?.innerHTML || '';
 
-            return (
-              <>
-                <div
-                  key={`${index}-quote`}
-                  id={taskId || undefined}
-                  onClick={() => {
-                    if (
-                      taskId &&
-                      !isSearchingMessages &&
-                      handleActionEditTask
-                    ) {
-                      handleActionEditTask(Number(taskId));
-                    }
-                  }}
-                  className="flex mb-2 items-center w-full rounded-[6px] h-[42px] border-[1px] border-[#D2DBE1] bg-white px-4 gap-3 hover:cursor-pointer">
-                  <ImageRound
-                    className="w-[14px] h-[14px]"
-                    name="Task icon"
-                    src="/icons/gray-checkbox.svg"
-                  />
-                  <span
-                    className="text-sm font-medium  line-clamp-1 overflow-hidden text-[#228CDB]  break-all"
-                    dangerouslySetInnerHTML={{ __html: targetSpan }}
-                  />
-                </div>
-
-                {restOfContent.trim() && (
-                  <p
-                    key={`${index}-rest`}
-                    className="text-chat-box font-normal text-sm -ml-1 p-1 rounded-[5px]"
-                    dangerouslySetInnerHTML={{ __html: restOfContent }}
-                  />
-                )}
-              </>
+            children.push(
+              <div
+                key={`${index}-${i}-task`}
+                id={taskId}
+                className="flex mb-2 items-center w-full rounded-[6px] min-h-[42px] border border-[#D2DBE1] bg-white px-4 gap-3 hover:cursor-pointer">
+                <ImageRound
+                  className="w-[14px] h-[14px]"
+                  name="Task icon"
+                  src="/icons/gray-checkbox.svg"
+                />
+                <span
+                  className="text-sm font-medium  line-clamp-1 overflow-hidden text-[#228CDB]  break-all"
+                  dangerouslySetInnerHTML={{ __html: targetSpan }}
+                />
+              </div>,
             );
           }
 
-          return (
-            <p
-              key={index}
-              className="text-chat-box font-normal text-sm -ml-1 p-1 rounded-[5px]">
-              <span dangerouslySetInnerHTML={{ __html: element.innerHTML }} />
-            </p>
-          );
+          if (el.dataset.quoteMsg) {
+            const raw = el.dataset.msgData;
+            const foundQuote: ChatMessageResponse = raw
+              ? JSON.parse(raw)
+              : null;
+            if (foundQuote) {
+              children.push(
+                <div className={``}>
+                  <MessageDetailQuote
+                    key={`${index}-${i}-msg`}
+                    messageDetail={foundQuote}
+                    uuidQuote={foundQuote.uuid}
+                    uuidList={uuidList}
+                    isBookMark
+                    chatRoomDetail={undefined}
+                    highlightedMessageId={null}
+                    dashboardMemberList={dashboardMemberList}
+                    setDataPreviewFile={setDataPreviewFile}
+                    handleActionEditTask={handleActionEditTask}
+                  />
+                </div>,
+              );
+            }
+          }
+
+          if (el.dataset.quoteText) {
+            const dataTitle = el.dataset.title || '';
+            const raw = el.dataset.msgTextData;
+            const foundQuote: ChatMessageResponse = raw
+              ? JSON.parse(raw)
+              : null;
+
+            if (foundQuote) {
+              children.push(
+                <div className={`${index !== 0 && 'mt-5'}`}>
+                  <MessageDetailQuoteText
+                    key={`${index}-${i}-textquote`}
+                    messageDetail={foundQuote}
+                    dashboardMemberList={dashboardMemberList}
+                    title={dataTitle}
+                    uuidQuote={foundQuote.uuid}
+                  />
+                </div>,
+              );
+            }
+          }
+          if (el.dataset.msgReplyId) {
+            const title = el.dataset.title || '';
+
+            children.push(
+              <p key={`${index}-msg-reply`}>
+                <span
+                  className="inline-msg-quote flex items-center gap-[6px]"
+                  contentEditable={false}>
+                  <ImageRound
+                    name="Reply"
+                    src={'/icons/reply.svg'}
+                    className="w-[14px] h-[12px] hover:cursor-pointer"
+                  />
+                  <span style={{ color: '#77858F' }}>{title}</span>
+                </span>
+              </p>,
+            );
+          }
+          if (
+            el.classList.contains('mention') ||
+            el.dataset.type === 'mention'
+          ) {
+            const mentionText = el.textContent?.trim() || el.innerText || '';
+            if (mentionText) {
+              children.push(
+                <span
+                  key={`${index}-${i}-mention`}
+                  className="mention"
+                  data-type="mention"
+                  data-id={el.dataset.id}
+                  style={{ color: el.style.color }}>
+                  {mentionText}
+                </span>,
+              );
+            }
+          }
+          if (
+            el.tagName === 'IMG' &&
+            el.getAttribute('src')?.includes('/icons/') &&
+            el.getAttribute('alt') &&
+            el.getAttribute('title')
+          ) {
+            const src = el.getAttribute('src');
+            const name = el.getAttribute('alt') ?? '';
+            children.push(
+              <Image
+                key={`${index}-${i}-reaction`}
+                src={src!}
+                alt={name}
+                title={name}
+                width={20}
+                height={20}
+                className="inline-block align-middle mx-[2px] w-[20px] h-[20px]"
+              />,
+            );
+          }
+          if (
+            el.tagName === 'SPAN' &&
+            el.getAttribute('data-src')?.includes('/icons/')
+          ) {
+            const src = el.getAttribute('data-src');
+            const name = el.getAttribute('alt') ?? '';
+            children.push(
+              <Image
+                key={`${index}-${i}-reaction`}
+                src={src!}
+                alt={name}
+                title={name}
+                width={20}
+                height={20}
+                className="inline-block align-middle mx-[2px] w-[20px] h-[20px]"
+              />,
+            );
+          }
+          // Fallback for unhandled inline tags
+          if (
+            !el.dataset.taskId &&
+            !el.dataset.quoteMsg &&
+            !el.dataset.quoteText &&
+            !el.dataset.msgReplyId &&
+            !el.classList.contains('mention')
+          ) {
+            children.push(
+              <span
+                key={`${index}-${i}-inline`}
+                dangerouslySetInnerHTML={{ __html: el.outerHTML }}
+              />,
+            );
+          }
         }
-      } else if (node.nodeType === 3) {
-        return node.textContent?.trim() ? (
-          <span key={index}>{node.textContent}</span>
-        ) : null;
+      });
+
+      return (
+        <div
+          key={`p-${index}`}
+          data-id={messageDetail.uuid}
+          className="text-chat-box font-normal text-sm -ml-1 p-1 rounded-[5px] ">
+          {children}
+        </div>
+      );
+    };
+
+    const processNode = (node: ChildNode, index: number) => {
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const element = node as HTMLElement;
+        if (element.tagName === 'P') {
+          return processPElement(element, index);
+        }
+      } else if (node.nodeType === Node.TEXT_NODE) {
+        const text = node.textContent?.trim();
+        return text ? <span key={`text-${index}`}>{text}</span> : null;
       }
       return null;
     };
