@@ -49,9 +49,7 @@ class Command(BaseCommand):
                         admin_user.user.email
                         or admin_user.user.two_factor_auth_email
                     )
-                    company.responsible_person_name = (
-                        admin_user.user.profile.full_name
-                    )
+                    company.responsible_person_name = admin_user.user.full_name
             if company.contract.next_renewal_at is None:
                 company.contract.__dict__.update(contract_data)
                 company.contract.save(update_fields=contract_data.keys())

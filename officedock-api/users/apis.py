@@ -20,8 +20,7 @@ from base.constants import (
 )
 from base.messages import ERROR_MESSAGES
 from base.permissions import ActionPermission, IsOperationAdminOnly
-from chat.constants import ChatRoomTypes, WebSocketEventType
-from chat.models import ChatRoom
+from chat.constants import WebSocketEventType
 from common.serializers import EmptySerializer
 from common.utils import (
     calculate_company_dates,
@@ -286,7 +285,7 @@ class AdminUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             user.email,
             password,
             user,
-            invited_by=self.request.user.profile.full_name,
+            invited_by=self.request.user.full_name,
         )
 
     @transaction.atomic()
@@ -551,7 +550,7 @@ class SystemAuthViewSet(BaseAPIViewSet):
         serializer_data = serializer.validated_data
 
         user = (
-            User.objects.filter(
+            User.active_objects.filter(
                 Q(email=serializer_data["username"])
                 | Q(username=serializer_data["username"])
             )
@@ -588,7 +587,7 @@ class SystemAuthViewSet(BaseAPIViewSet):
 
         # Send OTP code to user email
         MailService().send_system_login_otp(
-            user.profile.full_name, user.two_factor_auth_email, otp_code
+            user.full_name, user.two_factor_auth_email, otp_code
         )
         user_verification.save()
 
@@ -673,7 +672,7 @@ class SystemAuthViewSet(BaseAPIViewSet):
         detail=False,
         methods=["GET"],
         url_path="me",
-        serializer_class=UserListSerializer,
+        serializer_class=UserSerializer,
         permission_classes=[IsAuthenticated],
     )
     def get_user_profile(self, request):
@@ -742,6 +741,8 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             .filter(company_id=company_id)
             .exclude(roles__name=RoleTypes.OPERATION_ADMIN.value)
             .distinct()
+            .select_related("profile")
+            .prefetch_related("organizations", "roles")
         )
         return queryset.order_by("created_at")
 
@@ -854,8 +855,8 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 new_user_email,
                 password,
                 company_name=company.name,
-                invite_by=current_user.profile.full_name,
-                user_name=user.profile.full_name,
+                invite_by=current_user.full_name,
+                user_name=user.full_name,
             )
         else:
             new_user_email = serializer_data.get("username")
@@ -1043,14 +1044,7 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             raise ValidationError(
                 {"detail": [ERROR_MESSAGES["last_system_admin_deleted"]]}
             )
-        ChatRoom.objects.filter(
-            chat_rooms_participants__user=instance,
-            type__in=[
-                ChatRoomTypes.PRIVATE.value,
-                ChatRoomTypes.TASK.value,
-                ChatRoomTypes.SELF.value,
-            ],
-        ).delete()
+
         # Block access token for logged user
         LoginToken.objects.filter(user=instance).delete()
         # Send socket for logout user deleted
@@ -1062,9 +1056,10 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             user=instance,
         )
 
-        if instance.avatar:
-            # Remove old avatar
-            instance.avatar.delete()
+        # Keep avatar use to restore user
+        # if instance.avatar:
+        #     # Remove old avatar
+        #     instance.avatar.delete()
 
         # Log user create
         UserActivityLog.log_user_deletion(
@@ -1074,7 +1069,18 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             get_user_agent(self.request),
         )
 
-        instance.delete()
+        instance.soft_delete()
+
+    @action(
+        detail=True, methods=["POST"], url_path="restore", serializer_class=None
+    )
+    def restore_user(self, request, pk=None):
+        """
+        Handle restore of deleted user
+        """
+        user = self.get_object()
+        user.restore()
+        return self.response_ok()
 
     @action(
         detail=False,

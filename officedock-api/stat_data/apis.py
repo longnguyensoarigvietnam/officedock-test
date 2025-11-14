@@ -2,6 +2,7 @@ from datetime import datetime, time, timedelta
 
 from django.db.models import (
     Q,
+    Prefetch,
 )
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -20,6 +21,7 @@ from common.serializers import (
     CreationDataUserWithMainOrganizationSerializer,
 )
 from common.utils import (
+    filter_include_deleted_user,
     format_duration,
     time_str_to_timedelta,
     transform_statistic_categories,
@@ -239,6 +241,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
     @extend_schema(
         parameters=[
             OpenApiParameter(name="organization_ids", type=str),
+            OpenApiParameter(name="has_include_deleted_user", type=bool),
             OpenApiParameter(name="date", type=datetime),
         ]
     )
@@ -261,35 +264,49 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         datetime.combine(timezone.now().date(), time.min)
         end_of_day = datetime.combine(date, time.max)
 
-        if organization_ids_params is None:
-            organization_ids = request_user.organizations.all().values_list(
-                "id", flat=True
+        user_qs = (
+            User.objects.filter(filter_include_deleted_user(request))
+            .select_related("profile")
+            .prefetch_related(
+                Prefetch(
+                    "task_durations",
+                    queryset=TaskDuration.objects.filter(
+                        Q(
+                            Q(started_at__gte=start_of_day)
+                            & Q(paused_at__lte=end_of_day)
+                        )
+                        | Q(
+                            Q(started_at__lte=end_of_day)
+                            & Q(started_at__gte=start_of_day)
+                            & Q(paused_at__isnull=True)
+                        )
+                    ),
+                )
             )
+            .order_by("id")
+        )
+        if organization_ids_params is None:
+            organizations = request_user.organizations.prefetch_related(
+                Prefetch("users", queryset=user_qs)
+            ).order_by("id")
         else:
             organization_ids = split_id_from_string(organization_ids_params)
+            organizations = (
+                Organization.objects.filter(id__in=organization_ids)
+                .prefetch_related(Prefetch("users", queryset=user_qs))
+                .order_by("id")
+            )
 
         data = []
-        if organization_ids:
-            for organization_id in organization_ids:
-                organization = Organization.objects.get(id=organization_id)
-                users = organization.users.all().order_by("created_at")
+        if organizations:
+            for organization in organizations:
+                # Get data from fetched
+                users = organization.users.all()
                 user_list = []
                 for user in users:
                     total_duration = timedelta()
-                    durations = TaskDuration.objects.filter(
-                        Q(user=user)
-                        & Q(
-                            Q(
-                                Q(started_at__gte=start_of_day)
-                                & Q(paused_at__lte=end_of_day)
-                            )
-                            | Q(
-                                Q(started_at__lte=end_of_day)
-                                & Q(started_at__gte=start_of_day)
-                                & Q(paused_at__isnull=True)
-                            )
-                        )
-                    )
+                    # Get data from fetched
+                    durations = user.task_durations.all()
                     for duration in durations:
                         paused_at = (
                             duration.paused_at

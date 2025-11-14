@@ -97,8 +97,7 @@ def has_permission(actions, user, item_org_ids):
     Get unique role permissions for the given object.
     """
     # Retrieve permissions for update and delete actions
-    user_org_ids = user.organizations.values_list("id", flat=True)
-    org_ids = list(user_org_ids)
+    org_ids = list()
 
     def _get_children(instance):
         children = instance.organizations.all()

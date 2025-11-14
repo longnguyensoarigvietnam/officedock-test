@@ -461,7 +461,7 @@ class PeopleInChargeSerializer(serializers.ModelSerializer):
         """
         Return full name of user.
         """
-        return obj.user.profile.full_name
+        return obj.user.full_name
 
     def get_id(self, obj):
         """

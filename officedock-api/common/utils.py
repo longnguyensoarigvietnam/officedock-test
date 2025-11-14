@@ -1028,3 +1028,38 @@ def get_a_day_in_next_month(date: datetime, target_date: int):
     next_month = date.month + 1 if date.month < 12 else 1
     next_year = date.year if date.month < 12 else date.year + 1
     return datetime(next_year, next_month, target_date, 0, 0, 0)
+
+
+def common_filter_is_deleted(queryset, value):
+    """
+    Filter users by deletion status.
+
+    Returns:
+        A filtered queryset reflecting the requested deletion status
+    """
+    if value is True:
+        queryset = queryset.filter(deleted_at__isnull=False)
+    elif value is False:
+        queryset = queryset.filter(deleted_at__isnull=True)
+
+    return queryset.distinct()
+
+
+def filter_include_deleted_user(request):
+    """
+    Returns a Q filter for users based on the 'has_include_deleted_user' query parameter in the request.
+    If 'has_include_deleted_user' is set to 'false' (case-insensitive), the filter will restrict results to users who have not been soft deleted (i.e., where deleted_at is null).
+
+    Args:
+        request: The HTTP request object, expected to have 'query_params' containing 'has_include_deleted_user'.
+
+    Returns:
+        Q: A Django Q filter object for use in QuerySets.
+    """
+    has_include_deleted_user = request.query_params.get(
+        "has_include_deleted_user"
+    )
+    filters = Q()
+    if has_include_deleted_user and has_include_deleted_user.lower() == "false":
+        filters = Q(deleted_at__isnull=True)
+    return filters

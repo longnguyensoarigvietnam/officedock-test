@@ -67,9 +67,11 @@ class BaseUserSerializer(serializers.ModelSerializer):
             "two_factor_auth_email",
             "password",
             "profile",
+            "full_name",
             "login_type",
             "avatar_color",
             "avatar",
+            "deleted_at",
         ]
         extra_kwargs = {
             "password": {"write_only": True},
@@ -398,6 +400,7 @@ class UserSerializer(BaseUserSerializer):
             "roles",
             "permissions",
             "profile",
+            "full_name",
             "company",
             "organizations",
             "login_type",
@@ -406,6 +409,7 @@ class UserSerializer(BaseUserSerializer):
             "avatar_color",
             "avatar",
             "created_at",
+            "deleted_at",
         ]
 
     def get_permissions(self, obj):
@@ -430,9 +434,9 @@ class UserSerializer(BaseUserSerializer):
         """
         sorted_orgs = [
             item.organization
-            for item in UsersOrganizations.objects.filter(user=obj).order_by(
-                "-is_main", "id"
-            )
+            for item in UsersOrganizations.objects.filter(user=obj)
+            .select_related("organization")
+            .order_by("-is_main", "id")
         ]
         return OrganizationForUserSerializer(
             sorted_orgs, many=True, context={"user": obj}
@@ -532,6 +536,7 @@ class UserLoginSerializer(BaseUserSerializer):
             "two_factor_auth_email",
             "permissions",
             "profile",
+            "full_name",
             "login_type",
             "unread_terms",
         ]
@@ -613,12 +618,13 @@ class UserListSerializer(UserSerializer):
             "username",
             "roles",
             "profile",
-            "company",
+            "full_name",
             "organizations",
             "actions",
             "email",
             "avatar_color",
             "avatar",
+            "deleted_at",
         ]
 
     def get_actions(self, obj):
@@ -631,7 +637,7 @@ class UserListSerializer(UserSerializer):
             Actions.UPDATE.value: f"{Screens.USER.value}_{Actions.UPDATE.value}",
             Actions.DELETE.value: f"{Screens.USER.value}_{Actions.DELETE.value}",
         }
-        item_org_ids = obj.organizations.values_list("id", flat=True)
+        item_org_ids = [org.id for org in obj.organizations.all()]
 
         permissions = has_permission(actions, user, item_org_ids)
         # Check not show button delete if itself
@@ -687,6 +693,7 @@ class SystemUserInviteSerializer(BaseUserSerializer):
             "email",
             "password",
             "profile",
+            "full_name",
             "roles",
             "role_ids",
             "company",
@@ -793,6 +800,7 @@ class AdminUserInviteSerializer(serializers.ModelSerializer):
             "id",
             "email",
             "profile",
+            "full_name",
             "roles",
             "company",
         ]

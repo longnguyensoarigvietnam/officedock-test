@@ -134,6 +134,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             OpenApiParameter("user_id", type=int),
             OpenApiParameter("get_roles", type=bool),
             OpenApiParameter("get_all_members", type=bool),
+            OpenApiParameter("has_include_deleted_user", type=bool),
             OpenApiParameter("get_all_organizations", type=bool),
             OpenApiParameter("get_organization_members", type=bool),
             OpenApiParameter("get_tags", type=bool),
@@ -199,10 +200,12 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         if "get_roles" in request.query_params:
             response_data["roles"] = get_roles(company)
         if "get_all_members" in request.query_params:
-            response_data["all_members"] = get_members(company)
+            response_data["all_members"] = get_members(company, request=request)
         if "get_organization_members" in request.query_params:
             response_data["organization_members"] = get_members(
-                company, organization
+                company,
+                organization,
+                request=request,
             )
         if "get_tags" in request.query_params:
             response_data["tags"] = get_tags(company, organization)

@@ -846,7 +846,7 @@ class ScheduleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             "participants": [
                 {
                     "id": user.id,
-                    "name": user.profile.full_name,
+                    "name": user.full_name,
                     "is_creator": user.id == creator_id,
                 }
                 for user in users

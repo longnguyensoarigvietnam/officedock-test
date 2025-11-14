@@ -1854,7 +1854,7 @@ class TaskTeamdockViewSet(BaseAPIViewSet, mixins.ListModelMixin):
     API endpoint to show Tasks to the Teamdock.
     """
 
-    queryset = User.objects.all()
+    queryset = User.active_objects.all()
     serializer_class = TaskTeamdockSerializer
     ordering_fields = [
         "deadline",

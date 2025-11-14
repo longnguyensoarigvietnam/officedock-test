@@ -4,7 +4,7 @@ from uuid import UUID
 
 from chat.constants import ChatRoomTypes
 from chat.models import ChatRoom, ChatMessage, Bookmark, Reaction
-from chat.serializers import ChatFileSerializer
+from chat.serializers import ChatFileSerializer, UserPayloadMsgSerializer
 from common.constants import AVATAR_GCS_EXPIRATION_SECONDS
 from common.utils import get_signed_url
 from organizations.models import UsersOrganizations
@@ -108,8 +108,10 @@ def build_chat_message_payload(full_messages, request_user=None):
 
     # Prefetch all senders for the given messages in a single query
     sender_ids = [m.sender_id for m in full_messages]
-    senders = User.objects.filter(id__in=sender_ids).values(
-        "id", "profile__full_name", "avatar", "avatar_color"
+    senders = (
+        User.objects.filter(id__in=sender_ids)
+        .select_related("profile")
+        .only("id", "profile", "avatar", "avatar_color", "deleted_at")
     )
     main_org_map = {
         uo["user_id"]: {
@@ -127,15 +129,9 @@ def build_chat_message_payload(full_messages, request_user=None):
         )
     }
     user_serialized_map = {
-        user["id"]: {
-            "id": user["id"],
-            "full_name": user["profile__full_name"],
-            "avatar": get_signed_url(
-                user["avatar"], AVATAR_GCS_EXPIRATION_SECONDS
-            ),
-            "avatar_color": user["avatar_color"],
-            "organizations": main_org_map.get(user["id"]),
-        }
+        user.id: UserPayloadMsgSerializer(
+            user, context={"organizations": main_org_map.get(user.id)}
+        ).data
         for user in senders
     }
     # Prefetch all submit level for the given messages in a single query
