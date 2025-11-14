@@ -1649,9 +1649,11 @@ const EventCalendar = () => {
                       new Date(schedule.planEndDate).toDateString() &&
                       data.isAllDay) ||
                       isMidnight(new Date(schedule.planEndDate)))
-                      ? new Date(schedule.planEndDate).setDate(
-                          new Date(schedule.planEndDate).getDate() + 1,
-                        )
+                      ? (() => {
+                          const newDate = new Date(schedule.planEndDate);
+                          newDate.setDate(newDate.getDate() + 1);
+                          return newDate; // return Date object
+                        })()
                       : schedule.planEndDate;
                   return {
                     id: `${schedule.id}`,
@@ -1827,7 +1829,10 @@ const EventCalendar = () => {
           ? selectedScheduleUserIds.split(',').filter(Boolean)
           : [];
 
-        if (calendarRef.current) {
+        if (
+          calendarRef.current &&
+          watch('calendarView').value !== CalendarViewOptions.VIEW_BY_YEAR
+        ) {
           const calendarApi = calendarRef.current.getApi();
           const startDateISOString = formatQueryStartDateForCalendar(
             calendarApi.view.activeStart,
@@ -1842,6 +1847,8 @@ const EventCalendar = () => {
             endDate: endDateISOString,
             keySearch,
           });
+        } else {
+          setIsLoading(false);
         }
 
         setSelectedEventInfo(null);
@@ -1904,7 +1911,10 @@ const EventCalendar = () => {
           ? selectedScheduleUserIds.split(',').filter(Boolean)
           : [];
 
-        if (calendarRef.current) {
+        if (
+          calendarRef.current &&
+          watch('calendarView').value !== CalendarViewOptions.VIEW_BY_YEAR
+        ) {
           const calendarApi = calendarRef.current.getApi();
           const startDateISOString = formatQueryStartDateForCalendar(
             calendarApi.view.activeStart,
@@ -1919,6 +1929,8 @@ const EventCalendar = () => {
             endDate: endDateISOString,
             keySearch,
           });
+        } else {
+          setIsLoading(false);
         }
         setSelectedEventInfo(null);
         setDefaultCreateStartDate(undefined);

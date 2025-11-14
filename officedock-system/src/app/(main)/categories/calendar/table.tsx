@@ -99,7 +99,9 @@ const HierarchyTable = ({
     HierarchyType.MEDIUM,
   );
 
-  const findLastUniqueMediumIndexes = (data: CalendarCategoryRow[]): number[] => {
+  const findLastUniqueMediumIndexes = (
+    data: CalendarCategoryRow[],
+  ): number[] => {
     const lastIndexes: number[] = [];
     let currentLargeValue: number | string | null = null;
     let mediumIndexes: Record<number | string, number> = {}; // Tracks first occurrence of each medium value
@@ -129,12 +131,43 @@ const HierarchyTable = ({
     return lastIndexes;
   };
 
+  const findLastUniqueLargeIndexes = (
+    data: CalendarCategoryRow[],
+  ): number[] => {
+    const lastIndexes: number[] = [];
+    let lastLargeIndex: number | null = null;
+    let currentLargeValue: number | string | null = null;
+
+    for (let i = 0; i < data.length; i++) {
+      const { large } = data[i];
+
+      // If the large category changes, store the last large index
+      if (large.value !== currentLargeValue) {
+        if (lastLargeIndex !== null) lastIndexes.push(lastLargeIndex);
+        currentLargeValue = large.value;
+      }
+
+      lastLargeIndex = i; // Always update with the last index of the large group
+    }
+
+    // Push the last tracked index of the final large group
+    if (lastLargeIndex !== null) lastIndexes.push(lastLargeIndex);
+
+    return lastIndexes;
+  };
+
   const lastMediumIndexes = findLastUniqueMediumIndexes(
     hierarchyDetail.statisticCategories,
   );
 
+  const lastLargeIndexes = findLastUniqueLargeIndexes(
+    hierarchyDetail.statisticCategories,
+  );
+
   return (
-    <div className="w-full p-5 bg-[#F8FAFC] rounded-[30px]" style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
+    <div
+      className="w-full p-5 bg-[#F8FAFC] rounded-[30px]"
+      style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
       <p className="text-[#77858F] text-[16px] font-medium mb-4 max-w-[100%] break-all">
         {hierarchyDetail.name}
       </p>
@@ -142,10 +175,10 @@ const HierarchyTable = ({
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
+              {headerGroup.headers.map((header, index) => (
                 <th
                   key={header.id}
-                  className={`text-[#77858F] bg-[#F8FAFC] border-[1px] w-1/2 font-medium text-xs py-3`}>
+                  className={`text-[#77858F] bg-[#F8FAFC] ${headerGroup.headers.length - 1 != index && 'border-[#D2DBE1] border-r-[1px]'} w-1/2 font-medium text-xs py-3`}>
                   {flexRender(
                     header.column.columnDef.header,
                     header.getContext(),
@@ -157,11 +190,24 @@ const HierarchyTable = ({
         </thead>
         <tbody>
           {table.getRowModel().rows.map((row, rowIndex) => {
+            const rows = table.getRowModel().rows;
+            const lastIndex = rows.length - 1;
+
+            const secondLastLargeIndex =
+              Array.isArray(lastLargeIndexes) && lastLargeIndexes.length >= 2
+                ? lastLargeIndexes[lastLargeIndexes.length - 2]
+                : null;
+
             return (
               <tr key={row.id} className="h-[1px]">
                 {largeRowspan[rowIndex] > 0 && (
                   <td
-                    className={`border-[1px] w-1/2 max-w-1/2 break-all border-[#D2DBE1] h-full`}
+                    className={`${
+                      lastIndex !== rowIndex &&
+                      secondLastLargeIndex !== null &&
+                      secondLastLargeIndex + 1 !== rowIndex &&
+                      'border-b-[1px]'
+                    } border-r-[1px] border-[#D2DBE1] w-1/2 max-w-1/2 break-all h-full`}
                     style={{ height: 'inherit' }}
                     rowSpan={largeRowspan[rowIndex]}>
                     <div className="p-3 h-full flex items-center gap-3">
@@ -179,7 +225,7 @@ const HierarchyTable = ({
                 )}
                 {mediumRowspan[rowIndex] > 0 && (
                   <td
-                    className={`w-1/2 max-w-1/2 break-all px-3 border-[#D2DBE1] ${lastMediumIndexes.includes(rowIndex) ? 'border-b-[1px] border-x-[1px]' : 'border-x-[1px]'} h-full`}
+                    className={`w-1/2 max-w-1/2 break-all px-3 ${lastMediumIndexes.includes(rowIndex) && table.getRowModel().rows.length - 1 != rowIndex && 'border-b-[1px] border-[#D2DBE1]'} h-full`}
                     style={{ height: 'inherit' }}
                     rowSpan={mediumRowspan[rowIndex]}>
                     <p
