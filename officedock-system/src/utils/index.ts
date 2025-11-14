@@ -61,7 +61,7 @@ import {
   UserTotalStatus,
 } from '@interfaces/task';
 import { ChangeTextAreaProps, OptionDropdownType } from '@interfaces/common';
-import { UserRoleType } from '@interfaces/user';
+import { Profile, UserRoleType } from '@interfaces/user';
 import {
   ChatMessageResponse,
   ChatParticipant,
@@ -2739,4 +2739,15 @@ export const handleServerFormErrors = <T extends Record<string, any>>(
       message: messages[0],
     });
   });
+};
+
+export const getUserNameById = ({
+  users,
+  id,
+}: {
+  users: Profile[];
+  id: number;
+}): string => {
+  const user = users.find((u) => u.id === id);
+  return user ? user.fullName : '';
 };

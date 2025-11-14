@@ -710,6 +710,6 @@
   transform-origin: center;
 }
 .schedule-custom .fc-resourceTimeGridDay-view .fc-event .icon-circle {
-  transform: scaleX(1.0417);
+  transform: scaleX(1.04);
   transform-origin: center;
 }

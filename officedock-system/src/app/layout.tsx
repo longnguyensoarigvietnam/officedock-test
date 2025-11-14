@@ -38,7 +38,7 @@ export default function RootLayout({
     <html lang="ja">
       {/* TODO: Config font and using in here */}
       <body
-        className={`${fontPrimary.variable} font-primary bg-[#EBF1F7] overflow-y-hidden overflow-x-auto scrollbar-gutter-stable`}>
+        className={`${fontPrimary.variable} font-primary  overflow-y-hidden overflow-x-auto scrollbar-gutter-stable bg-[#E6F3FB]`}>
         <AuthProvider>
           <SessionCacheProvider>
             <GlobalStateProvider>

@@ -195,6 +195,7 @@ const KanbanBoardTaskTeam = () => {
       get_organization_with_users: true,
       get_organization_members: true,
       get_task_status: true,
+      has_include_deleted_user: 'false',
     },
     onSuccess: (data) => {
       if (data.organizationMembers) {
@@ -2480,246 +2481,249 @@ const KanbanBoardTaskTeam = () => {
   return (
     <>
       <div
-        className={`pt-[30px] pr-10 h-[calc(100vh_-_70px)] !overflow-hidden ${isDragging ? 'overflow-hidden' : 'overflow-y-auto'}   font-medium  w-full pb-10`}>
-        <div className="mb-[30px] flex items-center justify-between">
-          <div className="flex items-center">
-            <div className="flex gap-1 items-center">
-              {selectedOrganization?.imgComponent && (
-                <div className="w-[34px] h-[34px] scale-[1.4167] flex justify-center items-center">
-                  {selectedOrganization.imgComponent}
-                </div>
-              )}
-              <p className="text-[26px] font-medium relative top-[0px] line-clamp-2 max-w-[350px] break-all ml-[10px] ">
-                {selectedOrganization?.label}
-              </p>
-            </div>
-            <div className="flex justify-center bg-white p-[6px] rounded-[20px] items-center gap-2 ml-5 ">
-              <Button
-                disabled={isLoadingDataTask}
-                variant={'primary'}
-                className={`!py-0 !px-0 font-bold w-[90px] h-7
-              !rounded-[20px] text-xs`}>
-                タスク
-              </Button>
-              <Button
-                disabled={isLoadingDataTask}
-                onClick={() => {
-                  router.push(
-                    `${pageRouters.SCHEDULE_TEAM_MANAGEMENT.href}?organization=${organizationId}&tabId=1`,
-                  );
-                }}
-                variant={'outline'}
-                className={`!text-[#77858F] !bg-[#EBF1F7] !border-none !py-0 !px-0 font-bold w-[90px] h-7 !rounded-[20px] text-xs`}>
-                スケジュール
-              </Button>
-            </div>{' '}
-          </div>
-          <div className="flex items-center mr-3">
-            {listMemberTeam.length > 0 && getParticipantAvatars(listMemberTeam)}
-          </div>
-        </div>
-        <div className={`flex gap-7 mb-6 w-full min-w-[300px] relative`}>
-          <div className="flex items-center gap-2">
-            {/* Filter option modal */}
-            <Popover className="relative mr-2">
-              {() => (
-                <>
-                  <div className="flex items-center gap-2">
-                    <PopoverButton
-                      onClick={() => setIsOpenModalFilter(!isOpenModalFilter)}
-                      className="flex items-center gap-2 text-xs font-medium text-[#77858F] focus-visible:outline-none">
-                      <ImageRound
-                        src="/icons/filter.svg"
-                        name="Filter icon"
-                        className="w-[14px] h-[14px] ml-2"
-                      />
-                    </PopoverButton>
-                    {allLabels.length > 2 ? (
-                      <>
-                        {firstThree.slice(0, 2).map((item, index) => (
-                          <div
-                            key={index}
-                            className="w-[105px] h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#DAE2EB]">
-                            <span className="w-[71px] truncate">
-                              {item.label}
-                            </span>
-                            {!isLoadingDataTask && (
-                              <ImageRound
-                                src={`/icons/close.svg`}
-                                name="close"
-                                className="w-fit h-fit cursor-pointer"
-                                onClick={() => {
-                                  setIsReadyToFetch(true);
-                                  handleRemoveItem(
-                                    item.category as
-                                      | 'organization_ids'
-                                      | 'tag_ids'
-                                      | 'user_ids'
-                                      | 'category_ids',
-                                    item.value,
-                                  );
-                                }}
-                              />
-                            )}
-                          </div>
-                        ))}
-                        <p className="px-[10px] h-6 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
-                          +{remainingCount}
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        {allLabels.map((item, index) => (
-                          <div
-                            key={index}
-                            className="w-[105px] h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#DAE2EB]">
-                            <span className="w-[71px] truncate">
-                              {item.label}
-                            </span>
-                            {!isLoadingDataTask && (
-                              <ImageRound
-                                src={`/icons/close.svg`}
-                                name="close"
-                                className="w-fit h-fit cursor-pointer"
-                                onClick={() => {
-                                  setIsReadyToFetch(true);
-                                  handleRemoveItem(
-                                    item.category as
-                                      | 'organization_ids'
-                                      | 'tag_ids'
-                                      | 'category_ids',
-                                    item.value,
-                                  );
-                                }}
-                              />
-                            )}
-                          </div>
-                        ))}
-                      </>
-                    )}
+        className={`pt-[30px] pr-10 h-[calc(100vh_-_70px)] flex flex-col !overflow-hidden ${isDragging ? 'overflow-hidden' : 'overflow-y-auto'}   font-medium  w-full pb-5`}>
+        <div className="flex-shrink-0">
+          <div className="mb-[30px] flex items-center justify-between">
+            <div className="flex items-center">
+              <div className="flex gap-1 items-center">
+                {selectedOrganization?.imgComponent && (
+                  <div className="w-[34px] h-[34px] scale-[1.4167] flex justify-center items-center">
+                    {selectedOrganization.imgComponent}
                   </div>
-                  <Transition
-                    as={Fragment}
-                    show={isOpenModalFilter}
-                    enter="transition ease-out duration-200"
-                    enterFrom="opacity-0 translate-y-1"
-                    enterTo="opacity-100 translate-y-0"
-                    leave="transition ease-in duration-150"
-                    leaveFrom="opacity-100 translate-y-0"
-                    leaveTo="opacity-0 translate-y-1">
-                    <PopoverPanel className="absolute left-0 top-5 z-[1] w-[400px] transform">
-                      <ActionFilterTaskTeam
-                        listMemberTeam={listMemberTeam}
-                        isLoadingDataTask={isLoadingDataTask}
-                        handleClose={() => setIsOpenModalFilter(false)}
-                        handleReadyToFetch={() => setIsReadyToFetch(true)}
-                      />
-                    </PopoverPanel>
-                  </Transition>
-                </>
-              )}
-            </Popover>
-            <ImageRound
-              src="/icons/sort-task.svg"
-              name="Sort icon"
-              className="w-[18px] h-[14px]"
-            />
-            <>
-              <Button
-                disabled={isLoadingDataTask}
-                onClick={() => {
-                  if (dataOrderRing !== FilterTypeKanban.DEADLINE) {
-                    setIsReadyToFetch(true);
-                    setDataOrderRing(FilterTypeKanban.DEADLINE);
-                  }
-                }}
-                variant={
-                  isLoadingDataTask
-                    ? 'outline'
-                    : dataOrderRing === FilterTypeKanban.DEADLINE
-                      ? 'primary'
-                      : 'outline'
-                }
-                className={`${dataOrderRing === FilterTypeKanban.DEADLINE && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] !bg-[#EBF1F7]  '}  h-6 w-20 !px-0 !py-0 text-xs font-bold !rounded-[20px]`}>
-                締切期間
-              </Button>
-              <Button
-                disabled={isLoadingDataTask}
-                onClick={() => {
-                  if (dataOrderRing !== FilterTypeKanban.IMPORTANT) {
-                    setIsReadyToFetch(true);
-
-                    setDataOrderRing(FilterTypeKanban.IMPORTANT);
-                  }
-                }}
-                variant={
-                  isLoadingDataTask
-                    ? 'outline'
-                    : dataOrderRing === FilterTypeKanban.IMPORTANT
-                      ? 'primary'
-                      : 'outline'
-                }
-                className={`${dataOrderRing === FilterTypeKanban.IMPORTANT && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2]  !bg-[#EBF1F7] '} h-6 w-20 !px-0 !py-0 text-xs font-bold !rounded-[20px]   `}>
-                重要
-              </Button>
-            </>
-
-            <InputSearch
-              className="w-[300px] h-[34px] py-0 bg-white !rounded-[20px]"
-              inputClassName="h-[34px] bg-white border-none !rounded-[20px] text-sm placeholder-[#77858F]"
-              iconClassName="w-[14px] h-[14px]"
-              placeholder="タスク、キーワードを検索"
-              // TODO : Implement search task
-              // onChange={(e) => {
-              //   setValueSearch(e.target.value);
-              // }}
-            />
-
-            <div className="ml-3">
-              <Checkbox
-                label="他チームを表示"
-                isChecked={isConcurrently}
-                disable={isLoadingDataTask}
-                onChange={(data) => {
-                  setIsConcurrently(data);
-                }}
-              />
+                )}
+                <p className="text-[26px] font-medium relative top-[0px] line-clamp-2 max-w-[350px] break-all ml-[10px] ">
+                  {selectedOrganization?.label}
+                </p>
+              </div>
+              <div className="flex justify-center bg-white p-[6px] rounded-[20px] items-center gap-2 ml-5 ">
+                <Button
+                  disabled={isLoadingDataTask}
+                  variant={'primary'}
+                  className={`!py-0 !px-0 font-bold w-[90px] h-7
+              !rounded-[20px] text-xs`}>
+                  タスク
+                </Button>
+                <Button
+                  disabled={isLoadingDataTask}
+                  onClick={() => {
+                    router.push(
+                      `${pageRouters.SCHEDULE_TEAM_MANAGEMENT.href}?organization=${organizationId}&tabId=1`,
+                    );
+                  }}
+                  variant={'outline'}
+                  className={`!text-[#77858F] !bg-[#EBF1F7] !border-none !py-0 !px-0 font-bold w-[90px] h-7 !rounded-[20px] text-xs`}>
+                  スケジュール
+                </Button>
+              </div>{' '}
+            </div>
+            <div className="flex items-center mr-3">
+              {listMemberTeam.length > 0 &&
+                getParticipantAvatars(listMemberTeam)}
             </div>
           </div>
-          <div className="absolute right-0 top-0">
-            <DynamicTooltip content="タスクを新規作成" placement="top">
-              <Button
-                onClick={() => {
-                  setPeopleDefaultId(COLUMN_ID_TASK);
-                  handleSetParam({
-                    id: null,
-                    action: ActionTask.CREATE,
-                  });
-                }}
-                style={{ boxShadow: '0px 1px 5px 0px #00000033' }}
-                className="flex gap-2 !p-[10px] !border-none">
-                <div
-                  style={{
-                    padding: '6.5px',
+          <div className={`flex gap-7 mb-6 w-full min-w-[300px] relative`}>
+            <div className="flex items-center gap-2">
+              {/* Filter option modal */}
+              <Popover className="relative mr-2">
+                {() => (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <PopoverButton
+                        onClick={() => setIsOpenModalFilter(!isOpenModalFilter)}
+                        className="flex items-center gap-2 text-xs font-medium text-[#77858F] focus-visible:outline-none">
+                        <ImageRound
+                          src="/icons/filter.svg"
+                          name="Filter icon"
+                          className="w-[14px] h-[14px] ml-2"
+                        />
+                      </PopoverButton>
+                      {allLabels.length > 2 ? (
+                        <>
+                          {firstThree.slice(0, 2).map((item, index) => (
+                            <div
+                              key={index}
+                              className="w-[105px] h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#DAE2EB]">
+                              <span className="w-[71px] truncate">
+                                {item.label}
+                              </span>
+                              {!isLoadingDataTask && (
+                                <ImageRound
+                                  src={`/icons/close.svg`}
+                                  name="close"
+                                  className="w-fit h-fit cursor-pointer"
+                                  onClick={() => {
+                                    setIsReadyToFetch(true);
+                                    handleRemoveItem(
+                                      item.category as
+                                        | 'organization_ids'
+                                        | 'tag_ids'
+                                        | 'user_ids'
+                                        | 'category_ids',
+                                      item.value,
+                                    );
+                                  }}
+                                />
+                              )}
+                            </div>
+                          ))}
+                          <p className="px-[10px] h-6 flex items-center justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
+                            +{remainingCount}
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          {allLabels.map((item, index) => (
+                            <div
+                              key={index}
+                              className="w-[105px] h-6 px-[10px] justify-between gap-[6px] text-xs text-black font-medium flex items-center truncate rounded-[20px] bg-[#DAE2EB]">
+                              <span className="w-[71px] truncate">
+                                {item.label}
+                              </span>
+                              {!isLoadingDataTask && (
+                                <ImageRound
+                                  src={`/icons/close.svg`}
+                                  name="close"
+                                  className="w-fit h-fit cursor-pointer"
+                                  onClick={() => {
+                                    setIsReadyToFetch(true);
+                                    handleRemoveItem(
+                                      item.category as
+                                        | 'organization_ids'
+                                        | 'tag_ids'
+                                        | 'category_ids',
+                                      item.value,
+                                    );
+                                  }}
+                                />
+                              )}
+                            </div>
+                          ))}
+                        </>
+                      )}
+                    </div>
+                    <Transition
+                      as={Fragment}
+                      show={isOpenModalFilter}
+                      enter="transition ease-out duration-200"
+                      enterFrom="opacity-0 translate-y-1"
+                      enterTo="opacity-100 translate-y-0"
+                      leave="transition ease-in duration-150"
+                      leaveFrom="opacity-100 translate-y-0"
+                      leaveTo="opacity-0 translate-y-1">
+                      <PopoverPanel className="absolute left-0 top-5 z-[1] w-[400px] transform">
+                        <ActionFilterTaskTeam
+                          listMemberTeam={listMemberTeam}
+                          isLoadingDataTask={isLoadingDataTask}
+                          handleClose={() => setIsOpenModalFilter(false)}
+                          handleReadyToFetch={() => setIsReadyToFetch(true)}
+                        />
+                      </PopoverPanel>
+                    </Transition>
+                  </>
+                )}
+              </Popover>
+              <ImageRound
+                src="/icons/sort-task.svg"
+                name="Sort icon"
+                className="w-[18px] h-[14px]"
+              />
+              <>
+                <Button
+                  disabled={isLoadingDataTask}
+                  onClick={() => {
+                    if (dataOrderRing !== FilterTypeKanban.DEADLINE) {
+                      setIsReadyToFetch(true);
+                      setDataOrderRing(FilterTypeKanban.DEADLINE);
+                    }
                   }}
-                  className={`rounded-full cursor-pointer w-fit  bg-white `}>
-                  <ImageRound
-                    src={`/icons/add.svg`}
-                    name="Add"
+                  variant={
+                    isLoadingDataTask
+                      ? 'outline'
+                      : dataOrderRing === FilterTypeKanban.DEADLINE
+                        ? 'primary'
+                        : 'outline'
+                  }
+                  className={`${dataOrderRing === FilterTypeKanban.DEADLINE && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] !bg-[#EBF1F7]  '}  h-6 w-20 !px-0 !py-0 text-xs font-bold !rounded-[20px]`}>
+                  締切期間
+                </Button>
+                <Button
+                  disabled={isLoadingDataTask}
+                  onClick={() => {
+                    if (dataOrderRing !== FilterTypeKanban.IMPORTANT) {
+                      setIsReadyToFetch(true);
+
+                      setDataOrderRing(FilterTypeKanban.IMPORTANT);
+                    }
+                  }}
+                  variant={
+                    isLoadingDataTask
+                      ? 'outline'
+                      : dataOrderRing === FilterTypeKanban.IMPORTANT
+                        ? 'primary'
+                        : 'outline'
+                  }
+                  className={`${dataOrderRing === FilterTypeKanban.IMPORTANT && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2]  !bg-[#EBF1F7] '} h-6 w-20 !px-0 !py-0 text-xs font-bold !rounded-[20px]   `}>
+                  重要
+                </Button>
+              </>
+
+              <InputSearch
+                className="w-[300px] h-[34px] py-0 bg-white !rounded-[20px]"
+                inputClassName="h-[34px] bg-white border-none !rounded-[20px] text-sm placeholder-[#77858F]"
+                iconClassName="w-[14px] h-[14px]"
+                placeholder="タスク、キーワードを検索"
+                // TODO : Implement search task
+                // onChange={(e) => {
+                //   setValueSearch(e.target.value);
+                // }}
+              />
+
+              <div className="ml-3">
+                <Checkbox
+                  label="他チームを表示"
+                  isChecked={isConcurrently}
+                  disable={isLoadingDataTask}
+                  onChange={(data) => {
+                    setIsConcurrently(data);
+                  }}
+                />
+              </div>
+            </div>
+            <div className="absolute right-0 top-0">
+              <DynamicTooltip content="タスクを新規作成" placement="top">
+                <Button
+                  onClick={() => {
+                    setPeopleDefaultId(COLUMN_ID_TASK);
+                    handleSetParam({
+                      id: null,
+                      action: ActionTask.CREATE,
+                    });
+                  }}
+                  style={{ boxShadow: '0px 1px 5px 0px #00000033' }}
+                  className="flex gap-2 !p-[10px] !border-none">
+                  <div
                     style={{
-                      width: `${(247 / 247) * 9}px`,
-                      height: `${(247 / 247) * 9}px`,
+                      padding: '6.5px',
                     }}
-                  />
-                </div>
-                <p> 新規作成</p>
-              </Button>
-            </DynamicTooltip>
+                    className={`rounded-full cursor-pointer w-fit  bg-white `}>
+                    <ImageRound
+                      src={`/icons/add.svg`}
+                      name="Add"
+                      style={{
+                        width: `${(247 / 247) * 9}px`,
+                        height: `${(247 / 247) * 9}px`,
+                      }}
+                    />
+                  </div>
+                  <p> 新規作成</p>
+                </Button>
+              </DynamicTooltip>
+            </div>
           </div>
         </div>
 
         {/* BOARD DATA */}
-        <div className="h-fit overflow-y-auto mt-6 w-full overflow-x-auto">
+        <div className="h-fit flex-grow  overflow-y-auto mt-6 w-full overflow-x-auto">
           {!isLoadingDataTask ? (
             <DragDropContext
               onDragStart={() => {
@@ -2728,7 +2732,7 @@ const KanbanBoardTaskTeam = () => {
               onDragEnd={onDragEnd}>
               <div
                 ref={listContainerRef}
-                className={`flex gap-8  h-[calc(100vh_-_235px)] overflow-x-auto overflow-y-hidden items-stretch  ${expanded ? 'w-[calc(100vw_-_270px)]' : 'w-[calc(100vw_-_120px)]'}`}>
+                className={`flex gap-8 h-full  overflow-x-auto overflow-y-hidden items-stretch  ${expanded ? 'w-[calc(100vw_-_270px)]' : 'w-[calc(100vw_-_120px)]'}`}>
                 <NoSettingColumn
                   totalNoSetting={totalNoSetting}
                   setTotalNoSetting={setTotalNoSetting}
@@ -2769,7 +2773,7 @@ const KanbanBoardTaskTeam = () => {
               </div>
             </DragDropContext>
           ) : (
-            <div className="h-[calc(100vh_-_250px)] w-full">
+            <div className="w-full h-full">
               <ColumnsSkeleton numberOfColumns={4} />
             </div>
           )}

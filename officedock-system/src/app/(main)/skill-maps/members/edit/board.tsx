@@ -71,6 +71,7 @@ const EditSkillMapByMemberBoard = () => {
   // Fetch organization skills
   const { skillMapListByMembers } = useSkillMapByMembers({
     organizationId: Number(selectedOrganizationOption.value),
+    has_include_deleted_user: 'false',
   });
 
   // Fetch organization skills
@@ -148,7 +149,9 @@ const EditSkillMapByMemberBoard = () => {
     <Fragment>
       <div className="sticky z-[21] top-[0px] px-10 py-[30px] bg-[#E6F3FB]">
         <div className="flex gap-5 items-center mb-[30px]">
-          <p className="text-black font-medium text-[26px] leading-[1]">スキルマップ設定</p>
+          <p className="text-black font-medium text-[26px] leading-[1]">
+            スキルマップ設定
+          </p>
           <div className="flex gap-[6px] bg-white w-fit p-[6px] rounded-[20px]">
             <Link href={pageRouters.SKILL_MAPS_MANAGEMENT.href}>
               <Button

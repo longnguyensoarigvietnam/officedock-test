@@ -76,6 +76,7 @@ export interface Profile {
     id: number;
     name: string;
   } | null;
+  deletedAt?: null | string;
 }
 
 export interface CreateUserFormRequest {

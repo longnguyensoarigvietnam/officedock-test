@@ -45,6 +45,7 @@ interface useCreationDataCommonHooksProps {
     get_balances_of_user?: boolean;
     get_items_of_user?: boolean;
     get_organizations_for_all_team_statistic?: boolean;
+    has_include_deleted_user?: string;
   };
   onSuccess?: (success: CreationDataCommon) => void;
   onError?: (error: AxiosError) => void;

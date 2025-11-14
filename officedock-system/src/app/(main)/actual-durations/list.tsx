@@ -176,6 +176,7 @@ const ListActualDurations = () => {
       get_all_members: true,
       get_tags: true,
       get_statistic_categories: true,
+      has_include_deleted_user: 'false',
     },
     onSuccess: (data) => {
       const memberList =

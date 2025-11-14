@@ -30,6 +30,10 @@ export const pageRouters = {
     name: 'ユーザー管理',
     href: '/users',
   },
+  USERS_MANAGEMENT_HIDDEN: {
+    name: 'ユーザー管理',
+    href: '/users/delete',
+  },
   CREATE_USER: {
     name: '新規登録',
     href: '/users/create',
@@ -47,6 +51,11 @@ export const pageRouters = {
   ROLES_MANAGEMENT: {
     name: '権限管理',
     href: '/roles',
+  },
+  // ROLE
+  ROLES_MANAGEMENT_HIDDEN: {
+    name: '権限管理',
+    href: '/roles/delete',
   },
   CREATE_ROLE: {
     name: '新規登録',
@@ -481,6 +490,7 @@ export const apiRouters = {
   // USER
   USER_LIST: '/users/',
   USER_DETAIL: (id: string | number) => `/users/${id}/`,
+  USER_RESTORE: (id: string | number) => `/users/${id}/restore/`,
   TAG_LIST: '/tags/',
   HIDDEN_TAG_LIST: '/tags/list-hidden',
   TAG_DETAIL: (id: string) => `/tags/${id}/`,
