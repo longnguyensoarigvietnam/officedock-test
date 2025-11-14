@@ -50,6 +50,7 @@ const MessageDetailQuoteText = ({
       </div>
     );
   };
+
   return (
     <div
       className={`flex flex-col border border-[#D2DBE1] p-5 bg-white rounded-md !box-border group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>

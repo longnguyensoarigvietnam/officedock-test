@@ -19,10 +19,16 @@ import { MessageDetailBookmark } from '@components/chat/MessageDetailBookmark';
 
 import { NO_DATA_AVAILABLE } from '@constants';
 
-import { ChatMessageResponse } from '@interfaces/chat';
+import {
+  ChatDashboardMember,
+  ChatFileResponse,
+  ChatMessageResponse,
+} from '@interfaces/chat';
 import { Profile } from '@interfaces/user';
 
 import { LoadingContext } from '@providers/LoadingProvider';
+import FilePreview from '@components/custom/FilePreview';
+import { ActionTask, ItemStartType } from '@constants/enums';
 
 interface AllChatRoomSearchMessagesModalProps {
   open: boolean;
@@ -78,7 +84,17 @@ export const AllChatRoomSearchMessagesModal = ({
 }: AllChatRoomSearchMessagesModalProps) => {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // Params
+  const params = new URLSearchParams(searchParams);
   const { isLoading } = useContext(LoadingContext);
+  // Preview files
+  const [dataPreviewFile, setDataPreviewFile] = useState<{
+    msgId: string;
+    file: ChatFileResponse;
+    user: ChatDashboardMember;
+    createAt: string;
+  } | null>(null);
 
   const resultsContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -135,6 +151,30 @@ export const AllChatRoomSearchMessagesModal = ({
     params.set('messageId', data.messageId);
 
     router.push(`/chat?${params.toString()}`, { scroll: false });
+  };
+
+  // Set param
+  const handleSetParam = ({
+    id,
+    action,
+  }: {
+    id: string | null;
+    action: string;
+  }) => {
+    if (id) {
+      params.set('task', id);
+    }
+    params.set('action', action);
+    params.set('type', ItemStartType.TASK);
+    router.push(`?${params.toString()}`);
+  };
+
+  // Edit task
+  const handleActionEditTask = (id: number) => {
+    handleSetParam({
+      id: `${id}`,
+      action: ActionTask.EDIT,
+    });
   };
 
   return (
@@ -211,7 +251,9 @@ export const AllChatRoomSearchMessagesModal = ({
                         messageId: String(messageDetail.id),
                       });
                     }}
+                    setDataPreviewFile={setDataPreviewFile}
                     handleBookmark={handleBookmark}
+                    handleActionEditTask={handleActionEditTask}
                   />
                 </div>
               );
@@ -231,6 +273,26 @@ export const AllChatRoomSearchMessagesModal = ({
             <></>
           )}
         </div>
+        {dataPreviewFile && (
+          <FilePreview
+            open={dataPreviewFile !== null}
+            file={dataPreviewFile.file}
+            user={dataPreviewFile.user}
+            msgId={dataPreviewFile.msgId}
+            createAt={dataPreviewFile.createAt}
+            onClose={() => setDataPreviewFile(null)}
+            onGotoMessage={(data: {
+              messageId: string | number;
+              roomCode?: string;
+            }) => {
+              handleChangeRoom({
+                roomCode: String(data.roomCode),
+                messageId: String(data.messageId),
+              });
+              setDataPreviewFile(null);
+            }}
+          />
+        )}
       </div>
     </Modal>
   );

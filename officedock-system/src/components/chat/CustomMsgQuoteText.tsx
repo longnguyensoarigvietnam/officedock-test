@@ -10,6 +10,29 @@ export const MsgQuoteText = Node.create({
     return {
       id: { default: null },
       title: { default: '' },
+
+      // 🌟 Thêm attribute mới
+      data: {
+        default: null,
+        parseHTML: (el: HTMLElement) => {
+          const raw = el.getAttribute('data-msg-text-data');
+          if (!raw) return null;
+          try {
+            return JSON.parse(raw);
+          } catch {
+            return raw;
+          }
+        },
+        renderHTML: (attributes) => {
+          if (!attributes.data) return {};
+          return {
+            'data-msg-text-data':
+              typeof attributes.data === 'string'
+                ? attributes.data
+                : JSON.stringify(attributes.data),
+          };
+        },
+      },
     };
   },
 
@@ -22,6 +45,16 @@ export const MsgQuoteText = Node.create({
           title:
             dom.getAttribute('data-title') ||
             dom.textContent?.replace('[引用] ', ''),
+          // parse attribute mới
+          data: (() => {
+            const raw = dom.getAttribute('data-msg-text-data');
+            if (!raw) return null;
+            try {
+              return JSON.parse(raw);
+            } catch {
+              return raw;
+            }
+          })(),
         }),
       },
     ];

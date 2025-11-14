@@ -61,6 +61,7 @@ import { ChatContext } from '@providers/ChatProvider';
 
 export type MessageDetailProps = {
   uuidList: any[];
+  isBookMark?: boolean;
   chatRoomDetail: ChatRoomDetail | undefined;
   messageDetail: ChatMessageResponse;
   uuidQuote: string;
@@ -82,6 +83,7 @@ export type MessageDetailProps = {
 
 export const MessageDetailQuote = ({
   uuidList,
+  isBookMark = false,
   chatRoomDetail,
   messageDetail,
   dashboardMemberList,
@@ -244,6 +246,7 @@ export const MessageDetailQuote = ({
                     messageDetail={foundQuote}
                     uuidQuote={uuidQuote}
                     uuidList={uuidList}
+                    isBookMark={isBookMark}
                     dashboardMemberList={dashboardMemberList}
                     highlightedMessageId={highlightedMessageId}
                     setDataPreviewFile={setDataPreviewFile}
@@ -254,11 +257,12 @@ export const MessageDetailQuote = ({
             }
           }
           if (el.dataset.quoteText) {
-            const msgId = el.dataset.msgId;
             const dataTitle = el.dataset.title || '';
-            const foundQuote = messageDetail.quote?.find(
-              (q) => q.uuid === msgId,
-            );
+            const raw = el.dataset.msgTextData;
+            const foundQuote: ChatMessageResponse = raw
+              ? JSON.parse(raw)
+              : null;
+
             if (foundQuote) {
               children.push(
                 <div className={`${index !== 0 && 'mt-5'}`}>
@@ -452,7 +456,8 @@ export const MessageDetailQuote = ({
     <Fragment>
       {messageDetail && (
         <div className="group my-2 bg-white border border-[#D2DBE1] rounded-md">
-          {(chatRoomDetail?.type === ChatRoomType.PRIVATE ||
+          {(isBookMark ||
+            chatRoomDetail?.type === ChatRoomType.PRIVATE ||
             chatRoomDetail?.type === ChatRoomType.GROUP ||
             chatRoomDetail?.type === ChatRoomType.SELF) && (
             <div
