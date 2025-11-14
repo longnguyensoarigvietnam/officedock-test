@@ -2943,7 +2943,7 @@ const ChatDetail = ({
                               <EditorContent
                                 editor={editor}
                                 key={chatRoomCode}
-                                className="w-full break-words whitespace-pre-wrap chat text-sm"
+                                className="w-full whitespace-pre-wrap chat text-sm custom-tiptap-editor"
                               />
                             </div>
                           </div>

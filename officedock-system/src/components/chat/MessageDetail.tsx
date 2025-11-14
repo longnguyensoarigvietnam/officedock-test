@@ -675,22 +675,22 @@ export const MessageDetail = ({
                   <div className="flex flex-grow  gap-2 items-baseline font-semibold text-[15px] pr-2">
                     <div
                       data-id={messageDetail.uuid}
-                      className="flex-grow min-w-0 flex items-start gap-1 break-all whitespace-normal line-clamp-3">
+                      className="flex-grow min-w-0 gap-1 break-all whitespace-normal line-clamp-3">
                       {messageDetail.sender.fullName}
                       <span
                         data-id={messageDetail.uuid}
-                        className="font-medium text-xs text-[#77858F] relative top-1">
+                        className="font-medium text-xs text-[#77858F]">
                         {' '}
                         {messageDetail.sender?.organizations?.name}
                       </span>
-                      {messageDetail.isBookmark && (
-                        <ImageRound
-                          name="Save"
-                          src="/icons/save-active.svg"
-                          className="w-[10px] h-[12px] relative top-1 hover:cursor-pointer flex-shrink-0"
-                        />
-                      )}
                     </div>
+                    {messageDetail.isBookmark && (
+                      <ImageRound
+                        name="Save"
+                        src="/icons/save-active.svg"
+                        className="w-[10px] h-[12px] relative top-[2px] hover:cursor-pointer flex-shrink-0"
+                      />
+                    )}
                   </div>
                   <div className={`flex items-start w-fit flex-shrink-0`}>
                     <p

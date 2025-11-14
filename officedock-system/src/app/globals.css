@@ -375,3 +375,9 @@ input[type='checkbox']:focus {
   transform: scale(1);
   transform-origin: center;
 }
+.custom-tiptap-editor{
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-wrap: break-word;  /* handles long words */
+  word-break: break-word;     /* fallback */
+}
