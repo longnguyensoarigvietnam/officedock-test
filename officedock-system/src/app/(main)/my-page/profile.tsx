@@ -330,7 +330,7 @@ const MyPage = () => {
           width: '100%',
           height: '100%',
         }}
-        className="w-full flex flex-col rounded-bl-[30px] rounded-r-[30px]">
+        className="w-full  min-h-[775px] flex flex-col rounded-bl-[30px] rounded-r-[30px]">
         <div className="flex ">
           <div className="h-20 bg-white w-fit px-5 py-4 text-[#77858F] font-medium flex items-center gap-5 rounded-br-[30px]">
             <div>{session?.user.id && renderBoxUser()}</div>
@@ -396,9 +396,9 @@ const MyPage = () => {
             isHasMvpVoting={creationDataCommonData?.isHasMvpVoting || false}
           />
         </div>
-        <div className="relative ml-[3.37vh] mb-[4.49vh] top-[-3vh] flex items-end flex-grow">
-          <div className="flex-grow">
-            <div className="h-[44.64vh] w-[35vh] ml-[31.86vh] relative">
+        <div className="relative mx-[30px] mb-[4.49vh] top-[-3vh] flex items-end flex-grow">
+          <div className="flex-grow ml-[110px] relative">
+            <div className="h-[44.64vh] w-[35vh]  mx-auto">
               <RenderAccessories handleShowData={() => setIsShowMike(true)} />
             </div>
 
@@ -409,20 +409,23 @@ const MyPage = () => {
                   style={{
                     background:
                       'linear-gradient(180deg, #355AC9 0%, #5282FC 100%)',
-                    boxShadow: '0px 0.45vh 0px 0px #355AC940',
+                    boxShadow: '0px 4px 0px 0px #355AC940',
+                    left: 'calc(50% + 5vh)',
                   }}
-                  className="absolute top-[calc(100%_-_56.66vh)] left-[56.17vh] p-[1.12vh] rounded-[1.57vh] w-[28.98vh] h-fit">
-                  <p className="text-white text-[1.46vh] font-bold">
-                    マイルくん
-                  </p>
-                  <div className="mt-[1.12vh] w-full bg-white rounded-[0.56vh] p-[1.34vh] text-[1.46vh] font-semibold text-black">
+                  className="absolute top-[-120px] p-[10px] rounded-[14px] w-[258px] h-fit] ">
+                  <p className="text-white text-[13px] font-bold">マイルくん</p>
+                  <div className="mt-[10px] w-full bg-white rounded-[5px] p-4 text-[13px] font-semibold text-black">
                     {receivedThanksMessageList?.length
                       ? '新しいサンクスメッセージが届いているよ！'
                       : 'ポイントが貯まると、素敵な商品と交換できるよ！'}
                   </div>
                 </div>
 
-                <div className="bg-[#5282FB] rotate-[20deg] absolute clip-diagonal-left h-[2.81vh] w-[2.47vh] top-[calc(100%_-_44.85vh)] left-[59.74vh]"></div>
+                <div
+                  style={{
+                    left: 'calc(50% + 9vh)',
+                  }}
+                  className="bg-[#5282FB] rotate-[20deg] absolute clip-diagonal-left h-[25px] w-[22px] top-[-4px]"></div>
               </>
             ) : (
               <></>
@@ -430,7 +433,9 @@ const MyPage = () => {
 
             {/* Seagull icon */}
             {receivedThanksMessageList?.length ? (
-              <div className="absolute bottom-0 left-[610px]">
+              <div
+                style={{ left: 'calc(50% + 15vh)' }}
+                className="absolute bottom-0 ">
                 <ImageRound
                   name="Seagull"
                   src="/icons/seagull.svg"
@@ -440,14 +445,7 @@ const MyPage = () => {
               </div>
             ) : null}
           </div>
-
-          {/* Tweet icon */}
-          <ImageRound
-            name="Tweet icon"
-            src={'/icons/tweet.svg'}
-            className={`w-[88px] h-[94px] z-10 hover:cursor-pointer absolute bottom-[0px] right-[20px]`}
-            onClick={() => setOpenCreateTweetModal(true)}
-          />
+          <div className="w-[352px]"></div>
         </div>
       </div>
       {/* Timeline */}
@@ -458,6 +456,13 @@ const MyPage = () => {
         isLoadingList={isLoadingList}
         fetchNextPage={fetchNextPage}
         setSelectedTweetToDelete={setSelectedTweetToDelete}
+      />
+      {/* Tweet icon */}
+      <ImageRound
+        name="Tweet icon"
+        src={'/icons/tweet.svg'}
+        className={`w-[88px] h-[94px] z-10 hover:cursor-pointer absolute bottom-[3%] right-0`}
+        onClick={() => setOpenCreateTweetModal(true)}
       />
       {showReceiveEnvelopeAnimation && receivedThanksMessageList?.length ? (
         <ReceiveEnvelopeAnimationOverlay

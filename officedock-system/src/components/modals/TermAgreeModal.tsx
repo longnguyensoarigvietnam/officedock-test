@@ -114,9 +114,10 @@ const TermAgreeModal = memo(() => {
     <Modal
       open={true}
       sz="full"
-      className="font-primary bg-white w-full h-[90vh] relative z-[9999] !rounded-2xl !py-4"
+      className="font-primary bg-white w-full h-[90vh] relative z-[9999999] !rounded-2xl !py-4"
       onClose={() => {}}
       overlayClassName="flex justify-center items-center"
+      fixedClass="!z-[50]"
       showIconClose={false}>
       <header className="flex  border-b pb-4  border-solid border-gray-100 justify-between items-center mb-4">
         <Heading

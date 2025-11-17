@@ -1103,6 +1103,8 @@ const Header = ({ className }: HeaderProps) => {
                                 key={item.name}
                                 onClick={() => {
                                   setOpenViewProfileModal(true);
+                                  router.replace(pathname);
+
                                   close();
                                 }}
                                 className="px-4 py-2 hover:bg-[#7D8A94] hover:cursor-pointer rounded-md">

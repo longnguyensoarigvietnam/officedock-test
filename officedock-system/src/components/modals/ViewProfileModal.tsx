@@ -38,6 +38,7 @@ const ViewProfileModal = memo(
         headerClassName="bg-[#EBF1F7] !rounded-t-[20px] !rounded-b-none px-5 !py-[10px]"
         closeIconClassName="!bg-white !rounded-full !p-[7px] !hover:cursor-pointer"
         closeClassName="!mt-0 !w-4 !h-4 !hover:cursor-pointer"
+        fixedClass="!z-[60]"
         onClose={() => {
           onClose();
         }}
