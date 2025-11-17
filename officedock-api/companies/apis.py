@@ -22,6 +22,7 @@ from common.utils import delete_file
 from companies.constants import (
     CompanyStatus,
     CompanyTransactionTypes,
+    PaymentTypes,
 )
 from companies.services import CompanyService
 
@@ -295,7 +296,7 @@ class SystemCompanyViewSet(
         serializer.is_valid(raise_exception=True)
         serializer_data = serializer.validated_data
         stripe_payment_method_id = serializer_data.pop(
-            "stripe_payment_method_id"
+            "stripe_payment_method_id", None
         )
         payment_method = serializer_data.pop("payment_method")
         plan = serializer_data.pop("plan")
@@ -308,6 +309,7 @@ class SystemCompanyViewSet(
             "responsible_person_mail": serializer_data.pop(
                 "responsible_person_mail"
             ),
+            "payment_type": payment_method,
         }
         # Create company
         company = Company.objects.create(**company_data)
@@ -321,19 +323,21 @@ class SystemCompanyViewSet(
             "department": serializer_data.pop("department"),
         }
         Contract.objects.create(**contract_data, company=company)
-        # Create Stripe customer and attach payment method to customer
-        StripeService().get_or_create_customer(company)
-        stripe_payment = StripeService().attach_payment_method_to_customer(
-            company, stripe_payment_method_id, is_create_company=True
-        )
         # Create payment method of company
-        CompanyPaymentMethod.objects.create(
+        pm = CompanyPaymentMethod.objects.create(
             company=company,
             type=payment_method,
             stripe_payment_method_id=stripe_payment_method_id,
-            **stripe_payment
+            is_default=True,
         )
-
+        if payment_method == PaymentTypes.CREDIT_CARD.value:
+            # Create Stripe customer and attach payment method to customer
+            StripeService().get_or_create_customer(company)
+            stripe_payment = StripeService().attach_payment_method_to_customer(
+                company, stripe_payment_method_id, is_create_company=True
+            )
+            pm.__dict__.update(stripe_payment)
+            pm.save(update_fields=stripe_payment.keys())
         # Create plan of company
         CompanyPlan.objects.create(company=company, plan=plan)
         return self.response_created()
@@ -453,7 +457,9 @@ class ManagePaymentViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             )
         # Check if all payment methods failed retry
         if (
-            not company.payment_methods.filter(is_retry_failed=False)
+            not company.payment_methods.filter(
+                is_retry_failed=False, type=PaymentTypes.CREDIT_CARD.value
+            )
             .exclude(id=payment_method.id)
             .exists()
         ):

@@ -22,6 +22,7 @@ from common.utils import (
 from companies.constants import (
     CompanyStatus,
     CompanyTransactionTypes,
+    PaymentTypes,
     TransactionStatus,
 )
 from companies.models import Company, CompanyTransaction
@@ -104,19 +105,19 @@ class CompanyService:
             plan=company.company_plan.plan,
             type=CompanyTransactionTypes.PLAN.value,
         )
-
-        # Create Stripe postpaid subscription and save IDs to company plan
-        subscription = (
-            self.stripe_service.create_postpaid_subscription_with_invoice(
-                company
+        if company.payment_type == PaymentTypes.CREDIT_CARD.value:
+            # Create Stripe postpaid subscription and save IDs to company plan
+            subscription = (
+                self.stripe_service.create_postpaid_subscription_with_invoice(
+                    company
+                )
             )
-        )
-        company.company_plan.stripe_subscription_id = subscription.id
-        company.company_plan.save(
-            update_fields=[
-                "stripe_subscription_id",
-            ]
-        )
+            company.company_plan.stripe_subscription_id = subscription.id
+            company.company_plan.save(
+                update_fields=[
+                    "stripe_subscription_id",
+                ]
+            )
         # Mark company as active and save status
         company.status = CompanyStatus.ACTIVE_CONTRACT.value
         company.max_user_in_contract_period = 1
@@ -137,30 +138,17 @@ class CompanyService:
             responsible_name=company.responsible_person_name,
         )
 
-    def handle_contract_renewal(self, company, day):
+    def handle_contract_renewal(self, company):
         """
         Handle automatic contract renewal for the given company.
         """
         contract = company.contract
-
-        if (
-            company.contract.cancel_at
-            and company.contract.cancel_at.date() <= day
-        ):
-            self.change_status_of_company(
-                company, CompanyStatus.CANCELLATION_PENDING.value
-            )
-            print(f"✅ Company : {company.id} pending contract at: {day}")
-            return True
         related_date = generate_contract_related_date_base_on_now(
             contract.next_renewal_at
         )
         contract.end_date = related_date["end_date"]
         contract.next_renewal_at = related_date["next_renewal_at"]
         contract.save(update_fields=["end_date", "next_renewal_at"])
-        print(
-            f"✅ Company : {company.id} renewal contract at: {contract.next_renewal_at}"
-        )
 
         return True
 
@@ -182,7 +170,7 @@ class CompanyService:
             **validated_data,
             defaults={"is_custom_plan": True, "name": CUSTOM_PLAN},
         )
-        if created:
+        if created and company.payment_type == PaymentTypes.CREDIT_CARD.value:
             (
                 stripe_product,
                 stripe_price,
@@ -206,7 +194,13 @@ class CompanyService:
         """
         Mark the company's contract as pending cancellation and schedule Stripe cancellation.
         """
-        if not company.company_plan.stripe_subscription_id:
+        is_credit_card_method = (
+            company.payment_type == PaymentTypes.CREDIT_CARD.value
+        )
+        if (
+            is_credit_card_method
+            and not company.company_plan.stripe_subscription_id
+        ):
             raise ValidationError({"detail": ERROR_MESSAGES["plan_invalid"]})
 
         contract = company.contract
@@ -220,13 +214,14 @@ class CompanyService:
         )
         company.status = CompanyStatus.CANCELLATION_PENDING.value
         company.save(update_fields=["status"])
-        subscription_cancel_at = datetime.datetime.combine(
-            contract.end_date, datetime.time.max, tzinfo=timezone.utc
-        )
-        self.stripe_service.handle_cancel_subscription(
-            subscription_id=company.company_plan.stripe_subscription_id,
-            cancel_at=subscription_cancel_at,
-        )
+        if is_credit_card_method:
+            subscription_cancel_at = datetime.datetime.combine(
+                contract.end_date, datetime.time.max, tzinfo=timezone.utc
+            )
+            self.stripe_service.handle_cancel_subscription(
+                subscription_id=company.company_plan.stripe_subscription_id,
+                cancel_at=subscription_cancel_at,
+            )
 
     def handle_invoice_base_on_status(self, company):
         """
@@ -293,10 +288,12 @@ class CompanyService:
         """
         try:
             old_plan = company.company_plan.plan.name
-            self.stripe_service.change_price_of_subscription(company, plan)
-            invoice = self.stripe_service.replace_invoice_subscription(
-                company, plan
-            )
+            invoice = None
+            if company.payment_type == PaymentTypes.CREDIT_CARD.value:
+                self.stripe_service.change_price_of_subscription(company, plan)
+                invoice = self.stripe_service.replace_invoice_subscription(
+                    company, plan
+                )
             start_month = to_datetime(invoice.created) if invoice else now()
             tax = Tax.objects.first()
             new_price = plan.monthly_fee * (1 + tax.percentage / 100)
@@ -430,7 +427,8 @@ class CompanyService:
             return
         plan = Plan.objects.filter(filter).first()
         if plan != current_plan:
-            self.stripe_service.change_price_of_subscription(company, plan)
+            if company.payment_type == PaymentTypes.CREDIT_CARD.value:
+                self.stripe_service.change_price_of_subscription(company, plan)
             company.company_plan.plan = plan
             company.company_plan.save(update_fields=["plan"])
             # Update history use plan

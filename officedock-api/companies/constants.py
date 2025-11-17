@@ -62,3 +62,4 @@ class Industry(EnumChoices):
 
 class PaymentTypes(EnumChoices):
     CREDIT_CARD = "クレジットカード"
+    DEBIT = "口座振替"
