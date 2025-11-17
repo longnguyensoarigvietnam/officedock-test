@@ -94,6 +94,15 @@ export const MessageDetailQuote = ({
 }: MessageDetailProps) => {
   const { data: session } = useSessionCache();
   const router = useRouter();
+  let uuidListMain = [];
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(messageDetail?.message, 'text/html');
+  const pEl = doc.querySelector('p');
+
+  if (pEl) {
+    const raw = pEl.getAttribute('data-uuid');
+    uuidListMain = raw ? JSON.parse(raw) : [];
+  }
 
   const { listAllMember } = useContext(ChatContext);
 
@@ -531,6 +540,7 @@ export const MessageDetailQuote = ({
                                       key={messageDetail.uuid}
                                       dashboardMemberList={dashboardMemberList}
                                       uuidList={uuidList}
+                                      uuidMain={uuidListMain}
                                       messageDetail={messageDetail}
                                       setDataPreviewFile={setDataPreviewFile}
                                     />
