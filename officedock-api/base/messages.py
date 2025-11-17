@@ -9,7 +9,7 @@ _ERROR_MESSAGES = {
         "locked_error": _("Your role has changed. Please login again."),
         "invalid_ordering_field": _("Invalid ordering field: {field_name}"),
         "email_exists": _("This email is already exists."),
-        "username_exists": _("This username is already exists."),
+        "username_exists": _("This ID is already exists."),
         "role_not_exist": _("This role does not exist."),
         "otp_code_invalid": _("Invalid OTP code."),
         "login_session_invalid": _(
@@ -167,7 +167,7 @@ _ERROR_MESSAGES = {
         "locked_error": _("ロールが変更されました。再度ログインしてください。"),
         "invalid_ordering_field": _("この{field_name}は存在していません。"),
         "email_exists": _("このメールアドレスは既に存在しています。"),
-        "username_exists": _("この名前はすでに存在しています。"),
+        "username_exists": _("このIDはすでに存在しています。"),
         "role_not_exist": _("このロールが存在していません。"),
         "otp_code_invalid": _("認証コードは無効です。"),
         "login_session_invalid": _("ログインセッションが無効となりました。再度ログインしてください。"),
