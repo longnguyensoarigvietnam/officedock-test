@@ -593,6 +593,7 @@ export const MessageDetailBookmark = ({
                                   dashboardMemberList={dashboardMemberList}
                                   uuidList={uuidListMain}
                                   uuidMain={uuidListMain}
+                                  isMain
                                   messageDetail={messageDetail}
                                   downloadFileName={downloadFileName}
                                   setDataPreviewFile={setDataPreviewFile}

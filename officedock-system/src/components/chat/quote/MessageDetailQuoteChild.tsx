@@ -94,6 +94,15 @@ export const MessageDetailQuoteChild = ({
   const { data: session } = useSessionCache();
   const router = useRouter();
   const { listAllMember } = useContext(ChatContext);
+  let uuidListMain = [];
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(messageDetail?.message, 'text/html');
+  const pEl = doc.querySelector('p');
+
+  if (pEl) {
+    const raw = pEl.getAttribute('data-uuid');
+    uuidListMain = raw ? JSON.parse(raw) : [];
+  }
 
   // Render avatar
   const renderAvatar = (senderId: number) => {
@@ -530,6 +539,7 @@ export const MessageDetailQuoteChild = ({
                                     <RenderFiles
                                       dashboardMemberList={dashboardMemberList}
                                       uuidList={uuidList}
+                                      uuidMain={uuidListMain}
                                       messageDetail={messageDetail}
                                       setDataPreviewFile={setDataPreviewFile}
                                     />

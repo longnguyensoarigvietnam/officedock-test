@@ -756,6 +756,7 @@ export const MessageDetail = ({
                                         dashboardMemberList={
                                           dashboardMemberList
                                         }
+                                        isMain
                                         uuidList={uuidListMain}
                                         uuidMain={uuidListMain}
                                         messageDetail={messageDetail}

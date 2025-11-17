@@ -17,6 +17,7 @@ import { Profile } from '@interfaces/user';
 type Props = {
   uuidList: ChatFileResponse[];
   uuidMain?: any[];
+  isMain?: boolean;
   messageDetail: ChatMessageResponse;
   dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
   downloadFileName?: UseMutateFunction<
@@ -38,6 +39,7 @@ type Props = {
 const RenderFiles = ({
   uuidList,
   uuidMain,
+  isMain,
   messageDetail,
   dashboardMemberList,
   downloadFileName,
@@ -50,7 +52,7 @@ const RenderFiles = ({
         messageDetail?.chatFiles.map((file) => {
           const uuidArray = uuidList.map((item) => item.uuid);
 
-          if (uuidArray.includes(file.uuid)) {
+          if (isMain && uuidArray.includes(file.uuid)) {
             const newFile = uuidList.find((data) => data.uuid === file.uuid);
 
             if (!newFile) return null;
@@ -111,6 +113,7 @@ const RenderFiles = ({
             );
           }
           if (uuidMain && uuidMain.includes(file.uuid)) {
+            const uuidArray = uuidList.find((item) => item.uuid == item.uuid);
             return (
               <div
                 key={file.uuid}
@@ -119,7 +122,11 @@ const RenderFiles = ({
                   {file.fileType.includes('image') && (
                     <div>
                       <Image
-                        src={getFileURL(file?.compressedFile || '')}
+                        src={getFileURL(
+                          isMain
+                            ? file?.compressedFile || ''
+                            : uuidArray?.compressedFile || '',
+                        )}
                         alt="Image"
                         unoptimized={true}
                         width={150}

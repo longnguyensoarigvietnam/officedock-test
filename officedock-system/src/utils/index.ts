@@ -239,7 +239,9 @@ export const trimUnnecessaryLineBreaks = (
       const isIcon = el.querySelector('[data-custom-reaction]') !== null;
       const isImg = el.tagName === 'IMG';
 
-      return hasText || isIcon || isImg;
+      const hasAttributes = el.attributes.length > 0;
+
+      return hasText || isIcon || isImg || hasAttributes;
     } else if (node.nodeType === Node.TEXT_NODE) {
       return node.textContent?.trim() !== '';
     }
@@ -2725,7 +2727,9 @@ export const handleServerFormErrors = <T extends Record<string, any>>(
 
       if (allowNestedFields) {
         isRegistered = registeredFields.some(
-          (registeredField) => formKey === registeredField || formKey.startsWith(`${registeredField}.`),
+          (registeredField) =>
+            formKey === registeredField ||
+            formKey.startsWith(`${registeredField}.`),
         );
       } else {
         isRegistered = registeredFields.includes(formKey);
