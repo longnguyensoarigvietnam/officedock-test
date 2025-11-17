@@ -2157,7 +2157,7 @@ const DailyReportDetailBoard = () => {
         </header>
         <div className="mb-[30px] flex items-center justify-between pr-10">
           <div className="flex items-center gap-5">
-            <DynamicTooltip content={'前のメンバ'} placement="top">
+            <DynamicTooltip content={'前のメンバー'} placement="top">
               <ImageRound
                 onClick={handlePrevUser}
                 style={{
@@ -2199,7 +2199,7 @@ const DailyReportDetailBoard = () => {
                 </span>
               </div>
             </div>
-            <DynamicTooltip content={'次のメンバ'} placement="top">
+            <DynamicTooltip content={'次のメンバー'} placement="top">
               <ImageRound
                 onClick={handleNextUser}
                 style={{

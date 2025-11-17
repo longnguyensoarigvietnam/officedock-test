@@ -25,6 +25,7 @@ export type ModalProps = {
   children?: React.ReactNode;
   showIconClose?: boolean;
   contentClass?: string;
+  fixedClass?: string;
   onClose: () => void;
 };
 
@@ -41,6 +42,7 @@ const Modal = ({
   closeClassName,
   children,
   contentClass,
+  fixedClass,
   showIconClose = true,
   onClose,
 }: ModalProps) => {
@@ -62,7 +64,7 @@ const Modal = ({
     <Transition show={open} as={Fragment}>
       <Dialog
         as="div"
-        className="relative z-30"
+        className={`relative z-[50] ${fixedClass}`}
         onClose={() => {
           if (isOutSideAction) {
             onClose();
