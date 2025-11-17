@@ -201,6 +201,8 @@ export interface ChatRoomItem {
     avatar: string | null;
     avatarColor: string;
   };
+  avatar?: string | null;
+  avatarColor?: string;
 }
 
 export interface WebSocketMessageData extends DataSkillReward {

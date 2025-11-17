@@ -928,15 +928,15 @@ const ListChatUsers = ({
 
     switch (item.type) {
       case AvatarChat.GROUP:
-        return item.chatRoom?.avatar ? (
+        return item.chatRoom?.avatar || item?.avatar ? (
           <CustomUserAvatar
-            avatarUrl={item.chatRoom?.avatar || ''}
-            avatarColor={item.chatRoom?.avatarColor || ''}
+            avatarUrl={item.chatRoom?.avatar || item?.avatar || ''}
+            avatarColor={item.chatRoom?.avatarColor || item?.avatarColor || ''}
             size={30}
           />
         ) : (
           <GroupIconWithDynamicColor
-            color={item.chatRoom?.avatarColor || '#228CDB'}
+            color={item.chatRoom?.avatarColor || item?.avatarColor || '#228CDB'}
             size={30}
           />
         );
@@ -970,17 +970,29 @@ const ListChatUsers = ({
             name="Calendar"
           />
         );
+      default: {
+        const memberInfo = dashboardMemberList.find((member) => {
+          if (item.type === AvatarChat.PRIVATE) {
+            return (
+              member.id ===
+              item.participants.find(
+                (participant) => participant.id !== session?.user.id,
+              )?.id
+            );
+          }
+          return member.id === item.participants[0].id;
+        });
 
-      default:
         return (
           <div className="w-[30px] h-[30px]">
             <CustomUserAvatar
-              avatarUrl={item.chatRoom?.avatar || ''}
-              avatarColor={item.chatRoom?.avatarColor || ''}
+              avatarUrl={memberInfo?.avatar || ''}
+              avatarColor={memberInfo?.avatarColor || ''}
               size={30}
             />
           </div>
         );
+      }
     }
   };
 
