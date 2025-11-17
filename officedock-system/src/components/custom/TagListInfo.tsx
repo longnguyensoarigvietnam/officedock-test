@@ -21,6 +21,8 @@ type Props = {
 
 const TagListInfo = ({ tagList, optionsTag, taskId }: Props) => {
   const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
+
   const [position, setPosition] = useState<{ top: number; left: number }>({
     top: 0,
     left: 0,
@@ -60,6 +62,29 @@ const TagListInfo = ({ tagList, optionsTag, taskId }: Props) => {
     },
   );
 
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (popupRef.current && !popupRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+  useEffect(() => {
+    const handleScroll = (e: Event) => {
+      if (popupRef.current?.contains(e.target as Node)) {
+        return;
+      }
+      setIsOpen(false);
+    };
+
+    window.addEventListener('scroll', handleScroll, true);
+
+    return () => window.removeEventListener('scroll', handleScroll, true);
+  }, []);
+
   return (
     <>
       <Popover className="relative">
@@ -98,11 +123,7 @@ const TagListInfo = ({ tagList, optionsTag, taskId }: Props) => {
         createPortal(
           <>
             <div
-              className="fixed inset-0 z-40"
-              onClick={() => setIsOpen(false)}
-            />
-
-            <div
+              ref={popupRef}
               className="absolute z-50 w-[144px] overflow-hidden bg-white rounded-lg shadow-common"
               style={{ top: `${position.top}px`, left: `${position.left}px` }}>
               <div className="relative flex w-[144px] rounded-md overflow-y-auto min-h-[144px] max-h-[144px] flex-col p-[14px] gap-[10px] text-gray-700">
