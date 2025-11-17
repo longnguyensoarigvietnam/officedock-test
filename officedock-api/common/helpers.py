@@ -24,6 +24,7 @@ from organizations.serializers import (
     BaseStatisticCategorySerializer,
     OrganizationDetailSerializer,
 )
+from plans.constants import CUSTOM_PLAN
 from plans.models import Plan
 from roles.constants import Actions, Screens, SelectionResultOptions
 from shop_items.models import ShopItems
@@ -429,7 +430,8 @@ def get_plans():
     """
     Get all plan in system
     """
-    plans = Plan.objects.filter(is_custom_plan=False).values_list(
-        "name", flat=True
+    plans = list(
+        Plan.objects.filter(is_custom_plan=False).values_list("name", flat=True)
     )
+    plans.append(CUSTOM_PLAN)
     return plans
