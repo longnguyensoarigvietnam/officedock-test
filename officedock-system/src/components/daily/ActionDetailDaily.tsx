@@ -74,12 +74,6 @@ const ActionDetailDaily = ({
   });
   const [isTodoOptionsReady, setIsTodoOptionsReady] = useState(false);
 
-  const [selectedItemsTag, setSelectedItemsTag] = useState<
-    {
-      id: number;
-      name: string;
-    }[]
-  >([]);
   useEffect(() => {
     if (dataTagsList) {
       setListTagActive(dataTagsList);
@@ -96,9 +90,6 @@ const ActionDetailDaily = ({
           };
         });
         setTodoList(newTodoList);
-      }
-      if (row.original.tags) {
-        setSelectedItemsTag(row.original.tags);
       }
     }
   }, [row]);
@@ -176,7 +167,6 @@ const ActionDetailDaily = ({
   const [prevOpenState, setPrevOpenState] = useState(false);
 
   const [isOpenTag, setIsOpenTodoTag] = useState(false);
-  const [prevOpenStateTag, setPrevOpenStateTag] = useState(false);
 
   // Update data in daily
   const handleUpdateDataTodoList = useCallback(() => {
@@ -197,37 +187,12 @@ const ActionDetailDaily = ({
     );
   }, [row.original.id, setDataTaskDailyList, todoList]);
 
-  const handleUpdateDataTags = useCallback(() => {
-    setDataTaskDailyList((prevData) =>
-      prevData.map((task) => {
-        if (task.id === row.original.id) {
-          return {
-            ...task,
-            tags: selectedItemsTag,
-            children: task.children?.map((child) => ({
-              ...child,
-              tags: selectedItemsTag,
-            })),
-          };
-        }
-        return task;
-      }),
-    );
-  }, [row.original.id, selectedItemsTag, setDataTaskDailyList]);
-
   useEffect(() => {
     if (prevOpenState && !isOpenTodo) {
       handleUpdateDataTodoList();
     }
     setPrevOpenState(isOpenTodo);
   }, [isOpenTodo, prevOpenState, handleUpdateDataTodoList]);
-
-  useEffect(() => {
-    if (prevOpenStateTag && !isOpenTag) {
-      handleUpdateDataTags();
-    }
-    setPrevOpenStateTag(isOpenTag);
-  }, [handleUpdateDataTags, isOpenTag, prevOpenStateTag]);
 
   const handleToggleTag = () => {
     if (!tagIconRef.current) return;
@@ -282,6 +247,33 @@ const ActionDetailDaily = ({
       }
     });
   };
+
+  // Tag
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        tagOptionListRef.current &&
+        !tagOptionListRef.current.contains(e.target as Node)
+      ) {
+        setIsOpenTodoTag(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+  useEffect(() => {
+    const handleScroll = (e: Event) => {
+      if (tagOptionListRef.current?.contains(e.target as Node)) {
+        return;
+      }
+      setIsOpenTodoTag(false);
+    };
+
+    window.addEventListener('scroll', handleScroll, true);
+
+    return () => window.removeEventListener('scroll', handleScroll, true);
+  }, []);
 
   const renderTagPopoverPanel = () => {
     return (
@@ -365,6 +357,33 @@ const ActionDetailDaily = ({
       </div>
     );
   };
+
+  // TODO
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        todoOptionListRef.current &&
+        !todoOptionListRef.current.contains(e.target as Node)
+      ) {
+        setIsOpenTodo(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+  useEffect(() => {
+    const handleScroll = (e: Event) => {
+      if (todoOptionListRef.current?.contains(e.target as Node)) {
+        return;
+      }
+      setIsOpenTodo(false);
+    };
+
+    window.addEventListener('scroll', handleScroll, true);
+
+    return () => window.removeEventListener('scroll', handleScroll, true);
+  }, []);
 
   const renderTodoPopoverPanel = () => {
     return (
@@ -457,16 +476,7 @@ const ActionDetailDaily = ({
         </div>
 
         {isOpenTodo &&
-          createPortal(
-            <>
-              <div
-                className="fixed inset-0 z-40"
-                onClick={() => setIsOpenTodo(false)}
-              />
-              {renderTodoPopoverPanel()}
-            </>,
-            document.body,
-          )}
+          createPortal(<>{renderTodoPopoverPanel()}</>, document.body)}
       </div>
 
       {/* Tag icon */}
@@ -485,16 +495,7 @@ const ActionDetailDaily = ({
         </div>
 
         {isOpenTag &&
-          createPortal(
-            <>
-              <div
-                className="fixed inset-0 z-40"
-                onClick={() => setIsOpenTodoTag(false)}
-              />
-              {renderTagPopoverPanel()}
-            </>,
-            document.body,
-          )}
+          createPortal(<>{renderTagPopoverPanel()}</>, document.body)}
       </div>
     </div>
   );
