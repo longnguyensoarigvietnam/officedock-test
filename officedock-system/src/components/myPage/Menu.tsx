@@ -63,7 +63,7 @@ export const MyPageMenu = ({
                 ((page.name == pageRouters.SURVEY.name && isOpenSurveys) ||
                   (page.name == pageRouters.MVP.name && isHasMvpVoting)) && (
                   <>
-                    <p className="text-[10px] bg-[#FFEE6F] mt-7 text-black rounded-full  w-[70px] h-5 flex items-center justify-center">
+                    <p className="text-[10px] bg-[#FFEE6F] mt-[7px] text-black rounded-full  w-[70px] h-5 flex items-center justify-center">
                       投票受付中
                     </p>
                   </>
