@@ -34,9 +34,12 @@ export const MAX_MONTHLY_FEE_MESSAGE = '利用料金の最大金額は1,000,000�
 export const LIMIT_PERSON_REQUIRED_MESSAGE = 'ユーザー作成上限は必須です。';
 export const MIN_LIMIT_PERSON_MESSAGE = 'ユーザー作成上限の最低値は1人です。';
 export const MAX_LIMIT_PERSON_MESSAGE = 'ユーザー作成上限の最大値は300人です。';
+export const MIN_CUSTOM_LIMIT_PERSON_MESSAGE = (totalUsers: number) =>
+  `ユーザー作成上限は${totalUsers}以上で入力してください。`;
 export const MONTHLY_COIN_REQUIRED_MESSAGE = '毎月のコイン付与数は必須です。';
 export const MIN_MONTHLY_COIN_MESSAGE = '毎月のコイン付与数の最低値は300です。';
-export const MAX_MONTHLY_COIN_MESSAGE = '毎月のコイン付与数の最大値は100,000です。';
+export const MAX_MONTHLY_COIN_MESSAGE =
+  '毎月のコイン付与数の最大値は100,000です。';
 
 // Success message
 export const SUCCESS_SENT_MAIL_MESSAGE = 'メール送信に成功しました';
