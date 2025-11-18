@@ -102,7 +102,6 @@ class CompanyViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 )
             if company.status in [
                 CompanyStatus.CONTRACT_TERMINATED.value,
-                CompanyStatus.PENDING_APPROVAL.value,
             ]:
                 raise ValidationError(
                     {"detail": ERROR_MESSAGES["cannot_updated"]}

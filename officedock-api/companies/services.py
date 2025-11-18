@@ -288,18 +288,15 @@ class CompanyService:
         """
         try:
             old_plan = company.company_plan.plan.name
-            self.stripe_service.change_price_of_subscription(company, plan)
-            invoice = self.stripe_service.replace_invoice_subscription(
-                company, plan
-            )
-            start_month = to_datetime(invoice.created) if invoice else now()
-            tax = Tax.objects.first()
-            new_price = plan.monthly_fee * (1 + tax.percentage / 100)
-
-            with transaction.atomic():
-                # Update new plan
-                company.company_plan.plan = plan
-                company.company_plan.save(update_fields=["plan"])
+            invoice = None
+            if company.status not in [
+                CompanyStatus.CONTRACT_TERMINATED.value,
+                CompanyStatus.PENDING_APPROVAL.value,
+            ]:
+                self.stripe_service.change_price_of_subscription(company, plan)
+                invoice = self.stripe_service.replace_invoice_subscription(
+                    company, plan
+                )
                 # Update history use plan
                 company.transactions.filter(
                     type=CompanyTransactionTypes.PLAN.value,
@@ -310,6 +307,15 @@ class CompanyService:
                     plan_start_at=start_month,
                     plan=plan,
                 )
+            start_month = to_datetime(invoice.created) if invoice else now()
+            tax = Tax.objects.first()
+            new_price = plan.monthly_fee * (1 + tax.percentage / 100)
+
+            with transaction.atomic():
+                # Update new plan
+                company.company_plan.plan = plan
+                company.company_plan.save(update_fields=["plan"])
+
             if old_plan != CUSTOM_PLAN:
                 self.mail_service.send_plan_auto_upgrade(
                     recipient=company.responsible_person_mail,
