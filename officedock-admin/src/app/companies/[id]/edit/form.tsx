@@ -27,13 +27,13 @@ import {
   MIN_MONTHLY_FEE_MESSAGE,
   MONTHLY_FEE_REQUIRED_MESSAGE,
   LIMIT_PERSON_REQUIRED_MESSAGE,
-  MIN_LIMIT_PERSON_MESSAGE,
   MAX_LIMIT_PERSON_MESSAGE,
   MONTHLY_COIN_REQUIRED_MESSAGE,
   MIN_MONTHLY_COIN_MESSAGE,
   MAX_MONTHLY_COIN_MESSAGE,
   MAX_MONTHLY_FEE_MESSAGE,
   PLAN_REQUIRED_MESSAGE,
+  MIN_CUSTOM_LIMIT_PERSON_MESSAGE,
 } from '@constants/message';
 import { apiRouters, pageRouters } from '@constants/routers';
 import {
@@ -881,8 +881,10 @@ const EditCompanyForm = () => {
               required: isCustomPlan ? LIMIT_PERSON_REQUIRED_MESSAGE : false,
               min: isCustomPlan
                 ? {
-                    value: 1,
-                    message: MIN_LIMIT_PERSON_MESSAGE,
+                    value: companyDetail?.totalUsers || 1,
+                    message: MIN_CUSTOM_LIMIT_PERSON_MESSAGE(
+                      companyDetail?.totalUsers || 1,
+                    ),
                   }
                 : undefined,
               max: isCustomPlan
