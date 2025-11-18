@@ -215,6 +215,10 @@ const CompanyDetailInfo = () => {
             value: companyDetail?.responsiblePersonName || '',
           },
           {
+            label: 'マネーフォワードケッサイの顧客ID',
+            value: companyDetail?.mfCustomerId || '',
+          },
+          {
             label: 'メールアドレス',
             value: companyDetail?.responsiblePersonMail || '',
           },
@@ -232,7 +236,7 @@ const CompanyDetailInfo = () => {
           },
         ]}
       />
-      <PaymentInformation paymentMethod={companyDetail?.paymentMethod || ''} />
+      <PaymentInformation paymentMethod={companyDetail?.paymentType || ''} />
       <InformationSection
         name="ユーザー情報"
         infoArr={[

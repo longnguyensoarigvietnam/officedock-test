@@ -15,6 +15,8 @@ export interface Company {
   maxUserAt?: string | null;
   maxUserInContractPeriod?: number;
   paymentMethod?: string | null;
+  paymentType?: string | null;
+  mfCustomerId?: string | null;
   contract?: {
     startDate?: string | null;
     endDate?: string | null;
@@ -61,6 +63,7 @@ export interface EditCompanyRequest {
   plan?: string | null;
   status?: string | null;
   paymentMethod?: string | null;
+  mfCustomerId?: string | null;
   responsiblePersonName?: string | null;
   responsiblePersonMail?: string | null;
   contract: {

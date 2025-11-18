@@ -78,6 +78,7 @@ interface EditCompanyType {
   plan?: OptionDropdownType | null;
   status?: OptionDropdownType;
   paymentMethod?: string | null;
+  mfCustomerId?: string | null;
   responsiblePersonName?: string | null;
   responsiblePersonMail?: string | null;
   contract: {
@@ -222,6 +223,7 @@ const EditCompanyForm = () => {
             value: companyDetail.status,
           }
         : undefined;
+      value.mfCustomerId = companyDetail.mfCustomerId;
 
       value.paymentMethod = companyDetail.paymentMethod;
       value.responsiblePersonName = companyDetail?.responsiblePersonName;
@@ -350,6 +352,7 @@ const EditCompanyForm = () => {
           item.value == OTHER_OPTION_VALUE ? item.other || '' : item.value,
         ) as string[],
       },
+      mfCustomerId: data.mfCustomerId,
       closeDate:
         companyDetail?.totalUsers && companyDetail?.totalUsers > 0
           ? undefined
@@ -455,8 +458,13 @@ const EditCompanyForm = () => {
       {/* Payment method */}
       <Input
         label="決済方法"
-        register={register('paymentMethod')}
+        value={companyDetail?.paymentType || ''}
         disabled={true}
+      />
+      {/* MfCustomerID */}
+      <Input
+        label="マネーフォワードケッサイの顧客ID"
+        register={register('mfCustomerId')}
       />
 
       {/* Responsible person name */}
