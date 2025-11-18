@@ -59,7 +59,7 @@ function StatisticTagCalendar() {
 
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [isEndButtonClicked, setIsEndButtonClicked] = useState(false);
-  const [isStartButtonClicked, setIsStartButtonClicked] = useState(true);
+  const [isStartButtonClicked, setIsStartButtonClicked] = useState(false);
 
   const [dataStartDate, setDataStartDate] = useState(new Date());
   const [dataEndDate, setDataEndDate] = useState<Date | null>(null);
@@ -86,7 +86,7 @@ function StatisticTagCalendar() {
   const [isEndButtonClickedCompare, setIsEndButtonClickedCompare] =
     useState(false);
   const [isStartButtonClickedCompare, setIsStartButtonClickedCompare] =
-    useState(true);
+    useState(false);
 
   useEffect(() => {
     if (startDate) {
