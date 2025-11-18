@@ -229,6 +229,16 @@ def send_web_socket_event(data, user=None, chat_room=None):
                     },
                 },
             )
+        if data["action"] == WebSocketEventType.CREATE_CHAT_ROOM.value:
+            # Send websocket total unread message
+            async_to_sync(channel_layer.group_send)(
+                USER_ACTION_GROUP.format(user_id),
+                {
+                    "type": "join_new_room",
+                    "room_code": data["chat_room"]["code"],
+                },
+            )
+
     if chat_room:
         async_to_sync(channel_layer.group_send)(
             chat_room.code,
