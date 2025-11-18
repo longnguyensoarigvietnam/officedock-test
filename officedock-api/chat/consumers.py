@@ -145,6 +145,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
         }
         await self.send(text_data=convert_to_camel_case(data))
 
+    async def join_new_room(self, room_code):
+        """Handle add new group to channel"""
+        await self.channel_layer.group_add(room_code, self.channel_name)
+        self.chat_room_codes.append(room_code)
+
     @database_sync_to_async
     def save_message(
         self,
