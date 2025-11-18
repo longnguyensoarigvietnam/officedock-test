@@ -310,18 +310,19 @@ class CompanyService:
                     plan_start_at=start_month,
                     plan=plan,
                 )
-            self.mail_service.send_plan_auto_upgrade(
-                recipient=company.responsible_person_mail,
-                company_name=company.name,
-                responsible_name=company.responsible_person_name,
-                old_plan=old_plan,
-                new_plan=plan.name,
-                start_month=format_date(start_month, style="jp_month_year"),
-                new_price=format(
-                    invoice.amount_due if invoice else int(new_price), ","
-                ),
-                is_auto_upgrade=not is_custom_plan,
-            )
+            if old_plan != CUSTOM_PLAN:
+                self.mail_service.send_plan_auto_upgrade(
+                    recipient=company.responsible_person_mail,
+                    company_name=company.name,
+                    responsible_name=company.responsible_person_name,
+                    old_plan=old_plan,
+                    new_plan=plan.name,
+                    start_month=format_date(start_month, style="jp_month_year"),
+                    new_price=format(
+                        invoice.amount_due if invoice else int(new_price), ","
+                    ),
+                    is_auto_upgrade=not is_custom_plan,
+                )
             return True
         except stripe.error.StripeError as e:
             raise ValidationError({"detail": e.user_message or str(e)})
