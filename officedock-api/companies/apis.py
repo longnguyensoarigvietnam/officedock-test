@@ -89,6 +89,17 @@ class CompanyViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         ):
             StripeService().update_customer(company)
         if custom_plan:
+            if (
+                custom_plan.get("limit_person")
+                and custom_plan.get("limit_person") <= company.users.count()
+            ):
+                raise ValidationError(
+                    {
+                        "detail": ERROR_MESSAGES[
+                            "update_over_total_users"
+                        ].format(user_count=company.users.count())
+                    }
+                )
             if company.status in [
                 CompanyStatus.CONTRACT_TERMINATED.value,
                 CompanyStatus.PENDING_APPROVAL.value,

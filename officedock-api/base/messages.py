@@ -149,6 +149,9 @@ _ERROR_MESSAGES = {
         "limit_user": _("Amount of user is maximum, cannot create"),
         # Validate
         "must_be_array": _("{field} must be a array."),
+        "update_over_total_users": _(
+            "The limit person cannot small than {user_count}."
+        ),
         "cannot_edit_close_date": _(
             "Cannot update 'close_date' when the instance already has assigned users."
         ),
@@ -268,6 +271,7 @@ _ERROR_MESSAGES = {
         "close_date_range_1_to_31": _("締日は1日から31日まで選択してください。"),
         "editable_range_1_to_10": _("修正可能な期間は1日間から10日間まで選択してください。"),
         "cannot_edit_schedule_task_archive": _("アーカイブ済みのタスクは、実施予定日時を修正できません。"),
+        "update_over_total_users": _("ユーザー作成上限は{user_count}以上で入力してください。"),
     },
 }
 
