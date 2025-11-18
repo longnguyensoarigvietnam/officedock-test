@@ -152,7 +152,7 @@ import {
 import './styles/schedule.css';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
-import { hasPermissionInArray } from '@utils';
+import { hasDelta, hasPermissionInArray } from '@utils';
 
 const formatDateJp = (date: Date) => {
   return format(date, DATE_SCHEDULE_FORMAT, {
@@ -1947,9 +1947,12 @@ const TimeSchedule = memo(
 
     // Event resize
     const handleEventResize = async (info: EventResizeDoneArg) => {
-      const resizedEvent = info.event as any;
-      const isActualCalculate = info.event.extendedProps.isCalculation;
+      const { startDelta, endDelta } = info;
 
+      const resizedEvent = info.event as any;
+      const isBottom = hasDelta(endDelta) && !hasDelta(startDelta);
+
+      const isActualCalculate = info.event.extendedProps.isCalculation;
       const isLessThanToday = isDateLessThanToday(resizedEvent.start);
       const resourcePlanDay =
         resizedEvent._def.resourceIds?.length &&
@@ -1961,11 +1964,12 @@ const TimeSchedule = memo(
         const oldEnd = info.oldEvent.end;
         info.event.setDates(oldStart as Date, oldEnd);
       }
-
-      if (resizedEvent.startEditable == false) {
+      if (
+        (resizedEvent.startEditable == false && !isActualCalculate) ||
+        (isActualCalculate && isBottom)
+      ) {
         const oldStart = info.oldEvent.start;
         const oldEnd = info.oldEvent.end;
-
         info.event.setDates(oldStart as Date, oldEnd);
         setTimeout(() => setIsInteracting(false), 200);
         if (
@@ -1984,14 +1988,14 @@ const TimeSchedule = memo(
 
         return;
       }
-
       if (!resourcePlanDay && isDateInFutureOrToday(resizedEvent.end)) {
         const oldStart = info.oldEvent.start;
         const oldEnd = info.oldEvent.end;
+
         if (!isActualCalculate) {
           info.event.setDates(oldStart as Date, oldEnd);
         } else {
-          info.event.setDates(oldStart as Date, oldEnd);
+          if (isBottom) info.event.setDates(oldStart as Date, oldEnd);
         }
       }
 
@@ -2007,7 +2011,7 @@ const TimeSchedule = memo(
 
       if (
         info.event.extendedProps.type === EventCalendarType.SCHEDULE ||
-        isActualCalculate
+        (isActualCalculate && isBottom)
       ) {
         const oldStart = info.oldEvent.start;
         const oldEnd = info.oldEvent.end;
@@ -2123,7 +2127,6 @@ const TimeSchedule = memo(
     // Event drag & drop schedule
     const handleEventDrop = async (info: EventDropArg) => {
       const droppedEvent = info.event;
-
       const startDrop = new Date(droppedEvent.start || new Date());
       const endDrop = new Date(droppedEvent.end || new Date());
       const isLessThanToday = isDateLessThanToday(startDrop);
@@ -2823,7 +2826,6 @@ const TimeSchedule = memo(
       const draggedEvent = info.event;
       const draggedResourceId = draggedEvent.extendedProps.resourceId;
       const trashEl = document.getElementById('trash-area');
-
       if (trashEl && draggedEvent.startEditable) {
         const trashRect = trashEl.getBoundingClientRect();
 
