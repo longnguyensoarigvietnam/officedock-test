@@ -458,14 +458,15 @@ const EditCompanyForm = () => {
       {/* Payment method */}
       <Input
         label="決済方法"
-        value={companyDetail?.paymentType || ''}
+        value={companyDetail?.paymentMethod || ''}
         disabled={true}
       />
       {/* MfCustomerID */}
-      <Input
+      {/* TODO: Update MF */}
+      {/* <Input
         label="マネーフォワードケッサイの顧客ID"
         register={register('mfCustomerId')}
-      />
+      /> */}
 
       {/* Responsible person name */}
       <Input
