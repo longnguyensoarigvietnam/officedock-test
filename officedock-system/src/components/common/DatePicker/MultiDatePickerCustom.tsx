@@ -39,6 +39,8 @@ export type DatePickerProps = Omit<ReactDatePickerProps, 'onChange'> & {
   resetEndClick?: () => void;
   resetStartClick?: () => void;
   clickStartButton?: () => void;
+  clickEndButton?: () => void;
+  resetStartClickCustom?: () => void;
 };
 
 const MultiDatePickerCustom = ({
@@ -61,7 +63,8 @@ const MultiDatePickerCustom = ({
   onChange,
   resetEndClick,
   resetStartClick,
-  clickStartButton,
+  clickEndButton,
+  resetStartClickCustom,
   dateFormat = DATE_FORMAT,
   ...props
 }: DatePickerProps) => {
@@ -132,7 +135,6 @@ const MultiDatePickerCustom = ({
           setEndDate(adjustedEnd);
           onChange && onChange(start, adjustedEnd);
           resetEndClick && resetEndClick();
-          clickStartButton && clickStartButton();
         } else {
           if (initialStartDate && start) {
             const endNew = compareAndSetDate(initialStartDate, start);
@@ -167,8 +169,8 @@ const MultiDatePickerCustom = ({
           setStartDate(start);
           setEndDate(adjustedEnd);
           onChange && onChange(start, adjustedEnd);
-          resetStartClick && resetStartClick();
-          resetEndClick && resetEndClick();
+          resetStartClickCustom && resetStartClickCustom();
+          clickEndButton && clickEndButton();
         }
       }
     } else if (start && isEndButtonClicked) {
@@ -218,9 +220,7 @@ const MultiDatePickerCustom = ({
         <DatePickerUI
           openToDate={startDate}
           scrollableYearDropdown
-          disabledKeyboardNavigation={
-            isTypeTime === TimeOptionsType.MORE ? false : isDisable
-          }
+          disabledKeyboardNavigation={isDisable}
           yearDropdownItemNumber={100}
           ref={(el) => {
             if (el) {
@@ -228,15 +228,11 @@ const MultiDatePickerCustom = ({
             }
           }}
           open={isOpen}
-          disabled={isTypeTime === TimeOptionsType.MORE ? false : isDisable}
+          disabled={isDisable}
           selected={startDate}
           onChange={(date: [Date, Date | null]) => {
-            if (isTypeTime === TimeOptionsType.MORE) {
+            if (!isDisable) {
               handleChange(date);
-            } else {
-              if (!isDisable) {
-                handleChange(date);
-              }
             }
           }}
           maxDate={
@@ -253,7 +249,7 @@ const MultiDatePickerCustom = ({
             isTypeTime === TimeOptionsType.MORE &&
             endDate &&
             !isStartButtonClicked
-              ? endDate
+              ? startDate
               : isEndButtonClicked
                 ? startDate
                 : null

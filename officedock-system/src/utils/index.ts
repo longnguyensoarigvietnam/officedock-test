@@ -2755,3 +2755,15 @@ export const getUserNameById = ({
   const user = users.find((u) => u.id === id);
   return user ? user.fullName : '';
 };
+
+export const hasDelta = (delta: any) => {
+  if (!delta) return false;
+
+  return (
+    (delta.years ?? 0) !== 0 ||
+    (delta.months ?? 0) !== 0 ||
+    (delta.days ?? 0) !== 0 ||
+    (delta.milliseconds ?? 0) !== 0 ||
+    (delta.seconds ?? 0) !== 0
+  );
+};

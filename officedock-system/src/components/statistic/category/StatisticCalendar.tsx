@@ -55,7 +55,7 @@ function StatisticCalendar() {
 
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [isEndButtonClicked, setIsEndButtonClicked] = useState(false);
-  const [isStartButtonClicked, setIsStartButtonClicked] = useState(true);
+  const [isStartButtonClicked, setIsStartButtonClicked] = useState(false);
 
   const [dataStartDate, setDataStartDate] = useState(new Date());
   const [dataEndDate, setDataEndDate] = useState<Date | null>(null);
@@ -81,7 +81,7 @@ function StatisticCalendar() {
   const [isEndButtonClickedCompare, setIsEndButtonClickedCompare] =
     useState(false);
   const [isStartButtonClickedCompare, setIsStartButtonClickedCompare] =
-    useState(true);
+    useState(false);
 
   useEffect(() => {
     if (startDate) {
@@ -211,11 +211,11 @@ function StatisticCalendar() {
       }
 
       case TimeOptionsType.MORE:
-        setIsDisableCalendar(false);
+        setIsDisableCalendar(true);
         setIsEndButtonClicked(false);
         setIsStartButtonClicked(false);
         if (isDataCheckCompare) {
-          setIsDisableCalendarCompare(false);
+          setIsDisableCalendarCompare(true);
           setIsEndButtonClickedCompare(false);
           setIsStartButtonClickedCompare(false);
         }
@@ -777,7 +777,7 @@ function StatisticCalendar() {
                   className="gap-3 flex items-center mt-[6px]">
                   <span>開始日</span>
                   <div
-                    className={`w-[135px] h-[34px] flex items-center justify-center rounded-md border ${dataStartDate ? 'border-primary' : 'border-[#77858F]'} ${isErrorData.start && '!border-red-500'}`}>
+                    className={`w-[135px] h-[34px] flex items-center justify-center rounded-md border ${isStartButtonClicked ? 'border-primary' : 'border-[#77858F]'} ${isErrorData.start && '!border-red-500'}`}>
                     {formatShowDateJapanese(dataStartDate)}
                   </div>
                   <div className="h-[34px] flex items-center text-[#77858F]">
@@ -794,7 +794,7 @@ function StatisticCalendar() {
                   className="gap-3 flex items-center mt-[6px]">
                   <span>終了日</span>
                   <div
-                    className={`w-[135px] h-[34px] flex items-center justify-center rounded-md border ${dataEndDate ? 'border-primary' : 'border-[#77858F]'} ${isErrorData.end && '!border-red-500'}`}>
+                    className={`w-[135px] h-[34px] flex items-center justify-center rounded-md border ${isEndButtonClicked ? 'border-primary' : 'border-[#77858F]'} ${isErrorData.end && '!border-red-500'}`}>
                     {dataEndDate && formatShowDateJapanese(dataEndDate)}
                   </div>
                 </div>
@@ -864,6 +864,12 @@ function StatisticCalendar() {
                   setIsDisableCalendar(true);
                   setIsStartButtonClicked(false);
                 }}
+                clickEndButton={() => {
+                  setIsEndButtonClicked(true);
+                }}
+                resetStartClickCustom={() => {
+                  setIsStartButtonClicked(false);
+                }}
                 onChange={handleChangeCalendar}
               />
             </div>
@@ -884,7 +890,7 @@ function StatisticCalendar() {
                     className="gap-3 flex items-center mt-[6px]">
                     <span>開始日</span>
                     <div
-                      className={`w-[135px] h-[34px] flex items-center justify-center rounded-md border ${dataStartDateCompare ? 'border-primary' : 'border-[#77858F]'} ${isErrorDataCompare.start && '!border-red-500'}`}>
+                      className={`w-[135px] h-[34px] flex items-center justify-center rounded-md border ${isStartButtonClickedCompare ? 'border-primary' : 'border-[#77858F]'} ${isErrorDataCompare.start && '!border-red-500'}`}>
                       {dataStartDateCompare &&
                         formatShowDateJapanese(dataStartDateCompare)}
                     </div>
@@ -900,7 +906,7 @@ function StatisticCalendar() {
                     className="gap-3 flex items-center mt-[6px]">
                     <span>終了日</span>
                     <div
-                      className={`w-[135px] h-[34px] flex items-center justify-center rounded-md border ${dataEndDateCompare ? 'border-primary' : 'border-[#77858F]'}  ${isErrorDataCompare.end && '!border-red-500'}`}>
+                      className={`w-[135px] h-[34px] flex items-center justify-center rounded-md border ${isEndButtonClickedCompare ? 'border-primary' : 'border-[#77858F]'}  ${isErrorDataCompare.end && '!border-red-500'}`}>
                       {dataEndDateCompare &&
                         formatShowDateJapanese(dataEndDateCompare)}
                     </div>
@@ -941,6 +947,12 @@ function StatisticCalendar() {
                   }}
                   clickStartButton={() => {
                     setIsStartButtonClickedCompare(true);
+                  }}
+                  clickEndButton={() => {
+                    setIsEndButtonClickedCompare(true);
+                  }}
+                  resetStartClickCustom={() => {
+                    setIsStartButtonClickedCompare(false);
                   }}
                   onChange={handleChangeCalendarCompare}
                 />
