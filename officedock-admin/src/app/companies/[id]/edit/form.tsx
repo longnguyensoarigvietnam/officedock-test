@@ -33,15 +33,19 @@ import {
   MIN_MONTHLY_COIN_MESSAGE,
   MAX_MONTHLY_COIN_MESSAGE,
   MAX_MONTHLY_FEE_MESSAGE,
+  PLAN_REQUIRED_MESSAGE,
 } from '@constants/message';
 import { apiRouters, pageRouters } from '@constants/routers';
 import {
+  CompanyPlan,
   CompanyStatus,
   SelectionBoxType,
   ServerStatusCode,
 } from '@constants/enums';
 import { PHONE_REGEX } from '@constants/regex';
 import {
+  COMPANY_CUSTOM_PLAN_OPTIONS,
+  COMPANY_STATUS_OPTIONS,
   CUSTOM_PLAN_LABEL,
   NAME_OTHER_OPTION,
   OTHER_OPTION_VALUE,
@@ -71,7 +75,7 @@ import api from '@base/api';
 interface EditCompanyType {
   id?: number;
   name: string;
-  plan?: string | null;
+  plan?: OptionDropdownType | null;
   status?: OptionDropdownType;
   paymentMethod?: string | null;
   responsiblePersonName?: string | null;
@@ -105,16 +109,7 @@ const EditCompanyForm = () => {
   const [industryOptions, setIndustryOptions] = useState<OptionDropdownType[]>(
     [],
   );
-  const STATUS_OPTIONS = [
-    {
-      label: CompanyStatus.ACTIVE_CONTRACT,
-      value: CompanyStatus.ACTIVE_CONTRACT,
-    },
-    {
-      label: CompanyStatus.TEMPORARY_USAGE,
-      value: CompanyStatus.TEMPORARY_USAGE,
-    },
-  ];
+
   const [systemMainPurposeOptions, setSystemMainPurposeOptions] = useState<
     OptionDropdownType[]
   >([]);
@@ -193,7 +188,7 @@ const EditCompanyForm = () => {
     const value: EditCompanyType = {
       id: 0,
       name: '',
-      plan: '',
+      plan: null,
       paymentMethod: '',
       responsiblePersonName: '',
       responsiblePersonMail: '',
@@ -217,7 +212,10 @@ const EditCompanyForm = () => {
     if (companyDetail) {
       value.id = companyDetail.id;
       value.name = companyDetail.name;
-      value.plan = companyDetail.plan?.name || '';
+      value.plan = {
+        label: companyDetail.plan?.name || '',
+        value: companyDetail.plan?.name || '',
+      };
       value.status = companyDetail.status
         ? {
             label: companyDetail.status,
@@ -362,7 +360,8 @@ const EditCompanyForm = () => {
           : (data.editableAfterClosing?.value as number),
       ...(Number(data?.customPlan?.monthlyFee) &&
       Number(data?.customPlan?.exchangeableAmount) &&
-      Number(data?.customPlan?.limitPerson)
+      Number(data?.customPlan?.limitPerson) &&
+      data?.plan?.value == CompanyPlan.CUSTOM_PLAN
         ? {
             customPlan: {
               monthlyFee: Number(data?.customPlan?.monthlyFee) || null,
@@ -376,9 +375,7 @@ const EditCompanyForm = () => {
   };
 
   const isCustomPlan =
-    watch('customPlan.monthlyFee') ||
-    watch('customPlan.limitPerson') ||
-    watch('customPlan.exchangeableAmount');
+    watch('plan') && watch('plan')?.value == CompanyPlan.CUSTOM_PLAN;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -409,8 +406,8 @@ const EditCompanyForm = () => {
           render={({ field: { onChange, value } }) => (
             <Dropdown
               label="ステータス"
-              options={STATUS_OPTIONS}
-              selectedOption={STATUS_OPTIONS.find(
+              options={COMPANY_STATUS_OPTIONS}
+              selectedOption={COMPANY_STATUS_OPTIONS.find(
                 (element) => element.value === value?.value,
               )}
               onChange={(e) => {
@@ -426,7 +423,34 @@ const EditCompanyForm = () => {
       )}
 
       {/* Plan */}
-      <Input label="契約プラン" register={register('plan')} disabled={true} />
+      <Controller
+        control={control}
+        name="plan"
+        render={({ field: { onChange, value } }) => (
+          <Dropdown
+            label="契約プラン"
+            options={COMPANY_CUSTOM_PLAN_OPTIONS(
+              companyDetail?.plan?.name != CompanyPlan.CUSTOM_PLAN
+                ? String(companyDetail?.plan?.name)
+                : '',
+            )}
+            selectedOption={COMPANY_CUSTOM_PLAN_OPTIONS(
+              companyDetail?.plan?.name != CompanyPlan.CUSTOM_PLAN
+                ? String(companyDetail?.plan?.name)
+                : '',
+            ).find((element) => element.value === value?.value)}
+            onChange={(e) => {
+              onChange(e);
+              clearErrors('customPlan.exchangeableAmount');
+              clearErrors('customPlan.monthlyFee');
+              clearErrors('customPlan.limitPerson');
+            }}
+            error={getErrorMessage(errors, 'plan')}
+            disabled={companyDetail?.plan?.name == CompanyPlan.CUSTOM_PLAN}
+          />
+        )}
+        rules={{ required: PLAN_REQUIRED_MESSAGE }}
+      />
 
       {/* Payment method */}
       <Input
@@ -811,6 +835,9 @@ const EditCompanyForm = () => {
             label="利用料金"
             type="number"
             placeholder="利用料金を入力してください"
+            disabled={Boolean(
+              watch('plan') && watch('plan')?.value != CompanyPlan.CUSTOM_PLAN,
+            )}
             register={register('customPlan.monthlyFee', {
               required: isCustomPlan ? MONTHLY_FEE_REQUIRED_MESSAGE : false,
               min: isCustomPlan
@@ -838,6 +865,9 @@ const EditCompanyForm = () => {
             label="ユーザー作成上限"
             type="number"
             placeholder="ユーザー作成上限を入力してください"
+            disabled={Boolean(
+              watch('plan') && watch('plan')?.value != CompanyPlan.CUSTOM_PLAN,
+            )}
             register={register('customPlan.limitPerson', {
               required: isCustomPlan ? LIMIT_PERSON_REQUIRED_MESSAGE : false,
               min: isCustomPlan
@@ -865,6 +895,9 @@ const EditCompanyForm = () => {
             label="毎月のコイン付与数"
             type="number"
             placeholder="毎月のコイン付与数を入力してください"
+            disabled={Boolean(
+              watch('plan') && watch('plan')?.value != CompanyPlan.CUSTOM_PLAN,
+            )}
             register={register('customPlan.exchangeableAmount', {
               required: isCustomPlan ? MONTHLY_COIN_REQUIRED_MESSAGE : false,
               min: isCustomPlan

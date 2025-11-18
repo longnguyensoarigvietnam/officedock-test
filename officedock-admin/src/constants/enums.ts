@@ -64,3 +64,8 @@ export enum SelectionBoxType {
   MONO_SELECT = 'monoSelect',
   MULTIPLE_SELECT = 'multipleSelect',
 }
+
+export enum CompanyPlan {
+  CUSTOM_PLAN = 'カスタムプラン',
+  NORMAL_PLAN = '通常プラン'
+}
