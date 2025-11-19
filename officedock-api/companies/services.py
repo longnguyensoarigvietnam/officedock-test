@@ -299,16 +299,17 @@ class CompanyService:
                     company, plan
                 )
                 start_month = to_datetime(invoice.created) if invoice else now()
-                # Update history use plan
-                company.transactions.filter(
-                    type=CompanyTransactionTypes.PLAN.value,
-                    plan_end_at__isnull=True,
-                ).update(plan_end_at=start_month)
-                company.transactions.create(
-                    type=CompanyTransactionTypes.PLAN.value,
-                    plan_start_at=start_month,
-                    plan=plan,
-                )
+                if old_plan != CUSTOM_PLAN:
+                    # Update history use plan
+                    company.transactions.filter(
+                        type=CompanyTransactionTypes.PLAN.value,
+                        plan_end_at__isnull=True,
+                    ).update(plan_end_at=start_month)
+                    company.transactions.create(
+                        type=CompanyTransactionTypes.PLAN.value,
+                        plan_start_at=start_month,
+                        plan=plan,
+                    )
             tax = Tax.objects.first()
             new_price = plan.monthly_fee * (1 + tax.percentage / 100)
 
