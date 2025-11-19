@@ -449,7 +449,11 @@ const EditCompanyForm = () => {
               clearErrors('customPlan.limitPerson');
             }}
             error={getErrorMessage(errors, 'plan')}
-            disabled={companyDetail?.plan?.name == CompanyPlan.CUSTOM_PLAN}
+            disabled={
+              companyDetail?.plan?.name == CompanyPlan.CUSTOM_PLAN ||
+              (watch('status')?.value != CompanyStatus.PENDING_APPROVAL &&
+                watch('status')?.value != CompanyStatus.ACTIVE_CONTRACT)
+            }
           />
         )}
         rules={{ required: PLAN_REQUIRED_MESSAGE }}
@@ -837,97 +841,104 @@ const EditCompanyForm = () => {
         }}
       />
 
-      {/* Monthly fee */}
-      <Input
-        label="利用料金"
-        type="number"
-        placeholder="利用料金を入力してください"
-        disabled={Boolean(
-          watch('plan') && watch('plan')?.value != CompanyPlan.CUSTOM_PLAN,
-        )}
-        register={register('customPlan.monthlyFee', {
-          required: isCustomPlan ? MONTHLY_FEE_REQUIRED_MESSAGE : false,
-          min: isCustomPlan
-            ? {
-                value: 3000,
-                message: MIN_MONTHLY_FEE_MESSAGE,
-              }
-            : undefined,
-          max: isCustomPlan
-            ? {
-                value: 1000000,
-                message: MAX_MONTHLY_FEE_MESSAGE,
-              }
-            : undefined,
-          onChange: () => clearErrors('customPlan.monthlyFee'),
-        })}
-        error={getErrorMessage(errors, 'customPlan.monthlyFee')}
-        onWheel={(e) => e.currentTarget.blur()}
-        onInput={handleHalfWidthInput}
-        onPaste={handleHalfWidthPaste}
-      />
+      {watch('status')?.value == CompanyStatus.PENDING_APPROVAL ||
+      watch('status')?.value == CompanyStatus.ACTIVE_CONTRACT ? (
+        <>
+          {/* Monthly fee */}
+          <Input
+            label="利用料金"
+            type="number"
+            placeholder="利用料金を入力してください"
+            disabled={Boolean(
+              watch('plan') && watch('plan')?.value != CompanyPlan.CUSTOM_PLAN,
+            )}
+            register={register('customPlan.monthlyFee', {
+              required: isCustomPlan ? MONTHLY_FEE_REQUIRED_MESSAGE : false,
+              min: isCustomPlan
+                ? {
+                    value: 3000,
+                    message: MIN_MONTHLY_FEE_MESSAGE,
+                  }
+                : undefined,
+              max: isCustomPlan
+                ? {
+                    value: 1000000,
+                    message: MAX_MONTHLY_FEE_MESSAGE,
+                  }
+                : undefined,
+              onChange: () => clearErrors('customPlan.monthlyFee'),
+            })}
+            error={getErrorMessage(errors, 'customPlan.monthlyFee')}
+            onWheel={(e) => e.currentTarget.blur()}
+            onInput={handleHalfWidthInput}
+            onPaste={handleHalfWidthPaste}
+          />
 
-      {/* Limit */}
-      <Input
-        label="ユーザー作成上限"
-        type="number"
-        placeholder="ユーザー作成上限を入力してください"
-        disabled={Boolean(
-          watch('plan') && watch('plan')?.value != CompanyPlan.CUSTOM_PLAN,
-        )}
-        register={register('customPlan.limitPerson', {
-          required: isCustomPlan ? LIMIT_PERSON_REQUIRED_MESSAGE : false,
-          min: isCustomPlan
-            ? {
-                value: companyDetail?.totalUsers || 1,
-                message: MIN_CUSTOM_LIMIT_PERSON_MESSAGE(
-                  companyDetail?.totalUsers || 1,
-                ),
-              }
-            : undefined,
-          max: isCustomPlan
-            ? {
-                value: 300,
-                message: MAX_LIMIT_PERSON_MESSAGE,
-              }
-            : undefined,
-          onChange: () => clearErrors('customPlan.limitPerson'),
-        })}
-        error={getErrorMessage(errors, 'customPlan.limitPerson')}
-        onWheel={(e) => e.currentTarget.blur()}
-        onInput={handleHalfWidthInput}
-        onPaste={handleHalfWidthPaste}
-      />
+          {/* Limit */}
+          <Input
+            label="ユーザー作成上限"
+            type="number"
+            placeholder="ユーザー作成上限を入力してください"
+            disabled={Boolean(
+              watch('plan') && watch('plan')?.value != CompanyPlan.CUSTOM_PLAN,
+            )}
+            register={register('customPlan.limitPerson', {
+              required: isCustomPlan ? LIMIT_PERSON_REQUIRED_MESSAGE : false,
+              min: isCustomPlan
+                ? {
+                    value: companyDetail?.totalUsers || 1,
+                    message: MIN_CUSTOM_LIMIT_PERSON_MESSAGE(
+                      companyDetail?.totalUsers || 1,
+                    ),
+                  }
+                : undefined,
+              max: isCustomPlan
+                ? {
+                    value: 300,
+                    message: MAX_LIMIT_PERSON_MESSAGE,
+                  }
+                : undefined,
+              onChange: () => clearErrors('customPlan.limitPerson'),
+            })}
+            error={getErrorMessage(errors, 'customPlan.limitPerson')}
+            onWheel={(e) => e.currentTarget.blur()}
+            onInput={handleHalfWidthInput}
+            onPaste={handleHalfWidthPaste}
+          />
 
-      {/* Exchangeable coins */}
-      <Input
-        label="毎月のコイン付与数"
-        type="number"
-        placeholder="毎月のコイン付与数を入力してください"
-        disabled={Boolean(
-          watch('plan') && watch('plan')?.value != CompanyPlan.CUSTOM_PLAN,
-        )}
-        register={register('customPlan.exchangeableAmount', {
-          required: isCustomPlan ? MONTHLY_COIN_REQUIRED_MESSAGE : false,
-          min: isCustomPlan
-            ? {
-                value: 300,
-                message: MIN_MONTHLY_COIN_MESSAGE,
-              }
-            : undefined,
-          max: isCustomPlan
-            ? {
-                value: 100000,
-                message: MAX_MONTHLY_COIN_MESSAGE,
-              }
-            : undefined,
-          onChange: () => clearErrors('customPlan.exchangeableAmount'),
-        })}
-        error={getErrorMessage(errors, 'customPlan.exchangeableAmount')}
-        onWheel={(e) => e.currentTarget.blur()}
-        onInput={handleHalfWidthInput}
-        onPaste={handleHalfWidthPaste}
-      />
+          {/* Exchangeable coins */}
+          <Input
+            label="毎月のコイン付与数"
+            type="number"
+            placeholder="毎月のコイン付与数を入力してください"
+            disabled={Boolean(
+              watch('plan') && watch('plan')?.value != CompanyPlan.CUSTOM_PLAN,
+            )}
+            register={register('customPlan.exchangeableAmount', {
+              required: isCustomPlan ? MONTHLY_COIN_REQUIRED_MESSAGE : false,
+              min: isCustomPlan
+                ? {
+                    value: 300,
+                    message: MIN_MONTHLY_COIN_MESSAGE,
+                  }
+                : undefined,
+              max: isCustomPlan
+                ? {
+                    value: 100000,
+                    message: MAX_MONTHLY_COIN_MESSAGE,
+                  }
+                : undefined,
+              onChange: () => clearErrors('customPlan.exchangeableAmount'),
+            })}
+            error={getErrorMessage(errors, 'customPlan.exchangeableAmount')}
+            onWheel={(e) => e.currentTarget.blur()}
+            onInput={handleHalfWidthInput}
+            onPaste={handleHalfWidthPaste}
+          />
+        </>
+      ) : (
+        <></>
+      )}
 
       <div className="flex justify-center">
         <div className="flex flex-col items-center gap-4 my-[60px]">
