@@ -452,7 +452,8 @@ const EditCompanyForm = () => {
             disabled={
               companyDetail?.plan?.name == CompanyPlan.CUSTOM_PLAN ||
               (watch('status')?.value != CompanyStatus.PENDING_APPROVAL &&
-                watch('status')?.value != CompanyStatus.ACTIVE_CONTRACT)
+                watch('status')?.value != CompanyStatus.ACTIVE_CONTRACT &&
+                watch('status')?.value != CompanyStatus.TEMPORARY_USAGE)
             }
           />
         )}
@@ -842,7 +843,8 @@ const EditCompanyForm = () => {
       />
 
       {watch('status')?.value == CompanyStatus.PENDING_APPROVAL ||
-      watch('status')?.value == CompanyStatus.ACTIVE_CONTRACT ? (
+      watch('status')?.value == CompanyStatus.ACTIVE_CONTRACT ||
+      watch('status')?.value == CompanyStatus.TEMPORARY_USAGE ? (
         <>
           {/* Monthly fee */}
           <Input
