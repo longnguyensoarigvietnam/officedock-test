@@ -91,7 +91,7 @@ class CompanyViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         if custom_plan:
             if (
                 custom_plan.get("limit_person")
-                and custom_plan.get("limit_person") <= company.users.count()
+                and custom_plan.get("limit_person") < company.users.count()
             ):
                 raise ValidationError(
                     {
