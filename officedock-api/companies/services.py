@@ -195,7 +195,12 @@ class CompanyService:
             plan.stripe_product_id = stripe_product.id
             plan.stripe_price_id = stripe_price.id
             plan.save(update_fields=["stripe_product_id", "stripe_price_id"])
-        self.upgrade_plan(company, plan, is_custom_plan=True)
+        if company.status == CompanyStatus.PENDING_APPROVAL.value:
+            # Update new plan
+            company.company_plan.plan = plan
+            company.company_plan.save(update_fields=["plan"])
+        else:
+            self.upgrade_plan(company, plan, is_custom_plan=True)
 
     def cancellation_pending_contract(self, company):
         """
@@ -288,28 +293,11 @@ class CompanyService:
         """
         try:
             old_plan = company.company_plan.plan.name
-            invoice = None
-            start_month = now()
-            if company.status not in [
-                CompanyStatus.CONTRACT_TERMINATED.value,
-                CompanyStatus.PENDING_APPROVAL.value,
-            ]:
-                self.stripe_service.change_price_of_subscription(company, plan)
-                invoice = self.stripe_service.replace_invoice_subscription(
-                    company, plan
-                )
-                start_month = to_datetime(invoice.created) if invoice else now()
-                if old_plan != CUSTOM_PLAN:
-                    # Update history use plan
-                    company.transactions.filter(
-                        type=CompanyTransactionTypes.PLAN.value,
-                        plan_end_at__isnull=True,
-                    ).update(plan_end_at=start_month)
-                    company.transactions.create(
-                        type=CompanyTransactionTypes.PLAN.value,
-                        plan_start_at=start_month,
-                        plan=plan,
-                    )
+            self.stripe_service.change_price_of_subscription(company, plan)
+            invoice = self.stripe_service.replace_invoice_subscription(
+                company, plan
+            )
+            start_month = to_datetime(invoice.created) if invoice else now()
             tax = Tax.objects.first()
             new_price = plan.monthly_fee * (1 + tax.percentage / 100)
 
@@ -319,6 +307,16 @@ class CompanyService:
                 company.company_plan.save(update_fields=["plan"])
 
             if old_plan != CUSTOM_PLAN:
+                # Update history use plan
+                company.transactions.filter(
+                    type=CompanyTransactionTypes.PLAN.value,
+                    plan_end_at__isnull=True,
+                ).update(plan_end_at=start_month)
+                company.transactions.create(
+                    type=CompanyTransactionTypes.PLAN.value,
+                    plan_start_at=start_month,
+                    plan=plan,
+                )
                 self.mail_service.send_plan_auto_upgrade(
                     recipient=company.responsible_person_mail,
                     company_name=company.name,
