@@ -289,6 +289,7 @@ class CompanyService:
         try:
             old_plan = company.company_plan.plan.name
             invoice = None
+            start_month = now()
             if company.status not in [
                 CompanyStatus.CONTRACT_TERMINATED.value,
                 CompanyStatus.PENDING_APPROVAL.value,
@@ -297,6 +298,7 @@ class CompanyService:
                 invoice = self.stripe_service.replace_invoice_subscription(
                     company, plan
                 )
+                start_month = to_datetime(invoice.created) if invoice else now()
                 # Update history use plan
                 company.transactions.filter(
                     type=CompanyTransactionTypes.PLAN.value,
@@ -307,7 +309,6 @@ class CompanyService:
                     plan_start_at=start_month,
                     plan=plan,
                 )
-            start_month = to_datetime(invoice.created) if invoice else now()
             tax = Tax.objects.first()
             new_price = plan.monthly_fee * (1 + tax.percentage / 100)
 
