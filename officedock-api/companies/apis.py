@@ -103,6 +103,7 @@ class CompanyViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             if company.status not in [
                 CompanyStatus.ACTIVE_CONTRACT.value,
                 CompanyStatus.PENDING_APPROVAL.value,
+                CompanyStatus.TEMPORARY_USAGE.value,
             ]:
                 raise ValidationError(
                     {"detail": ERROR_MESSAGES["cannot_updated"]}

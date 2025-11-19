@@ -595,6 +595,9 @@ class StripeService:
                     tax_rates=item["tax_rates"],
                     period=item["period"],
                 )
+            if company.status == CompanyStatus.TEMPORARY_USAGE.value:
+                self.update_invoice_finalize(new_invoice, company)
+
             return self.get_invoice(new_invoice.id)
 
         except stripe.error.StripeError as e:
