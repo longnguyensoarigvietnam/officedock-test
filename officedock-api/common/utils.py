@@ -20,7 +20,7 @@ from djangorestframework_camel_case.render import CamelCaseJSONRenderer
 from djangorestframework_camel_case.parser import CamelCaseJSONParser
 from rest_framework.exceptions import ValidationError, NotFound
 
-from base.messages import ERROR_MESSAGES
+from base.messages import ERROR_MESSAGES, KEYWORDS
 from calendars.constants import ScheduleCategoryTypes
 from chat.constants import USER_ACTION_GROUP, WebSocketEventType
 from common.constants import STRIP_TAGS
@@ -1073,3 +1073,42 @@ def filter_include_deleted_user(request):
     if has_include_deleted_user and has_include_deleted_user.lower() == "false":
         filters = Q(deleted_at__isnull=True)
     return filters
+
+
+def filter_include_deleted_skill(request):
+    """
+    Returns a Q filter for skills based on the 'has_include_deleted_skill' query parameter in the request.
+    If 'has_include_deleted_skill' is set to 'false' (case-insensitive), the filter will restrict results to skills who have not been soft deleted (i.e., where deleted_at is null).
+
+    Args:
+        request: The HTTP request object, expected to have 'query_params' containing 'has_include_deleted_skill'.
+
+    Returns:
+        Q: A Django Q filter object for use in QuerySets.
+    """
+    has_include_deleted_skill = request.query_params.get(
+        "has_include_deleted_skill"
+    )
+    filters = Q()
+    if (
+        has_include_deleted_skill
+        and has_include_deleted_skill.lower() == "false"
+    ):
+        filters = Q(deleted_at__isnull=True)
+    return filters
+
+
+def get_deleted_name(obj, key="name"):
+    """
+    Return the object's field value with a 'deleted' suffix if the object is soft-deleted.
+
+    Args:
+        obj: The model instance containing the field.
+        key (str): The field name to retrieve from the object. Defaults to "name".
+
+    Returns:
+        str: The field value. If the object is soft-deleted (deleted_at is not None),
+             the returned value will include the 'deleted' suffix defined in KEYWORDS.
+    """
+    value = getattr(obj, key, "")
+    return value if obj.deleted_at is None else f"{value}{KEYWORDS['deleted']}"
