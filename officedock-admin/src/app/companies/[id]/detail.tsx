@@ -236,7 +236,7 @@ const CompanyDetailInfo = () => {
           },
         ]}
       />
-      <PaymentInformation paymentMethod={companyDetail?.paymentMethod || ''} />
+      <PaymentInformation paymentMethod={companyDetail?.paymentType || ''} />
       <InformationSection
         name="ユーザー情報"
         infoArr={[
