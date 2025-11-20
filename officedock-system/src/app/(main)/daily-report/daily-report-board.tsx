@@ -1665,14 +1665,16 @@ const DailyReportBoard = () => {
     divRef.current.style.left = '-9999px';
     divRef.current.style.top = '0';
 
-    await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 50)));
+    await new Promise((r) => requestAnimationFrame(() => setTimeout(r, 150)));
 
     // --- snapshot chart if exists ---
     const chartElem = document.getElementById('chart-to-pdf');
+    const dpr = window.devicePixelRatio || 1;
+
     let chartImgData = '';
     if (chartElem) {
       const chartCanvas = await html2canvas(chartElem, {
-        scale: 2,
+        scale: 2 * dpr,
         useCORS: true,
       });
       chartImgData = chartCanvas.toDataURL('image/png');

@@ -11,7 +11,7 @@ const RolePage = () => {
     <MainLayout
       title={pageRouters.ROLES_MANAGEMENT.name}
       permission={PermissionsSystem.ROLE_VIEW}
-      className="px-10 py-[30px] !overflow-x-auto"
+      className="px-10 py-[30px] !bg-[#F3F3F3] !overflow-x-auto"
       showFooter={false}>
       <div className="flex gap-4 items-center mb-5 justify-between">
         <div className="flex items-center gap-5">
@@ -24,15 +24,13 @@ const RolePage = () => {
               src={'/icons/dark-close-eye.svg'}
               className={`w-[16px] h-[13px]`}
             />
-            <span>削除 権限ー一覧</span>
+            <span>非表示一覧</span>
           </div>
         </div>
         <Link
           href={pageRouters.ROLES_MANAGEMENT.href}
           className="flex items-center hover:cursor-pointer">
-          <p className="ml-1 text-[#344653] font-medium text-xs">
-            権限ー管理へもどる
-          </p>
+          <p className="ml-1 text-[#344653] font-medium text-xs">表示中一覧</p>
           <div className="ml-[6px] flex justify-between p-[3px] rounded-full bg-white border-b">
             <ImageRound
               name="Filter extend icon"

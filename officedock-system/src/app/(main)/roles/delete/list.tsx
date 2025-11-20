@@ -54,6 +54,12 @@ const ListRolesDelete = () => {
   const { setIsLoading } = useContext(LoadingContext);
   const { data: session } = useSessionCache();
   const { showToast } = useToast();
+  useEffect(() => {
+    document.body.style.backgroundColor = '#F3F3F3';
+    return () => {
+      document.body.style.backgroundColor = '';
+    };
+  }, []);
 
   useEffect(() => {
     setDebouncedParams((prev) => ({
@@ -96,9 +102,7 @@ const ListRolesDelete = () => {
   };
 
   const postRestoreRole = async (id: number) => {
-    const { data: response } = await api.patch(apiRouters.ROLE_DETAIL(id), {
-      deletedAt: null,
-    });
+    const { data: response } = await api.post(apiRouters.ROLE_RESTORE(id));
     return response;
   };
 
@@ -183,7 +187,7 @@ const ListRolesDelete = () => {
                     <div className="flex w-full gap-2 justify-end pr-3 items-center">
                       <ImageRound
                         name="Hide"
-                        src={'/icons/eye.svg'}
+                        src={'/icons/dark-close-eye.svg'}
                         className={`w-[16px] h-[13px] hover:cursor-pointer ml-1`}
                         onClick={() => handleOpenRestoreRoleModal(element)}
                       />

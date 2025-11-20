@@ -130,6 +130,13 @@ const ListUsersDelete = () => {
   });
 
   useEffect(() => {
+    document.body.style.backgroundColor = '#F3F3F3';
+    return () => {
+      document.body.style.backgroundColor = '';
+    };
+  }, []);
+
+  useEffect(() => {
     setDebouncedParams((prev) => ({
       ...prev,
       search: debouncedSearch,
@@ -589,14 +596,14 @@ const ListUsersDelete = () => {
                 src={'/icons/dark-close-eye.svg'}
                 className={`w-[16px] h-[13px]`}
               />
-              <span>削除ユーザー一覧</span>
+              <span>非表示一覧</span>
             </div>
           </div>
           <Link
             href={pageRouters.USERS_MANAGEMENT.href}
             className="flex items-center hover:cursor-pointer">
             <p className="ml-1 text-[#77858F] font-medium text-xs">
-              ユーザー管理へもどる
+              表示中一覧
             </p>
             <div className="ml-[6px] flex justify-between p-[3px] rounded-full bg-white border-b">
               <ImageRound
@@ -758,7 +765,7 @@ const ListUsersDelete = () => {
                         <ImageRound
                           name="Hide"
                           onClick={() => handleOpenRestoreUserModal(element)}
-                          src={'/icons/eye.svg'}
+                          src={'/icons/dark-close-eye.svg'}
                           className={`w-[16px] h-[13px] hover:cursor-pointer`}
                         />
                       </div>

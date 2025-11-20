@@ -8,7 +8,9 @@ export type ConfirmDeleteModalProps = {
   open: boolean;
   name?: string;
   type: string;
+  classNameMsg?: string;
   message?: string;
+  message2?: string;
   userColor?: string;
   userAvatarUrl?: string | undefined;
   onConfirm: () => void;
@@ -23,6 +25,8 @@ const ConfirmDeleteModal = memo(
     userColor,
     userAvatarUrl,
     message,
+    message2,
+    classNameMsg,
     onConfirm,
     onClose,
   }: ConfirmDeleteModalProps) => {
@@ -51,9 +55,13 @@ const ConfirmDeleteModal = memo(
         )}
         <div className="text-center mb-10">
           <p className="text-sm text-black leading-6 text-neutral-02">{`この${type}を本当に削除しますか？`}</p>
-          <p className="text-[#77858F] font-normal text-[13px] mt-[10px]">
+          <p
+            className={`text-[#77858F] font-normal text-[13px] mt-[10px] ${classNameMsg}`}>
             {message}
           </p>
+          {message2 && (
+            <p className="text-[#77858F] font-normal text-[13px]">{message2}</p>
+          )}
         </div>
         <div className="flex justify-center gap-3  items-center">
           <Button

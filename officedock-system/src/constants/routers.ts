@@ -100,6 +100,10 @@ export const pageRouters = {
     name: '集計タグ管理',
     href: '/tags',
   },
+  TAGS_MANAGEMENT_HIDDEN: {
+    name: '集計タグ管理',
+    href: '/tags/delete',
+  },
   CREATE_TAG: {
     name: '新規登録',
     href: '/tags/create',
@@ -491,14 +495,18 @@ export const apiRouters = {
   USER_LIST: '/users/',
   USER_DETAIL: (id: string | number) => `/users/${id}/`,
   USER_RESTORE: (id: string | number) => `/users/${id}/restore/`,
-  TAG_LIST: '/tags/',
-  HIDDEN_TAG_LIST: '/tags/list-hidden',
-  TAG_DETAIL: (id: string) => `/tags/${id}/`,
+
   DASHBOARD_MEMBER_LIST: '/dashboard/members/',
   MEMO_DETAIL: '/users/memo/',
   AUTHENTICATED_USER: '/auth/me',
   USER_BUY_ITEM: '/users/buy-item/',
   USER_WEAR_ITEM: '/users/equipped-item/',
+
+  // TAG
+  TAG_DETAIL: (id: string) => `/tags/${id}/`,
+  TAG_RESTORE: (id: string) => `/tags/${id}/restore/`,
+  TAG_LIST: '/tags/',
+  HIDDEN_TAG_LIST: '/tags/list-hidden',
 
   // CATEGORY
   CATEGORY_LIST: '/statistic-categories/',
@@ -618,6 +626,7 @@ export const apiRouters = {
   // ROLES
   ROLE_LIST: '/roles/',
   ROLE_DETAIL: (id: number) => `/roles/${id}/`,
+  ROLE_RESTORE: (id: number) => `/roles/${id}/restore/`,
 
   // ACTUAL DURATIONS
   ACTUAL_DURATIONS_LIST: '/actual-durations/',

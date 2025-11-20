@@ -30,9 +30,11 @@ import {
   ERROR_COMMON_MESSAGE,
   ERROR_CREATE_MESSAGE,
   ERROR_DELETE_MESSAGE,
+  ERROR_RESTORE_MESSAGE,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_CREATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
+  SUCCESS_RESTORE_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
 import {
@@ -58,6 +60,7 @@ import { hasPermissionInArray } from '@utils';
 
 import api from '@base/api';
 import Link from 'next/link';
+import ConfirmRestoreModal from '@components/modals/ConfirmRestoreModal';
 
 const FilterOrganizationComponent = ({
   dataOrganizationList,
@@ -102,7 +105,7 @@ const FilterOrganizationComponent = ({
   );
 };
 
-const ListTags = () => {
+const ListDeleteTags = () => {
   const { setIsLoading } = useContext(LoadingContext);
   const { data: session } = useSessionCache();
 
@@ -148,12 +151,17 @@ const ListTags = () => {
   const [selectedTagToDelete, setSelectedTagToDelete] = useState<Tags | null>(
     null,
   );
+  const [selectedTagToRestore, setSelectedTagToRestore] = useState<Tags | null>(
+    null,
+  );
   const [selectedTagToUpdate, setSelectedTagToUpdate] = useState<number | null>(
     null,
   );
 
   // Actions
   const [openConfirmDeleteModal, setOpenConfirmDeleteModal] = useState(false);
+  const [openConfirmRestoreModal, setOpenConfirmRestoreModal] = useState(false);
+
   const [openActionsTagModal, setOpenActionsTagModal] = useState(false);
   const [dataTagEdit, setDataTagEdit] = useState<Tags | null>(null);
 
@@ -167,6 +175,13 @@ const ListTags = () => {
       organizationIds: [],
     },
   });
+  useEffect(() => {
+    document.body.style.backgroundColor = '#F3F3F3';
+    return () => {
+      document.body.style.backgroundColor = '';
+    };
+  }, []);
+
   useCreationDataCommon({
     options: {
       get_all_organizations: true,
@@ -186,7 +201,7 @@ const ListTags = () => {
     filter: {
       tagName: debouncedParams.search,
       organizationIds: filterRequest.organizationIds,
-      isHidden: false,
+      isHidden: true,
     },
     onSuccess: (data) => {
       setDataTags(data.results);
@@ -393,6 +408,50 @@ const ListTags = () => {
       setSelectedTagToDelete(null);
     },
   });
+  // Restore tag
+  const handleOpenRestoreTagModal = (tag: Tags) => {
+    setOpenConfirmRestoreModal(true);
+    setSelectedTagToRestore(tag);
+  };
+
+  const handleConfirmRestoreTag = () => {
+    if (selectedTagToRestore) {
+      setIsLoading(true);
+      restoreTag(Number(selectedTagToRestore.id));
+      return;
+    }
+  };
+
+  const postRestoreTag = async (id: number) => {
+    const { data: response } = await api.post(apiRouters.TAG_RESTORE(`${id}`));
+    return response;
+  };
+
+  const { mutate: restoreTag } = useMutation(postRestoreTag, {
+    onSuccess: async () => {
+      showToast({
+        description: SUCCESS_RESTORE_MESSAGE,
+      });
+      if (dataTags.length === 1 && debouncedParams.page > 1) {
+        // If change current page, useTagList auto recall, just don't need using refetchTagList
+        setDebouncedParams((prev) => ({
+          ...prev,
+          page: debouncedParams.page - 1,
+        }));
+      } else {
+        refetchTagList();
+      }
+      setOpenConfirmRestoreModal(false);
+    },
+    onError: (error: AxiosError<any>) => {
+      showErrorToast(error, ERROR_RESTORE_MESSAGE);
+      setOpenConfirmRestoreModal(false);
+      setIsLoading(false);
+    },
+    onSettled: () => {
+      setSelectedTagToRestore(null);
+    },
+  });
 
   useEffect(() => {
     if (tagIdParam && !dataTagEdit && actionTypeParam === ActionsModal.EDIT) {
@@ -413,7 +472,7 @@ const ListTags = () => {
           </p>
         </div>
         <Link
-          href={pageRouters.TAGS_MANAGEMENT_HIDDEN.href}
+          href={pageRouters.TAGS_MANAGEMENT.href}
           className="flex items-center hover:cursor-pointer">
           <ImageRound
             name="Hide"
@@ -608,7 +667,7 @@ const ListTags = () => {
                         )}
                         {element.actions?.update ? (
                           <div
-                            onClick={() => handleOpenDeleteTagModal(element)}>
+                            onClick={() => handleOpenRestoreTagModal(element)}>
                             <ImageRound
                               name="Hide"
                               src={'/icons/eye.svg'}
@@ -695,13 +754,19 @@ const ListTags = () => {
         open={openConfirmDeleteModal}
         name={selectedTagToDelete?.name || ''}
         type="タグ"
-        message="すでにタスクカードと紐づけたタグはそのままです。"
-        message2="あとで「非表示一覧」から復元することも可能です。"
+        message="紐づいているタスクからも削除されます。"
         onConfirm={handleConfirmDeleteTag}
         onClose={() => {
           setSelectedTagToDelete(null);
           setOpenConfirmDeleteModal(false);
         }}
+      />
+      <ConfirmRestoreModal
+        open={openConfirmRestoreModal}
+        type="タグ"
+        name={selectedTagToRestore?.name}
+        onConfirm={handleConfirmRestoreTag}
+        onClose={() => setOpenConfirmRestoreModal(false)}
       />
 
       {openActionsTagModal && actionTypeParam && (
@@ -735,4 +800,4 @@ const ListTags = () => {
   );
 };
 
-export default ListTags;
+export default ListDeleteTags;
