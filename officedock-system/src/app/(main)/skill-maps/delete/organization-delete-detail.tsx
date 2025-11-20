@@ -1,5 +1,3 @@
-import { useSessionCache } from '@providers/SessionCacheProvider';
-
 import { useContext, useEffect, useRef, useState } from 'react';
 import { useMutation } from 'react-query';
 import { AxiosError } from 'axios';
@@ -12,12 +10,10 @@ import {
 
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
-import Input from '@components/common/Input';
 import { Table } from '@components/common/Table';
 
 import {
   ActionsModal,
-  PermissionsSystem,
   ScreenName,
   SkillMapLookBackType,
   SkillMapTypeInterval,
@@ -39,14 +35,11 @@ import {
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 
-import { hasPermissionInArray } from '@utils';
-
 import api from '@base/api';
 
 interface OrganizationSkillDetailProps {
   orgSkillDetail: OrganizationSkill;
   handleOpenDeleteSkillModal: (skill: SkillDataDeleteType) => void;
-  setOpenSkillMapActionsModal: React.Dispatch<React.SetStateAction<boolean>>;
   setSelectedFilterStepDetail: React.Dispatch<
     React.SetStateAction<
       | {
@@ -143,9 +136,8 @@ const LevelConditionDetail = ({
   );
 };
 
-export const OrganizationSkillDetail = ({
+export const OrganizationDeleteSkillDetail = ({
   orgSkillDetail,
-  setOpenSkillMapActionsModal,
   setSelectedFilterStepDetail,
   setSelectedSkillMapToUpdate,
   handleSetParam,
@@ -156,7 +148,6 @@ export const OrganizationSkillDetail = ({
   const [isEditStepDefinitionMode, setIsEditStepDefinitionMode] =
     useState<boolean>(false);
 
-  const { data: session } = useSessionCache();
   const { setIsLoading } = useContext(LoadingContext);
   const showErrorToast = useErrorToast();
   const { showToast } = useToast();
@@ -164,7 +155,7 @@ export const OrganizationSkillDetail = ({
   const stepDefinitionBoxRef = useRef<HTMLDivElement | null>(null);
   const isEditingRef = useRef(false);
 
-  const { register, watch, reset } = useForm<OrganizationDefineSteps>({
+  const { watch } = useForm<OrganizationDefineSteps>({
     mode: 'onSubmit',
   });
 
@@ -303,113 +294,11 @@ export const OrganizationSkillDetail = ({
 
   return (
     <div
-      className="w-full p-5 bg-[#F8FAFC] rounded-[30px]"
+      className="w-full p-5 bg-white rounded-[30px]"
       style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
       <p className="text-[#77858F] text-[16px] font-medium mb-[30px] max-w-[100%] break-all">
         {orgSkillDetail.name}
       </p>
-
-      {/* Step definitions */}
-      {isEditStepDefinitionMode ? (
-        <div
-          className="border-[1px] border-[#D2DBE1] bg-white flex w-full py-[15px] pl-[14px] pr-[19px] mb-7 gap-5 items-center rounded-[6px]"
-          ref={stepDefinitionBoxRef}>
-          <div className="flex gap-5 w-[calc(100%_-_34px)]">
-            <div className="flex gap-2 items-center w-1/3">
-              <p className="bg-[#3DC1E2] text-white rounded-[20px] w-[70px] h-[24px] flex items-center justify-center text-xs">
-                STEP 1
-              </p>
-              <div className="!w-full">
-                <Input
-                  className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-full focus:!shadow-none focus:border !border-[1px] !border-[#77858F] rounded-md`}
-                  defaultValue={orgSkillDetail.steps.step1}
-                  register={register('defineStep1')}
-                />
-              </div>
-            </div>
-            <div className="flex gap-2 items-center w-1/3">
-              <p className="bg-primary text-white rounded-[20px] w-[70px] h-[24px] flex items-center justify-center text-xs">
-                STEP 2
-              </p>
-              <div className="!w-full">
-                <Input
-                  className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-full focus:!shadow-none focus:border !border-[1px] !border-[#77858F] rounded-md`}
-                  defaultValue={orgSkillDetail.steps.step2}
-                  register={register('defineStep2')}
-                />
-              </div>
-            </div>
-            <div className="flex gap-2 items-center w-1/3">
-              <p className="bg-[#355AC9] text-white rounded-[20px] w-[70px] h-[24px] flex items-center justify-center text-xs">
-                STEP 3
-              </p>
-              <div className="!w-full">
-                <Input
-                  className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-full focus:!shadow-none focus:border !border-[1px] !border-[#77858F] rounded-md`}
-                  defaultValue={orgSkillDetail.steps.step3}
-                  register={register('defineStep3')}
-                />
-              </div>
-            </div>
-          </div>
-          <ImageRound
-            name="Edit"
-            src={'/icons/edit-gray.svg'}
-            className="w-3.5 h-3.5 hover:cursor-pointer edit-icon"
-            onClick={() => {
-              if (!isEditingRef.current) {
-                handleConfirmEditStepDefinitions({
-                  defineStep1: watch('defineStep1') || null,
-                  defineStep2: watch('defineStep2') || null,
-                  defineStep3: watch('defineStep3') || null,
-                });
-              }
-            }}
-          />
-        </div>
-      ) : (
-        <div className="border-[1px] border-[#D2DBE1] bg-white flex w-full py-[15px] pl-[14px] pr-[19px] mb-7 gap-5 items-center rounded-[6px]">
-          <div className="flex gap-5 w-[calc(100%_-_34px)]">
-            <div className="flex gap-2 items-center max-w-[33.3%] min-w-0">
-              <p className="bg-[#3DC1E2] text-white rounded-[20px] w-[70px] h-[24px] flex items-center justify-center text-xs">
-                STEP 1
-              </p>
-              <p className="text-sm font-normal max-w-[calc(100%_-_70px)] break-all">
-                {orgSkillDetail.steps.step1}
-              </p>
-            </div>
-            <div className="flex gap-2 items-center max-w-[33.3%] min-w-0">
-              <p className="bg-primary text-white rounded-[20px] w-[70px] h-[24px] flex items-center justify-center text-xs">
-                STEP 2
-              </p>
-              <p className="text-sm font-normal max-w-[calc(100%_-_70px)] break-all">
-                {orgSkillDetail.steps.step2}
-              </p>
-            </div>
-            <div className="flex gap-2 items-center max-w-[33.3%] min-w-0">
-              <p className="bg-[#355AC9] text-white rounded-[20px] w-[70px] h-[24px] flex items-center justify-center text-xs">
-                STEP 3
-              </p>
-              <p className="text-sm font-normal max-w-[calc(100%_-_70px)] break-all">
-                {orgSkillDetail.steps.step3}
-              </p>
-            </div>
-          </div>
-          <ImageRound
-            name="Edit"
-            src={'/icons/edit-gray.svg'}
-            className="w-3.5 h-3.5 hover:cursor-pointer opacity-45 hover:opacity-100"
-            onClick={() => {
-              setIsEditStepDefinitionMode(true);
-              reset({
-                defineStep1: orgSkillDetail.steps.step1,
-                defineStep2: orgSkillDetail.steps.step2,
-                defineStep3: orgSkillDetail.steps.step3,
-              });
-            }}
-          />
-        </div>
-      )}
 
       {/* Buttons */}
       <div className="flex gap-[30px] !w-full mb-[30px]">
@@ -439,34 +328,11 @@ export const OrganizationSkillDetail = ({
             );
           })}
         </div>
-        {session?.user.permissions &&
-          hasPermissionInArray(
-            session?.user.permissions,
-            PermissionsSystem.SKILL_MAP_MANAGEMENT_ADD,
-          ) && (
-            <Button
-              className="w-[100px] h-[30px] !text-sm !text-nowrap !text-white border-none"
-              style={{ boxShadow: '0px 1px 5px 0px #00000033' }}
-              onClick={() => {
-                setOpenSkillMapActionsModal(true);
-                handleSetParam({
-                  action: ActionsModal.CREATE,
-                  organization: orgSkillDetail.id,
-                });
-              }}>
-              <ImageRound
-                src="/icons/add-with-background.svg"
-                name="Add icon"
-                className="!w-4 !h-4 text-gray-400 cursor-pointer text-sm mr-2"
-              />
-              新規追加
-            </Button>
-          )}
       </div>
 
       {/* Step information */}
       <Table
-        className="w-full h-full bg-white !rounded-[10px]"
+        className="w-full h-full bg-white !rounded-[10px] !border-[#BDBDBD]"
         classCustom="!p-0">
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -494,7 +360,7 @@ export const OrganizationSkillDetail = ({
                 return (
                   <th
                     key={header.id}
-                    className={`text-[#77858F] bg-[#F8FAFC] text-xs font-medium py-3 ${widthClass} ${!isLast ? 'border-r-[1px]' : ''}`}>
+                    className={`text-[#77858F] bg-[#F3F3F3] text-xs  font-medium py-3 ${widthClass} ${!isLast ? 'border-r-[1px] border-[#BDBDBD]' : ''}`}>
                     {flexRender(
                       header.column.columnDef.header,
                       header.getContext(),
@@ -519,15 +385,15 @@ export const OrganizationSkillDetail = ({
             return (
               <tr
                 key={row.id}
-                className={`${table.getRowModel().rows.length - 1 != rowIndex && 'border-b-[1px] border-b-[#D2DBE1]'}`}>
+                className={`${table.getRowModel().rows.length - 1 != rowIndex && 'border-b-[1px] border-b-[#BDBDBD]'} ${rowIndex == 0 && 'border-t border-[#BDBDBD]'}`}>
                 <td
-                  className={`w-[4%] break-all h-full border-r-[1px] border-r-[#D2DBE1]`}>
+                  className={`w-[4%] break-all h-full border-r-[1px] border-r-[#BDBDBD]`}>
                   <p className="text-sm font-medium py-4 text-center">
                     {row.original.id}
                   </p>
                 </td>
                 <td
-                  className={`w-[20%] break-all h-full border-r-[1px] border-r-[#D2DBE1]`}>
+                  className={`w-[20%] break-all h-full border-r-[1px] border-r-[#BDBDBD]`}>
                   <div className="flex justify-between">
                     <p className="text-sm flex justify-left items-center font-medium py-4 px-5 max-w-[calc(100%_-_50px)] break-all">
                       {row.original.name}
@@ -555,7 +421,7 @@ export const OrganizationSkillDetail = ({
                             name: row.original.name,
                           });
                         }}
-                        src={'/icons/close-eye-gray.svg'}
+                        src={'/icons/eye.svg'}
                         className="w-[17px] h-[14px] hover:cursor-pointer"
                       />
                     </div>

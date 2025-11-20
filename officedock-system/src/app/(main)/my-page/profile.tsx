@@ -374,7 +374,7 @@ const MyPage = () => {
             </p>
           </div>
         </div>
-        <div className="mt-[30px] ml-[30px]">
+        <div className="mt-[30px] ml-[30px] relative z-[30]">
           <SkillSetting
             myPageSkillList={myPageSkillList}
             setSkillIdToUpdate={setSkillIdToUpdate}

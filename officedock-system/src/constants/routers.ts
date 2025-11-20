@@ -257,6 +257,10 @@ export const pageRouters = {
     name: 'スキルマップ',
     href: '/skill-maps',
   },
+  SKILL_MAPS_HIDDEN_MANAGEMENT: {
+    name: 'スキルマップ',
+    href: '/skill-maps/delete',
+  },
   EDIT_SKILL_MAPS: {
     name: 'スキルマップ編集',
     href: (skillId: string | null, organizationId: string, staffId: string) =>
@@ -597,6 +601,7 @@ export const apiRouters = {
   // SKILL
   SKILL_LIST: '/skills/',
   SKILL_DETAIL: (id: string) => `/skills/${id}/`,
+  SKILL_RESTORE: (id: string) => `/skills/${id}/restore/`,
 
   // SKILLS MAP
   SKILL_MAPS_LIST: '/skill-maps/',

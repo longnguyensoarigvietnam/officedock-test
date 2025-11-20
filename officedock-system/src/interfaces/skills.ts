@@ -249,6 +249,7 @@ export interface SkillMapByOrganizationInfo {
     name: string | null;
     description: string | null;
     step: string | null;
+    deletedAt?: string | null;
   };
   isComplete: boolean | null;
   step: string | null;
@@ -501,4 +502,10 @@ export interface SaveLevelUpDraftRequest {
     isChecked: boolean;
   }[];
   approver: number;
+}
+
+export interface SkillDataDeleteType {
+  id: number;
+  name: string;
+  orgId?: number;
 }
