@@ -59,6 +59,7 @@ from companies.constants import (
     CompanyTransactionTypes,
     Department,
     Industry,
+    PaymentTypes,
     SystemMainPurpose,
     TransactionStatus,
 )
@@ -639,6 +640,9 @@ class CronJobViewSet(BaseAPIViewSet):
             # Handle terminate contract
             self.cronjob_service.handle_terminate_contract_over_period(today)
 
+            # Handle renewal contract
+            self.cronjob_service.handle_renewal_contract(today)
+
         # 4. Get company have status Temporary Usage and void the invoice before auto pay
         if today.day == 5:
             self.cronjob_service.handle_cancel_the_invoice_of_company_temporary_usage(
@@ -703,17 +707,6 @@ class WebhookView(BaseAPIViewSet):
         if event.type == "invoice.created":
             invoice = event.data.object
             self.stripe_service.handle_invoice_created(invoice)
-            # Check renewal of contract and handle it
-            invoice_start_date = datetime.fromtimestamp(invoice.created)
-            company = Company.objects.filter(
-                stripe_customer_id=invoice.customer,
-                contract__next_renewal_at__lte=invoice_start_date,
-                contract__cancel_at__isnull=True,
-            ).first()
-            if company:
-                self.company_service.handle_contract_renewal(
-                    company, invoice_start_date.date()
-                )
         elif event.type in ["invoice.payment_succeeded"]:
             # Update status transaction
             self.handle_payment_succeeded(event.data.object)
@@ -791,7 +784,9 @@ class WebhookView(BaseAPIViewSet):
         ).first()
         if attempt_count == THE_FIRST_RETRY_FAILED:
             payment_methods = company.payment_methods
-            next_pm = payment_methods.filter(is_retry_failed=False).first()
+            next_pm = payment_methods.filter(
+                is_retry_failed=False, type=PaymentTypes.CREDIT_CARD.value
+            ).first()
             # Retry if have another card
             if next_pm:
                 self.stripe_service.handle_pay_invoice(
@@ -1038,6 +1033,8 @@ class TestingViewset(BaseAPIViewSet):
                 today
             )
             self.cronjob_service.handle_terminate_contract_over_period(today)
+            # Handle renewal contract
+            self.cronjob_service.handle_renewal_contract(today)
 
         # 4. Get company have status Temporary Usage and void the invoice before auto pay
         if today.day == 5:

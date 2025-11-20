@@ -845,6 +845,27 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         for role in roles_data:
             user.roles.add(role, through_defaults={"company": company})
 
+        company_user_count += 1
+        # Store max user at in contract period
+        if company_user_count > company.max_user_in_contract_period:
+            company.max_user_in_contract_period = company_user_count
+            company.max_user_at = datetime.now()
+            company.save(
+                update_fields=["max_user_in_contract_period", "max_user_at"]
+            )
+        # Upgrade plan
+        if company_user_count > current_plan.limit_person:
+            filter = Q()
+            if company_user_count <= LIMIT_PERSON_PLAN_1_10:
+                filter = Q(limit_person=LIMIT_PERSON_PLAN_1_10)
+            elif company_user_count <= LIMIT_PERSON_PLAN_11_20:
+                filter = Q(limit_person=LIMIT_PERSON_PLAN_11_20)
+            elif company_user_count <= LIMIT_PERSON_PLAN_21_30:
+                filter = Q(limit_person=LIMIT_PERSON_PLAN_21_30)
+            plan = Plan.objects.filter(filter).first()
+            if plan != current_plan:
+                CompanyService().upgrade_plan(company, plan)
+
         # Send mail to invited user
         new_user_email = ""
         mail_service = MailService()
@@ -878,26 +899,6 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 new_user_name=user.full_name,
                 new_user_email=new_user_email,
             )
-        company_user_count += 1
-        # Store max user at in contract period
-        if company_user_count > company.max_user_in_contract_period:
-            company.max_user_in_contract_period = company_user_count
-            company.max_user_at = datetime.now()
-            company.save(
-                update_fields=["max_user_in_contract_period", "max_user_at"]
-            )
-        # Upgrade plan
-        if company_user_count > current_plan.limit_person:
-            filter = Q()
-            if company_user_count <= LIMIT_PERSON_PLAN_1_10:
-                filter = Q(limit_person=LIMIT_PERSON_PLAN_1_10)
-            elif company_user_count <= LIMIT_PERSON_PLAN_11_20:
-                filter = Q(limit_person=LIMIT_PERSON_PLAN_11_20)
-            elif company_user_count <= LIMIT_PERSON_PLAN_21_30:
-                filter = Q(limit_person=LIMIT_PERSON_PLAN_21_30)
-            plan = Plan.objects.filter(filter).first()
-            if plan != current_plan:
-                CompanyService().upgrade_plan(company, plan)
 
         # Log user create
         UserActivityLog.log_user_creation(

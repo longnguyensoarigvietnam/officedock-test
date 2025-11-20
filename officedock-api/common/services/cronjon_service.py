@@ -228,3 +228,17 @@ class CronJobService:
             CompanyService().change_status_of_company(
                 company, status=CompanyStatus.CONTRACT_TERMINATED.value
             )
+
+    def handle_renewal_contract(self, today):
+        """
+        Automatically renewal contracts that have reached their end date.
+        Args:
+        today (datetime.date, optional): The current date used for comparison`.
+        """
+        companies = Company.objects.filter(
+            contract__next_renewal_at=today,
+            contract__cancel_at__isnull=True,
+        ).all()
+        if companies:
+            for company in companies:
+                CompanyService().handle_contract_renewal(company)

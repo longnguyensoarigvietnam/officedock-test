@@ -40,6 +40,10 @@ class Company(BaseModel):
     # Define close date and editable after closing
     close_date = models.IntegerField(default=31)
     editable_after_closing = models.IntegerField(default=10)
+    mf_customer_id = models.CharField(
+        null=True, blank=True
+    )  # MoneyForward customer id
+    payment_type = models.CharField(null=True, blank=True)
 
     def __str__(self):
         return self.name

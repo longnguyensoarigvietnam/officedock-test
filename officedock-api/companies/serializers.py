@@ -137,6 +137,8 @@ class CompanySerializer(serializers.ModelSerializer):
             "close_date",
             "editable_after_closing",
             "custom_plan",
+            "mf_customer_id",
+            "payment_type",
         ]
         read_only_fields = ["is_show_holidays_calendar"]
 
@@ -233,7 +235,7 @@ class CreationCompanySerializer(serializers.Serializer):
     """
 
     company_name = serializers.CharField()
-    payment_method = serializers.CharField()
+    payment_method = serializers.ChoiceField(choices=PaymentTypes.choices())
     address = serializers.CharField(required=False)
     phone = serializers.CharField(required=False)
     responsible_person_name = serializers.CharField(required=False)
@@ -246,10 +248,22 @@ class CreationCompanySerializer(serializers.Serializer):
             "invalid": ERROR_MESSAGES["plan_invalid"],
         },
     )
-    stripe_payment_method_id = serializers.CharField()
+    stripe_payment_method_id = serializers.CharField(required=False)
     industry = serializers.CharField(required=False)
     system_main_purpose = serializers.JSONField(required=False)
     department = serializers.JSONField(required=False)
+
+    def validate(self, attrs):
+        stripe_payment_method_id = attrs.get("stripe_payment_method_id", None)
+        payment_method = attrs.get("payment_method", None)
+        if (
+            payment_method == PaymentTypes.CREDIT_CARD.value
+            and not stripe_payment_method_id
+        ):
+            raise serializers.ValidationError(
+                {"stripe_payment_method_id": ERROR_MESSAGES["field_required"]}
+            )
+        return attrs
 
     def validate_system_main_purpose(self, value):
         if not isinstance(value, list):
@@ -304,6 +318,8 @@ class RetrieveCompanySerializer(CompanySerializer):
             "close_date",
             "editable_after_closing",
             "stripe_subscription_id",
+            "mf_customer_id",
+            "payment_type",
         ]
 
     def get_payment_method(self, instance):

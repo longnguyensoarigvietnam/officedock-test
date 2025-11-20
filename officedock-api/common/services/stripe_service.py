@@ -7,6 +7,7 @@ from common.utils import get_a_day_in_next_month
 from companies.constants import (
     CompanyStatus,
     CompanyTransactionTypes,
+    PaymentTypes,
     TransactionStatus,
 )
 from companies.models import Company, CompanyPlan, CompanyTransaction
@@ -191,7 +192,9 @@ class StripeService:
             )
 
             # 5. Set default if it's the first one
-            is_default = not company.payment_methods.exists()
+            is_default = not company.payment_methods.filter(
+                type=PaymentTypes.CREDIT_CARD.value
+            ).exists()
             if is_default:
                 self.modify_default_payment_method(
                     customer_id, payment_method_id
