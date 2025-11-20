@@ -62,7 +62,7 @@ class Company(BaseModel):
     @property
     def exchangeable_amount(self):
         return (
-            self.company_plan.plan.exchangeable_amount
+            self.company_plan.exchangeable_amount
             if hasattr(self, "company_plan")
             and hasattr(self.company_plan, "plan")
             else 0
@@ -106,6 +106,16 @@ class CompanyPlan(BaseModel):
         on_delete=models.CASCADE,
     )
     stripe_subscription_id = models.CharField(null=True, blank=True)
+    monthly_fee = models.FloatField(null=True, blank=True)
+    stripe_price_id = models.CharField(null=True, blank=True)
+    exchangeable_amount = models.IntegerField(
+        default=0
+    )  # Amount convertible to DotMoney
+    limit_person = models.IntegerField(default=0)
+
+    @property
+    def name(self):
+        return self.plan.name
 
 
 class CompanyPaymentMethod(BaseModel):

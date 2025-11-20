@@ -1037,7 +1037,7 @@ class TestingViewset(BaseAPIViewSet):
             )
             self.cronjob_service.handle_terminate_contract_over_period(today)
             # Handle renewal contract
-            self.cronjob_service.handle_renewal_contract(today)
+            self.cronjob_service.handle_renewal_contract(today, all_companies)
 
         # 4. Get company have status Temporary Usage and void the invoice before auto pay
         if today.day == 5:

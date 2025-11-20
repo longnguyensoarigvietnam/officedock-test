@@ -1,7 +1,6 @@
 import datetime
 from django.contrib.auth.base_user import get_random_string
 from datetime import timezone
-from django.db import transaction
 from django.db.models import Q
 from django.utils.timezone import now
 from rest_framework.fields import ValidationError
@@ -48,6 +47,39 @@ class CompanyService:
         """
         self.stripe_service = StripeService()
         self.mail_service = PaymentMailService()
+
+    def update_new_plan(
+        self,
+        company,
+        plan,
+        monthly_fee=None,
+        stripe_price_id=None,
+        exchangeable_amount=None,
+        limit_person=None,
+    ):
+        """
+        Update a company plan by plan, and validated data
+        """
+        if plan.name != CUSTOM_PLAN:
+            monthly_fee = plan.monthly_fee
+            stripe_price_id = plan.stripe_price_id
+            exchangeable_amount = plan.exchangeable_amount
+            limit_person = plan.limit_person
+
+        company.company_plan.plan = plan
+        company.company_plan.monthly_fee = monthly_fee
+        company.company_plan.stripe_price_id = stripe_price_id
+        company.company_plan.exchangeable_amount = exchangeable_amount
+        company.company_plan.limit_person = limit_person
+        company.company_plan.save(
+            update_fields=[
+                "monthly_fee",
+                "stripe_price_id",
+                "exchangeable_amount",
+                "limit_person",
+                "plan",
+            ]
+        )
 
     def active_company(self, request, company: Company):
         """
@@ -167,27 +199,50 @@ class CompanyService:
             Exception: If Stripe subscription creation fails.
         """
         plan, created = Plan.objects.get_or_create(
-            **validated_data,
-            defaults={"is_custom_plan": True, "name": CUSTOM_PLAN},
+            name=CUSTOM_PLAN,
+            defaults={"is_custom_plan": True},
         )
-        if created and company.payment_type == PaymentTypes.CREDIT_CARD.value:
+        if company.payment_type == PaymentTypes.CREDIT_CARD.value:
+            stripe_product_id = plan.stripe_product_id if not created else None
+            stripe_price = None
+            if created:
+                (
+                    product,
+                    stripe_price,
+                ) = self.stripe_service.create_product_with_price(
+                    name=plan.name,
+                    amount=validated_data["monthly_fee"],
+                    currency="jpy",
+                    interval="month",
+                )
+                plan.stripe_product_id = product.id
+                plan.save(update_fields=["stripe_product_id"])
+            else:
+                prices = stripe.Price.list(product=stripe_product_id)
+                for p in prices.data:
+                    if p.unit_amount == int(validated_data["monthly_fee"]):
+                        stripe_price = p
+                        break
+                if not stripe_price:
+                    stripe_price = self.stripe_service.create_price_by_product(
+                        product=stripe_product_id,
+                        amount=validated_data["monthly_fee"],
+                        currency="jpy",
+                        interval="month",
+                    )
+        self.update_new_plan(
+            company,
+            plan,
+            validated_data["monthly_fee"],
             (
-                stripe_product,
-                stripe_price,
-            ) = self.stripe_service.create_product_with_price(
-                name=plan.name,
-                amount=plan.monthly_fee,
-                currency="jpy",
-                interval="month",
-            )
-            plan.stripe_product_id = stripe_product.id
-            plan.stripe_price_id = stripe_price.id
-            plan.save(update_fields=["stripe_product_id", "stripe_price_id"])
-        if company.status == CompanyStatus.PENDING_APPROVAL.value:
-            # Update new plan
-            company.company_plan.plan = plan
-            company.company_plan.save(update_fields=["plan"])
-        else:
+                stripe_price.id
+                if company.payment_type == PaymentTypes.CREDIT_CARD.value
+                else None
+            ),
+            exchangeable_amount=validated_data["exchangeable_amount"],
+            limit_person=validated_data["limit_person"],
+        )
+        if company.status != CompanyStatus.PENDING_APPROVAL.value:
             self.upgrade_plan(company, plan, is_custom_plan=True)
 
     def cancellation_pending_contract(self, company):
@@ -287,23 +342,19 @@ class CompanyService:
         4. Replace or regenerate the related invoice to reflect the new plan
         """
         try:
-            old_plan = company.company_plan.plan.name
+            company_plan = company.company_plan
             invoice = None
+            if not is_custom_plan:
+                self.update_new_plan(company, plan)
             if company.payment_type == PaymentTypes.CREDIT_CARD.value:
-                self.stripe_service.change_price_of_subscription(company, plan)
+                self.stripe_service.change_price_of_subscription(company)
                 invoice = self.stripe_service.replace_invoice_subscription(
-                    company, plan
+                    company
                 )
             start_month = to_datetime(invoice.created) if invoice else now()
             tax = Tax.objects.first()
-            new_price = plan.monthly_fee * (1 + tax.percentage / 100)
-
-            with transaction.atomic():
-                # Update new plan
-                company.company_plan.plan = plan
-                company.company_plan.save(update_fields=["plan"])
-
-            if old_plan != CUSTOM_PLAN:
+            new_price = company_plan.monthly_fee * (1 + tax.percentage / 100)
+            if company_plan.name != CUSTOM_PLAN:
                 # Update history use plan
                 company.transactions.filter(
                     type=CompanyTransactionTypes.PLAN.value,
@@ -318,7 +369,7 @@ class CompanyService:
                     recipient=company.responsible_person_mail,
                     company_name=company.name,
                     responsible_name=company.responsible_person_name,
-                    old_plan=old_plan,
+                    old_plan=company_plan.name,
                     new_plan=plan.name,
                     start_month=format_date(start_month, style="jp_month_year"),
                     new_price=format(
@@ -427,10 +478,9 @@ class CompanyService:
             return
         plan = Plan.objects.filter(filter).first()
         if plan != current_plan:
+            self.update_new_plan(company, plan)
             if company.payment_type == PaymentTypes.CREDIT_CARD.value:
-                self.stripe_service.change_price_of_subscription(company, plan)
-            company.company_plan.plan = plan
-            company.company_plan.save(update_fields=["plan"])
+                self.stripe_service.change_price_of_subscription(company)
             # Update history use plan
             company.transactions.filter(
                 type=CompanyTransactionTypes.PLAN.value,

@@ -336,6 +336,7 @@ class SystemCompanyViewSet(
             pm.save(update_fields=stripe_payment.keys())
         # Create plan of company
         CompanyPlan.objects.create(company=company, plan=plan)
+        CompanyService().update_new_plan(company, plan)
         return self.response_created()
 
     @action(

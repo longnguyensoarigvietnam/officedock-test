@@ -778,7 +778,7 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         company = current_user.company
         # Handle check max user
         company_user_count = company.users.count()
-        current_plan = company.company_plan.plan
+        current_plan = company.company_plan
         # Check is current plan over highest plan limit person
         is_over_limit_default_plan = (
             company_user_count
@@ -863,7 +863,7 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             elif company_user_count <= LIMIT_PERSON_PLAN_21_30:
                 filter = Q(limit_person=LIMIT_PERSON_PLAN_21_30)
             plan = Plan.objects.filter(filter).first()
-            if plan != current_plan:
+            if plan != current_plan.plan:
                 CompanyService().upgrade_plan(company, plan)
 
         # Send mail to invited user

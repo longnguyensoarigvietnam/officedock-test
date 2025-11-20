@@ -9,7 +9,7 @@ class Plan(BaseModel):
     """
 
     name = models.CharField()
-    monthly_fee = models.FloatField()
+    monthly_fee = models.FloatField(null=True, blank=True)
     stripe_product_id = models.CharField(null=True, blank=True)
     stripe_price_id = models.CharField(null=True, blank=True)
     exchangeable_amount = models.IntegerField(
