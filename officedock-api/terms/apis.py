@@ -92,15 +92,14 @@ class SystemTermViewSet(BaseAPIViewSet):
                 term, through_defaults={"company_id": user.company_id}
             )
             return self.response_ok()
-        else:
-            return self.response(
-                {
-                    "detail": ERROR_MESSAGES["read_term"].format(
-                        type=KEYWORDS[lower(term.type)]
-                    )
-                },
-                status_code=HTTPStatus.BAD_REQUEST,
-            )
+
+        return self.response_ok(
+            {
+                "detail": ERROR_MESSAGES["read_term"].format(
+                    type=KEYWORDS[lower(term.type)]
+                )
+            },
+        )
 
     def list(self, request, *args, **kwargs):
         """

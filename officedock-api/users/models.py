@@ -6,7 +6,7 @@ from django.db.models import Q
 from rest_framework.exceptions import ValidationError
 from base.models import BaseModel
 from base.exceptions import LockedError
-from base.messages import ERROR_MESSAGES
+from base.messages import ERROR_MESSAGES, KEYWORDS
 from common.constants import ALLOW_IMAGE_FORMATS, USER_AVATAR_FOLDER_UPLOAD
 from organizations.models import UsersOrganizations
 from utils.jwt import JWTService
@@ -186,7 +186,7 @@ class User(AbstractBaseUser, BaseModel, PermissionsMixin):
     @property
     def full_name(self):
         if self.deleted_at:
-            return f"{self.profile.full_name}（削除済）"
+            return f"{self.profile.full_name}{KEYWORDS['deleted']}"
         return self.profile.full_name
 
     def save(self, *args, **kwargs):

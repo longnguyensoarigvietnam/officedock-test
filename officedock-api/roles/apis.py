@@ -2,6 +2,7 @@ from django.db import transaction
 from django.db.models import Q
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import viewsets
+from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 
 from rest_framework.permissions import IsAuthenticated
@@ -30,7 +31,7 @@ class RoleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
     API endpoint for role.
     """
 
-    queryset = Role.objects.order_by("id").all()
+    queryset = Role.objects.order_by("id")
     serializer_class = RolePermissionSerializer
     permission_classes = [IsAuthenticated]
     filterset_class = RoleFilter
@@ -163,8 +164,19 @@ class RoleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         if instance.users.exists():
             raise ValidationError({"detail": ERROR_MESSAGES["cannot_delete"]})
+
         instance.soft_delete()
-        return self.response_deleted()
+
+    @action(
+        detail=True, methods=["POST"], url_path="restore", serializer_class=None
+    )
+    def restore_role(self, request, pk=None):
+        """
+        Handle restore of deleted role
+        """
+        role = self.get_object()
+        role.restore()
+        return self.response_ok()
 
     @extend_schema(
         parameters=[

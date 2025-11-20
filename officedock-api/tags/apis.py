@@ -2,6 +2,7 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
+from rest_framework.decorators import action
 
 from base.apis import BaseAPIViewSet
 from base.filters import FilterByPermission
@@ -131,5 +132,18 @@ class TagViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         )
 
     def perform_destroy(self, instance):
+        """
+        Handle soft delete tag
+        """
         instance.soft_delete()
-        return self.response_deleted()
+
+    @action(
+        detail=True, methods=["POST"], url_path="restore", serializer_class=None
+    )
+    def restore_tag(self, request, pk=None):
+        """
+        Handle restore of deleted tag
+        """
+        tag = self.get_object()
+        tag.restore()
+        return self.response_ok()
