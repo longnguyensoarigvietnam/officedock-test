@@ -51,7 +51,6 @@ class TagSerializer(serializers.ModelSerializer):
         read_only=True
     )
     actions = serializers.SerializerMethodField(read_only=True)
-    deleted_at = serializers.DateTimeField(allow_null=True)
 
     class Meta:
         model = Tag
@@ -63,7 +62,6 @@ class TagSerializer(serializers.ModelSerializer):
             "actions",
             "calendar_organization_check",
             "is_calendar_organization_check",
-            "deleted_at",
         ]
 
     def validate(self, data):
