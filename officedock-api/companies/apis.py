@@ -101,11 +101,7 @@ class CompanyViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                         ].format(user_count=company.users.count())
                     }
                 )
-            if company.status not in [
-                CompanyStatus.ACTIVE_CONTRACT.value,
-                CompanyStatus.PENDING_APPROVAL.value,
-                CompanyStatus.TEMPORARY_USAGE.value,
-            ]:
+            if company.status == CompanyStatus.CONTRACT_TERMINATED.value:
                 raise ValidationError(
                     {"detail": ERROR_MESSAGES["cannot_updated"]}
                 )
