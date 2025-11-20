@@ -615,7 +615,7 @@ const ListUsers = () => {
               className={`w-[16px] h-[13px] hover:cursor-pointer ml-1`}
             />
             <p className="ml-1 text-[#77858F] font-medium text-xs">
-              削除ユーザー一覧
+              非表示一覧
             </p>
             <div className="ml-[6px] flex justify-between p-[3px] rounded-full bg-white border-b">
               <ImageRound
@@ -778,8 +778,8 @@ const ListUsers = () => {
                           <ImageRound
                             name="Hide"
                             onClick={() => handleOpenDeleteUserModal(element)}
-                            src={'/icons/dark-close-eye.svg'}
-                            className={`w-[16px] h-[13px] hover:cursor-pointer opacity-30`}
+                            src={'/icons/eye.svg'}
+                            className={`w-[16px] h-[13px] hover:cursor-pointer`}
                           />
                         )}
                       </div>
@@ -861,7 +861,8 @@ const ListUsers = () => {
       <ConfirmDeleteModal
         open={openConfirmDeleteModal}
         type="ユーザー"
-        message="紐づいている要素からも削除されます。"
+        message="すでに登録したチームカテゴリーは、表示されたままです。"
+        message2="あとで「非表示一覧」から復元することも可能です。"
         name={selectedUserToDelete?.profile.fullName}
         userColor={selectedUserToDelete?.avatarColor}
         userAvatarUrl={selectedUserToDelete?.avatar}

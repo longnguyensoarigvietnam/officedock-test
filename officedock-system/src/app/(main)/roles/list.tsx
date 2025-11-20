@@ -221,7 +221,7 @@ const ListRoles = () => {
                       {showDeleteIcon(element?.systemRole || false) ? (
                         <ImageRound
                           name="Hide"
-                          src={'/icons/dark-close-eye.svg'}
+                          src={'/icons/eye.svg'}
                           className={`w-[16px] h-[13px] hover:cursor-pointer ml-1`}
                           onClick={() => handleOpenDeleteRoleModal(element)}
                         />
@@ -299,6 +299,8 @@ const ListRoles = () => {
         open={openConfirmDeleteModal}
         name={selectedRoleToDelete?.name || ''}
         type="権限"
+        message="あとで「非表示一覧」から復元することも可能です。"
+        classNameMsg="!text-black !text-sm"
         onConfirm={handleConfirmDeleteRole}
         onClose={() => setOpenConfirmDeleteModal(false)}
       />

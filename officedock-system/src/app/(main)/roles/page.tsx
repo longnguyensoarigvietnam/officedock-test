@@ -25,9 +25,7 @@ const RolePage = () => {
             src={'/icons/dark-close-eye.svg'}
             className={`w-[16px] h-[13px] hover:cursor-pointer ml-1`}
           />
-          <p className="ml-1 text-[#77858F] font-medium text-xs">
-            削除権限ー一覧
-          </p>
+          <p className="ml-1 text-[#77858F] font-medium text-xs">非表示一覧</p>
           <div className="ml-[6px] flex justify-between p-[3px] rounded-full bg-white border-b">
             <ImageRound
               name="Filter extend icon"

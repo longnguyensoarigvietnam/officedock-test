@@ -2745,16 +2745,18 @@ const DailyReportDetailBoard = () => {
                 </tbody>
               </table>
             </div>
-            <div className="mt-[60px] min-h-[200px] border border-[#77858F]">
-              <p className="text-center py-2 border-b border-[#77858F] -translate-y-[25%]">
-                備考
-              </p>
-              <div className="py-1 px-3">
-                <div
-                  className="rounded-sm break-all p-1"
-                  dangerouslySetInnerHTML={{
-                    __html: (remarkData ?? '').replace(/\n/g, '<br/>'),
-                  }}></div>
+            <div className="pdf-remark">
+              <div className="my-[60px] min-h-[200px] border border-[#77858F]">
+                <p className="remark-title text-center py-2 border-b border-[#77858F] -translate-y-[25%]">
+                  備考
+                </p>
+                <div className="remark-content py-1 px-3">
+                  <div
+                    className="rounded-sm break-all p-1"
+                    dangerouslySetInnerHTML={{
+                      __html: (remarkData ?? '').replace(/\n/g, '<br/>'),
+                    }}></div>
+                </div>
               </div>
             </div>
           </div>

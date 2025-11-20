@@ -50,7 +50,7 @@ const ConfirmRestoreModal = memo(
           </div>
         )}
         <div className="text-center mb-10">
-          <p className="text-sm text-black leading-6 text-neutral-02">{`この${type}を復元してもよろしいですか？`}</p>
+          <p className="text-sm text-black leading-6 text-neutral-02">{`この${type}を本当に復元しますか？`}</p>
           <p className="text-[#77858F] font-normal text-[13px] mt-[10px]">
             {message}
           </p>

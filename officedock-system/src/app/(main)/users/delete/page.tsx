@@ -11,7 +11,7 @@ const UsersPage = () => {
     <MainLayout
       title={pageRouters.USERS_MANAGEMENT.name}
       permission={PermissionsSystem.USER_VIEW}
-      className="px-10 pt-[30px]  pb-10 !overflow-x-auto"
+      className="px-10 pt-[30px] !bg-[#F3F3F3]  pb-10 !overflow-x-auto"
       showFooter={false}>
       <div className="flex flex-col gap-0">
         <Suspense>
