@@ -1,4 +1,4 @@
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 from django.utils.timezone import now
 from calendars.serializers import EventLocationSerializer
 from common.serializers import (
@@ -12,6 +12,7 @@ from common.serializers import (
     CreationDataUserWithMainOrganizationSerializer,
 )
 from common.utils import (
+    filter_include_deleted_skill,
     filter_include_deleted_user,
     transform_statistic_categories,
 )
@@ -123,15 +124,25 @@ def get_event_locations(company):
     return EventLocationSerializer(event_locations, many=True).data
 
 
-def get_organization_skills(orgs, organization_id):
+def get_organization_skills(orgs, organization_id, request):
     """
     Get all organization skills
     """
     if organization_id:
         orgs = orgs.filter(id=organization_id)
     results = []
+
+    orgs = orgs.prefetch_related(
+        Prefetch(
+            "skills",
+            queryset=Skill.objects.filter(
+                filter_include_deleted_skill(request)
+            ).order_by("id"),
+        ),
+    )
+
     for org in orgs:
-        skills = Skill.objects.filter(organization_id=org.id).order_by("id")
+        skills = org.skills.all()
 
         results.append(
             {

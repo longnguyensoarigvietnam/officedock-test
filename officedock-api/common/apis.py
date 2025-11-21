@@ -144,6 +144,7 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             OpenApiParameter("get_event_types", type=bool),
             OpenApiParameter("get_event_locations", type=bool),
             OpenApiParameter("get_organization_skills", type=bool),
+            OpenApiParameter("has_include_deleted_skill", type=bool),
             OpenApiParameter("get_statistic_categories", type=bool),
             OpenApiParameter("is_organization_calendar", type=bool),
             OpenApiParameter("get_organizations_of_user_by_screen", type=str),
@@ -222,7 +223,9 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             if not organizations:
                 organizations = get_all_organizations(company, organizations)
             response_data["organization_skills"] = get_organization_skills(
-                organizations, organization
+                organizations,
+                organization,
+                request=request,
             )
         if "get_statistic_categories" in request.query_params:
             response_data["statistic_categories"] = get_statistic_categories(

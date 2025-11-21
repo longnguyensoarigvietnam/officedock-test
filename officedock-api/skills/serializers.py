@@ -5,6 +5,8 @@ from rest_framework import serializers
 
 from common.serializers import CreationDataUserWithMainOrganizationSerializer
 from common.utils import (
+    common_filter_is_deleted,
+    get_deleted_name,
     time_str_to_timedelta,
     get_common_categories_with_none_category,
 )
@@ -174,6 +176,8 @@ class BaseSkillHierarchySerializer(SkillSerializer):
     Serializer for skill without organization
     """
 
+    name = serializers.SerializerMethodField()
+
     class Meta:
         model = Skill
         fields = [
@@ -181,8 +185,12 @@ class BaseSkillHierarchySerializer(SkillSerializer):
             "name",
             "description",
             "step",
+            "deleted_at",
         ]
-        read_only_fields = ["id"]
+        read_only_fields = ["id", "deleted_at"]
+
+    def get_name(self, obj):
+        return get_deleted_name(obj)
 
 
 class SkillMapSkillLevelSerializer(serializers.ModelSerializer):
@@ -463,22 +471,24 @@ class BaseOrganizationWithSkillSerializer(BaseOrganizationSerializer):
         Handle group skills of organization by step
         """
         step = self.context.get("step", None)
+        is_deleted = self.context.get("is_deleted")
+
         data = []
-        skills = obj.skills.all()
+        skills = common_filter_is_deleted(obj.skills.all(), is_deleted)
+
         # Return list skill of organization by step
         if step:
-            grouped_skills = skills.filter(step=step).all().order_by("id")
+            grouped_skills = skills.filter(step=step).order_by("id")
             data = SkillWithoutOrganizationSerializer(
                 grouped_skills, many=True
             ).data
+
         # Return list skill hierarchy
         elif step is None:
-            grouped_skills = (
-                skills.filter(parent__isnull=True).all().order_by("id")
-            )
+            grouped_skills = skills.filter(parent__isnull=True).order_by("id")
             for skill in grouped_skills:
                 group_data = {
-                    "parent_name": skill.name,
+                    "parent_name": get_deleted_name(skill),
                     "id": skill.id,
                     "detail": [],
                 }

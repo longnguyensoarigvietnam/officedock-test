@@ -9,7 +9,7 @@ from rest_framework.exceptions import ValidationError, NotFound
 from django.utils.timezone import now
 
 from base.apis import BaseAPIViewSet
-from base.messages import ERROR_MESSAGES, KEYWORDS
+from base.messages import ERROR_MESSAGES
 from base.permissions import ActionPermission
 from chat.models import ChatMessage
 from common.serializers import CreationDataUserWithMainOrganizationSerializer
@@ -784,6 +784,7 @@ class SkillViewSet(
     BaseAPIViewSet,
     mixins.CreateModelMixin,
     mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
 ):
     """
     API endpoint for Skill
@@ -1050,22 +1051,45 @@ class SkillViewSet(
 
     @transaction.atomic
     def perform_destroy(self, instance):
-        """Handle destroy skill"""
-        check_exists = (
-            instance.skill_maps.exists()
-            or instance.submit_level_histories.exists()
-        )
+        """Handle soft delete skill"""
+        skill = instance
 
-        if check_exists:
-            raise ValidationError(
-                {
-                    "detail": ERROR_MESSAGES["cannot_delete_type"].format(
-                        type=KEYWORDS["skill"]
-                    )
-                }
-            )
+        # Get skill root (skill.parent is none)
+        while skill.parent:
+            skill = skill.parent
 
-        instance.delete()
+        skills_to_delete = []
+        # Handle data from root to last child
+        while skill:
+            skills_to_delete.append(skill)
+            skill = Skill.objects.filter(parent_id=skill.id).first()
+
+        for item in skills_to_delete:
+            item.soft_delete()
+
+    @action(
+        detail=True, methods=["POST"], url_path="restore", serializer_class=None
+    )
+    def restore_skill(self, request, pk=None):
+        """
+        Handle restore of deleted skill
+        """
+        skill = self.get_object()
+
+        # Get skill root (skill.parent is none)
+        while skill.parent:
+            skill = skill.parent
+
+        skills_to_delete = []
+        # Handle data from root to last child
+        while skill:
+            skills_to_delete.append(skill)
+            skill = Skill.objects.filter(parent_id=skill.id).first()
+
+        for item in skills_to_delete:
+            item.restore()
+
+        return self.response_ok()
 
     @extend_schema(
         parameters=[
@@ -1073,6 +1097,7 @@ class SkillViewSet(
             OpenApiParameter("filter_organization_ids", type=str),
             OpenApiParameter("filter_steps", type=str),
             OpenApiParameter("screen", type=str),
+            OpenApiParameter("is_deleted", type=bool),
         ]
     )
     def list(self, request, *args, **kwargs):
@@ -1086,11 +1111,17 @@ class SkillViewSet(
         filter_steps = request.query_params.get("filter_steps", None)
         screen = request.query_params.get("screen", None)
 
+        # Param delete
+        is_deleted = None
+        is_deleted_param = request.query_params.get("is_deleted")
+        if is_deleted_param:
+            is_deleted = is_deleted_param and is_deleted_param.lower() == "true"
+
         user = request.user
-        # FIXME: Check role permissions for get list organizations
         organizations = Organization.objects.filter(
             company_id=user.company_id,
         ).order_by("-created_at")
+
         if organization_id:
             organizations = organizations.filter(id=organization_id).all()
 
@@ -1117,6 +1148,7 @@ class SkillViewSet(
                 and len(steps) != len(filter_organization_ids)
             ):
                 return self.response_ok(data)
+
         for organization in organizations:
             # Set default step is step 1
             step = SkillStep.STEP_1.value if screen is None else None
@@ -1129,7 +1161,8 @@ class SkillViewSet(
                 step = steps[index]
             data.append(
                 BaseOrganizationWithSkillSerializer(
-                    organization, context={"step": step}
+                    organization,
+                    context={"step": step, "is_deleted": is_deleted},
                 ).data
             )
         return self.response_ok(data)
