@@ -871,36 +871,42 @@ class OrganizationCategoryHierarchyViewSet(
                         )
                     ).all()
 
-                    # Case selected large/medium/small statistic category
-                    categories.filter(
-                        large_statistic_category=organization_statistic_category.large_statistic_category
-                        or None,
-                        medium_statistic_category=organization_statistic_category.medium_statistic_category
-                        or None,
-                        small_statistic_category=organization_statistic_category.small_statistic_category
-                        or None,
-                    ).update(
-                        large_statistic_category=large_statistic_category,
-                        medium_statistic_category=medium_statistic_category,
-                        small_statistic_category=small_statistic_category,
+                    l_stat_cate = (
+                        organization_statistic_category.large_statistic_category
+                    )
+                    m_stat_cate = (
+                        organization_statistic_category.medium_statistic_category
+                    )
+                    s_stat_cate = (
+                        organization_statistic_category.small_statistic_category
                     )
 
+                    # Case selected large/medium/small statistic category
+                    if l_stat_cate and m_stat_cate and s_stat_cate:
+                        categories.filter(
+                            large_statistic_category=l_stat_cate,
+                            medium_statistic_category=m_stat_cate,
+                            small_statistic_category=s_stat_cate,
+                        ).update(
+                            large_statistic_category=large_statistic_category,
+                            medium_statistic_category=medium_statistic_category,
+                            small_statistic_category=small_statistic_category,
+                        )
+
                     # Case selected large/medium statistic category
-                    categories.filter(
-                        large_statistic_category=organization_statistic_category.large_statistic_category
-                        or None,
-                        medium_statistic_category=organization_statistic_category.medium_statistic_category
-                        or None,
-                        small_statistic_category=None,
-                    ).update(
-                        large_statistic_category=large_statistic_category,
-                        medium_statistic_category=medium_statistic_category,
-                    )
+                    if l_stat_cate and m_stat_cate:
+                        categories.filter(
+                            large_statistic_category=l_stat_cate,
+                            medium_statistic_category=m_stat_cate,
+                            small_statistic_category=None,
+                        ).update(
+                            large_statistic_category=large_statistic_category,
+                            medium_statistic_category=medium_statistic_category,
+                        )
 
                     # Case selected large statistic category
                     categories.filter(
-                        large_statistic_category=organization_statistic_category.large_statistic_category
-                        or None,
+                        large_statistic_category=l_stat_cate,
                         medium_statistic_category=None,
                         small_statistic_category=None,
                     ).update(
