@@ -185,7 +185,8 @@ const MySkill = () => {
                                 </div>
                               </div>
                             </div>
-                            <div className="min-w-[290px] text-xs max-w-[290px] flex-shrink-0 break-words border-r px-5 border-[#D2DBE1]">
+                            <div
+                              className={`min-w-[290px] ${lastValidSkill.skill.deletedAt && 'invisible'} text-xs max-w-[290px] flex-shrink-0 break-words border-r px-5 border-[#D2DBE1]`}>
                               <p>対応タスクを始めてから</p>
                               <div className="flex gap-[2px] items-end mt-[4px]">
                                 {lastValidSkill.level.measureCount !== null && (
@@ -242,7 +243,8 @@ const MySkill = () => {
                                 />
                               </div>
                             </div>
-                            <div className="min-w-[156px] max-w-[156px] flex-shrink-0 text-blue-500 cursor-pointer break-words px-5 flex items-center">
+                            <div
+                              className={`min-w-[156px] max-w-[156px] ${lastValidSkill.skill.deletedAt && 'border-l border-[#D2DBE1]'} flex-shrink-0 text-blue-500 cursor-pointer break-words px-5 flex items-center`}>
                               <Button
                                 onClick={() => {
                                   setSelectedSkillMapId(

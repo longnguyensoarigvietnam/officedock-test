@@ -114,7 +114,7 @@ export const SkillSetting = ({
         }
 
         return (
-          <Popover className="relative" key={skill.id}>
+          <Popover className="relative z-[50]" key={skill.id}>
             {({ close }) => {
               return (
                 <>

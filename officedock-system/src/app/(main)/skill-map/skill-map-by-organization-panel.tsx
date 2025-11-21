@@ -362,7 +362,8 @@ export const SkillMapByOrganizationPanel = ({
           ? undefined
           : '0px 4px 10px 0px #0000000D',
       }}>
-      <p className={`text-[#77858F] text-[16px] font-medium ${settingSkillAction ? 'mb-4' : 'mb-[30px]'} max-w-[100%] break-all`}>
+      <p
+        className={`text-[#77858F] text-[16px] font-medium ${settingSkillAction ? 'mb-4' : 'mb-[30px]'} max-w-[100%] break-all`}>
         {skillMapDetail.organizationName}
       </p>
 
@@ -439,7 +440,7 @@ export const SkillMapByOrganizationPanel = ({
                   return (
                     <div
                       key={skill.id ?? `${index}-${idx}`}
-                      className={`relative flex items-center ${isLast ? 'w-[calc(33.33333%_-_30px)]' : 'w-[calc(33.33333%_+_15px)]'}`}>
+                      className={`relative  flex items-center ${isLast ? 'w-[calc(33.33333%_-_30px)]' : 'w-[calc(33.33333%_+_15px)]'}`}>
                       {!skill.id ? (
                         <div
                           className={`${settingSkillAction ? 'px-5 h-[55px]' : 'px-5 h-[90px]'} bg-white w-full rounded-[14px]`}></div>
@@ -452,7 +453,8 @@ export const SkillMapByOrganizationPanel = ({
                               : '0px 2px 8px 0px #0000001A',
                           }}
                           onClick={async () => {
-                            if (isLocked || !skill.id) return;
+                            if (isLocked || !skill.id || skill.skill.deletedAt)
+                              return;
 
                             if (settingSkillAction === ActionsModal.CREATE) {
                               onOpenConfirmSettingSkillInfo &&
@@ -578,7 +580,8 @@ export const SkillMapByOrganizationPanel = ({
                               )}
                             </div>
 
-                            <div>
+                            <div
+                              className={`${skill.skill.deletedAt && 'invisible'}`}>
                               <SkillMapProgressBar
                                 value={progressPercent}
                                 strokeColor={strokeColor}

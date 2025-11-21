@@ -17,18 +17,19 @@ import Button from '@components/common/Button';
 import ActionsSkillMapModal, {
   ActionsSkillMapModalRef,
 } from '@components/modals/ActionsSkillMapModal';
-import { OrganizationSkillDetail } from './organization-skill-detail';
 import Dropdown from '@components/common/Dropdown';
+import ConfirmRestoreModal from '@components/modals/ConfirmRestoreModal';
+import ImageRound from '@components/common/ImageRound';
 
 import { apiRouters, pageRouters } from '@constants/routers';
 import {
   ERROR_COMMON_MESSAGE,
   ERROR_CREATE_MESSAGE,
-  ERROR_DELETE_MESSAGE,
+  ERROR_RESTORE_MESSAGE,
   ERROR_UPDATE_MESSAGE,
   PLEASE_FILL_IN_STEP_2,
   SUCCESS_CREATE_MESSAGE,
-  SUCCESS_DELETE_MESSAGE,
+  SUCCESS_RESTORE_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
 import {
@@ -61,10 +62,9 @@ import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 import { hasPermissionInArray } from '@utils';
 
 import api from '@base/api';
-import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
-import ImageRound from '@components/common/ImageRound';
+import { OrganizationDeleteSkillDetail } from './organization-delete-detail';
 
-const ListSkillsMap = () => {
+const ListSkillsMapDelete = () => {
   const { setIsLoading } = useContext(LoadingContext);
   const showErrorToast = useErrorToast();
   const { data: session } = useSessionCache();
@@ -88,10 +88,10 @@ const ListSkillsMap = () => {
     searchParams.get('organization'),
   );
 
-  // Set ID skill for delete
-  const [selectedSkillToDelete, setSelectedSkillToDelete] =
+  // Set ID skill for restore
+  const [selectedSkillToRestore, setSelectedSkillToRestore] =
     useState<SkillDataDeleteType | null>(null);
-  const [openConfirmDeleteModal, setOpenConfirmDeleteModal] = useState(false);
+  const [openConfirmRestoreModal, setOpenConfirmRestoreModal] = useState(false);
 
   const [dataOrganizationSkillList, setDataOrganizationSkillList] = useState<
     OrganizationSkill[]
@@ -122,6 +122,13 @@ const ListSkillsMap = () => {
     OrganizationSkillMapDetail[] | null
   >([]);
 
+  useEffect(() => {
+    document.body.style.backgroundColor = '#F3F3F3';
+    return () => {
+      document.body.style.backgroundColor = '';
+    };
+  }, []);
+
   // Get organization skills
   const { organizationSkillList, refetchOrganizationSkillList } =
     useOrganizationSkillList({
@@ -133,6 +140,7 @@ const ListSkillsMap = () => {
         filterOrganizationIds: selectedFilterStepDetail
           ? Number(selectedFilterStepDetail.filterOrganizationId)
           : undefined,
+        is_deleted: true,
       },
       showLoadingIndicator: true,
     });
@@ -452,49 +460,49 @@ const ListSkillsMap = () => {
   );
 
   // Delete skill map
-  const handleOpenDeleteSkillModal = (skill: SkillDataDeleteType) => {
-    setOpenConfirmDeleteModal(true);
-    setSelectedSkillToDelete(skill);
+  const handleOpenRestoreSkillModal = (skill: SkillDataDeleteType) => {
+    setOpenConfirmRestoreModal(true);
+    setSelectedSkillToRestore(skill);
   };
 
-  const handleConfirmDeleteSkill = () => {
-    if (selectedSkillToDelete) {
+  const handleConfirmRestoreSkill = () => {
+    if (selectedSkillToRestore) {
       setIsLoading(true);
-      deleteSkill(selectedSkillToDelete.id);
+      restoreSkill(selectedSkillToRestore.id);
       return;
     }
   };
 
-  const postDeleteSkill = async (id: number) => {
-    const { data: response } = await api.delete(
-      apiRouters.SKILL_DETAIL(`${id}`),
+  const postRestoreSkill = async (id: number) => {
+    const { data: response } = await api.post(
+      apiRouters.SKILL_RESTORE(`${id}`),
     );
     return response;
   };
 
-  const { mutate: deleteSkill } = useMutation(postDeleteSkill, {
+  const { mutate: restoreSkill } = useMutation(postRestoreSkill, {
     onSuccess: async () => {
       showToast({
-        description: SUCCESS_DELETE_MESSAGE,
+        description: SUCCESS_RESTORE_MESSAGE,
       });
       setDataOrganizationSkillList((prev) =>
         prev.map((org) => {
-          if (org.id !== selectedSkillToDelete?.orgId) return org;
+          if (org.id !== selectedSkillToRestore?.orgId) return org;
 
           return {
             ...org,
             skills: org.skills.filter(
-              (skill) => skill.id !== selectedSkillToDelete.id,
+              (skill) => skill.id !== selectedSkillToRestore.id,
             ),
           };
         }),
       );
-      setOpenConfirmDeleteModal(false);
-      setSelectedSkillToDelete(null);
+      setOpenConfirmRestoreModal(false);
+      setSelectedSkillToRestore(null);
     },
     onError: (error: AxiosError<any>) => {
-      showErrorToast(error, ERROR_DELETE_MESSAGE);
-      setOpenConfirmDeleteModal(false);
+      showErrorToast(error, ERROR_RESTORE_MESSAGE);
+      setOpenConfirmRestoreModal(false);
     },
     onSettled: () => {
       setIsLoading(false);
@@ -578,12 +586,20 @@ const ListSkillsMap = () => {
 
   return (
     <Fragment>
-      <div className="sticky z-[21] top-[0px] px-10 py-[30px] bg-[#E6F3FB]">
+      <div className="sticky z-[21] top-[0px] !bg-[#F3F3F3]  px-10 py-[30px] ">
         <div className="flex items-start justify-between">
           <div className="flex gap-5 items-center mb-[30px]">
-            <p className="text-black font-medium text-[26px] leading-[1]">
+            <div className="text-black flex items-center gap-[10px] font-medium text-[26px] leading-[1]">
               スキルマップ設定
-            </p>
+              <div className="text-xs flex items-center gap-1">
+                <ImageRound
+                  name="Hide"
+                  src={'/icons/dark-close-eye.svg'}
+                  className={`w-[16px] h-[13px]`}
+                />
+                <span>非表示一覧</span>
+              </div>
+            </div>
             <div className="flex gap-[6px] bg-white w-fit p-[6px] rounded-[20px]">
               <Button
                 variant="primary"
@@ -600,15 +616,10 @@ const ListSkillsMap = () => {
             </div>
           </div>
           <Link
-            href={pageRouters.SKILL_MAPS_HIDDEN_MANAGEMENT.href}
+            href={pageRouters.SKILL_MAPS_MANAGEMENT.href}
             className="flex items-center hover:cursor-pointer">
-            <ImageRound
-              name="Hide"
-              src={'/icons/dark-close-eye.svg'}
-              className={`w-[16px] h-[13px] hover:cursor-pointer ml-1`}
-            />
             <p className="ml-1 text-[#77858F] font-medium text-xs">
-              非表示一覧
+              表示中一覧
             </p>
             <div className="ml-[6px] flex justify-between p-[3px] rounded-full bg-white border-b">
               <ImageRound
@@ -640,30 +651,26 @@ const ListSkillsMap = () => {
         {dataOrganizationSkillList.length > 0 &&
           dataOrganizationSkillList.map((orgSkill) => {
             return (
-              <OrganizationSkillDetail
+              <OrganizationDeleteSkillDetail
                 key={orgSkill.id}
                 orgSkillDetail={orgSkill}
-                setOpenSkillMapActionsModal={setOpenSkillMapActionsModal}
                 setSelectedFilterStepDetail={setSelectedFilterStepDetail}
                 setSelectedSkillMapToUpdate={setSelectedSkillMapToUpdate}
                 handleSetParam={handleSetParam}
                 refetchOrganizationSkillList={refetchOrganizationSkillList}
                 handleOpenDeleteSkillModal={(skill) => {
-                  handleOpenDeleteSkillModal({ ...skill, orgId: orgSkill.id });
+                  handleOpenRestoreSkillModal({ ...skill, orgId: orgSkill.id });
                 }}
               />
             );
           })}
       </div>
 
-      <ConfirmDeleteModal
-        open={openConfirmDeleteModal}
+      <ConfirmRestoreModal
+        open={openConfirmRestoreModal}
         type="スキルマップ"
-        message="すでに登録したスキルマップは、表示されたままです。"
-        message2="あとで「非表示一覧」から復元することも可能です。"
-        name={selectedSkillToDelete?.name}
-        onConfirm={handleConfirmDeleteSkill}
-        onClose={() => setOpenConfirmDeleteModal(false)}
+        onConfirm={handleConfirmRestoreSkill}
+        onClose={() => setOpenConfirmRestoreModal(false)}
       />
 
       {/* Open skill map actions modal */}
@@ -690,4 +697,4 @@ const ListSkillsMap = () => {
   );
 };
 
-export default ListSkillsMap;
+export default ListSkillsMapDelete;

@@ -21,6 +21,7 @@ interface FilterProps {
   filterSteps?: string;
   organizationId?: number;
   screen?: string;
+  is_deleted?: boolean;
 }
 
 const useOrganizationSkillList = ({
@@ -54,6 +55,11 @@ const useOrganizationSkillList = ({
     }
     if (filter?.screen) {
       queryParams.push(`screen=${filter.screen}`);
+    }
+    if (filter?.is_deleted) {
+      queryParams.push(`is_deleted=true`);
+    } else {
+      queryParams.push(`is_deleted=false`);
     }
 
     const queryString =
