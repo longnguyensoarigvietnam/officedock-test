@@ -70,17 +70,17 @@ export interface OrganizationCategoryRow {
   large: {
     value: string | number;
     label: string;
-    showBy: string;
+    showBy: string | null;
   };
   medium: {
     value: string | number;
     label: string;
-    showBy: string;
+    showBy: string | null;
   };
   small: {
     value: string | number;
     label: string;
-    showBy: string;
+    showBy: string | null;
   };
   skills: OptionDropdownType[];
   color: string;

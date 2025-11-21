@@ -911,12 +911,36 @@ const ActionsSkillMapModal = forwardRef<
                           index,
                         ),
                         {
+                          maxLength: {
+                            value: 255,
+                            message: ERROR_LONG_FIELD_MESSAGE,
+                          },
                           onChange: () => {
                             setIsFormTouched(true);
                           },
                         },
                       )}
-                      className="shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md"
+                      error={getErrorMessage(
+                        errors,
+                        getItemFieldArrayPath(
+                          currentStep as 1 | 2 | 3,
+                          levelKey as 1 | 2 | 3,
+                          index,
+                        ),
+                      )}
+                      className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] 
+                        focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md ${
+                          !getErrorMessage(
+                            errors,
+                            getItemFieldArrayPath(
+                              currentStep as 1 | 2 | 3,
+                              levelKey as 1 | 2 | 3,
+                              index,
+                            ),
+                          )
+                            ? '!border-[#77858F]'
+                            : '!border-error'
+                        }`}
                       placeholder="振り返り項目"
                     />
                   </div>

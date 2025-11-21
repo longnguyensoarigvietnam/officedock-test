@@ -128,6 +128,7 @@ export type CreationDataCommon = {
     skills: {
       id: number;
       name: string;
+      deletedAt: string | Date | null
     }[];
   }[];
   eventLocations?: {

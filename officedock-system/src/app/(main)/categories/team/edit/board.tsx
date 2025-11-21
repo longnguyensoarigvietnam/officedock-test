@@ -122,12 +122,14 @@ const EditHierarchyForm = () => {
             data.organizationSkills.map((item) => {
               return {
                 organizationId: item.organization.id as number,
-                skills: item.skills?.map((skill: Skill) => {
-                  return {
-                    value: skill.id,
-                    label: skill.name,
-                  };
-                }),
+                skills: item.skills
+                  ?.filter((skill) => skill.deletedAt == null)
+                  ?.map((skill: Skill) => {
+                    return {
+                      value: skill.id,
+                      label: skill.name,
+                    };
+                  }),
               };
             }),
           );
@@ -270,12 +272,18 @@ const EditHierarchyForm = () => {
       medium: {
         label: org.mediumStatisticCategory?.name || '',
         value: org.mediumStatisticCategory?.uuid || '',
-        showBy: AddCategoryHierarchyType.PULLDOWN,
+        showBy:
+          !org.mediumStatisticCategory && !org.smallStatisticCategory
+            ? null
+            : AddCategoryHierarchyType.PULLDOWN,
       },
       small: {
         label: org.smallStatisticCategory?.name || '',
         value: org.smallStatisticCategory?.uuid || '',
-        showBy: AddCategoryHierarchyType.PULLDOWN,
+        showBy:
+          !org.mediumStatisticCategory && !org.smallStatisticCategory
+            ? null
+            : AddCategoryHierarchyType.PULLDOWN,
       },
       skills: org.skills.map((skill) => {
         return {
@@ -301,12 +309,18 @@ const EditHierarchyForm = () => {
         medium: {
           label: org.mediumStatisticCategory?.name || '',
           value: org.mediumStatisticCategory?.uuid || '',
-          showBy: AddCategoryHierarchyType.PULLDOWN,
+          showBy:
+            !org.mediumStatisticCategory && !org.smallStatisticCategory
+              ? null
+              : AddCategoryHierarchyType.PULLDOWN,
         },
         small: {
           label: org.smallStatisticCategory?.name || '',
           value: org.smallStatisticCategory?.uuid || '',
-          showBy: AddCategoryHierarchyType.PULLDOWN,
+          showBy:
+            !org.mediumStatisticCategory && !org.smallStatisticCategory
+              ? null
+              : AddCategoryHierarchyType.PULLDOWN,
         },
         skills: org.skills.map((skill) => {
           return {
