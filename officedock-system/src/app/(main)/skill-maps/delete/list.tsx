@@ -33,7 +33,6 @@ import {
   SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
 import {
-  ActionsModal,
   PermissionsSystem,
   ServerStatusCode,
   SkillMapStep,
@@ -75,7 +74,7 @@ const ListSkillsMapDelete = () => {
   const searchParams = useSearchParams();
   const params = new URLSearchParams(searchParams);
   const router = useRouter();
-  const [skillIdParam, setSkillIdParam] = useState<string | null>(
+  const [_skillIdParam, setSkillIdParam] = useState<string | null>(
     searchParams.get('skillId'),
   );
   const [actionTypeParam, setActionTypeParam] = useState<string | null>(
@@ -140,7 +139,7 @@ const ListSkillsMapDelete = () => {
         filterOrganizationIds: selectedFilterStepDetail
           ? Number(selectedFilterStepDetail.filterOrganizationId)
           : undefined,
-        is_deleted: true,
+        is_deleted: 'true',
       },
       showLoadingIndicator: true,
     });
@@ -538,25 +537,6 @@ const ListSkillsMapDelete = () => {
     }
     router.push(`?${params.toString()}`);
   };
-
-  useEffect(() => {
-    if (
-      skillIdParam &&
-      skillMapEditDetail?.length == 0 &&
-      actionTypeParam === ActionsModal.EDIT
-    ) {
-      setSelectedSkillMapToUpdate(Number(skillIdParam));
-    }
-
-    if (actionTypeParam === ActionsModal.CREATE && !openSkillMapActionsModal) {
-      setOpenSkillMapActionsModal(true);
-    }
-  }, [
-    skillIdParam,
-    actionTypeParam,
-    skillMapEditDetail,
-    openSkillMapActionsModal,
-  ]);
 
   const handleRemoveParam = () => {
     const params = new URLSearchParams(searchParams);

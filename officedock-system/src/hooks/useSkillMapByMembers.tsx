@@ -19,6 +19,7 @@ import api from '@base/api';
 interface FilterProps {
   organizationId?: number | null;
   has_include_deleted_user?: string;
+  has_include_deleted_skill?: string;
 }
 
 const useSkillMapByMembers = (filter?: FilterProps) => {
@@ -41,6 +42,12 @@ const useSkillMapByMembers = (filter?: FilterProps) => {
       params.append(
         'has_include_deleted_user',
         filter.has_include_deleted_user,
+      );
+    }
+    if (filter?.has_include_deleted_skill) {
+      params.append(
+        'has_include_deleted_skill',
+        filter.has_include_deleted_skill,
       );
     }
 

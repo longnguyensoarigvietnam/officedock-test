@@ -13,7 +13,6 @@ import ImageRound from '@components/common/ImageRound';
 import { Table } from '@components/common/Table';
 
 import {
-  ActionsModal,
   ScreenName,
   SkillMapLookBackType,
   SkillMapTypeInterval,
@@ -139,8 +138,6 @@ const LevelConditionDetail = ({
 export const OrganizationDeleteSkillDetail = ({
   orgSkillDetail,
   setSelectedFilterStepDetail,
-  setSelectedSkillMapToUpdate,
-  handleSetParam,
   refetchOrganizationSkillList,
   handleOpenDeleteSkillModal,
 }: OrganizationSkillDetailProps) => {
@@ -398,21 +395,7 @@ export const OrganizationDeleteSkillDetail = ({
                     <p className="text-sm flex justify-left items-center font-medium py-4 px-5 max-w-[calc(100%_-_50px)] break-all">
                       {row.original.name}
                     </p>
-                    <div className="flex gap-2 items-center w-[50px]">
-                      <ImageRound
-                        name="Edit"
-                        src={'/icons/edit-gray.svg'}
-                        className="w-3.5 h-3.5 hover:cursor-pointer opacity-45"
-                        onClick={() => {
-                          handleSetParam({
-                            action: ActionsModal.EDIT,
-                            id: String(row.original.id),
-                            step: currentStep,
-                            organization: orgSkillDetail.id,
-                          });
-                          setSelectedSkillMapToUpdate(row.original.id);
-                        }}
-                      />
+                    <div className="flex gap-2 items-center w-[25px]">
                       <ImageRound
                         name="Hide"
                         onClick={() => {
