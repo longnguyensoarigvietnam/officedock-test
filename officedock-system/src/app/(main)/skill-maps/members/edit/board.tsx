@@ -72,6 +72,7 @@ const EditSkillMapByMemberBoard = () => {
   const { skillMapListByMembers } = useSkillMapByMembers({
     organizationId: Number(selectedOrganizationOption.value),
     has_include_deleted_user: 'false',
+    has_include_deleted_skill: 'false',
   });
 
   // Fetch organization skills
@@ -79,6 +80,7 @@ const EditSkillMapByMemberBoard = () => {
     filter: {
       organizationId: Number(selectedOrganizationOption.value),
       screen: ScreenName.SKILL_MAP,
+      is_deleted: 'false',
     },
   });
 

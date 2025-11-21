@@ -448,9 +448,10 @@ export const SkillMapByOrganizationPanel = ({
                         <div
                           className={`${settingSkillAction ? 'px-5 h-[55px]' : 'px-5 h-[90px]'} ${stepCompleted && '!pr-[5px]'} hover:cursor-pointer flex gap-3 bg-white items-center w-full rounded-[14px] relative`}
                           style={{
-                            boxShadow: showTwinklingStars
-                              ? '0px 0px 20px 0px #36ACDE80'
-                              : '0px 2px 8px 0px #0000001A',
+                            boxShadow:
+                              showTwinklingStars && !skill.skill.deletedAt
+                                ? '0px 0px 20px 0px #36ACDE80'
+                                : '0px 2px 8px 0px #0000001A',
                           }}
                           onClick={async () => {
                             if (isLocked || !skill.id || skill.skill.deletedAt)
@@ -474,9 +475,9 @@ export const SkillMapByOrganizationPanel = ({
                               setOpenSubmitLevelUpModal(true);
                             }
                           }}>
-                          {showTwinklingStars && (
+                          {showTwinklingStars && !skill.skill.deletedAt && (
                             <>
-                              <div className="absolute -top-[20px] left-[20px] bg-primary rounded-[20px] w-[140px] h-[28px] flex items-center justify-center">
+                              <div className="absolute -top-[20px]  left-[20px] bg-primary rounded-[20px] w-[140px] h-[28px] flex items-center justify-center">
                                 <p className="text-white text-xs font-bold">
                                   レベルアップ申請可能
                                 </p>
@@ -485,7 +486,7 @@ export const SkillMapByOrganizationPanel = ({
                             </>
                           )}
 
-                          {showTwinklingStars && (
+                          {showTwinklingStars && !skill.skill.deletedAt && (
                             <>
                               {' '}
                               {settingSkillAction ? (
