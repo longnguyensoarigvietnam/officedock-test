@@ -2,12 +2,14 @@
 
 from django.db import migrations, models
 
+from companies.constants import PaymentTypes
+
 
 def seed_default_payment_type(apps, schema_editor):
     Company = apps.get_model("companies", "Company")
     for c in Company.objects.all():
-        if pm := c.payment_methods.first():
-            c.payment_type = pm.type
+        if c.stripe_customer_id is not None:
+            c.payment_type = PaymentTypes.CREDIT_CARD.value
             c.save(update_fields=["payment_type"])
 
 
