@@ -13,7 +13,6 @@ import { useInView } from 'react-intersection-observer';
 import ImageRound from '@components/common/ImageRound';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import Spinner from '@components/common/Spinner';
-import Button from '@components/common/Button';
 import ListViewItem from './ListViewItem';
 
 import {
@@ -307,15 +306,23 @@ const ListViewByStatus = ({
         {!isLoadingDataTask && (
           <p className="text-[#77858F] text-[14px]">{count}</p>
         )}
+        {listId == `${StatusValueTask.COMPLETED}` && (
+          <ImageRound
+            src={`/icons/archive-treasure.svg`}
+            name="archive-treasure"
+            className="w-fit h-fit cursor-pointer"
+            onClick={() => {
+              handleViewArchive && handleViewArchive();
+            }}
+          />
+        )}
       </div>
       {extendByStatus.find((list) => list.id == listId)?.status &&
         (listId == StatusValueTask.MY_ROUTINE ? (
           <div className="flex items-center text-[#77858F] text-[12px] mb-[10px] px-1 font-medium">
             <p className="w-[59%]">タスク名</p>
             <div className="w-[1px] h-[9px] bg-[#D2DBE1]"></div>
-            <p className="w-[20%] text-left pl-[14px]">
-              締切
-            </p>
+            <p className="w-[20%] text-left pl-[14px]">締切</p>
           </div>
         ) : (
           <div className="w-[calc(100%_-_14px)] flex items-center text-[#77858F] text-[12px] mb-[10px] px-1 font-medium">
@@ -365,14 +372,6 @@ const ListViewByStatus = ({
               </div>
             ) : (
               <div></div>
-            )}
-            {listId == `${StatusValueTask.COMPLETED}` && (
-              <Button
-                onClick={handleViewArchive}
-                variant="secondary"
-                className="w-full !px-0 !bg-[#EBF1F7] !text-[#77858F] font-medium text-sm !border-none">
-                アーカイブタスクを見る
-              </Button>
             )}
           </div>
         )}

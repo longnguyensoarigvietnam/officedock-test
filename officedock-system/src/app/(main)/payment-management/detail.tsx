@@ -178,103 +178,111 @@ const PaymentDetail = () => {
         <div className="mt-5 bg-[#F8FAFC] rounded-[30px] p-[30px]">
           <div className="flex items-center justify-between">
             <p className="text-[18px] font-medium">お支払い方法</p>
-            <Button
-              onClick={() => setOpenAddCard(true)}
-              className="flex gap-2 !p-[10px] h-[34px]">
-              <div
-                className={`rounded-full cursor-pointer w-4 h-4 flex items-center justify-center  bg-white `}>
-                <ImageRound
-                  src={`/icons/add.svg`}
-                  name="Add"
-                  style={{
-                    width: `8px`,
-                    height: `8px`,
-                  }}
-                />
-              </div>
-              <p> 新規カード情報登録</p>
-            </Button>
+            {creationDataCommonData?.company?.paymentType ==
+              'クレジットカード' && (
+              <Button
+                onClick={() => setOpenAddCard(true)}
+                className="flex gap-2 !p-[10px] h-[34px]">
+                <div
+                  className={`rounded-full cursor-pointer w-4 h-4 flex items-center justify-center  bg-white `}>
+                  <ImageRound
+                    src={`/icons/add.svg`}
+                    name="Add"
+                    style={{
+                      width: `8px`,
+                      height: `8px`,
+                    }}
+                  />
+                </div>
+                <p> 新規カード情報登録</p>
+              </Button>
+            )}
           </div>
           <div className="flex items-center gap-5 mt-10 ">
             <p className="w-[100px] text-[#77858F] font-medium text-sm">
               お支払い方法
             </p>
-            <p className="text-black font-medium text-base">クレジットカード</p>
+            <p className="text-black font-medium text-base">
+              {creationDataCommonData?.company?.paymentType}
+            </p>
           </div>
           {/* List card */}
-          <div className="mt-10 flex flex-col gap-5">
-            {paymentList?.results.map((card, index) => (
-              <div
-                key={card.id}
-                className={`rounded-[10px] border ${card.isRetryFailed ? 'border-[#F75356]' : 'border-[#D2DBE1]'}  overflow-hidden`}>
-                <div className="border-b border-[#D2DBE1] flex items-center gap-4 p-[18px]">
-                  <p className="text-xs font-medium text-[#77858F]">
-                    クレジットカード情報 {index + 1}
-                  </p>
-                  {paymentList?.results.length > 1 && !card.isDefault && (
-                    <ImageRound
-                      onClick={() => {
-                        setOpenDeleteCardModal(true);
-                        setSelectedCardId({
-                          id: card.id,
-                          name: card.last4,
-                        });
-                      }}
-                      src={`/icons/delete-gray-bold.svg`}
-                      name="delete"
-                      className="w-fit h-fit hover:opacity-70 cursor-pointer"
-                    />
-                  )}
-                  {card.isRetryFailed && (
-                    <div className="p-[14px] bg-[#F75356] rounded-md flex items-center gap-2">
+          {creationDataCommonData?.company?.paymentType ==
+            'クレジットカード' && (
+            <div className="mt-10 flex flex-col gap-5">
+              {paymentList?.results.map((card, index) => (
+                <div
+                  key={card.id}
+                  className={`rounded-[10px] border ${card.isRetryFailed ? 'border-[#F75356]' : 'border-[#D2DBE1]'}  overflow-hidden`}>
+                  <div className="border-b border-[#D2DBE1] flex items-center gap-4 p-[18px]">
+                    <p className="text-xs font-medium text-[#77858F]">
+                      クレジットカード情報 {index + 1}
+                    </p>
+                    {paymentList?.results.length > 1 && !card.isDefault && (
                       <ImageRound
-                        src={`/icons/warning-payment.svg`}
+                        onClick={() => {
+                          setOpenDeleteCardModal(true);
+                          setSelectedCardId({
+                            id: card.id,
+                            name: card.last4,
+                          });
+                        }}
+                        src={`/icons/delete-gray-bold.svg`}
                         name="delete"
-                        className="w-fit h-fit hover:opacity-70 cursor-pointer !rounded-none"
+                        className="w-fit h-fit hover:opacity-70 cursor-pointer"
                       />
-                      <p className="text-white font-bold text-sm">
-                        決済でエラーが発生しました。このカードでは決済ができません。{' '}
-                      </p>
+                    )}
+                    {card.isRetryFailed && (
+                      <div className="p-[14px] bg-[#F75356] rounded-md flex items-center gap-2">
+                        <ImageRound
+                          src={`/icons/warning-payment.svg`}
+                          name="delete"
+                          className="w-fit h-fit hover:opacity-70 cursor-pointer !rounded-none"
+                        />
+                        <p className="text-white font-bold text-sm">
+                          決済でエラーが発生しました。このカードでは決済ができません。{' '}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center bg-white border-b border-[#D2DBE1]">
+                    <div className="w-[319px] border-r border-[#D2DBE1] py-9 px-[18px]">
+                      カード会社
                     </div>
-                  )}
-                </div>
-                <div className="flex items-center bg-white border-b border-[#D2DBE1]">
-                  <div className="w-[319px] border-r border-[#D2DBE1] py-9 px-[18px]">
-                    カード会社
+                    <div className="flex-grow py-9 px-[18px] break-all capitalize">
+                      {card.brand}
+                    </div>
                   </div>
-                  <div className="flex-grow py-9 px-[18px] break-all capitalize">
-                    {card.brand}
+                  <div className="flex items-center bg-white border-b border-[#D2DBE1]">
+                    <div className="w-[319px] border-r border-[#D2DBE1] py-9 px-[18px]">
+                      カード番号
+                    </div>
+                    <div className="flex-grow py-9 px-[18px] break-all">
+                      ************{card.last4}
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center bg-white border-b border-[#D2DBE1]">
-                  <div className="w-[319px] border-r border-[#D2DBE1] py-9 px-[18px]">
-                    カード番号
-                  </div>
-                  <div className="flex-grow py-9 px-[18px] break-all">
-                    ************{card.last4}
-                  </div>
-                </div>
-                <div className="flex items-center bg-white ">
-                  <div className="w-[319px] border-r border-[#D2DBE1] py-9 px-[18px]">
-                    メイン設定
-                  </div>
-                  <div className="flex-grow py-9 px-[18px] break-all">
-                    <RadioButtonSingle
-                      option={{
-                        label:
-                          '選択したカードが、次回以降の決済時に優先して使用される',
-                        value: 'experience',
-                      }}
-                      checked={card.isDefault}
-                      onChange={() => {
-                        changeCardDefault(card.id);
-                      }}
-                    />
+                  <div className="flex items-center bg-white ">
+                    <div className="w-[319px] border-r border-[#D2DBE1] py-9 px-[18px]">
+                      メイン設定
+                    </div>
+                    <div className="flex-grow py-9 px-[18px] break-all">
+                      <RadioButtonSingle
+                        option={{
+                          label:
+                            '選択したカードが、次回以降の決済時に優先して使用される',
+                          value: 'experience',
+                        }}
+                        checked={card.isDefault}
+                        onChange={() => {
+                          changeCardDefault(card.id);
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
       <ActionAddCreditCardModal

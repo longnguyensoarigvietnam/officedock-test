@@ -19,6 +19,7 @@ interface filePreviewProp {
   user: ChatDashboardMember;
   msgId: string;
   createAt: string;
+  isBookmark?: boolean;
   onClose: () => void;
   onGotoMessage: (data: {
     messageId: string | number;
@@ -30,6 +31,7 @@ const FilePreview = ({
   open,
   file,
   user,
+  isBookmark = false,
   onClose,
   onGotoMessage,
 }: filePreviewProp) => {
@@ -82,7 +84,7 @@ const FilePreview = ({
         </div>
       </header>
       <div className="bg-white pt-5 px-[46px] text-[#77858F] text-[13px] min-h-[500px] font-medium relative">
-        {fileDetail && fileDetail.files.previousFile && (
+        {fileDetail && fileDetail.files.previousFile && !isBookmark && (
           <div className="absolute top-1/2 left-5 transform -translate-y-1/2">
             <DynamicTooltip content={'前のファイルへ'} placement="top">
               <ImageRound
@@ -94,7 +96,7 @@ const FilePreview = ({
             </DynamicTooltip>
           </div>
         )}
-        {fileDetail && fileDetail.files.nextFile && (
+        {fileDetail && fileDetail.files.nextFile && !isBookmark && (
           <div className="absolute top-1/2 right-5 transform -translate-y-1/2">
             <DynamicTooltip content={'次のファイルへ'} placement="top">
               <ImageRound
