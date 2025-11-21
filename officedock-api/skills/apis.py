@@ -14,6 +14,7 @@ from base.permissions import ActionPermission
 from chat.models import ChatMessage
 from common.serializers import CreationDataUserWithMainOrganizationSerializer
 from common.utils import (
+    filter_include_deleted_skill,
     filter_include_deleted_user,
     get_user_organizations_with_descendants,
     split_id_from_string,
@@ -275,6 +276,7 @@ class ManageSkillMapViewSet(
         parameters=[
             OpenApiParameter("organization_id", type=int),
             OpenApiParameter("has_include_deleted_user", type=bool),
+            OpenApiParameter("has_include_deleted_skill", type=bool),
         ]
     )
     def list(self, request, *args, **kwargs):
@@ -289,15 +291,18 @@ class ManageSkillMapViewSet(
             .select_related("profile")
             .order_by("id")
         )
+        skill_qs = (
+            Skill.objects.filter(filter_include_deleted_skill(request))
+            .filter(parent__isnull=True)
+            .order_by("id")
+        )
         organizations = (
             Organization.objects.filter(company_id=user.company_id)
             .prefetch_related(
                 Prefetch("users", queryset=user_qs),
                 Prefetch(
                     "skills",
-                    queryset=Skill.objects.filter(parent__isnull=True).order_by(
-                        "id"
-                    ),
+                    queryset=skill_qs,
                 ),
             )
             .order_by("-created_at")
