@@ -1,5 +1,5 @@
 'use client';
-import { memo, useContext, useState } from 'react';
+import { memo, useContext, useEffect, useRef, useState } from 'react';
 import { useMutation } from 'react-query';
 import 'react-quill/dist/quill.snow.css';
 import { useSessionCache } from '@providers/SessionCacheProvider';
@@ -19,6 +19,8 @@ import api from '@base/api';
 
 const TermAgreeModal = memo(() => {
   const { data: session, update } = useSessionCache();
+  const scrollRef = useRef<HTMLDivElement>(null);
+
   const { setIsLoading } = useContext(LoadingContext);
   const [currentStep, setCurrentStep] = useState(0);
   const [termsSteps, setTermsSteps] = useState<TermsStep[]>([]);
@@ -51,6 +53,11 @@ const TermAgreeModal = memo(() => {
       }
     },
   });
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = 0;
+    }
+  }, [currentStep]);
 
   const handleConfirmReadTerm = async (termData: {
     idTerm: string;
@@ -126,7 +133,9 @@ const TermAgreeModal = memo(() => {
           {termsSteps[currentStep].title}
         </Heading>
       </header>
-      <div className="custom-quill-text text-sm w-full text-gray-700 min-h-[78vh] max-h-[78vh] overflow-y-auto leading-6 text-neutral-02 text-neutral-02 gap-4 flex flex-col justify-between quill-editor ql-editor">
+      <div
+        ref={scrollRef}
+        className="custom-quill-text text-sm w-full text-gray-700 min-h-[78vh] max-h-[78vh] overflow-y-auto leading-6 text-neutral-02 text-neutral-02 gap-4 flex flex-col justify-between quill-editor ql-editor">
         <div
           dangerouslySetInnerHTML={{
             __html: termsSteps[currentStep].description

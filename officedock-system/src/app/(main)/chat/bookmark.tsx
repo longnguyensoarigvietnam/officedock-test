@@ -651,6 +651,7 @@ const BookmarkList = ({
       )}
       {dataPreviewFile && (
         <FilePreview
+          isBookmark
           open={dataPreviewFile !== null}
           file={dataPreviewFile.file}
           user={dataPreviewFile.user}

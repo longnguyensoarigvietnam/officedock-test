@@ -5,6 +5,8 @@ export interface Company {
   name: string;
   contract: Contract;
   isShowHolidaysCalendar: boolean;
+  mfCustomerId?: string | null;
+  paymentType?: string | null;
   totalUsers?: number;
   plan?: {
     id: number;
