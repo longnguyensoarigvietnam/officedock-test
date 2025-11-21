@@ -14,6 +14,7 @@ from common.serializers import (
 from common.utils import (
     filter_include_deleted_skill,
     filter_include_deleted_user,
+    get_deleted_name,
     transform_statistic_categories,
 )
 from companies.constants import CompanyStatus
@@ -151,7 +152,12 @@ def get_organization_skills(orgs, organization_id, request):
                     "name": org.name,
                 },
                 "skills": [
-                    {"id": skill.id, "name": skill.name} for skill in skills
+                    {
+                        "id": skill.id,
+                        "name": get_deleted_name(skill),
+                        "deleted_at": skill.deleted_at,
+                    }
+                    for skill in skills
                 ],
             }
         )
