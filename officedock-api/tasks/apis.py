@@ -422,7 +422,10 @@ class TaskViewSet(
         rule = rrule.rrule(**rule_params)
         schedules = []
         if not old_recurring:
-            task.task_schedules.all().delete()
+            task.task_schedules.exclude(
+                plan_start_date__lt=now()
+            ).all().delete()
+
         if task.task_schedules.exists():
             list_task_schedule_edited = None
             if (
@@ -438,8 +441,7 @@ class TaskViewSet(
                 ).timetz()
                 # Check edited schedules
                 list_task_schedule_edited = task.task_schedules.filter(
-                    Q(plan_start_date__lt=now())
-                    | Q(
+                    Q(
                         ~Q(plan_start_date__time=plan_start_time)
                         & ~Q(plan_end_date__time=plan_end_time)
                     )
@@ -448,7 +450,8 @@ class TaskViewSet(
             task.task_schedules.exclude(
                 id__in=list_task_schedule_edited.values_list("id", flat=True)
                 if list_task_schedule_edited
-                else []
+                else [],
+                plan_start_date__lt=now(),
             ).delete()
             for occurrence in rule:
                 plan_end_date = datetime.combine(
@@ -795,7 +798,7 @@ class TaskViewSet(
                 and repeat_type == FrequencyMap.ONCE.value
             )
         ):
-            task.task_schedules.all().delete()
+            task.task_schedules.filter(plan_start_date__gt=now()).all().delete()
         if (
             is_exists_repeat
             and old_recurring
@@ -803,7 +806,7 @@ class TaskViewSet(
             and task.recurring != old_recurring
             and repeat_type is None
         ):
-            task.task_schedules.all().delete()
+            task.task_schedules.filter(plan_start_date__gt=now()).all().delete()
             task.recurring = {}
             task.save()
         if is_exists_task_schedules and task_schedules is None:

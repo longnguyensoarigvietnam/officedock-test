@@ -128,7 +128,9 @@ def delete_task_schedules(schedule_ids):
     """
     Delete task schedules based on the given schedule_ids.
     """
-    TaskSchedule.objects.filter(id__in=schedule_ids).delete()
+    TaskSchedule.objects.filter(id__in=schedule_ids).exclude(
+        plan_start_date__lt=now()
+    ).delete()
 
 
 def create_todo_list_for_task(current_user: User, task: Task, todo_data):
