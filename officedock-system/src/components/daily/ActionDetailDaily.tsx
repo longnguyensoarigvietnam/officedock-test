@@ -291,67 +291,69 @@ const ActionDetailDaily = ({
           <div className="flex flex-col gap-4 max-h-[200px] overflow-y-auto">
             {/* TODO: Implement action tag */}
             {optionsTag &&
-              optionsTag.tags.map((item) => (
-                <div key={item.id} className="flex gap-3">
-                  <div className="w-fit h-fit flex-shrink-0">
-                    <Button
-                      variant="text"
-                      className="!w-fit !h-fit !p-0 !bg-transparent"
-                      disabled={
-                        (session?.user.permissions &&
-                          !hasPermissionInArray(
-                            session?.user.permissions,
-                            PermissionsSystem.STATISTIC_UPDATE,
-                          )) ||
-                        isPreventAction
-                      }
-                      onClick={() => {
-                        if (
-                          listTagActive.some(
-                            (tag) => String(tag.value) == String(item.id),
-                          )
-                        ) {
-                          const dataTag = listTagActive.filter(
-                            (tag) => String(tag.value) != String(item.id),
-                          );
-                          setListTagActive([...dataTag]);
-                          editTaskDailyInline({
-                            id: row.original.id,
-                            tagIds: dataTag.map((tag) => ({
-                              tagId: tag.value,
-                              name: tag.label,
-                            })),
-                          });
-                        } else {
-                          const dataTag = [
-                            ...listTagActive,
-                            {
-                              label: item.name,
-                              value: item.id,
-                            },
-                          ];
-                          setListTagActive(dataTag);
-                          editTaskDailyInline({
-                            id: row.original.id,
-                            tagIds: dataTag.map((tag) => ({
-                              tagId: tag.value,
-                              name: tag.label,
-                            })),
-                          });
+              optionsTag.tags
+                .filter((data) => !data.deletedAt)
+                .map((item) => (
+                  <div key={item.id} className="flex gap-3">
+                    <div className="w-fit h-fit flex-shrink-0">
+                      <Button
+                        variant="text"
+                        className="!w-fit !h-fit !p-0 !bg-transparent"
+                        disabled={
+                          (session?.user.permissions &&
+                            !hasPermissionInArray(
+                              session?.user.permissions,
+                              PermissionsSystem.STATISTIC_UPDATE,
+                            )) ||
+                          isPreventAction
                         }
-                      }}>
-                      <ImageRound
-                        className="w-4 h-4"
-                        src={`/icons/${listTagActive.some((tag) => String(tag.value) == String(item.id)) ? 'ticket-active.svg' : 'ticket-no-active.svg'}`}
-                        name="icon tag"
-                      />
-                    </Button>
+                        onClick={() => {
+                          if (
+                            listTagActive.some(
+                              (tag) => String(tag.value) == String(item.id),
+                            )
+                          ) {
+                            const dataTag = listTagActive.filter(
+                              (tag) => String(tag.value) != String(item.id),
+                            );
+                            setListTagActive([...dataTag]);
+                            editTaskDailyInline({
+                              id: row.original.id,
+                              tagIds: dataTag.map((tag) => ({
+                                tagId: tag.value,
+                                name: tag.label,
+                              })),
+                            });
+                          } else {
+                            const dataTag = [
+                              ...listTagActive,
+                              {
+                                label: item.name,
+                                value: item.id,
+                              },
+                            ];
+                            setListTagActive(dataTag);
+                            editTaskDailyInline({
+                              id: row.original.id,
+                              tagIds: dataTag.map((tag) => ({
+                                tagId: tag.value,
+                                name: tag.label,
+                              })),
+                            });
+                          }
+                        }}>
+                        <ImageRound
+                          className="w-4 h-4"
+                          src={`/icons/${listTagActive.some((tag) => String(tag.value) == String(item.id)) ? 'ticket-active.svg' : 'ticket-no-active.svg'}`}
+                          name="icon tag"
+                        />
+                      </Button>
+                    </div>
+                    <div className="break-all text-left w-fit max-w-[100px]">
+                      {item.name}
+                    </div>
                   </div>
-                  <div className="break-all text-left w-fit max-w-[100px]">
-                    {item.name}
-                  </div>
-                </div>
-              ))}
+                ))}
           </div>
         </div>
       </div>

@@ -762,12 +762,14 @@ const ListUsersDelete = () => {
                             </div>
                           </>
                         )}
-                        <ImageRound
-                          name="Hide"
-                          onClick={() => handleOpenRestoreUserModal(element)}
-                          src={'/icons/dark-close-eye.svg'}
-                          className={`w-[16px] h-[13px] hover:cursor-pointer`}
-                        />
+                        {element.actions && element.actions.delete && (
+                          <ImageRound
+                            name="Hide"
+                            onClick={() => handleOpenRestoreUserModal(element)}
+                            src={'/icons/dark-close-eye.svg'}
+                            className={`w-[16px] h-[13px] hover:cursor-pointer`}
+                          />
+                        )}
                       </div>
                     </div>
                   </td>
