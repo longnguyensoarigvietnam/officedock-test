@@ -2,7 +2,6 @@
 
 import { Fragment, useContext, useEffect, useState } from 'react';
 import { useMutation } from 'react-query';
-import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { AxiosError } from 'axios';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -13,16 +12,17 @@ import {
   PopoverPanel,
   Transition,
 } from '@headlessui/react';
+import Link from 'next/link';
 
 import { Table, TableBody, TableHeader } from '@components/common/Table';
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
 import Pagination from '@components/common/Pagination';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 import InputSearch from '@components/common/InputSearch';
 import ActionsTagModal from '@components/modals/ActionsTagModal';
 import Dropdown from '@components/common/Dropdown';
+import { FilterOrganizationComponent } from '@components/tag/FilterOrganizationComponent';
 
 import { NO_DATA_AVAILABLE, PAGE_SIZE_OPTIONS } from '@constants';
 import { apiRouters, pageRouters } from '@constants/routers';
@@ -49,6 +49,7 @@ import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { Tags, TagFormData, TagRequest } from '@interfaces/tag';
 import { OptionDropdownType } from '@interfaces/common';
@@ -57,50 +58,6 @@ import { Organizations } from '@interfaces/organization';
 import { hasPermissionInArray } from '@utils';
 
 import api from '@base/api';
-import Link from 'next/link';
-
-const FilterOrganizationComponent = ({
-  dataOrganizationList,
-  selectedOptions,
-  onChange,
-  onSubmit,
-  onClose,
-}: {
-  dataOrganizationList: OptionDropdownType[];
-  selectedOptions: OptionDropdownType[];
-  onChange: (selected: OptionDropdownType) => void;
-  onSubmit: () => void;
-  onClose: () => void;
-}) => {
-  return (
-    <div className="bg-white rounded-lg shadow-common flex flex-col items-center w-[330px] py-5">
-      <div className="w-[300px]">
-        <MultiSelectDropdown
-          className="!h-[34px] !rounded-md"
-          labelClass="!min-h-0 !text-sm font-medium"
-          valueClassName="!border-[1px] !border-[#77858F] !py-0 flex items-center !rounded-md"
-          optionClassName="!border-[1px] !border-[#77858F] w-full"
-          labelOptionClass="break-words max-w-[300px]  !text-sm"
-          optionsCheckBoxClassName="!max-w-[300px]"
-          options={dataOrganizationList}
-          selectedOptions={selectedOptions}
-          customLabel="チーム"
-          onChange={(selected) => {
-            onChange(selected);
-          }}
-        />
-      </div>
-      <div className="flex justify-center gap-[10px] mt-4 ">
-        <Button variant="outline" onClick={onClose} className="h-9">
-          キャンセル
-        </Button>
-        <Button onClick={onSubmit} className="h-9">
-          絞り込む
-        </Button>
-      </div>
-    </div>
-  );
-};
 
 const ListTags = () => {
   const { setIsLoading } = useContext(LoadingContext);
@@ -612,7 +569,7 @@ const ListTags = () => {
                             <ImageRound
                               name="Hide"
                               src={'/icons/eye.svg'}
-                              className={`w-[16px] h-[13px] hover:cursor-pointer `}
+                              className={`w-[16px] h-[12px] hover:cursor-pointer `}
                             />
                           </div>
                         ) : (
