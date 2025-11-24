@@ -289,10 +289,8 @@ def get_data_organization_my_statistic(user, organizations, company):
         ).data
     )
     tags = (
-        company.tags.filter(
-            deleted_at__isnull=True, organizations__in=organizations
-        )
-        .all()
+        company.tags.filter(organizations__in=organizations)
+        .order_by("-deleted_at")
         .distinct()
     )
     # Insert option all team to pulldown choose organization for statistic to start of a list
@@ -302,9 +300,7 @@ def get_data_organization_my_statistic(user, organizations, company):
             "id": ALL_TEAM,
             "name": ALL_TEAM,
             "statistic_categories": [],
-            "tags": CreationDataTagSerializer(
-                tags, many=True, context={"user": user}
-            ).data,
+            "tags": BaseTagSerializer(tags, many=True).data,
         },
     )
 

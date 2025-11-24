@@ -171,7 +171,9 @@ class CreationDataOrganizationWithStructCategorySerializer(
         """
         from tags.serializers import BaseTagSerializer
 
-        return BaseTagSerializer(obj.tags.all(), many=True).data
+        return BaseTagSerializer(
+            obj.tags.order_by("-deleted_at"), many=True
+        ).data
 
 
 class CreationDataOrganizationWithMainSerializer(OrganizationForUserSerializer):

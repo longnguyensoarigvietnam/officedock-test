@@ -4,6 +4,7 @@ import re
 from itertools import chain
 
 from django.db.models import (
+    CharField,
     Sum,
     Q,
     ExpressionWrapper,
@@ -17,12 +18,12 @@ from django.db.models import (
     Count,
     IntegerField,
 )
-from django.db.models.functions import Now, Coalesce
+from django.db.models.functions import Concat, Now, Coalesce
 from django.utils import timezone
 from django.utils.timezone import now
 from rest_framework.exceptions import ValidationError
 
-from base.messages import ERROR_MESSAGES
+from base.messages import ERROR_MESSAGES, KEYWORDS
 from calendars.constants import CalendarTypes
 from calendars.models import Schedule
 from common.constants import (
@@ -644,7 +645,16 @@ def process_merge_card_per_tag(
         Prefetch("task__tags", to_attr="prefetched_tags"),
         Prefetch("schedule__tags", to_attr="prefetched_tags"),
     )
-    tags = Tag.objects.filter(id__in=tag_ids).only("id", "name")
+    tags = Tag.objects.filter(id__in=tag_ids).annotate(
+        name_display=Case(
+            When(
+                deleted_at__isnull=False,
+                then=Concat(F("name"), Value(KEYWORDS["deleted"])),
+            ),
+            default=F("name"),
+            output_field=CharField(),
+        )
+    )
     organizations = Organization.all_objects.filter(
         id__in=organization_ids
     ).only("id", "name")
@@ -689,7 +699,7 @@ def process_merge_card_per_tag(
         for tag_id in common_tag_ids:
             grouped_data[(tag_id, org_id)].append(duration)
             total_duration += duration
-    tag_map = {tag.id: tag.name for tag in tags}
+    tag_map = {tag.id: tag.name_display for tag in tags}
     org_map = {org.id: org.name for org in organizations}
     tag_totals = {}
 
