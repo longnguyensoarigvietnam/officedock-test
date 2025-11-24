@@ -58,7 +58,7 @@ class CronJobService:
             tax = Tax.objects.first()
             mail_service = PaymentMailService()
             for company in companies:
-                plan = company.company_plan.plan
+                plan = company.company_plan
                 price = plan.monthly_fee + (
                     plan.monthly_fee * tax.percentage / 100
                 )
@@ -229,16 +229,23 @@ class CronJobService:
                 company, status=CompanyStatus.CONTRACT_TERMINATED.value
             )
 
-    def handle_renewal_contract(self, today):
+    def handle_renewal_contract(self, today, input_companies=None):
         """
         Automatically renewal contracts that have reached their end date.
         Args:
         today (datetime.date, optional): The current date used for comparison`.
         """
-        companies = Company.objects.filter(
-            contract__next_renewal_at=today,
-            contract__cancel_at__isnull=True,
-        ).all()
+        companies = (
+            Company.objects.filter(
+                contract__next_renewal_at=today,
+                contract__cancel_at__isnull=True,
+            ).all()
+            if not input_companies
+            else input_companies.filter(
+                contract__next_renewal_at=today,
+                contract__cancel_at__isnull=True,
+            ).all()
+        )
         if companies:
             for company in companies:
                 CompanyService().handle_contract_renewal(company)

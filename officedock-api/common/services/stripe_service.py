@@ -108,6 +108,36 @@ class StripeService:
 
         return product, price
 
+    def create_price_by_product(
+        self, product, amount, currency, interval=None, meter_id=None
+    ):
+        """
+        Create a Stripe price.
+
+        Args:
+            amount (int): Price amount in the smallest currency unit (e.g. 1000 = ¥1,000)
+            currency (str): Currency code (e.g. "jpy", "usd")
+            interval (str, optional): Billing interval for recurring price (e.g. "month", "year").
+                                    If None, creates a one-time price.
+
+        Returns:
+            tuple: A tuple containing:
+                - stripe.Product: The created product object
+                - stripe.Price: The created price object
+        """
+        price_data = {
+            "unit_amount": amount,
+            "currency": currency,
+            "product": product,
+            "recurring": {
+                "interval": interval,
+            },
+            "billing_scheme": "per_unit",
+        }
+        price = stripe.Price.create(**price_data)
+
+        return price
+
     def get_customer(self, company: Company):
         """Get a Stripe customer"""
         try:
@@ -192,9 +222,13 @@ class StripeService:
             )
 
             # 5. Set default if it's the first one
-            is_default = not company.payment_methods.filter(
-                type=PaymentTypes.CREDIT_CARD.value
-            ).exists()
+            is_default = (
+                not company.payment_methods.filter(
+                    type=PaymentTypes.CREDIT_CARD.value
+                )
+                .exclude(stripe_payment_method_id=payment_method_id)
+                .exists()
+            )
             if is_default:
                 self.modify_default_payment_method(
                     customer_id, payment_method_id
@@ -240,7 +274,7 @@ class StripeService:
                     {"detail": ERROR_MESSAGES["stripe_customer_id_missing"]}
                 )
             company_plan = company.company_plan
-            price = stripe.Price.retrieve(company_plan.plan.stripe_price_id)
+            price = stripe.Price.retrieve(company_plan.stripe_price_id)
             # Create fixed subscription billing at the end of the month
             tax = Tax.objects.first()
             subscription = stripe.Subscription.create(
@@ -392,7 +426,7 @@ class StripeService:
         except stripe.error.StripeError as e:
             return False
 
-    def change_price_of_subscription(self, company, plan):
+    def change_price_of_subscription(self, company):
         """
         Change the price of an existing Stripe subscription for a company.
 
@@ -413,7 +447,7 @@ class StripeService:
                     {"detail": ERROR_MESSAGES["stripe_customer_id_missing"]}
                 )
             company_plan = company.company_plan
-            price = stripe.Price.retrieve(plan.stripe_price_id)
+            price = stripe.Price.retrieve(company_plan.stripe_price_id)
             stripe_subs = self.retrieve_subscription(
                 company_plan.stripe_subscription_id
             )
@@ -519,7 +553,7 @@ class StripeService:
                 {"detail": f"{e.user_message or 'Unknown error'}"}
             )
 
-    def replace_invoice_subscription(self, company, plan):
+    def replace_invoice_subscription(self, company):
         """
         Create and replace an invoice for a company in Stripe and local DB.
 
@@ -531,6 +565,7 @@ class StripeService:
         5. Update the local CompanyTransaction record.
         """
         try:
+            plan = company.company_plan
             tax = Tax.objects.first()
             customer_id = company.stripe_customer_id
             # Get current invoice unpaid

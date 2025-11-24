@@ -16,7 +16,6 @@ from plans.constants import (
     MIN_MONTHLY_FEE,
 )
 from plans.models import Plan
-from plans.serializers import PlanSerializer
 from users.models import User
 
 
@@ -143,11 +142,15 @@ class CompanySerializer(serializers.ModelSerializer):
         read_only_fields = ["is_show_holidays_calendar"]
 
     def get_plan(self, instance):
-        if hasattr(instance, "company_plan") and hasattr(
-            instance.company_plan, "plan"
-        ):
-            return PlanSerializer(instance.company_plan.plan).data
-        return None
+        cp = instance.company_plan
+        return {
+            "id": cp.plan.id,
+            "name": cp.plan.name,
+            "exchangeable_amount": cp.exchangeable_amount,
+            "limit_person": cp.limit_person,
+            "monthly_fee": cp.monthly_fee,
+            "stripe_price_id": cp.stripe_price_id,
+        }
 
     def get_total_users(self, obj):
         return obj.users.count()

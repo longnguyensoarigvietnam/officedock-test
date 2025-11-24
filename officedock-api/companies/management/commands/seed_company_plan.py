@@ -37,6 +37,8 @@ class Command(BaseCommand):
                 "end_date": related_date["end_date"],
                 "next_renewal_at": related_date["next_renewal_at"],
             }
+            company.responsible_person_mail = company.responsible_person_mail
+            company.responsible_person_name = company.responsible_person_name
             if (
                 admin_user := company.user_roles.filter(
                     role__name=RoleTypes.SYSTEM_ADMIN.value
