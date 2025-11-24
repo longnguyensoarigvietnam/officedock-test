@@ -23,10 +23,14 @@ def get_data_plan_to_company_plan(apps, schema_editor):
     else:
         product_id = main_cp.stripe_product_id
     plans = Plan.objects.filter(monthly_fee__isnull=False).all()
+    prices = stripe.Price.list(product=product_id)
+    price_lookup = {p.unit_amount: p.id for p in prices.data}
+
     for plan in plans:
         stripe_price_id = plan.stripe_price_id
         price = None
         if plan.is_custom_plan:
+            amount = int(plan.monthly_fee)
             price_data = {
                 "unit_amount": int(plan.monthly_fee),
                 "currency": "jpy",
@@ -36,16 +40,13 @@ def get_data_plan_to_company_plan(apps, schema_editor):
                 },
                 "billing_scheme": "per_unit",
             }
-            prices = stripe.Price.list(product=product_id)
-            price = None
-            for p in prices.data:
-                if p.unit_amount == price_data["unit_amount"]:
-                    price = p
-                    break
-            if not price:
+            if price_data["unit_amount"] in price_lookup:
+                stripe_price_id = price_lookup[amount]
+            else:
                 # Add price to main custom plan
-                price = stripe.Price.create(**price_data)
-            stripe_price_id = price.id
+                stripe_price = stripe.Price.create(**price_data)
+                stripe_price_id = stripe_price.id
+                price_lookup[amount] = stripe_price_id
         comp_plans = plan.company_plans.all()
         # Update new price to subscription
         for c_plan in comp_plans:
