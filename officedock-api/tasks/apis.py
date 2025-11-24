@@ -810,7 +810,7 @@ class TaskViewSet(
             task.recurring = {}
             task.save()
         if is_exists_task_schedules and task_schedules is None:
-            task.task_schedules.all().delete()
+            task.task_schedules.filter(plan_start_date__gt=now()).all().delete()
 
         # Handle task schedules creation
         if (task_schedules is not None) or (
