@@ -1,6 +1,5 @@
 'use client';
 import React, { Dispatch, SetStateAction } from 'react';
-import Image from 'next/image';
 import { UseMutateFunction } from 'react-query';
 
 import Button from '@components/common/Button';
@@ -13,6 +12,7 @@ import {
   ChatMessageResponse,
 } from '@interfaces/chat';
 import { Profile } from '@interfaces/user';
+import SafeImage from './SafeImage';
 
 type Props = {
   uuidList: ChatFileResponse[];
@@ -63,12 +63,12 @@ const RenderFiles = ({
                 <div className="bg-white border-[#D2DBE1] border-[1px] rounded-[6px] p-[14px] flex gap-2 items-center !w-[calc(100%_-_100px)]">
                   {newFile.fileType.includes('image') && (
                     <div>
-                      <Image
+                      <SafeImage
                         src={getFileURL(newFile?.compressedFile || '')}
                         alt="Image"
-                        unoptimized={true}
                         width={150}
                         height={100}
+                        unoptimized
                       />
                     </div>
                   )}
@@ -121,16 +121,16 @@ const RenderFiles = ({
                 <div className="bg-white border-[#D2DBE1] border-[1px] rounded-[6px] p-[14px] flex gap-2 items-center !w-[calc(100%_-_100px)]">
                   {file.fileType.includes('image') && (
                     <div>
-                      <Image
+                      <SafeImage
                         src={getFileURL(
                           isMain
                             ? file?.compressedFile || ''
                             : uuidArray?.compressedFile || '',
                         )}
                         alt="Image"
-                        unoptimized={true}
                         width={150}
                         height={100}
+                        unoptimized
                       />
                     </div>
                   )}

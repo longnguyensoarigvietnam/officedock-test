@@ -126,7 +126,7 @@ export const SkillSetting = ({
                           : '0px 2px 8px 0px #0000001A',
                       }}
                       className="w-[245px] h-[55px] relative bg-white px-5 py-3 flex items-center gap-[10px] justify-center rounded-[14px]">
-                      {showTwinklingStars && (
+                      {showTwinklingStars && !skill.skill.deletedAt && (
                         <>
                           <div className="absolute -top-[20px] left-[20px] bg-primary rounded-[20px] w-[140px] h-[20px] flex items-center justify-center">
                             <p className="text-white text-xs font-bold leading-none">
@@ -137,7 +137,7 @@ export const SkillSetting = ({
                         </>
                       )}
 
-                      {showTwinklingStars && (
+                      {showTwinklingStars && !skill.skill.deletedAt && (
                         <>
                           <TwinklingIcon
                             className="absolute top-[-10px] left-[-10px]"

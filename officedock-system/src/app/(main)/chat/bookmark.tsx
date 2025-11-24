@@ -13,6 +13,7 @@ import ActionsEventModal from '@components/modals/ActionsEventModal';
 import { MessageDetailBookmark } from '@components/chat/MessageDetailBookmark';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
 import { SearchMessagesModal } from '@components/modals/SearchMessagesModal';
+import FilePreview from '@components/custom/FilePreview';
 
 import { apiRouters } from '@constants/routers';
 import {
@@ -59,7 +60,6 @@ import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 
 import api from '@base/api';
-import FilePreview from '@components/custom/FilePreview';
 
 interface BookmarkListProps {
   searchChatMsg: string;
