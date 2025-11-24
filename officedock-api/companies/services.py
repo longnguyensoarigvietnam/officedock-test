@@ -342,6 +342,9 @@ class CompanyService:
         4. Replace or regenerate the related invoice to reflect the new plan
         """
         try:
+            last_upgrade = company.transactions.filter(
+                type=CompanyTransactionTypes.PLAN.value,
+            ).last()
             company_plan = company.company_plan
             invoice = None
             if not is_custom_plan:
@@ -354,7 +357,7 @@ class CompanyService:
             start_month = to_datetime(invoice.created) if invoice else now()
             tax = Tax.objects.first()
             new_price = company_plan.monthly_fee * (1 + tax.percentage / 100)
-            if company_plan.name != CUSTOM_PLAN:
+            if last_upgrade.plan.name != CUSTOM_PLAN:
                 # Update history use plan
                 company.transactions.filter(
                     type=CompanyTransactionTypes.PLAN.value,
@@ -369,7 +372,7 @@ class CompanyService:
                     recipient=company.responsible_person_mail,
                     company_name=company.name,
                     responsible_name=company.responsible_person_name,
-                    old_plan=company_plan.name,
+                    old_plan=last_upgrade.plan.name,
                     new_plan=plan.name,
                     start_month=format_date(start_month, style="jp_month_year"),
                     new_price=format(
