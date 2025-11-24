@@ -36,6 +36,7 @@ interface SkillMapByOrganizationPanelProps {
   skillMapDetail: SkillMapByOrganization;
   userId: number;
   settingSkillAction?: ActionsModal;
+  isMyPage?: boolean;
   onOpenConfirmSettingSkillInfo?:
     | ((skill: SkillMapByOrganizationInfo) => void)
     | undefined;
@@ -45,6 +46,7 @@ interface SkillMapByOrganizationPanelProps {
 export const SkillMapByOrganizationPanel = ({
   skillMapDetail,
   userId,
+  isMyPage = false,
   settingSkillAction,
   onOpenConfirmSettingSkillInfo,
   onEditSettingSkill,
@@ -454,7 +456,11 @@ export const SkillMapByOrganizationPanel = ({
                                 : '0px 2px 8px 0px #0000001A',
                           }}
                           onClick={async () => {
-                            if (isLocked || !skill.id || skill.skill.deletedAt)
+                            if (
+                              isLocked ||
+                              !skill.id ||
+                              (skill.skill.deletedAt && !isMyPage)
+                            )
                               return;
 
                             if (settingSkillAction === ActionsModal.CREATE) {
@@ -582,7 +588,7 @@ export const SkillMapByOrganizationPanel = ({
                             </div>
 
                             <div
-                              className={`${skill.skill.deletedAt && 'invisible'}`}>
+                              className={`${skill.skill.deletedAt && !isMyPage && 'invisible'}`}>
                               <SkillMapProgressBar
                                 value={progressPercent}
                                 strokeColor={strokeColor}

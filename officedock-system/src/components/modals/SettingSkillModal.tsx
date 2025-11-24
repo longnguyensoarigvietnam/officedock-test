@@ -59,6 +59,7 @@ export const SettingSkillModal = ({
             skillMapByOrganizations.map((skillMap, index) => (
               <SkillMapByOrganizationPanel
                 key={index}
+                isMyPage
                 skillMapDetail={skillMap}
                 userId={skillMapInfo?.user.id || 0}
                 settingSkillAction={action}
@@ -69,7 +70,7 @@ export const SettingSkillModal = ({
         </div>
 
         <div className="mt-auto">
-          <Button variant="text" className='!p-0' onClick={onClose}>
+          <Button variant="text" className="!p-0" onClick={onClose}>
             閉じる
           </Button>
         </div>
