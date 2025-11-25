@@ -5,7 +5,6 @@ import { useMutation } from 'react-query';
 
 import Link from 'next/link';
 import { AxiosError } from 'axios';
-import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import {
   Popover,
@@ -15,56 +14,36 @@ import {
 } from '@headlessui/react';
 
 import { Table, TableBody, TableHeader } from '@components/common/Table';
-import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
 import Pagination from '@components/common/Pagination';
 import ConfirmRestoreModal from '@components/modals/ConfirmRestoreModal';
-import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 import { FilterOrganizationComponent } from '@components/tag/FilterOrganizationComponent';
 import InputSearch from '@components/common/InputSearch';
-import ActionsTagModal from '@components/modals/ActionsTagModal';
 import Dropdown from '@components/common/Dropdown';
 
 import { NO_DATA_AVAILABLE, PAGE_SIZE_OPTIONS } from '@constants';
 import { apiRouters, pageRouters } from '@constants/routers';
 import {
-  ERROR_COMMON_MESSAGE,
-  ERROR_CREATE_MESSAGE,
-  ERROR_DELETE_MESSAGE,
   ERROR_RESTORE_MESSAGE,
-  ERROR_UPDATE_MESSAGE,
-  SUCCESS_CREATE_MESSAGE,
-  SUCCESS_DELETE_MESSAGE,
   SUCCESS_RESTORE_MESSAGE,
-  SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
-import {
-  ActionsModal,
-  PermissionsSystem,
-  ServerStatusCode,
-} from '@constants/enums';
 
 import useTagList from '@hooks/useTagList';
 import { useErrorToast } from '@hooks/useErrorToast';
 import useDebounceText from '@hooks/useDebounceText';
-import useTagDetail from '@hooks/useTagDetail';
 import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
-import { useSessionCache } from '@providers/SessionCacheProvider';
 
-import { Tags, TagFormData, TagRequest } from '@interfaces/tag';
+import { Tags } from '@interfaces/tag';
 import { OptionDropdownType } from '@interfaces/common';
 import { Organizations } from '@interfaces/organization';
-
-import { hasPermissionInArray } from '@utils';
 
 import api from '@base/api';
 
 const ListDeleteTags = () => {
   const { setIsLoading } = useContext(LoadingContext);
-  const { data: session } = useSessionCache();
 
   const { showToast } = useToast();
   const showErrorToast = useErrorToast();
@@ -94,33 +73,14 @@ const ListDeleteTags = () => {
     name: '',
     organizationIds: '',
   });
-  const searchParams = useSearchParams();
-  const params = new URLSearchParams(searchParams);
-  const router = useRouter();
-  const [tagIdParam, setTagIdParam] = useState<string | null>(
-    searchParams.get('tagId'),
-  );
-  const [actionTypeParam, setActionTypeParam] = useState<string | null>(
-    searchParams.get('action'),
-  );
 
-  // Set ID tag for delete and update
-  const [selectedTagToDelete, setSelectedTagToDelete] = useState<Tags | null>(
-    null,
-  );
+  // Set ID tag for restore
   const [selectedTagToRestore, setSelectedTagToRestore] = useState<Tags | null>(
-    null,
-  );
-  const [selectedTagToUpdate, setSelectedTagToUpdate] = useState<number | null>(
     null,
   );
 
   // Actions
-  const [openConfirmDeleteModal, setOpenConfirmDeleteModal] = useState(false);
   const [openConfirmRestoreModal, setOpenConfirmRestoreModal] = useState(false);
-
-  const [openActionsTagModal, setOpenActionsTagModal] = useState(false);
-  const [dataTagEdit, setDataTagEdit] = useState<Tags | null>(null);
 
   // Search
   const { register, watch, getValues, setValue } = useForm<{
@@ -166,31 +126,6 @@ const ListDeleteTags = () => {
     },
   });
 
-  useTagDetail({
-    tagId: Number(selectedTagToUpdate),
-    onSuccess: (data) => {
-      setDataTagEdit(data);
-      setOpenActionsTagModal(true);
-      if (selectedTagToUpdate) {
-        handleSetParam({
-          id: String(selectedTagToUpdate),
-          action: ActionsModal.EDIT,
-        });
-      }
-      setIsLoading(false);
-    },
-    onError: (error: AxiosError) => {
-      if (error.response?.status === ServerStatusCode.NOT_FOUND) {
-        showToast({
-          variant: 'error',
-          description: ERROR_COMMON_MESSAGE,
-        });
-        handleRemoveParam();
-      }
-      setIsLoading(false);
-    },
-  });
-
   const debouncedFilterByTagName = useDebounceText(watch('name'), 1000);
 
   useEffect(() => {
@@ -221,150 +156,6 @@ const ListDeleteTags = () => {
     setIsOpenModalFilter(false);
   };
 
-  const handleSetParam = ({
-    id,
-    action,
-  }: {
-    id?: string | null;
-    action?: string | null;
-  }) => {
-    if (id) {
-      params.set('tagId', id);
-      setTagIdParam(id);
-    }
-    if (action) {
-      params.set('action', action);
-      setActionTypeParam(action);
-    }
-    router.push(`?${params.toString()}`);
-  };
-
-  const handleRemoveParam = () => {
-    const params = new URLSearchParams(searchParams);
-    params.delete('tagId');
-    params.delete('action');
-    setTagIdParam(null);
-    setActionTypeParam(null);
-    router.replace(`?${params.toString()}`);
-  };
-
-  // Create tag
-  const handleCreateTag = async (data: TagRequest) => {
-    setIsLoading(true);
-    return await api.post(apiRouters.TAG_LIST, data);
-  };
-
-  const { mutate: createTag } = useMutation('postCreateTag', handleCreateTag, {
-    onSuccess: () => {
-      showToast({
-        description: SUCCESS_CREATE_MESSAGE,
-      });
-      setOpenActionsTagModal(false);
-      refetchTagList();
-      handleRemoveParam();
-    },
-    onError: (error: AxiosError<any>) => {
-      showErrorToast(error, ERROR_CREATE_MESSAGE);
-    },
-    onSettled: () => {
-      setIsLoading(false);
-    },
-  });
-
-  const handleConfirmCreateTag = (data: TagFormData) => {
-    const organizationIds = data.organizations.map((org: OptionDropdownType) =>
-      Number(org.value),
-    );
-    createTag({
-      name: data.name || '',
-      organizationIds,
-      calendarOrganizationCheck: data.calendarOrganizationCheck,
-    });
-  };
-
-  // Edit tag
-  const handleEditTag = async (data: TagRequest) => {
-    setIsLoading(true);
-    return await api.patch(
-      apiRouters.TAG_DETAIL(String(selectedTagToUpdate)),
-      data,
-    );
-  };
-
-  const { mutate: editTag } = useMutation('postEditTag', handleEditTag, {
-    onSuccess: () => {
-      showToast({
-        description: SUCCESS_UPDATE_MESSAGE,
-      });
-      setDataTagEdit(null);
-      setOpenActionsTagModal(false);
-      setSelectedTagToUpdate(null);
-      handleRemoveParam();
-      refetchTagList();
-    },
-    onError: (error: AxiosError<any>) => {
-      showErrorToast(error, ERROR_UPDATE_MESSAGE);
-    },
-    onSettled: () => {
-      setIsLoading(false);
-    },
-  });
-
-  const handleConfirmEditTag = (data: TagFormData) => {
-    const organizationIds = data.organizations.map((org: OptionDropdownType) =>
-      Number(org.value),
-    );
-    editTag({
-      name: data.name || '',
-      organizationIds,
-      calendarOrganizationCheck: data.calendarOrganizationCheck,
-    });
-  };
-
-  // Delete tag
-  const handleOpenDeleteTagModal = (tag: Tags) => {
-    setOpenConfirmDeleteModal(true);
-    setSelectedTagToDelete(tag);
-  };
-
-  const handleConfirmDeleteTag = () => {
-    if (selectedTagToDelete) {
-      setIsLoading(true);
-      deleteTag(Number(selectedTagToDelete.id));
-      return;
-    }
-  };
-
-  const postDeleteTag = async (id: number) => {
-    const { data: response } = await api.delete(apiRouters.TAG_DETAIL(`${id}`));
-    return response;
-  };
-
-  const { mutate: deleteTag } = useMutation(postDeleteTag, {
-    onSuccess: async () => {
-      showToast({
-        description: SUCCESS_DELETE_MESSAGE,
-      });
-      if (dataTags.length === 1 && debouncedParams.page > 1) {
-        // If change current page, useTagList auto recall, just don't need using refetchTagList
-        setDebouncedParams((prev) => ({
-          ...prev,
-          page: debouncedParams.page - 1,
-        }));
-      } else {
-        refetchTagList();
-      }
-      setOpenConfirmDeleteModal(false);
-    },
-    onError: (error: AxiosError<any>) => {
-      showErrorToast(error, ERROR_DELETE_MESSAGE);
-      setOpenConfirmDeleteModal(false);
-      setIsLoading(false);
-    },
-    onSettled: () => {
-      setSelectedTagToDelete(null);
-    },
-  });
   // Restore tag
   const handleOpenRestoreTagModal = (tag: Tags) => {
     setOpenConfirmRestoreModal(true);
@@ -409,16 +200,6 @@ const ListDeleteTags = () => {
       setSelectedTagToRestore(null);
     },
   });
-
-  useEffect(() => {
-    if (tagIdParam && !dataTagEdit && actionTypeParam === ActionsModal.EDIT) {
-      setSelectedTagToUpdate(Number(tagIdParam));
-    }
-
-    if (actionTypeParam === ActionsModal.CREATE && !openActionsTagModal) {
-      setOpenActionsTagModal(true);
-    }
-  }, [tagIdParam, actionTypeParam, dataTagEdit, openActionsTagModal]);
 
   return (
     <Fragment>
@@ -552,30 +333,6 @@ const ListDeleteTags = () => {
             )}
           </div>
         </div>
-        <div className="flex justify-end">
-          {session?.user.permissions &&
-            hasPermissionInArray(
-              session?.user.permissions,
-              PermissionsSystem.TAG_ADD,
-            ) && (
-              <Button
-                className="w-[100px] h-[34px] !text-sm !text-nowrap !text-white border-none"
-                style={{ boxShadow: '0px 1px 5px 0px #00000033' }}
-                onClick={() => {
-                  setOpenActionsTagModal(true);
-                  handleSetParam({
-                    action: ActionsModal.CREATE,
-                  });
-                }}>
-                <ImageRound
-                  src="/icons/add-with-background.svg"
-                  name="Add icon"
-                  className="!w-4 !h-4 mr-2 text-gray-400 cursor-pointer"
-                />
-                新規追加
-              </Button>
-            )}
-        </div>
       </div>
       <div className="w-full p-5 bg-[#F8FAFC] rounded-[30px]">
         <Table className="bg-white !rounded-[10px] relative">
@@ -598,37 +355,20 @@ const ListDeleteTags = () => {
                 <tr key={index}>
                   <td className="w-[500px] text-black max-w-[500px] border-r-[1px] border-r-[#D2DBE1]">
                     <div className="flex justify-between items-center">
-                      <p className="text-left max-w-[calc(100%_-_50px)] break-all text-[16px] font-medium">
+                      <p className="text-left max-w-[calc(100%_-_30px)] break-all text-[16px] font-medium">
                         {element.name}
                       </p>
-                      <div className="flex gap-2 justify-end items-center">
-                        {element.actions?.update ? (
-                          <div
-                            onClick={() => {
-                              setSelectedTagToUpdate(Number(element.id));
-                            }}>
-                            <ImageRound
-                              name="Edit"
-                              src={'/icons/edit-gray.svg'}
-                              className={`w-3 h-3 hover:cursor-pointer ${selectedTagToUpdate != element.id && 'opacity-30'}`}
-                            />
-                          </div>
-                        ) : (
-                          <div className="w-3"></div>
-                        )}
-                        {element.actions?.update ? (
-                          <div
-                            onClick={() => handleOpenRestoreTagModal(element)}>
-                            <ImageRound
-                              name="Hide"
-                              src={'/icons/dark-close-eye.svg'}
-                              className={`w-[16px] h-[12px] hover:cursor-pointer `}
-                            />
-                          </div>
-                        ) : (
-                          <div className="w-[16px]"></div>
-                        )}
-                      </div>
+                      {element.actions?.update ? (
+                        <div onClick={() => handleOpenRestoreTagModal(element)}>
+                          <ImageRound
+                            name="Hide"
+                            src={'/icons/dark-close-eye.svg'}
+                            className={`w-[16px] h-[12px] hover:cursor-pointer `}
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-[16px]"></div>
+                      )}
                     </div>
                   </td>
                   <td className="!w-[calc(100%_-_550px)] text-black !break-all text-left text-[14px] font-medium">
@@ -701,17 +441,6 @@ const ListDeleteTags = () => {
         </div>
       </div>
 
-      <ConfirmDeleteModal
-        open={openConfirmDeleteModal}
-        name={selectedTagToDelete?.name || ''}
-        type="タグ"
-        message="紐づいているタスクからも削除されます。"
-        onConfirm={handleConfirmDeleteTag}
-        onClose={() => {
-          setSelectedTagToDelete(null);
-          setOpenConfirmDeleteModal(false);
-        }}
-      />
       <ConfirmRestoreModal
         open={openConfirmRestoreModal}
         type="タグ"
@@ -719,34 +448,6 @@ const ListDeleteTags = () => {
         onConfirm={handleConfirmRestoreTag}
         onClose={() => setOpenConfirmRestoreModal(false)}
       />
-
-      {openActionsTagModal && actionTypeParam && (
-        <ActionsTagModal
-          open={true}
-          action={actionTypeParam}
-          dataTag={dataTagEdit}
-          dataOrganizationList={dataOrganizationList}
-          onClose={() => {
-            setOpenActionsTagModal(false);
-            handleRemoveParam();
-            setDataTagEdit(null);
-            setSelectedTagToUpdate(null);
-          }}
-          onCreate={(data) => {
-            handleConfirmCreateTag(data);
-          }}
-          onEdit={(data) => {
-            handleConfirmEditTag(data);
-          }}
-          onDelete={(data) => {
-            setSelectedTagToUpdate(null);
-            handleOpenDeleteTagModal(data);
-            setDataTagEdit(null);
-            setOpenActionsTagModal(false);
-            handleRemoveParam();
-          }}
-        />
-      )}
     </Fragment>
   );
 };

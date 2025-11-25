@@ -24,13 +24,13 @@ const RolePage = () => {
               src={'/icons/dark-close-eye.svg'}
               className={`w-[16px] h-[13px]`}
             />
-            <span>非表示一覧</span>
+            <span className='text-[#77858F]'>非表示一覧</span>
           </div>
         </div>
         <Link
           href={pageRouters.ROLES_MANAGEMENT.href}
           className="flex items-center hover:cursor-pointer">
-          <p className="ml-1 text-[#344653] font-medium text-xs">表示中一覧</p>
+          <p className="ml-1 text-[#77858F] font-medium text-xs">表示中一覧</p>
           <div className="ml-[6px] flex justify-between p-[3px] rounded-full bg-white border-b">
             <ImageRound
               name="Filter extend icon"

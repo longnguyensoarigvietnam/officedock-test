@@ -1,7 +1,4 @@
-import { useContext, useEffect, useRef, useState } from 'react';
-import { useMutation } from 'react-query';
-import { AxiosError } from 'axios';
-import { useForm } from 'react-hook-form';
+import { useState } from 'react';
 import {
   flexRender,
   getCoreRowModel,
@@ -13,28 +10,15 @@ import ImageRound from '@components/common/ImageRound';
 import { Table } from '@components/common/Table';
 
 import {
-  ScreenName,
   SkillMapLookBackType,
   SkillMapTypeInterval,
 } from '@constants/enums';
-import {
-  ERROR_UPDATE_MESSAGE,
-  SUCCESS_UPDATE_MESSAGE,
-} from '@constants/message';
-import { apiRouters } from '@constants/routers';
 import { SKILL_MAP_STEPS } from '@constants';
 
-import { useErrorToast } from '@hooks/useErrorToast';
 import {
-  OrganizationDefineSteps,
   OrganizationSkill,
   SkillDataDeleteType,
 } from '@interfaces/skills';
-
-import { LoadingContext } from '@providers/LoadingProvider';
-import { useToast } from '@providers/ToastProvider';
-
-import api from '@base/api';
 
 interface OrganizationSkillDetailProps {
   orgSkillDetail: OrganizationSkill;
@@ -48,21 +32,6 @@ interface OrganizationSkillDetailProps {
       | undefined
     >
   >;
-  setSelectedSkillMapToUpdate: React.Dispatch<
-    React.SetStateAction<number | null | undefined>
-  >;
-  handleSetParam: ({
-    id,
-    action,
-    step,
-    organization,
-  }: {
-    id?: string | null;
-    action?: string | null;
-    step?: number | null;
-    organization?: number | null;
-  }) => void;
-  refetchOrganizationSkillList: any;
 }
 
 const LevelConditionDetail = ({
@@ -138,23 +107,9 @@ const LevelConditionDetail = ({
 export const OrganizationDeleteSkillDetail = ({
   orgSkillDetail,
   setSelectedFilterStepDetail,
-  refetchOrganizationSkillList,
   handleOpenDeleteSkillModal,
 }: OrganizationSkillDetailProps) => {
   const [currentStep, setCurrentStep] = useState<number>(1);
-  const [isEditStepDefinitionMode, setIsEditStepDefinitionMode] =
-    useState<boolean>(false);
-
-  const { setIsLoading } = useContext(LoadingContext);
-  const showErrorToast = useErrorToast();
-  const { showToast } = useToast();
-
-  const stepDefinitionBoxRef = useRef<HTMLDivElement | null>(null);
-  const isEditingRef = useRef(false);
-
-  const { watch } = useForm<OrganizationDefineSteps>({
-    mode: 'onSubmit',
-  });
 
   const columns = [
     {
@@ -217,77 +172,6 @@ export const OrganizationDeleteSkillDetail = ({
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
-
-  // Edit step definitions
-  const handleConfirmEditStepDefinitions = (data: OrganizationDefineSteps) => {
-    const isChanged =
-      orgSkillDetail.steps.step1 != watch('defineStep1') ||
-      orgSkillDetail.steps.step2 != watch('defineStep2') ||
-      orgSkillDetail.steps.step3 != watch('defineStep3');
-    if (isChanged) {
-      editStepDefinitions(data);
-    } else {
-      setIsEditStepDefinitionMode(false);
-      isEditingRef.current = false;
-    }
-  };
-
-  const handleEditSkillMap = async (data: OrganizationDefineSteps) => {
-    setIsLoading(true);
-    return await api.post(
-      `${apiRouters.ORGANIZATION_DEFINE_STEPS(orgSkillDetail.id)}?screen_name=${ScreenName.SKILL_MAP_MANAGEMENT}`,
-      data,
-    );
-  };
-
-  const { mutate: editStepDefinitions } = useMutation(
-    'editStepDefinitions',
-    handleEditSkillMap,
-    {
-      onMutate: () => {
-        isEditingRef.current = true;
-      },
-      onSuccess: async () => {
-        setIsEditStepDefinitionMode(false);
-        showToast({
-          description: SUCCESS_UPDATE_MESSAGE,
-        });
-        refetchOrganizationSkillList();
-        isEditingRef.current = false;
-      },
-      onError: (error: AxiosError<any>) => {
-        showErrorToast(error, ERROR_UPDATE_MESSAGE);
-        isEditingRef.current = false;
-      },
-      onSettled: () => {
-        setIsLoading(false);
-      },
-    },
-  );
-
-  // Handle call API when click outside
-  useEffect(() => {
-    const handleClickOutside = (event: any) => {
-      if (
-        isEditStepDefinitionMode &&
-        stepDefinitionBoxRef.current &&
-        !stepDefinitionBoxRef.current.contains(event.target) &&
-        !isEditingRef.current
-      ) {
-        handleConfirmEditStepDefinitions({
-          defineStep1: watch('defineStep1') || null,
-          defineStep2: watch('defineStep2') || null,
-          defineStep3: watch('defineStep3') || null,
-        });
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEditStepDefinitionMode]);
 
   return (
     <div
@@ -404,8 +288,8 @@ export const OrganizationDeleteSkillDetail = ({
                             name: row.original.name,
                           });
                         }}
-                        src={'/icons/eye.svg'}
-                        className="w-[17px] h-[14px] hover:cursor-pointer"
+                        src={'/icons/dark-close-eye.svg'}
+                        className={`w-[16px] h-[12px] hover:cursor-pointer `}
                       />
                     </div>
                   </div>
