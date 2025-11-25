@@ -1,5 +1,5 @@
 'use client';
-import { Fragment, useContext, useEffect, useRef, useState } from 'react';
+import { Fragment, useContext, useEffect, useState } from 'react';
 import { useMutation } from 'react-query';
 import { signOut } from 'next-auth/react';
 import { AxiosError } from 'axios';
@@ -117,8 +117,6 @@ const ListUsersDelete = () => {
     searchParams.get('action'),
   );
 
-  const initialFetchRef = useRef(false);
-
   const debouncedSearch = useDebounceText(search, 1000);
 
   const [debouncedParams, setDebouncedParams] = useState({
@@ -174,28 +172,24 @@ const ListUsersDelete = () => {
     },
   });
 
-  const { userList, refetchUserList } = useUserList(
-    {
+  const { userList, refetchUserList } = useUserList({
+    pagination: {
       page: debouncedParams.page,
       pageSize,
     },
-    {
+    filter: {
       fullName: debouncedParams.search,
       companyName: debouncedParams.companyName,
       organizationId: debouncedParams.organizationId,
       role: debouncedParams.role,
       is_deleted: 'true',
     },
-  );
-
-  useEffect(() => {
-    if (userList) {
-      !initialFetchRef.current && setOriginalUserCount(userList.count);
-      initialFetchRef.current = true;
-      setDataUsers(userList.results);
-      setTotalPages(userList.numPages);
-    }
-  }, [userList]);
+    onSuccess: (data) => {
+      setOriginalUserCount(data.count);
+      setDataUsers(data.results);
+      setTotalPages(data.numPages);
+    },
+  });
 
   // Restore user
   const handleOpenRestoreUserModal = (user: User) => {
