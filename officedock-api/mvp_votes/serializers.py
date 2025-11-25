@@ -9,6 +9,7 @@ from common.serializers import (
 )
 from mvp_votes.constants import MVPVoteTypes
 from users.models import User
+from users.serializers import BaseUserSerializer
 from mvp_votes.models import MVPVote, MVPVoteManagement
 
 
@@ -125,3 +126,33 @@ class MvpVoteSerializer(serializers.ModelSerializer):
             raise ValidationError({"detail": ERROR_MESSAGES["vote_ended"]})
 
         return attrs
+
+
+"""
+Serializer for user candidate MVP
+"""
+
+
+class UserCandidateMVPSerializer(BaseUserSerializer):
+    """
+    Serializer for user payload message.
+    """
+
+    main_organization = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "full_name",
+            "avatar_color",
+            "avatar",
+            "main_organization",
+            "deleted_at",
+        ]
+
+    def get_main_organization(self, obj):
+        """
+        Get the main organization.
+        """
+        return self.context.get("main_organization")
