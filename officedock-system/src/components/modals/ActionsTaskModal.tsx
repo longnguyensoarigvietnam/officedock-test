@@ -700,29 +700,35 @@ const ActionsTaskModal = ({
     if (dataTask) {
       if (dataTask.taskSchedules?.length && action !== ActionTask.COPY) {
         dataTask.taskSchedules.map((plan) =>
-          appendPlanField({
-            scheduleId: plan.id || null,
-            planStartDate: plan.planStartDate
-              ? new Date(convertDateToStartDate(plan.planStartDate))
-              : null,
-            planStartTime: plan.planStartDate
-              ? convertToTimeString(plan.planStartDate)
-              : null,
-            planEndDate: plan.planEndDate
-              ? new Date(convertDateToStartDate(plan.planEndDate))
-              : null,
-            planEndTime: plan.planEndDate
-              ? convertToTimeString(plan.planEndDate)
-              : null,
-          }),
+          appendPlanField(
+            {
+              scheduleId: plan.id || null,
+              planStartDate: plan.planStartDate
+                ? new Date(convertDateToStartDate(plan.planStartDate))
+                : null,
+              planStartTime: plan.planStartDate
+                ? convertToTimeString(plan.planStartDate)
+                : null,
+              planEndDate: plan.planEndDate
+                ? new Date(convertDateToStartDate(plan.planEndDate))
+                : null,
+              planEndTime: plan.planEndDate
+                ? convertToTimeString(plan.planEndDate)
+                : null,
+            },
+            { shouldFocus: false },
+          ),
         );
       } else {
-        appendPlanField({
-          planStartDate: null,
-          planEndTime: '',
-          planEndDate: null,
-          planStartTime: '',
-        });
+        appendPlanField(
+          {
+            planStartDate: null,
+            planEndTime: '',
+            planEndDate: null,
+            planStartTime: '',
+          },
+          { shouldFocus: false },
+        );
       }
 
       if (dataTask.remindType) {
@@ -732,12 +738,15 @@ const ActionsTaskModal = ({
         setShowDeadlineTimeSetting(true);
       }
     } else {
-      appendPlanField({
-        planStartDate: null,
-        planEndTime: '',
-        planEndDate: null,
-        planStartTime: '',
-      });
+      appendPlanField(
+        {
+          planStartDate: null,
+          planEndTime: '',
+          planEndDate: null,
+          planStartTime: '',
+        },
+        { shouldFocus: false },
+      );
     }
   }, [action, appendPlanField, dataTask]);
 
@@ -748,16 +757,19 @@ const ActionsTaskModal = ({
       resetDataCategoryOptions();
       setIsSubmit(false);
     } else {
+      if (planFields.length === 0 && !dataTask) {
+        appendPlanField(
+          {
+            planStartDate: null,
+            planEndTime: '',
+            planEndDate: null,
+            planStartTime: '',
+          },
+          { shouldFocus: false },
+        );
+      }
       if (modalRef.current) {
         modalRef.current.scrollTop = 0;
-      }
-      if (planFields.length === 0 && !dataTask) {
-        appendPlanField({
-          planStartDate: null,
-          planEndTime: '',
-          planEndDate: null,
-          planStartTime: '',
-        });
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -2174,12 +2186,15 @@ const ActionsTaskModal = ({
                           type="button"
                           onClick={async () => {
                             setIsFormTouched(true);
-                            await appendPlanField({
-                              planStartDate: null,
-                              planStartTime: '',
-                              planEndDate: null,
-                              planEndTime: '',
-                            });
+                            await appendPlanField(
+                              {
+                                planStartDate: null,
+                                planStartTime: '',
+                                planEndDate: null,
+                                planEndTime: '',
+                              },
+                              { shouldFocus: false },
+                            );
                           }}>
                           <ImageRound
                             src="/icons/plus.svg"
@@ -3002,12 +3017,15 @@ const ActionsTaskModal = ({
                               type="button"
                               onClick={async () => {
                                 setIsFormTouched(true);
-                                await appendPlanField({
-                                  planStartDate: null,
-                                  planStartTime: '',
-                                  planEndDate: null,
-                                  planEndTime: '',
-                                });
+                                await appendPlanField(
+                                  {
+                                    planStartDate: null,
+                                    planStartTime: '',
+                                    planEndDate: null,
+                                    planEndTime: '',
+                                  },
+                                  { shouldFocus: false },
+                                );
                               }}>
                               <ImageRound
                                 src="/icons/plus.svg"
