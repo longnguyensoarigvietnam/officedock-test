@@ -170,6 +170,7 @@ export interface ChatParticipant {
   mainOrganization?: string;
   avatarColor?: string;
   avatarUrl?: string | null;
+  deletedAt?: string | null;
 }
 
 export interface ChatRoomDetail {

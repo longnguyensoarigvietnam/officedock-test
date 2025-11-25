@@ -78,7 +78,7 @@ interface dataProps {
   chatRoomCode: string | null;
   roomNameSearchResults: ChatRoomItem[];
   dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
-  dataOptionsParticipants: ChatParticipant[];
+  dataOptionsParticipantsCreate: ChatParticipant[];
   setDataChatList: React.Dispatch<React.SetStateAction<ChatRoomItem[]>>;
   setFilteredChatList: Dispatch<SetStateAction<ChatRoomItem[]>>;
   setLastItemId: React.Dispatch<
@@ -100,7 +100,7 @@ const ListChatUsers = ({
   filteredChatList,
   roomNameSearchResults,
   dashboardMemberList,
-  dataOptionsParticipants,
+  dataOptionsParticipantsCreate,
   setFilteredChatList,
   setLastItemId,
   setDataChatList,
@@ -706,8 +706,12 @@ const ListChatUsers = ({
     data.participantIds.forEach((id) =>
       formData.append('participantIds', id.toString()),
     );
-    data.selectOrganizations &&
-      formData.append('selectOrganizations', data.selectOrganizations);
+    if (data.selectOrganizations) {
+      formData.append(
+        'selectOrganizations',
+        JSON.stringify(data.selectOrganizations),
+      );
+    }
     if (data.avatar) formData.append('avatar', data.avatar);
 
     const response = await api.post(apiRouters.CHAT_LIST, formData);
@@ -1505,7 +1509,7 @@ const ListChatUsers = ({
         <ActionsAddMembersModal
           open={isModalOpen}
           dashboardMemberList={dashboardMemberList}
-          dataOptionsParticipants={dataOptionsParticipants}
+          dataOptionsParticipants={dataOptionsParticipantsCreate}
           onClose={() => setIsModalOpen(false)}
           createChatMutation={createChatMutation}
           setOpenErrorUploadFileModal={setOpenErrorUploadFileModal}
