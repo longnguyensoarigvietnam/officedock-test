@@ -952,11 +952,7 @@ const ActionsEventModal = ({
       }
 
       // CASE EDIT → apply date logic (repeatType ONCE)
-      if (
-        action === ActionsEvent.EDIT &&
-        repeatType?.label === TaskRepetitiveType.ONCE &&
-        eventStart instanceof Date
-      ) {
+      if (action === ActionsEvent.EDIT && eventStart instanceof Date) {
         rawMembers = rawMembers.filter((member) => {
           if (!member.deletedAt) return true;
 

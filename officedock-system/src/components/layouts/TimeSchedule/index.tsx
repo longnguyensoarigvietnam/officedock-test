@@ -1316,6 +1316,7 @@ const TimeSchedule = memo(
         setDataItemChangeInline(undefined);
       }
     }, [dataItemChangeInline]);
+
     // Update data when edit start item in header
     useEffect(() => {
       if (dataActualEdit) {
