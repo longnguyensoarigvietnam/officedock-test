@@ -44,6 +44,16 @@ const PopupDetailEvent = ({
   const router = useRouter();
   const [dashboardMemberList, setDashboardMemberList] = useState<Profile[]>([]);
 
+  const filteredParticipants = dataEvent.participants?.filter((p) => {
+    if (!p.deletedAt) return true;
+
+    const deletedDate = new Date(p.deletedAt);
+
+    if (deletedDate < new Date(dataEvent.start)) return false;
+
+    return true;
+  });
+
   useEffect(() => {
     if (creationDataCommonData && creationDataCommonData.allMembers) {
       setDashboardMemberList(creationDataCommonData.allMembers);
@@ -52,16 +62,16 @@ const PopupDetailEvent = ({
 
   const checkShowUserAvatar = () => {
     return !(
-      dataEvent.participants?.length == 1 &&
-      dataEvent.participants.find(
+      filteredParticipants?.length == 1 &&
+      filteredParticipants.find(
         (participant: EventParticipant) => participant.id == session?.user.id,
       )
     );
   };
   const checkShowDimmedUserAvatar = (participantId: number) => {
     return (
-      dataEvent.participants &&
-      dataEvent.participants.find((item) => Number(item.id) == participantId)
+      filteredParticipants &&
+      filteredParticipants.find((item) => Number(item.id) == participantId)
     );
   };
 
@@ -208,39 +218,39 @@ const PopupDetailEvent = ({
       {dataEvent && checkShowUserAvatar() && (
         <div className="mt-3">
           <p className="text-[#77858F] flex-none text-[14px] mb-3">
-            参加メンバー {dataEvent.participants?.length}人
+            参加メンバー {filteredParticipants?.length}人
           </p>
           <div className="flex flex-wrap">
-            {dataEvent.participants && dataEvent.participants?.length == 1 ? (
+            {filteredParticipants && filteredParticipants?.length == 1 ? (
               <div className="flex gap-2 items-center">
                 <DynamicTooltip
-                  content={`${dataEvent.participants[0].fullName}`}
+                  content={`${filteredParticipants[0].fullName}`}
                   placement="top">
                   <div
-                    className={`border-[2px] border-white rounded-full w-[40px] h-[40px] ${checkShowDimmedUserAvatar(Number(dataEvent.participants[0].id)) && 'opacity-60'}`}>
+                    className={`border-[2px] border-white rounded-full w-[40px] h-[40px] ${checkShowDimmedUserAvatar(Number(filteredParticipants[0].id)) && 'opacity-60'}`}>
                     <CustomUserAvatar
                       avatarUrl={
-                        (dataEvent.participants?.[0] &&
+                        (filteredParticipants?.[0] &&
                           dashboardMemberList?.find(
                             (member) =>
-                              member.id === dataEvent.participants?.[0]?.id,
+                              member.id === filteredParticipants?.[0]?.id,
                           )?.avatar) ||
                         ''
                       }
                       avatarColor={
-                        (dataEvent.participants?.[0] &&
+                        (filteredParticipants?.[0] &&
                           dashboardMemberList?.find(
                             (member) =>
-                              member.id === dataEvent.participants?.[0]?.id,
+                              member.id === filteredParticipants?.[0]?.id,
                           )?.avatarColor) ||
                         ''
                       }
                       size={36}
                       customClassName={`${
-                        !dataEvent.participants?.[0] &&
+                        !filteredParticipants?.[0] &&
                         dashboardMemberList?.find(
                           (member) =>
-                            member.id === dataEvent.participants?.[0]?.id,
+                            member.id === filteredParticipants?.[0]?.id,
                         )?.avatar &&
                         '!mt-0'
                       }`}
@@ -248,11 +258,11 @@ const PopupDetailEvent = ({
                   </div>
                 </DynamicTooltip>
                 <p className="text-[#000000] text-[14px] font-medium">
-                  {dataEvent.participants[0].fullName}
+                  {filteredParticipants[0].fullName}
                 </p>
               </div>
             ) : (
-              dataEvent.participants
+              filteredParticipants
                 ?.sort((a: EventParticipant, b: EventParticipant) => {
                   const aIsDimmed = checkShowDimmedUserAvatar(Number(a.id));
                   const bIsDimmed = checkShowDimmedUserAvatar(Number(b.id));

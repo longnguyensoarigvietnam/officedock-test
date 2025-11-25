@@ -319,8 +319,19 @@ const EventInfoModal = memo(
       }
 
       if (showOrganizationAvatar) return showOrgAvatars(organizationIds);
-      if (checkShowUserAvatar(event.participants))
-        return showUserAvatars(event.participants || []);
+      if (checkShowUserAvatar(event.participants) && dataEvent) {
+        const filteredParticipants = event.participants?.filter((p) => {
+          if (!p.deletedAt) return true;
+
+          const deletedDate = new Date(p.deletedAt);
+
+          if (deletedDate < new Date(dataEvent.start)) return false;
+
+          return true;
+        });
+
+        return showUserAvatars(filteredParticipants || []);
+      }
 
       return null;
     };

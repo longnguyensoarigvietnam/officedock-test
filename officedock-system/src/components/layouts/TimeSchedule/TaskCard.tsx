@@ -374,6 +374,7 @@ const TaskCard = ({
 
   const renderModal = () => {
     if (isShiftPressed) return;
+
     return (
       <div
         className={`w-[250px]    fixed top-0 left-0 z-[999]  h-fit rounded-[14px] pl-5 pr-[10px] pt-[10px] pb-5 bg-white`}

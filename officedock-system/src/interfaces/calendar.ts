@@ -151,6 +151,7 @@ export interface EventParticipant {
   mainOrganization?: string;
   color?: string;
   avatarUrl?: string;
+  deletedAt?: string | null;
 }
 
 export interface CalendarDashboardMember {
