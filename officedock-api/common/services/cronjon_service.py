@@ -7,6 +7,7 @@ from common.utils import calculate_company_dates, format_date
 from companies.constants import (
     CompanyStatus,
     CompanyTransactionTypes,
+    PaymentTypes,
     TransactionStatus,
 )
 from companies.models import Company, CompanyTransaction
@@ -228,6 +229,15 @@ class CronJobService:
             CompanyService().change_status_of_company(
                 company, status=CompanyStatus.CONTRACT_TERMINATED.value
             )
+            contract = company.contract
+            # Send email notify contract cancelled
+            if company.payment_type == PaymentTypes.DEBIT.value:
+                PaymentMailService().send_contract_cancelled(
+                    recipient=company.responsible_person_mail,
+                    company_name=company.name,
+                    responsible_name=company.responsible_person_name,
+                    end_date=format_date(contract.end_date, style="jp_date"),
+                )
 
     def handle_renewal_contract(self, today, input_companies=None):
         """

@@ -1,8 +1,18 @@
-from django.db.models import OuterRef, Q, Subquery
+from django.db.models import (
+    F,
+    Case,
+    CharField,
+    OuterRef,
+    Q,
+    Subquery,
+    Value,
+    When,
+)
+from django.db.models.functions import Concat
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from base.messages import ERROR_MESSAGES
+from base.messages import ERROR_MESSAGES, KEYWORDS
 from common.constants import AVATAR_GCS_EXPIRATION_SECONDS
 from common.utils import compare_categories, get_signed_url
 from roles.constants import Actions, Screens
@@ -159,12 +169,23 @@ class StatisticCategoryStructionSerializer(serializers.ModelSerializer):
             )
             .order_by("id")
             .distinct()
-        )
+        ).values_list("skill")
 
         # Rename the keys to match expected output
         return [
             {"id": id, "name": name}
-            for id, name in skills.values_list("skill__id", "skill__name")
+            for id, name in skills.annotate(
+                name=Case(
+                    When(
+                        skill__deleted_at__isnull=False,
+                        then=Concat(
+                            F("skill__name"), Value(KEYWORDS["deleted"])
+                        ),
+                    ),
+                    default=F("skill__name"),
+                    output_field=CharField(),
+                )
+            ).values_list("skill__id", "name")
         ]
 
 
