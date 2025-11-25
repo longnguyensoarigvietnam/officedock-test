@@ -107,7 +107,7 @@ const ActionsEventModal = ({
   dataEvent,
   action = ActionsEvent.CREATE,
   authenticatedUser,
-  defaultStartDate,
+  defaultStartDate = new Date(),
   calendarView,
   backToEditing,
   isEditDisabled = false,
@@ -928,14 +928,12 @@ const ActionsEventModal = ({
     if (!creationDataCommonDataCustom) return;
 
     const repeatType = watch('repeatType') as OptionDropdownType | undefined;
-
     const startDateStr = watch('startDate');
     const startTimeStr = watch('startTime');
+    const participantIds = watch('participantIds') || [];
 
-    // If startDate is missing → return
     if (!startDateStr) return;
 
-    // build eventStart
     let eventStart: Date | null = null;
     if (startDateStr && startTimeStr) {
       eventStart = new Date(combineDateAndTime(startDateStr, startTimeStr));
@@ -943,16 +941,19 @@ const ActionsEventModal = ({
       eventStart = startDateStr;
     }
 
-    const participantIds = watch('participantIds') || [];
-
     let eventMembers: EventParticipant[] = [];
     let eventOrganizations: EventParticipant[] = [];
-
-    // --- Members ---
     if (creationDataCommonDataCustom.allMembers) {
       let rawMembers = creationDataCommonDataCustom.allMembers;
 
+      // CASE CREATE → remove all deleted members
+      if (action === ActionsEvent.CREATE) {
+        rawMembers = rawMembers.filter((m) => !m.deletedAt);
+      }
+
+      // CASE EDIT → apply date logic (repeatType ONCE)
       if (
+        action === ActionsEvent.EDIT &&
         repeatType?.label === TaskRepetitiveType.ONCE &&
         eventStart instanceof Date
       ) {
@@ -960,9 +961,9 @@ const ActionsEventModal = ({
           if (!member.deletedAt) return true;
 
           const deletedAtDate = new Date(member.deletedAt);
-          const isValid = deletedAtDate > eventStart; // true = keep
+          const isValid = deletedAtDate > eventStart;
 
-          // If invalid → remove from participantIds if existing
+          // Remove invalid user from participantIds
           if (!isValid && participantIds.includes(member.id)) {
             setValue(
               'participantIds',
@@ -974,6 +975,7 @@ const ActionsEventModal = ({
         });
       }
 
+      // Map to EventParticipant
       eventMembers = rawMembers.map((member) => ({
         id: `${EventParticipantType.USER}-${member.id}`,
         fullName: member.fullName,
@@ -983,12 +985,64 @@ const ActionsEventModal = ({
         avatarUrl: member.avatar || '',
       }));
     }
-
-    // --- Orgs ---
     if (creationDataCommonDataCustom.organizationUsers) {
       const rawOrgs = creationDataCommonDataCustom.organizationUsers;
 
-      eventOrganizations = rawOrgs.map((org) => ({
+      let processedOrgs = rawOrgs;
+
+      if (action === ActionsEvent.CREATE) {
+        processedOrgs = rawOrgs
+          .map((org) => {
+            const validUsers = org.users
+              ? org.users.filter((u) => !u.deletedAt)
+              : [];
+
+            // if org has no valid users → remove org
+            if (validUsers.length === 0) return null;
+
+            return { ...org, users: validUsers };
+          })
+          .filter(Boolean) as typeof rawOrgs;
+      }
+
+      // ------------------------------------------------------------
+      // CASE EDIT → same logic as members
+      // ------------------------------------------------------------
+      if (
+        action === ActionsEvent.EDIT &&
+        repeatType?.label === TaskRepetitiveType.ONCE &&
+        eventStart instanceof Date
+      ) {
+        processedOrgs = rawOrgs
+          .map((org) => {
+            const validUsers = org.users
+              ? org.users.filter((u) => {
+                  if (!u.deletedAt) return true;
+
+                  const deletedAtDate = new Date(u.deletedAt);
+                  const isValid = deletedAtDate > eventStart;
+
+                  // Remove invalid user from participantIds
+                  if (!isValid && participantIds.includes(u.id)) {
+                    setValue(
+                      'participantIds',
+                      participantIds.filter((id) => id !== u.id),
+                    );
+                  }
+
+                  return isValid;
+                })
+              : [];
+
+            if (validUsers.length === 0) return null;
+
+            return { ...org, users: validUsers };
+          })
+          .filter(Boolean) as typeof rawOrgs;
+      }
+
+      // Map to EventParticipant
+      eventOrganizations = processedOrgs.map((org) => ({
         id: `${EventParticipantType.ORGANIZATION}-${org.id}`,
         fullName: org.name,
         type: EventParticipantType.ORGANIZATION,
@@ -997,8 +1051,9 @@ const ActionsEventModal = ({
         avatarUrl: org.icon || '',
       }));
 
+      // Map dropdown
       setDataOptionsOrganizations(
-        rawOrgs.map((org) => ({
+        processedOrgs.map((org) => ({
           value: org.id || '',
           label: org.name,
           userIds: org.users ? org.users.map((u) => u.id) : [],
@@ -1007,8 +1062,13 @@ const ActionsEventModal = ({
         })),
       );
     }
+
+    // ============================================================
+    //  SET FINAL PARTICIPANTS
+    // ============================================================
     setDataOptionsParticipants([...eventOrganizations, ...eventMembers]);
   };
+
   useEffect(() => {
     if (dataEvent && creationDataCommonData) {
       handleValidateUser();
