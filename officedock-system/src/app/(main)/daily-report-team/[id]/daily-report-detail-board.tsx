@@ -2465,6 +2465,10 @@ const DailyReportDetailBoard = () => {
                                         )
                                       : undefined
                                   }
+                                  isEvent={
+                                    row.original.type ===
+                                    EventCalendarType.SCHEDULE
+                                  }
                                   dataTagsList={row.original.tags.map(
                                     (org) => ({
                                       label: String(org.name),

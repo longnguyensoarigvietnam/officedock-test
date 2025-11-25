@@ -2305,6 +2305,10 @@ const DailyReportBoard = () => {
                                       value: String(org.id),
                                     }),
                                   )}
+                                  isEvent={
+                                    row.original.type ===
+                                    EventCalendarType.SCHEDULE
+                                  }
                                   setDataTaskDailyList={setDataTaskDailyList}
                                 />
                               </div>
