@@ -15,10 +15,10 @@ import {
 } from '@interfaces/skills';
 import { OptionDropdownType } from '@interfaces/common';
 
-import useTeamList from '@hooks/useListTeam';
 import useSkillMapByMembers from '@hooks/useSkillMapByMembers';
 import useOrganizationSkillList from '@hooks/useOrganizationSkillList';
 import { useErrorToast } from '@hooks/useErrorToast';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 import { ScreenName } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
@@ -66,8 +66,6 @@ const EditSkillMapByMemberBoard = () => {
     OptionDropdownType[]
   >([]);
 
-  const { teamList } = useTeamList({});
-
   // Fetch organization skills
   const { skillMapListByMembers } = useSkillMapByMembers({
     organizationId: Number(selectedOrganizationOption.value),
@@ -97,14 +95,18 @@ const EditSkillMapByMemberBoard = () => {
   }, [organizationSkillList]);
 
   // Get organization options for pulldown
-  useEffect(() => {
-    if (teamList) {
-      const organizationList = teamList.map((org) => {
-        return {
-          value: Number(org.id),
-          label: org.name,
-        };
-      });
+  useCreationDataCommon({
+    options: {
+      get_all_organizations: true,
+    },
+    onSuccess: (data) => {
+      const organizationList =
+        data.allOrganizations?.map((org) => {
+          return {
+            value: Number(org.id),
+            label: org.name,
+          };
+        }) || [];
       setOrganizationList([
         {
           label: ALL_TEAMS_OPTION,
@@ -112,8 +114,8 @@ const EditSkillMapByMemberBoard = () => {
         },
         ...organizationList,
       ]);
-    }
-  }, [teamList]);
+    },
+  });
 
   // Update skill map by users
   const handleConfirmUpdateSkillMapByUsers = () => {

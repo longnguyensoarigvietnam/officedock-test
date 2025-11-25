@@ -14,9 +14,9 @@ import { OptionDropdownType } from '@interfaces/common';
 
 import useSkillMapByMembers from '@hooks/useSkillMapByMembers';
 import useOrganizationSkillList from '@hooks/useOrganizationSkillList';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 import { SkillMapByMembersDetail } from './form';
-import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 const ListSkillsMapByMembers = () => {
   const [dataSkillMapsByMembers, setDataSkillMapsByMembers] = useState<

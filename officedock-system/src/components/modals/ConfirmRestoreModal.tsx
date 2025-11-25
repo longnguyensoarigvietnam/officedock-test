@@ -44,7 +44,7 @@ const ConfirmRestoreModal = memo(
                 />
               </div>
             )}
-            <p className="text-black font-medium break-all line-clamp-3 text-[15px] text-center">
+            <p className="text-black font-medium break-all line-clamp-3 text-base text-center">
               {name}
             </p>
           </div>
