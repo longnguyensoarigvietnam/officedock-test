@@ -467,10 +467,12 @@ const EditCompanyForm = () => {
         disabled={true}
       />
       {/* MfCustomerID */}
-      <Input
-        label="マネーフォワードケッサイの顧客ID"
-        register={register('mfCustomerId')}
-      />
+      {companyDetail?.paymentType == '口座振替' && (
+        <Input
+          label="マネーフォワードケッサイの顧客ID"
+          register={register('mfCustomerId')}
+        />
+      )}
 
       {/* Responsible person name */}
       <Input

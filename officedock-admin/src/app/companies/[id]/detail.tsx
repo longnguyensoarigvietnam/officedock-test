@@ -37,6 +37,7 @@ import { LoadingContext } from '@providers/LoadingProvider';
 import { renderDate } from '@utils';
 
 import api from '@base/api';
+import { OptionDropdownType } from '@interfaces/common';
 
 const CompanyDetailInfo = () => {
   const params = useParams<{ id: string }>();
@@ -209,32 +210,34 @@ const CompanyDetailInfo = () => {
       />
       <InformationSection
         name="担当者情報"
-        infoArr={[
-          {
-            label: '担当責任者名',
-            value: companyDetail?.responsiblePersonName || '',
-          },
-          {
-            label: 'マネーフォワードケッサイの顧客ID',
-            value: companyDetail?.mfCustomerId || '',
-          },
-          {
-            label: 'メールアドレス',
-            value: companyDetail?.responsiblePersonMail || '',
-          },
-          {
-            label: '電話番号',
-            value: companyDetail?.contract?.phone || '',
-          },
-          {
-            label: '住所',
-            value: companyDetail?.contract?.address || '',
-          },
-          {
-            label: '業種',
-            value: companyDetail?.contract?.industry || '',
-          },
-        ]}
+        infoArr={
+          [
+            {
+              label: '担当責任者名',
+              value: companyDetail?.responsiblePersonName || '',
+            },
+            companyDetail?.paymentType === '口座振替' && {
+              label: 'マネーフォワードケッサイの顧客ID',
+              value: companyDetail?.mfCustomerId || '',
+            },
+            {
+              label: 'メールアドレス',
+              value: companyDetail?.responsiblePersonMail || '',
+            },
+            {
+              label: '電話番号',
+              value: companyDetail?.contract?.phone || '',
+            },
+            {
+              label: '住所',
+              value: companyDetail?.contract?.address || '',
+            },
+            {
+              label: '業種',
+              value: companyDetail?.contract?.industry || '',
+            },
+          ].filter(Boolean) as OptionDropdownType[]
+        }
       />
       <PaymentInformation paymentMethod={companyDetail?.paymentType || ''} />
       <InformationSection
