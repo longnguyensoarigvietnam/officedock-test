@@ -204,12 +204,12 @@ class CronJobService:
         companies = Company.objects.filter(
             contract__start_date__day=today.day,
             contract__start_date__month=today.month,
-            contract__next_renewal_at__year=today.year
-            + 1,  # Since the contract renewal took place before the downgrade, 1 year must be added.
             contract__cancel_at__isnull=True,
         ).all()
         if companies:
             for company in companies:
+                if company.contract.start_date == today:
+                    continue
                 CompanyService().downgrade_plan(company, today)
 
     def handle_terminate_contract_over_period(self, today):
