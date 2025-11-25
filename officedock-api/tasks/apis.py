@@ -447,21 +447,24 @@ class TaskViewSet(
                     )
                 )
             # Remove task schedules not edited
-            task.task_schedules.exclude(
+            task.task_schedules.filter(plan_start_date__gt=now()).exclude(
                 id__in=list_task_schedule_edited.values_list("id", flat=True)
                 if list_task_schedule_edited
-                else [],
-                plan_start_date__lt=now(),
+                else []
             ).delete()
+
             for occurrence in rule:
                 plan_end_date = datetime.combine(
                     occurrence.date(), end_time, occurrence.tzinfo
                 )
                 # Check not have task edited in the day
-                if not list_task_schedule_edited.filter(
-                    Q(plan_start_date__date=occurrence.date())
-                    & Q(plan_end_date__date=occurrence.date())
-                ).exists():
+                if (
+                    not list_task_schedule_edited
+                    or not list_task_schedule_edited.filter(
+                        Q(plan_start_date__date=occurrence.date())
+                        & Q(plan_end_date__date=occurrence.date())
+                    ).exists()
+                ):
                     schedules.append(
                         TaskSchedule(
                             task=task,
