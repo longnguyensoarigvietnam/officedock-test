@@ -968,3 +968,19 @@ class UserPermissionsSerializer(UserSerializer):
     class Meta:
         model = User
         fields = ["id", "permissions"]
+
+
+class BaseUserProfileSerializer(BaseUserSerializer):
+    """
+    Serializer for the user with profile.
+    """
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "full_name",
+            "avatar_color",
+            "avatar",
+            "deleted_at",
+        ]

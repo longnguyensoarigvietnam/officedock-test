@@ -1,4 +1,4 @@
-from django.db.models import Q, Prefetch
+from django.db.models import F, Q, Prefetch
 from django.utils.timezone import now
 from calendars.serializers import EventLocationSerializer
 from common.serializers import (
@@ -240,9 +240,10 @@ def get_data_organization_team_statistic(user, company, organization):
     organizations = CreationDataOrganizationWithStructCategorySerializer(
         [organization, calendar_org], many=True, context={"user": user}
     ).data
-    members = CreationDataUserSerializer(
-        organization.users.order_by("created_at"), many=True
-    ).data
+    users = organization.users.order_by(
+        F("deleted_at").asc(nulls_first=True), "created_at"
+    )
+    members = CreationDataUserSerializer(users, many=True).data
 
     for org in organizations:
         org["members"] = members

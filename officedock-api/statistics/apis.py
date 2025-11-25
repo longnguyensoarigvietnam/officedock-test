@@ -32,7 +32,7 @@ from base.messages import ERROR_MESSAGES
 from base.paginations import BasePagination
 from calendars.constants import CalendarTypes, ScheduleCategoryTypes
 from calendars.models import Schedule
-from common.constants import BASE_DATE_FORMAT, AVATAR_GCS_EXPIRATION_SECONDS
+from common.constants import BASE_DATE_FORMAT
 from common.models import Category
 from common.utils import (
     format_duration,
@@ -76,6 +76,7 @@ from stat_data.utils import (
 from tasks.constants import TaskCategoryTypes
 from tasks.models import Task
 from users.models import User
+from users.serializers import BaseUserProfileSerializer
 from roles.constants import Screens
 from base.permissions import ActionPermission
 from statistics.services.export import ExportTaskService
@@ -1211,17 +1212,8 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
         )
 
         user_serialized_map = {
-            user["id"]: {
-                "id": user["id"],
-                "full_name": user["profile__full_name"],
-                "avatar": get_signed_url(
-                    user["avatar"], AVATAR_GCS_EXPIRATION_SECONDS
-                ),
-                "avatar_color": user["avatar_color"],
-            }
-            for user in users.values(
-                "id", "profile__full_name", "avatar", "avatar_color"
-            )
+            user.id: BaseUserProfileSerializer(user).data
+            for user in users.select_related("profile")
         }
         total_duration_by_range = {}
         for index, (start, end) in enumerate(ranges):
@@ -1551,9 +1543,10 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                 id__in=split_id_from_string(user_ids)
             ).all()
             if users:
-                user_list = users.values(
-                    "id", "profile__full_name", "avatar", "avatar_color"
-                )
+                user_list = BaseUserProfileSerializer(
+                    users.select_related("profile"), many=True
+                ).data
+
         organization_ids = Organization.all_objects.filter(
             users__in=users
         ).values_list("id", flat=True)
@@ -1815,7 +1808,7 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
         )
         data = {
             "id": user["id"],
-            "full_name": f"{org_name} {user['profile__full_name']}",
+            "full_name": f"{org_name} {user['full_name']}",
             "avatar": get_signed_url(user["avatar"], 3600),
             "avatar_color": user["avatar_color"],
             "total_duration": format_duration(user_duration),

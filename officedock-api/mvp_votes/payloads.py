@@ -2,13 +2,14 @@ from copy import deepcopy
 
 from django.db.models import Count, Max
 
-from common.constants import AVATAR_GCS_EXPIRATION_SECONDS
-from common.utils import get_signed_url
 from mvp_votes.models import MVPVoteCandidate
 from organizations.models import Organization, UsersOrganizations
 from organizations.serializers import BaseOrganizationSerializer
 from users.models import User
-from mvp_votes.serializers import MvpVoteManagementSerializer
+from mvp_votes.serializers import (
+    MvpVoteManagementSerializer,
+    UserCandidateMVPSerializer,
+)
 
 
 def build_list_mvp_vote_manage_payload(
@@ -63,20 +64,18 @@ def build_list_mvp_vote_manage_payload(
             "organization__uuid",
         )
     }
+
+    user_candidates = (
+        User.objects.filter(id__in=unique_user_ids)
+        .select_related("profile")
+        .only("id", "profile", "avatar", "avatar_color", "deleted_at")
+    )
     # Get candidate map
     candidates_map = {
-        user["id"]: {
-            "id": user["id"],
-            "full_name": user["profile__full_name"],
-            "avatar": get_signed_url(
-                user["avatar"], AVATAR_GCS_EXPIRATION_SECONDS
-            ),
-            "avatar_color": user["avatar_color"],
-            "main_organization": main_org_map.get(user["id"]),
-        }
-        for user in User.objects.filter(id__in=unique_user_ids).values(
-            "id", "profile__full_name", "avatar", "avatar_color"
-        )
+        user.id: UserCandidateMVPSerializer(
+            user, context={"main_organization": main_org_map.get(user.id)}
+        ).data
+        for user in user_candidates
     }
     if many:
         result = []
@@ -140,19 +139,17 @@ def build_present_mvp_vote_with_organization_list(mvp_vote, user):
             "id", flat=True
         )
     )
+    user_candidates = (
+        User.objects.filter(id__in=unique_user_ids)
+        .select_related("profile")
+        .only("id", "profile", "avatar", "avatar_color", "deleted_at")
+    )
+    # Get candidate map
     candidates_map = {
-        user["id"]: {
-            "id": user["id"],
-            "full_name": user["profile__full_name"],
-            "avatar": get_signed_url(
-                user["avatar"], AVATAR_GCS_EXPIRATION_SECONDS
-            ),
-            "avatar_color": user["avatar_color"],
-        }
-        for user in User.objects.filter(id__in=unique_user_ids).values(
-            "id", "profile__full_name", "avatar", "avatar_color"
-        )
+        user.id: UserCandidateMVPSerializer(user).data
+        for user in user_candidates
     }
+
     unique_candidate_ids = set()
     votes = user.mvp_votes.filter(mvp_vote_management=mvp_vote).values_list(
         "mvp_candidate", flat=True

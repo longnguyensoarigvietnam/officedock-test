@@ -29,13 +29,11 @@ from calendars.models import Schedule
 from common.constants import (
     DATE_REGEX,
     BASE_DATE_FORMAT,
-    AVATAR_GCS_EXPIRATION_SECONDS,
 )
 from common.models import Category
 from common.utils import (
     format_duration,
     time_str_to_timedelta,
-    get_signed_url,
 )
 from organizations.constants import CategoryColors
 from organizations.models import OrganizationsStatisticCategories, Organization
@@ -53,6 +51,7 @@ from tags.models import Tag
 from tasks.constants import TaskCategoryTypes
 from tasks.models import Task, TaskDuration
 from users.models import User
+from users.serializers import BaseUserProfileSerializer
 
 
 def get_list_durations_by_users(
@@ -528,18 +527,14 @@ def process_users(total_duration, durations):
 
     # Prefetch all users
     user_ids = list(user_durations.keys())
+    map_users = (
+        User.objects.filter(id__in=user_ids)
+        .select_related("profile")
+        .only("id", "profile", "avatar", "avatar_color", "deleted_at")
+    )
+    # Get candidate map
     user_serialized_map = {
-        user["id"]: {
-            "id": user["id"],
-            "full_name": user["profile__full_name"],
-            "avatar": get_signed_url(
-                user["avatar"], AVATAR_GCS_EXPIRATION_SECONDS
-            ),
-            "avatar_color": user["avatar_color"],
-        }
-        for user in User.objects.filter(id__in=user_ids).values(
-            "id", "profile__full_name", "avatar", "avatar_color"
-        )
+        user.id: BaseUserProfileSerializer(user).data for user in map_users
     }
 
     combined_task_map = {
