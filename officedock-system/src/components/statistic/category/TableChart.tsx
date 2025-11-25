@@ -817,6 +817,7 @@ const TableChart = ({
               <TagListInfo
                 tagList={tagList}
                 taskId={info.row.original.id}
+                isEvent={info.row.original.type !== EventCalendarType.TASK}
                 optionsTag={
                   rowData.organization
                     ? creationDataStatisticData?.find(

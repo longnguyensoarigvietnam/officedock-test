@@ -852,6 +852,7 @@ const TableChart = ({
             <div className="ml-auto">
               <TagListInfo
                 tagList={tagList}
+                isEvent={info.row.original.type !== EventCalendarType.TASK}
                 taskId={info.row.original.id}
                 optionsTag={
                   rowData.organization ? creationDataStatisticData : undefined

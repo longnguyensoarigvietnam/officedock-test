@@ -12,6 +12,7 @@ import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import Checkbox from '@components/common/Checkbox';
 import ImageRound from '@components/common/ImageRound';
+import Button from '@components/common/Button';
 
 import { apiRouters } from '@constants/routers';
 import { PermissionsSystem } from '@constants/enums';
@@ -22,13 +23,13 @@ import {
 } from '@interfaces/statistic';
 import { TodoItem } from '@interfaces/task';
 import { OptionDropdownType } from '@interfaces/common';
-import { TagId } from '@interfaces/tag';
+import { TagCreationStatisticType, TagId } from '@interfaces/tag';
 
 import api from '@base/api';
 import { hasPermissionInArray } from '@utils';
-import Button from '@components/common/Button';
 
 interface DataActionType {
+  isEvent?: boolean;
   row: Row<dataTaskDailyTable>;
   dataTagsList: OptionDropdownType[];
   optionsTag: CreationStatisticType | undefined;
@@ -39,6 +40,7 @@ interface DataActionType {
 
 const ActionDetailDaily = ({
   row,
+  isEvent = false,
   dataTagsList,
   optionsTag,
   setDataTaskDailyList,
@@ -58,6 +60,7 @@ const ActionDetailDaily = ({
     top: -9999,
     left: -9999,
   });
+  const [tagOptionList, setTagOptionList] = useState<OptionDropdownType[]>([]);
   const [isTagOptionsReady, setIsTagOptionsReady] = useState(false);
   const [listTagActive, setListTagActive] =
     useState<OptionDropdownType[]>(dataTagsList);
@@ -74,11 +77,36 @@ const ActionDetailDaily = ({
   });
   const [isTodoOptionsReady, setIsTodoOptionsReady] = useState(false);
 
+  const filterTags = (
+    tags: TagCreationStatisticType[],
+    items: OptionDropdownType[],
+  ): TagCreationStatisticType[] => {
+    const itemIds = new Set(items.map((item) => Number(item.value)));
+
+    return tags.filter((tag) => {
+      if (tag.deletedAt && itemIds.has(tag.id)) {
+        return true;
+      }
+      return !tag.deletedAt;
+    });
+  };
+
   useEffect(() => {
     if (dataTagsList) {
       setListTagActive(dataTagsList);
     }
   }, [dataTagsList]);
+
+  useEffect(() => {
+    if (optionsTag) {
+      setTagOptionList(
+        filterTags(optionsTag.tags, listTagActive).map((item) => ({
+          label: item.name,
+          value: item.id,
+        })),
+      );
+    }
+  }, [listTagActive, optionsTag]);
 
   useEffect(() => {
     if (row) {
@@ -290,70 +318,68 @@ const ActionDetailDaily = ({
           <p className="text-xs font-medium text-[#77858F]">タグ</p>
           <div className="flex flex-col gap-4 max-h-[200px] overflow-y-auto">
             {/* TODO: Implement action tag */}
-            {optionsTag &&
-              optionsTag.tags
-                .filter((data) => !data.deletedAt)
-                .map((item) => (
-                  <div key={item.id} className="flex gap-3">
-                    <div className="w-fit h-fit flex-shrink-0">
-                      <Button
-                        variant="text"
-                        className="!w-fit !h-fit !p-0 !bg-transparent"
-                        disabled={
-                          (session?.user.permissions &&
-                            !hasPermissionInArray(
-                              session?.user.permissions,
-                              PermissionsSystem.STATISTIC_UPDATE,
-                            )) ||
-                          isPreventAction
-                        }
-                        onClick={() => {
-                          if (
-                            listTagActive.some(
-                              (tag) => String(tag.value) == String(item.id),
-                            )
-                          ) {
-                            const dataTag = listTagActive.filter(
-                              (tag) => String(tag.value) != String(item.id),
-                            );
-                            setListTagActive([...dataTag]);
-                            editTaskDailyInline({
-                              id: row.original.id,
-                              tagIds: dataTag.map((tag) => ({
-                                tagId: tag.value,
-                                name: tag.label,
-                              })),
-                            });
-                          } else {
-                            const dataTag = [
-                              ...listTagActive,
-                              {
-                                label: item.name,
-                                value: item.id,
-                              },
-                            ];
-                            setListTagActive(dataTag);
-                            editTaskDailyInline({
-                              id: row.original.id,
-                              tagIds: dataTag.map((tag) => ({
-                                tagId: tag.value,
-                                name: tag.label,
-                              })),
-                            });
-                          }
-                        }}>
-                        <ImageRound
-                          className="w-4 h-4"
-                          src={`/icons/${listTagActive.some((tag) => String(tag.value) == String(item.id)) ? 'ticket-active.svg' : 'ticket-no-active.svg'}`}
-                          name="icon tag"
-                        />
-                      </Button>
-                    </div>
-                    <div className="break-all text-left w-fit max-w-[100px]">
-                      {item.name}
-                    </div>
-                  </div>
-                ))}
+            {tagOptionList.map((item) => (
+              <div key={item.value} className="flex gap-3">
+                <div className="w-fit h-fit flex-shrink-0">
+                  <Button
+                    variant="text"
+                    className="!w-fit !h-fit !p-0 !bg-transparent"
+                    disabled={
+                      (session?.user.permissions &&
+                        !hasPermissionInArray(
+                          session?.user.permissions,
+                          PermissionsSystem.STATISTIC_UPDATE,
+                        )) ||
+                      isPreventAction ||
+                      isEvent
+                    }
+                    onClick={() => {
+                      if (
+                        listTagActive.some(
+                          (tag) => String(tag.value) == String(item.value),
+                        )
+                      ) {
+                        const dataTag = listTagActive.filter(
+                          (tag) => String(tag.value) != String(item.value),
+                        );
+                        setListTagActive([...dataTag]);
+                        editTaskDailyInline({
+                          id: row.original.id,
+                          tagIds: dataTag.map((tag) => ({
+                            tagId: tag.value,
+                            name: tag.label,
+                          })),
+                        });
+                      } else {
+                        const dataTag = [
+                          ...listTagActive,
+                          {
+                            label: item.label,
+                            value: item.value,
+                          },
+                        ];
+                        setListTagActive(dataTag);
+                        editTaskDailyInline({
+                          id: row.original.id,
+                          tagIds: dataTag.map((tag) => ({
+                            tagId: tag.value,
+                            name: tag.label,
+                          })),
+                        });
+                      }
+                    }}>
+                    <ImageRound
+                      className="w-4 h-4"
+                      src={`/icons/${listTagActive.some((tag) => String(tag.value) == String(item.value)) ? 'ticket-active.svg' : 'ticket-no-active.svg'}`}
+                      name="icon tag"
+                    />
+                  </Button>
+                </div>
+                <div className="break-all text-left w-fit max-w-[100px]">
+                  {item.label}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

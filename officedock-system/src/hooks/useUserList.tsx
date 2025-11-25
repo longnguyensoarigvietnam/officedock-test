@@ -30,11 +30,17 @@ interface PaginationProps {
   pageSize?: number;
 }
 
-const useUserList = (
-  pagination?: PaginationProps,
-  filter?: FilterProps,
-  ordering?: string,
-) => {
+const useUserList = ({
+  pagination,
+  filter,
+  ordering,
+  onSuccess,
+}: {
+  pagination?: PaginationProps;
+  filter?: FilterProps;
+  ordering?: string;
+  onSuccess?: (data: BasePagination<User[]>) => void;
+}) => {
   const { data: session } = useSessionCache();
   const router = useRouter();
   const token = session?.accessToken;
@@ -83,6 +89,9 @@ const useUserList = (
     enabled: !!token,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
+    onSuccess: (data) => {
+      onSuccess && onSuccess(data);
+    },
     onError: ({ response }: ResponseError<any>) => {
       if (response?.status === ServerStatusCode.UNAUTHORIZED) {
         if (session) {
