@@ -22,4 +22,5 @@ export interface RoleDetail {
     screenName: string;
     actions: string;
   }[];
+  deletedAt?: string | null | Date
 }

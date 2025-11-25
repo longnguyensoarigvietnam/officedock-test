@@ -208,6 +208,16 @@ const ListDeleteTags = () => {
           <p className="text-black font-medium text-[26px] leading-[1]">
             タグ管理
           </p>
+          <div className="text-xs flex items-center gap-1">
+            <ImageRound
+              name="Hide"
+              src={'/icons/dark-close-eye.svg'}
+              className={`w-[16px] h-[13px] opacity-80`}
+            />
+            <span className="text-[#77858F] text-xs font-medium">
+              非表示一覧
+            </span>
+          </div>
         </div>
         <Link
           href={pageRouters.TAGS_MANAGEMENT.href}

@@ -1,11 +1,6 @@
 'use client';
 import { useMutation } from 'react-query';
-import React, {
-  Fragment,
-  useContext,
-  useEffect,
-  useState,
-} from 'react';
+import React, { Fragment, useContext, useEffect, useState } from 'react';
 import { AxiosError } from 'axios';
 
 import Link from 'next/link';
@@ -26,16 +21,12 @@ import { ALL_TEAMS_OPTION } from '@constants';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 
-import {
-  OrganizationSkill,
-  SkillDataDeleteType,
-} from '@interfaces/skills';
+import { OrganizationSkill, SkillDataDeleteType } from '@interfaces/skills';
 import { OptionDropdownType } from '@interfaces/common';
 
 import { useErrorToast } from '@hooks/useErrorToast';
 import useOrganizationSkillList from '@hooks/useOrganizationSkillList';
 import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
-
 
 import api from '@base/api';
 
@@ -76,20 +67,19 @@ const ListSkillsMapDelete = () => {
   }, []);
 
   // Get organization skills
-  const { organizationSkillList } =
-    useOrganizationSkillList({
-      filter: {
-        organizationId: Number(selectedOrganizationOption.value),
-        filterSteps: selectedFilterStepDetail
-          ? String(selectedFilterStepDetail.filterStep)
-          : undefined,
-        filterOrganizationIds: selectedFilterStepDetail
-          ? Number(selectedFilterStepDetail.filterOrganizationId)
-          : undefined,
-        is_deleted: 'true',
-      },
-      showLoadingIndicator: true,
-    });
+  const { organizationSkillList } = useOrganizationSkillList({
+    filter: {
+      organizationId: Number(selectedOrganizationOption.value),
+      filterSteps: selectedFilterStepDetail
+        ? String(selectedFilterStepDetail.filterStep)
+        : undefined,
+      filterOrganizationIds: selectedFilterStepDetail
+        ? Number(selectedFilterStepDetail.filterOrganizationId)
+        : undefined,
+      is_deleted: 'true',
+    },
+    showLoadingIndicator: true,
+  });
 
   useEffect(() => {
     if (organizationSkillList) {
@@ -183,9 +173,11 @@ const ListSkillsMapDelete = () => {
                 <ImageRound
                   name="Hide"
                   src={'/icons/dark-close-eye.svg'}
-                  className={`w-[16px] h-[13px]`}
+                  className={`w-[16px] h-[13px] opacity-80`}
                 />
-                <span className='text-[#77858F]'>非表示一覧</span>
+                <span className="text-[#77858F] text-xs font-medium">
+                  非表示一覧
+                </span>
               </div>
             </div>
             <div className="flex gap-[6px] bg-white w-fit p-[6px] rounded-[20px]">

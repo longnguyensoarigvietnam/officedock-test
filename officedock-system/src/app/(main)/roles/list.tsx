@@ -222,7 +222,7 @@ const ListRoles = () => {
                         <ImageRound
                           name="Hide"
                           src={'/icons/eye.svg'}
-                          className={`w-[16px] h-[13px] hover:cursor-pointer ml-1`}
+                          className={`w-[16px] h-[12px] hover:cursor-pointer ml-1`}
                           onClick={() => handleOpenDeleteRoleModal(element)}
                         />
                       ) : (
