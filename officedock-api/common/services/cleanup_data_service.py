@@ -3,6 +3,7 @@ from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.utils.timezone import now
 
+from companies.constants import CompanyStatus
 from companies.models import Company
 from thanks_messages.models import ThanksMessage
 
@@ -58,6 +59,7 @@ class CleanupDataService:
         deleted_count, _ = companies.filter(
             contract__end_date__isnull=False,
             contract__end_date__lt=threshold_date,
+            status=CompanyStatus.CONTRACT_TERMINATED.value,
         ).delete()
 
         return deleted_count
