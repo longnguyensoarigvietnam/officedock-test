@@ -62,7 +62,7 @@ const DetailRoleTable = () => {
         <div className="flex items-center gap-5 w-full">
           <p className="text-black font-medium text-[26px] leading-[1]">権限管理</p>
         </div>
-        {!dataRoleDetail?.systemRole &&
+        {!dataRoleDetail?.deletedAt && !dataRoleDetail?.systemRole &&
           session?.user.permissions &&
           hasPermissionInArray(
             session.user.permissions,

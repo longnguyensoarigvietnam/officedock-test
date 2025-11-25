@@ -22,9 +22,9 @@ const RolePage = () => {
             <ImageRound
               name="Hide"
               src={'/icons/dark-close-eye.svg'}
-              className={`w-[16px] h-[13px]`}
+              className={`w-[16px] h-[13px] opacity-80`}
             />
-            <span className='text-[#77858F]'>非表示一覧</span>
+            <span className="text-[#77858F] text-xs font-medium">非表示一覧</span>
           </div>
         </div>
         <Link
