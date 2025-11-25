@@ -4,7 +4,6 @@ import React, { Fragment, useContext, useEffect, useState } from 'react';
 import { useMutation } from 'react-query';
 import { AxiosError } from 'axios';
 
-import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
 import { Table, TableBody, TableHeader } from '@components/common/Table';
 import Pagination from '@components/common/Pagination';
@@ -14,10 +13,8 @@ import ConfirmRestoreModal from '@components/modals/ConfirmRestoreModal';
 
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
-import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { apiRouters, pageRouters } from '@constants/routers';
-import { PermissionsSystem } from '@constants/enums';
 import { NO_DATA_AVAILABLE, PAGE_SIZE_OPTIONS } from '@constants';
 import {
   ERROR_RESTORE_MESSAGE,
@@ -29,8 +26,6 @@ import useRoleList from '@hooks/useRoleList';
 import { useErrorToast } from '@hooks/useErrorToast';
 
 import { RoleDetail } from '@interfaces/role';
-
-import { hasPermissionInArray } from '@utils';
 
 import api from '@base/api';
 
@@ -52,7 +47,6 @@ const ListRolesDelete = () => {
   });
 
   const { setIsLoading } = useContext(LoadingContext);
-  const { data: session } = useSessionCache();
   const { showToast } = useToast();
   useEffect(() => {
     document.body.style.backgroundColor = '#F3F3F3';
@@ -134,32 +128,12 @@ const ListRolesDelete = () => {
       <div className="flex justify-between">
         <InputSearch
           placeholder="権限を検索"
-          inputClassName="!w-[300px] !py-2 !rounded-[30px] text-sm !bg-[#FFF] border-none placeholder-[#77858F99]"
+          inputClassName="!w-[300px] !py-2 !rounded-[30px] text-sm !bg-[#FFF] border-none !placeholder-[#77858F99]"
           iconClassName="w-[14px] h-[14px]"
           onChange={(e) => {
             setSearchRoleName(e.target.value);
           }}
         />
-        {session?.user.permissions &&
-          hasPermissionInArray(
-            session?.user.permissions,
-            PermissionsSystem.ROLE_ADD,
-          ) && (
-            <div className="flex justify-end">
-              <Link href={pageRouters.CREATE_ROLE.href} className={'flex'}>
-                <Button
-                  className="w-[100px] h-[34px] !text-sm !text-nowrap !text-white border-none"
-                  style={{ boxShadow: '0px 1px 5px 0px #00000033' }}>
-                  <ImageRound
-                    src="/icons/add-with-background.svg"
-                    name="Add icon"
-                    className="!w-4 !h-4 mr-2 text-gray-400 cursor-pointer"
-                  />
-                  新規追加
-                </Button>
-              </Link>
-            </div>
-          )}
       </div>
 
       <div
@@ -184,7 +158,7 @@ const ListRolesDelete = () => {
                     </p>
                   </td>
                   <td className="w-[220px]">
-                    <div className="flex w-full gap-2 justify-end pr-3 items-center">
+                    <div className="flex w-full gap-5 justify-end pr-3 items-center">
                       <ImageRound
                         name="Hide"
                         src={'/icons/dark-close-eye.svg'}

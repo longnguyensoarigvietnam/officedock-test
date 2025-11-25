@@ -555,8 +555,8 @@ export const OrganizationSkillDetail = ({
                             name: row.original.name,
                           });
                         }}
-                        src={'/icons/close-eye-gray.svg'}
-                        className="w-[17px] h-[14px] hover:cursor-pointer"
+                        src={'/icons/eye.svg'}
+                        className="w-[16px] h-[12px] hover:cursor-pointer"
                       />
                     </div>
                   </div>

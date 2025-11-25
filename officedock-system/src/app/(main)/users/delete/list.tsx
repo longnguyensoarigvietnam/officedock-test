@@ -1,16 +1,12 @@
 'use client';
 import { Fragment, useContext, useEffect, useState } from 'react';
 import { useMutation } from 'react-query';
-import { signOut } from 'next-auth/react';
 import { AxiosError } from 'axios';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
 
 import { Table, TableBody, TableHeader } from '@components/common/Table';
-import Button from '@components/common/Button';
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
-import ActionsUserModal from '@components/modals/ActionsUserModal';
 import Pagination from '@components/common/Pagination';
 import InputSearch from '@components/common/InputSearch';
 import ConfirmRestoreModal from '@components/modals/ConfirmRestoreModal';
@@ -19,60 +15,37 @@ import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import { apiRouters, pageRouters } from '@constants/routers';
 import { NO_DATA_AVAILABLE, PAGE_SIZE_OPTIONS } from '@constants';
 import {
-  ActionsModal,
-  CreateUserType,
-  PermissionsSystem,
-  ServerStatusCode,
-} from '@constants/enums';
-import {
-  ERROR_COMMON_MESSAGE,
-  ERROR_CREATE_MESSAGE,
   ERROR_RESTORE_MESSAGE,
-  ERROR_UPDATE_MESSAGE,
-  ERROR_UPDATE_ORGANIZATION_MESSAGE,
-  SUCCESS_CREATE_MESSAGE,
   SUCCESS_RESTORE_MESSAGE,
-  SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
 
 import useUserList from '@hooks/useUserList';
 import { useErrorToast } from '@hooks/useErrorToast';
 import useDebounceText from '@hooks/useDebounceText';
-import useUserDetail from '@hooks/useUserDetail';
 import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
-import { useSessionCache } from '@providers/SessionCacheProvider';
-
-import { hasPermissionInArray } from '@utils';
 
 import { OptionDropdownType } from '@interfaces/common';
 import {
-  CreateUserFormData,
-  CreateUserFormRequest,
   User,
-  UserRoleType,
 } from '@interfaces/user';
-import { ResponseError } from '@interfaces/response';
 
 import api from '@base/api';
 
 const ListUsersDelete = () => {
-  const { data: session } = useSessionCache();
   const { setIsLoading } = useContext(LoadingContext);
 
   const showErrorToast = useErrorToast();
 
   const { showToast } = useToast();
-  const router = useRouter();
 
   // State
   const [dataUsers, setDataUsers] = useState<User[]>([]);
   const [roleUserOptions, setRoleUserOptions] = useState<OptionDropdownType[]>(
     [],
   );
-  const [openActionsUserModal, setOpenActionsUserModal] = useState(false);
   const [pageSize, setPageSize] = useState<number>(10);
   const [search, setSearch] = useState<string>('');
 
@@ -82,41 +55,12 @@ const ListUsersDelete = () => {
   const [totalPages, setTotalPages] = useState<number>(1);
   const [originalUserCount, setOriginalUserCount] = useState<number>(0);
 
-  const [userEditId, setUserEditId] = useState<number | null>(null);
-  const [userEditDetail, setUserEditDetail] = useState<User | null>(null);
-
-  const [resetOrganizationFields, setResetOrganizationFields] =
-    useState<boolean>(false);
-  const [resetRoleField, setResetRoleField] = useState<boolean>(false);
-
-  // Error messages
-  const [errorMessages, setErrorMessages] = useState<{
-    email?: string;
-    username?: string;
-    password?: string;
-    fullName?: string;
-  }>({
-    email: '',
-    username: '',
-    password: '',
-    fullName: '',
-  });
-
   // Set ID user for Restore
   const [selectedUserToRestore, setSelectedUserToRestore] =
     useState<User | null>(null);
   const [openConfirmRestoreModal, setOpenConfirmRestoreModal] = useState(false);
 
   // Params
-  const searchParams = useSearchParams();
-  const params = new URLSearchParams(searchParams);
-  const [userIdParam, setUserIdParam] = useState<string | null>(
-    searchParams.get('userId'),
-  );
-  const [actionTypeParam, setActionTypeParam] = useState<string | null>(
-    searchParams.get('action'),
-  );
-
   const debouncedSearch = useDebounceText(search, 1000);
 
   const [debouncedParams, setDebouncedParams] = useState({
@@ -235,349 +179,6 @@ const ListUsersDelete = () => {
     },
   });
 
-  useUserDetail({
-    userId: Number(userEditId),
-    onError: (error: AxiosError) => {
-      if (error.response?.status === ServerStatusCode.NOT_FOUND) {
-        showToast({
-          variant: 'error',
-          description: ERROR_COMMON_MESSAGE,
-        });
-      }
-    },
-    onSuccess: (data) => {
-      setUserEditDetail(data);
-      setOpenActionsUserModal(true);
-    },
-  });
-
-  const handleSetParam = ({
-    id,
-    action,
-  }: {
-    id?: string | null;
-    action?: string | null;
-  }) => {
-    if (id) {
-      params.set('userId', id);
-      setUserIdParam(id);
-    }
-    if (action) {
-      params.set('action', action);
-      setActionTypeParam(action);
-    }
-    router.push(`?${params.toString()}`);
-  };
-
-  const handleRemoveParam = () => {
-    const params = new URLSearchParams(searchParams);
-    params.delete('userId');
-    params.delete('action');
-    setUserIdParam(null);
-    setActionTypeParam(null);
-    router.replace(`?${params.toString()}`);
-  };
-
-  function areArraysEqual(
-    arrayA: UserRoleType[],
-    arrayB: UserRoleType[],
-  ): boolean {
-    if (arrayA.length !== arrayB.length) {
-      return false;
-    }
-
-    for (let i = 0; i < arrayA.length; i++) {
-      const itemA = arrayA[i];
-      const itemB = arrayB[i];
-      if (
-        itemA.id !== itemB.id ||
-        itemA.name !== itemB.name ||
-        itemA.systemRole !== itemB.systemRole
-      ) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  // Handle submit edit user
-  const handleEditUser = async (data: CreateUserFormRequest) => {
-    setIsLoading(true);
-    return await api.patch(apiRouters.USER_DETAIL(String(userEditId)), data);
-  };
-
-  const { mutate: editUser } = useMutation('postEditUser', handleEditUser, {
-    onSuccess: async ({ data }) => {
-      showToast({
-        description: SUCCESS_UPDATE_MESSAGE,
-      });
-
-      if (
-        userEditDetail?.roles &&
-        !areArraysEqual(data.roles, userEditDetail?.roles) &&
-        String(userEditId) === `${session?.user.id}`
-      ) {
-        await signOut({
-          redirect: false,
-        });
-        router.push(pageRouters.LOGIN.href);
-      } else {
-        refetchUserList();
-        setUserEditDetail(null);
-        setOpenActionsUserModal(false);
-        setUserEditId(null);
-        handleRemoveParam();
-        setErrorMessages({
-          email: '',
-          username: '',
-          password: '',
-          fullName: '',
-        });
-        setResetOrganizationFields(false);
-        setResetRoleField(false);
-      }
-    },
-    onError: ({
-      response,
-    }: ResponseError<{
-      username?: string[];
-      email?: string[];
-      profile?: { fullName?: string[] };
-      password?: string[];
-      detail?: string[];
-    }>) => {
-      const errorData = response?.data || {};
-
-      // Extract known fields
-      const { username, email, profile, password, detail, ...rest } = errorData;
-      const fullName = profile?.fullName;
-
-      // Set known errors to form
-      setErrorMessages({
-        username: username?.[0] || '',
-        email: email?.[0] || '',
-        fullName: fullName?.[0] || '',
-        password: password?.[0] || '',
-      });
-
-      // Flatten remaining keys and check if any unknown error exists
-      const hasOtherErrors = Object.keys(rest).length > 0;
-      if (Object.keys(rest).includes('organizationIds')) {
-        setResetOrganizationFields(true);
-        showToast({
-          variant: 'error',
-          description: ERROR_UPDATE_ORGANIZATION_MESSAGE,
-        });
-      } else if (detail) {
-        setResetRoleField(true);
-        showToast({
-          variant: 'error',
-          description: detail?.[0] || ERROR_UPDATE_MESSAGE,
-        });
-      } else {
-        if (hasOtherErrors) {
-          showToast({
-            variant: 'error',
-            description: ERROR_UPDATE_MESSAGE,
-          });
-        }
-      }
-    },
-    onSettled: () => {
-      setIsLoading(false);
-    },
-  });
-
-  const handleConfirmEditUser = (
-    data: CreateUserFormData,
-    isOptionEmail: boolean,
-  ) => {
-    const organizationIds = data.organizations
-      .filter((item) => item.value !== '')
-      .map((item) => ({ organizationId: item.value, isMain: false }));
-    if (data.mainOrganization?.value) {
-      organizationIds.push({
-        organizationId: data.mainOrganization.value,
-        isMain: true,
-      });
-    }
-    const roleListId = data.roles
-      .filter((item) => item.value !== '')
-      .map((item) => item.value as number);
-
-    if (isOptionEmail) {
-      editUser({
-        email: data.email,
-        profile: {
-          fullName: data.name,
-        },
-        organizationIds: organizationIds,
-        roleIds: roleListId,
-        loginType: CreateUserType.EMAIL,
-        isTwoFactorAuth: data.isTwoFactorAuth,
-        twoFactorAuthEmail: data.isTwoFactorAuth
-          ? data.twoFactorAuthEmailRequired
-          : data.twoFactorAuthEmail,
-        password: data.password !== '' ? data.password : null,
-      });
-    } else {
-      editUser({
-        username: data.username,
-        profile: {
-          fullName: data.name,
-        },
-        organizationIds: organizationIds,
-        roleIds: roleListId,
-        loginType: CreateUserType.USERNAME,
-        isTwoFactorAuth: data.isTwoFactorAuth,
-        twoFactorAuthEmail: data.isTwoFactorAuth
-          ? data.twoFactorAuthEmailRequired
-          : data.twoFactorAuthEmail,
-        password: data.password !== '' ? data.password : null,
-      });
-    }
-  };
-
-  //Function call api create user
-  const handleCreateUser = async (data: CreateUserFormRequest) => {
-    setIsLoading(true);
-    return await api.post(apiRouters.USER_LIST, data);
-  };
-
-  const { mutate: createUser } = useMutation(
-    'postCreateUser',
-    handleCreateUser,
-    {
-      onSuccess: () => {
-        showToast({
-          description: SUCCESS_CREATE_MESSAGE,
-        });
-        refetchUserList();
-        setUserEditDetail(null);
-        setOpenActionsUserModal(false);
-        setUserEditId(null);
-        handleRemoveParam();
-        setErrorMessages({
-          email: '',
-          username: '',
-          password: '',
-          fullName: '',
-        });
-        setResetOrganizationFields(false);
-        setResetRoleField(false);
-        refetchCreationDataCommon();
-        setOriginalUserCount(originalUserCount + 1);
-      },
-      onError: ({
-        response,
-      }: ResponseError<{
-        username?: string[];
-        email?: string[];
-        profile?: { fullName?: string[] };
-      }>) => {
-        const errorData = response?.data || {};
-
-        // Extract known fields
-        const { username, email, profile, ...rest } = errorData;
-        const fullName = profile?.fullName;
-
-        // Set known errors to form
-        setErrorMessages({
-          username: username?.[0] || '',
-          email: email?.[0] || '',
-          fullName: fullName?.[0] || '',
-        });
-
-        // Flatten remaining keys and check if any unknown error exists
-        const hasOtherErrors = Object.keys(rest).length > 0;
-
-        if (hasOtherErrors) {
-          showToast({
-            variant: 'error',
-            description: ERROR_CREATE_MESSAGE,
-          });
-        }
-      },
-      onSettled: () => {
-        setIsLoading(false);
-      },
-    },
-  );
-  const handleConfirmCreateUser = (
-    data: CreateUserFormData,
-    isOptionEmail: boolean,
-  ) => {
-    const organizationIds = data.organizations
-      .filter((item) => item.value !== '')
-      .map((item) => ({ organizationId: item.value, isMain: false }));
-    if (data.mainOrganization?.value) {
-      organizationIds.push({
-        organizationId: data.mainOrganization.value,
-        isMain: true,
-      });
-    }
-    const roleListId = data.roles
-      .filter((item) => item.value !== '')
-      .map((item) => item.value as number);
-
-    if (isOptionEmail) {
-      createUser({
-        email: data.email,
-        profile: {
-          fullName: data.name,
-        },
-        organizationIds: organizationIds,
-        roleIds: roleListId,
-        loginType: CreateUserType.EMAIL,
-        isTwoFactorAuth: data.isTwoFactorAuth,
-        twoFactorAuthEmail: data.isTwoFactorAuth
-          ? data.twoFactorAuthEmailRequired
-          : data.twoFactorAuthEmail,
-        password: null,
-      });
-    } else {
-      createUser({
-        username: data.username,
-        profile: {
-          fullName: data.name,
-        },
-        organizationIds: organizationIds,
-        roleIds: roleListId,
-        loginType: CreateUserType.USERNAME,
-        isTwoFactorAuth: data.isTwoFactorAuth,
-        twoFactorAuthEmail: data.isTwoFactorAuth
-          ? data.twoFactorAuthEmailRequired
-          : data.twoFactorAuthEmail,
-        password: null,
-      });
-    }
-  };
-
-  useEffect(() => {
-    if (
-      userIdParam &&
-      !userEditDetail &&
-      actionTypeParam === ActionsModal.EDIT
-    ) {
-      setUserEditId(Number(userIdParam));
-    }
-
-    if (actionTypeParam === ActionsModal.CREATE && !openActionsUserModal) {
-      setOpenActionsUserModal(true);
-    }
-  }, [userIdParam, actionTypeParam, userEditDetail, openActionsUserModal]);
-
-  const isPermissionAdd =
-    session?.user.permissions &&
-    hasPermissionInArray(session?.user.permissions, PermissionsSystem.USER_ADD);
-  const isPermissionUpdate =
-    session?.user.permissions &&
-    hasPermissionInArray(
-      session?.user.permissions,
-      PermissionsSystem.USER_UPDATE,
-    );
-
   return (
     <Fragment>
       <div>
@@ -668,28 +269,6 @@ const ListUsersDelete = () => {
               />
             </div>
           </div>
-          {session?.user.permissions &&
-            hasPermissionInArray(
-              session?.user.permissions,
-              PermissionsSystem.USER_ADD,
-            ) && (
-              <Button
-                className="w-[100px] h-[34px] !text-sm !text-nowrap border-none"
-                style={{ boxShadow: '0px 1px 5px 0px #00000033' }}
-                onClick={() => {
-                  setOpenActionsUserModal(true);
-                  handleSetParam({
-                    action: ActionsModal.CREATE,
-                  });
-                }}>
-                <ImageRound
-                  src="/icons/add-with-background.svg"
-                  name="Add icon"
-                  className="!w-4 !h-4 mr-2 text-gray-400 cursor-pointer"
-                />
-                新規追加
-              </Button>
-            )}
         </div>
       </div>
 
@@ -737,25 +316,7 @@ const ListUsersDelete = () => {
                           {element.profile.fullName}
                         </p>
                       </div>
-                      <div className="flex items-center gap-2 w-fit pt-2">
-                        {element.actions && element.actions.update && (
-                          <>
-                            <div
-                              onClick={() => {
-                                setUserEditId(element.id);
-                                handleSetParam({
-                                  id: String(element.id),
-                                  action: ActionsModal.EDIT,
-                                });
-                              }}>
-                              <ImageRound
-                                name="Edit"
-                                src={`/icons/${element.id == userEditId ? 'edit-gray' : 'edit'}.svg`}
-                                className={`w-[12px] h-[12px] hover:cursor-pointer`}
-                              />
-                            </div>
-                          </>
-                        )}
+                      <div className="w-fit pt-2">
                         {element.actions && element.actions.delete && (
                           <ImageRound
                             name="Hide"
@@ -849,56 +410,6 @@ const ListUsersDelete = () => {
         onConfirm={handleConfirmRestoreUser}
         onClose={() => setOpenConfirmRestoreModal(false)}
       />
-      {openActionsUserModal &&
-        actionTypeParam &&
-        (isPermissionAdd || isPermissionUpdate) && (
-          <ActionsUserModal
-            open={openActionsUserModal}
-            action={actionTypeParam}
-            dataUserDetail={userEditDetail}
-            originalOrganizationOptions={organizationUserOptions.filter(
-              (role) => role.value,
-            )}
-            roleUserOptions={roleUserOptions.filter((role) => role.value)}
-            errorMessages={errorMessages}
-            setErrorMessages={setErrorMessages}
-            resetOrganizationFields={resetOrganizationFields}
-            resetRoleField={resetRoleField}
-            setResetOrganizationFields={setResetOrganizationFields}
-            setResetRoleField={setResetRoleField}
-            onClose={() => {
-              handleRemoveParam();
-              setOpenActionsUserModal(false);
-              setUserEditId(null);
-              setUserEditDetail(null);
-              setErrorMessages({
-                email: '',
-                username: '',
-                password: '',
-                fullName: '',
-              });
-              setResetOrganizationFields(false);
-              setResetRoleField(false);
-            }}
-            onDelete={(userToDelete: User) => {
-              handleOpenRestoreUserModal(userToDelete);
-              setUserEditDetail(null);
-              setOpenActionsUserModal(false);
-              setUserEditId(null);
-              handleRemoveParam();
-            }}
-            onCreate={(data: CreateUserFormData, isOptionEmail: boolean) => {
-              if (isPermissionAdd) {
-                handleConfirmCreateUser(data, isOptionEmail);
-              }
-            }}
-            onEdit={(data: CreateUserFormData, isOptionEmail: boolean) => {
-              if (isPermissionUpdate) {
-                handleConfirmEditUser(data, isOptionEmail);
-              }
-            }}
-          />
-        )}
     </Fragment>
   );
 };
