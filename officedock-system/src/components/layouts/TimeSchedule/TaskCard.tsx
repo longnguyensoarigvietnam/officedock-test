@@ -414,7 +414,11 @@ const TaskCard = ({
               month: event.event?.extendedProps?.month,
             }}
             creationDataCommonData={creationDataCommonData}
-            onDelete={onDeleteEvent}
+            onDelete={(values: EventEditFormData) => {
+              setIsHovering(false);
+              setIsShowAction(false);
+              onDeleteEvent && onDeleteEvent(values);
+            }}
           />
         ) : (
           <PopupDetail
