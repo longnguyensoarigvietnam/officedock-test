@@ -82,11 +82,11 @@ const MultiSelectDropdown = ({
     };
 
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('click', handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('click', handleClickOutside);
     };
   }, [isOpen]);
 
@@ -110,7 +110,7 @@ const MultiSelectDropdown = ({
                   label={option.label}
                   disable={disabled}
                   classLabel={labelOptionClass}
-                  className='hover:!cursor-pointer'
+                  className="hover:!cursor-pointer"
                   isChecked={
                     selected?.find(
                       (selectedOption) => selectedOption.value == option.value,
@@ -162,7 +162,8 @@ const MultiSelectDropdown = ({
       ) : (
         <div
           className="h-full"
-          onClick={() => {
+          onClick={(e) => {
+            e.stopPropagation();
             if (disabled) {
               setIsOpen(false);
             } else {

@@ -3400,7 +3400,11 @@ const TimeSchedule = memo(
     const handleConfirmDeleteEventRepeatCalendar = (sendToChat: boolean) => {
       if (dataEventEdit) {
         if (dataEventEdit.repeatType === TaskRepetitiveValue.ONCE) {
-          deleteEventCalendar({ id: `${dataEventEdit.id}`, sendToChat });
+          deleteEventCalendar({
+            id: `${dataEventEdit.id}`,
+            repeatScheduleId: dataEventEdit.eventSchedule as string,
+            sendToChat,
+          });
         } else {
           deleteEventCalendar({
             id: `${dataEventEdit.scheduleId}`,
@@ -3415,7 +3419,11 @@ const TimeSchedule = memo(
     // Delete event
     const handleConfirmDeleteEventCalendar = (sendToChat: boolean) => {
       if (dataEventEdit) {
-        deleteEventCalendar({ id: `${dataEventEdit.id}`, sendToChat });
+        deleteEventCalendar({
+          id: `${dataEventEdit.id}`,
+          repeatScheduleId: dataEventEdit.scheduleId,
+          sendToChat,
+        });
         return;
       }
     };
