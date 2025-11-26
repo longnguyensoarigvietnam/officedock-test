@@ -4404,7 +4404,7 @@ const TimeSchedule = memo(
             }}
             onBackToEditModal={() => {
               router.push(
-                `${pageRouters.CALENDAR_MANAGEMENT.href}?event=${`${idBackToEvent}`.replace('event', '')}&type=${ItemStartType.SCHEDULE}&action=${ActionsEvent.EDIT}${dataEventEdit && dataEventEdit.eventSchedule ? `&repeat-schedule=${dataEventEdit.eventSchedule}` : ''}`,
+                `${pageRouters.CALENDAR_MANAGEMENT.href}?view=month&event=${`${idBackToEvent}`.replace('event', '')}&type=${ItemStartType.SCHEDULE}&action=${ActionsEvent.EDIT}${dataEventEdit && dataEventEdit.eventSchedule ? `&repeat-schedule=${dataEventEdit.eventSchedule}` : ''}`,
               );
             }}
           />
@@ -4435,7 +4435,7 @@ const TimeSchedule = memo(
             }}
             onBackToEditModal={() => {
               router.push(
-                `${pageRouters.CALENDAR_MANAGEMENT.href}?event=${`${idBackToEvent}`.replace('event', '')}&type=${ItemStartType.SCHEDULE}&action=${ActionsEvent.EDIT}${dataEventEdit && dataEventEdit.eventSchedule ? `&repeat-schedule=${dataEventEdit.eventSchedule}` : ''}`,
+                `${pageRouters.CALENDAR_MANAGEMENT.href}?view=month&event=${`${idBackToEvent}`.replace('event', '')}&type=${ItemStartType.SCHEDULE}&action=${ActionsEvent.EDIT}${dataEventEdit && dataEventEdit.eventSchedule ? `&repeat-schedule=${dataEventEdit.eventSchedule}` : ''}`,
               );
             }}
           />

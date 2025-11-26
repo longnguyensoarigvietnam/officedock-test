@@ -276,11 +276,11 @@ const ListUsersDelete = () => {
         style={{
           boxShadow: '0px 4px 10px 0px #0000000D',
         }}
-        className="w-full relative p-[30px] mt-[30px] bg-[#F8FAFC] rounded-[30px]">
+        className="w-full relative p-[30px] mt-[30px] bg-[#FFFFFF] rounded-[30px]">
         <Table
           classCustom="!px-0 !py-0"
           className="bg-white text-xs font-medium !text-[#77858F] !rounded-[10px] relative !py-0 !px-0">
-          <TableHeader classCustom=" [&>th]:text-xs [&>th]:border-r [&>th]:border-b [&>th]:border-[#D2DBE1] [&>th:last-child]:border-r-0">
+          <TableHeader classCustom="bg-[#F3F3F3] [&>th]:text-xs [&>th]:border-r [&>th]:border-b [&>th]:border-[#D2DBE1] [&>th:last-child]:border-r-0">
             <th className="w-[220px] !text-[#77858F] text-left">
               <span>名前</span>
             </th>
