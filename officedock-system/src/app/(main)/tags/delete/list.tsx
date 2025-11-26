@@ -344,9 +344,9 @@ const ListDeleteTags = () => {
           </div>
         </div>
       </div>
-      <div className="w-full p-5 bg-[#F8FAFC] rounded-[30px]">
+      <div className="w-full p-5 bg-[#FFFFFF] rounded-[30px]">
         <Table className="bg-white !rounded-[10px] relative">
-          <TableHeader className="!bg-[#F8FAFC]">
+          <TableHeader className="!bg-[#F3F3F3]">
             <th className="w-[500px] max-w-[500px] text-left border-r-[1px] border-r-[#D2DBE1]">
               <span className="text-[#77858F] text-[12px] font-medium">
                 タグ名

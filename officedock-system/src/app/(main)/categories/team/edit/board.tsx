@@ -272,18 +272,12 @@ const EditHierarchyForm = () => {
       medium: {
         label: org.mediumStatisticCategory?.name || '',
         value: org.mediumStatisticCategory?.uuid || '',
-        showBy:
-          !org.mediumStatisticCategory && !org.smallStatisticCategory
-            ? null
-            : AddCategoryHierarchyType.PULLDOWN,
+        showBy: AddCategoryHierarchyType.PULLDOWN,
       },
       small: {
         label: org.smallStatisticCategory?.name || '',
         value: org.smallStatisticCategory?.uuid || '',
-        showBy:
-          !org.mediumStatisticCategory && !org.smallStatisticCategory
-            ? null
-            : AddCategoryHierarchyType.PULLDOWN,
+        showBy: AddCategoryHierarchyType.PULLDOWN,
       },
       skills: org.skills.map((skill) => {
         return {
@@ -309,18 +303,12 @@ const EditHierarchyForm = () => {
         medium: {
           label: org.mediumStatisticCategory?.name || '',
           value: org.mediumStatisticCategory?.uuid || '',
-          showBy:
-            !org.mediumStatisticCategory && !org.smallStatisticCategory
-              ? null
-              : AddCategoryHierarchyType.PULLDOWN,
+          showBy: AddCategoryHierarchyType.PULLDOWN,
         },
         small: {
           label: org.smallStatisticCategory?.name || '',
           value: org.smallStatisticCategory?.uuid || '',
-          showBy:
-            !org.mediumStatisticCategory && !org.smallStatisticCategory
-              ? null
-              : AddCategoryHierarchyType.PULLDOWN,
+          showBy: AddCategoryHierarchyType.PULLDOWN,
         },
         skills: org.skills.map((skill) => {
           return {
