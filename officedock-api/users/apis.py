@@ -777,7 +777,7 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         serializer_data = serializer.validated_data
         company = current_user.company
         # Handle check max user
-        company_user_count = company.users.count()
+        company_user_count = company.active_users.count()
         current_plan = company.company_plan
         # Check is current plan over highest plan limit person
         is_over_limit_default_plan = (
@@ -1092,6 +1092,38 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                         skill_map_skill_level=skill_level,
                         deleted_at=user.deleted_at,
                     )
+        company = user.company
+        # Handle check max user
+        company_user_count = company.active_users.count()
+        current_plan = company.company_plan
+        # Check is current plan over highest plan limit person
+        is_over_limit_default_plan = (
+            company_user_count
+            >= current_plan.limit_person
+            == LIMIT_PERSON_PLAN_21_30
+        )
+        is_over_limit_custom_plan = (
+            current_plan.name == CUSTOM_PLAN
+            and company_user_count == current_plan.limit_person
+        )
+        if is_over_limit_default_plan or is_over_limit_custom_plan:
+            raise ValidationError(
+                {"detail": [ERROR_MESSAGES["cannot_restore_user"]]}
+            )
+
+        # Upgrade plan
+        company_user_count += 1
+        if company_user_count > current_plan.limit_person:
+            filter = Q()
+            if company_user_count <= LIMIT_PERSON_PLAN_1_10:
+                filter = Q(limit_person=LIMIT_PERSON_PLAN_1_10)
+            elif company_user_count <= LIMIT_PERSON_PLAN_11_20:
+                filter = Q(limit_person=LIMIT_PERSON_PLAN_11_20)
+            elif company_user_count <= LIMIT_PERSON_PLAN_21_30:
+                filter = Q(limit_person=LIMIT_PERSON_PLAN_21_30)
+            plan = Plan.objects.filter(filter).first()
+            if plan != current_plan.plan:
+                CompanyService().upgrade_plan(company, plan)
         user.restore()
         return self.response_ok()
 

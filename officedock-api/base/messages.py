@@ -147,6 +147,7 @@ _ERROR_MESSAGES = {
         "card_declined": _("Payment card declined."),
         "cannot_remove_card": _("Cannot remove this card"),
         "limit_user": _("Amount of user is maximum, cannot create"),
+        "cannot_restore_user": _("Amount of user is maximum, cannot restore"),
         # Validate
         "must_be_array": _("{field} must be a array."),
         "update_over_total_users": _(
@@ -267,6 +268,7 @@ _ERROR_MESSAGES = {
         "card_declined": _("支払カードが拒否されました。"),
         "cannot_remove_card": _("使用しているカードは削除できません。"),
         "limit_user": _("ユーザー数が上限に達しているため、作成できません。"),
+        "cannot_restore_user": _("ユーザー数が上限に達しているため、復元できません。"),
         # Validate
         "must_be_array": _("{field}は配列でなければなりません。"),
         "cannot_edit_close_date": _("締日を変更できません。"),

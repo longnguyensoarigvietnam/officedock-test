@@ -475,7 +475,7 @@ class CompanyService:
             ValidationError: If Stripe fails to update the subscription or any unexpected error occurs.
         """
         # Handle check max user
-        company_user_count = company.users.count()
+        company_user_count = company.active_users.count()
         current_plan = company.company_plan.plan
         filter = Q()
         if company_user_count <= LIMIT_PERSON_PLAN_1_10:
@@ -500,6 +500,11 @@ class CompanyService:
                 type=CompanyTransactionTypes.PLAN.value,
                 plan_start_at=updated_at,
                 plan=plan,
+            )
+            company.max_user_in_contract_period = company_user_count
+            company.max_user_at = updated_at
+            company.save(
+                update_fields=["max_user_in_contract_period", "max_user_at"]
             )
         return True
 
