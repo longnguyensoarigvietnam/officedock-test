@@ -174,14 +174,14 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
 
         for item in list(tasks) + list(events):
             if (
-                item.organization
-                and item.organization.id not in data["organization_categories"]
+                item.organization_id
+                and item.organization_id not in data["organization_categories"]
             ):
                 categories = OrganizationDetailSerializer(
                     item.organization
                 ).data["statistic_categories"]
                 data["organization_categories"][
-                    item.organization.id
+                    item.organization_id
                 ] = transform_statistic_categories(categories)
 
         total_duration = get_total_durations(durations)

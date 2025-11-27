@@ -429,6 +429,9 @@ def transform_statistic_categories(statistic_categories):
             else default_color
         )
 
+    def is_deleted(cat):
+        return cat and cat.get("deleted_at") not in [None, ""]
+
     large_dict = {}
 
     for item in statistic_categories:
@@ -485,14 +488,16 @@ def transform_statistic_categories(statistic_categories):
     # Sort helper
     def sort_key(item):
         if item is None:
-            return 0, ""
+            return (0, 0, "")
+        deleted_flag = 1 if is_deleted(item) else 0
         name = str(item.get("name") or "")
-        return 0 if name == NONE_CATEGORY else 1, name
+        none_flag = 0 if name == NONE_CATEGORY else 1
+        return (deleted_flag, none_flag, name)
 
     result = []
     for large_id, large_data in sorted(
         large_dict.items(),
-        key=lambda x: (0 if x[0] == "None" else 1, sort_key(x[1][LARGE])),
+        key=lambda x: (0 if x[0] == "None" else 1, *sort_key(x[1][LARGE])),
     ):
         medium_list = []
         medium_items = list(large_data[MEDIUM].values())
@@ -516,18 +521,22 @@ def get_large_statistic_category_color(task):
             organization_id=task.organization_id,
             large_statistic_category__large_categories__task=task,
         )
-        .values_list("color", "large_statistic_category__name")
+        .select_related("large_statistic_category")
+        .only("color", "large_statistic_category", "deleted_type")
         .first()
     )
 
-    color, name = None, None
+    color, cate_obj, deleted_type = None, None, None
     if item:
-        color, name = item
+        color = item.color
+        cate_obj = item.large_statistic_category
+        deleted_type = item.deleted_type
 
+    is_large_cate = deleted_type == ScheduleCategoryTypes.LARGE.value
     return [
         {
             "id": None,
-            "name": name,
+            "name": get_deleted_name_skill(cate_obj, is_large_cate),
             "color": color,
             "type": ScheduleCategoryTypes.LARGE.value,
         }
@@ -545,31 +554,65 @@ def get_common_categories(category, obj=None):
         ("medium_statistic_category", ScheduleCategoryTypes.MEDIUM.value),
         ("small_statistic_category", ScheduleCategoryTypes.SMALL.value),
     ]
+
     color = None
+    deleted_type = None
+
     if obj:
-        color = (
-            OrganizationsStatisticCategories.objects.filter(
-                organization_id=obj.organization_id,
-                large_statistic_category=category.large_statistic_category,
-            )
-            .values_list("color", flat=True)
-            .first()
+        org_cate = OrganizationsStatisticCategories.objects.filter(
+            organization_id=obj.organization_id,
+            large_statistic_category=category.large_statistic_category,
+            medium_statistic_category=category.medium_statistic_category,
+            small_statistic_category=category.small_statistic_category,
+        ).first()
+        if org_cate:
+            color = org_cate.color
+            deleted_type = org_cate.deleted_type
+
+    results = []
+
+    for attr, type_value in category_types:
+        if not hasattr(category, attr):
+            continue
+
+        cate_obj = getattr(category, attr)
+        if cate_obj is None:
+            continue
+
+        # Determine deleted text by delete level specific rules
+        deleted_text = ""
+        if deleted_type:
+            if deleted_type == ScheduleCategoryTypes.LARGE.value:
+                # All types show deleted
+                deleted_text = KEYWORDS["deleted"]
+            elif deleted_type == ScheduleCategoryTypes.MEDIUM.value:
+                # Medium & Small show deleted
+                if type_value in (
+                    ScheduleCategoryTypes.MEDIUM.value,
+                    ScheduleCategoryTypes.SMALL.value,
+                ):
+                    deleted_text = KEYWORDS["deleted"]
+            elif deleted_type == ScheduleCategoryTypes.SMALL.value:
+                # Only Small show deleted
+                if type_value == ScheduleCategoryTypes.SMALL.value:
+                    deleted_text = KEYWORDS["deleted"]
+
+        is_large_cate = type_value == ScheduleCategoryTypes.LARGE.value
+        results.append(
+            {
+                "id": cate_obj.id,
+                "name": get_deleted_name_skill(cate_obj, deleted_text),
+                "color": color if is_large_cate else None,
+                "type": type_value,
+            }
         )
-    return [
-        {
-            "id": getattr(category, attr).id,
-            "name": getattr(category, attr).name,
-            "color": color
-            if type_value == ScheduleCategoryTypes.LARGE.value
-            else None,
-            "type": type_value,
-        }
-        for attr, type_value in category_types
-        if hasattr(category, attr) and getattr(category, attr) is not None
-    ]
+
+    return results
 
 
-def get_common_categories_with_none_category(category, obj=None):
+def get_common_categories_with_none_category(
+    category, obj=None, deleted_type=None
+):
     """Handle transform common category"""
 
     if not category:
@@ -580,44 +623,68 @@ def get_common_categories_with_none_category(category, obj=None):
         ("medium_statistic_category", ScheduleCategoryTypes.MEDIUM.value),
         ("small_statistic_category", ScheduleCategoryTypes.SMALL.value),
     ]
+
     color = None
+    organization_type = None
+
     if obj:
-        color = (
-            OrganizationsStatisticCategories.objects.filter(
-                organization_id=obj.organization_id,
-                large_statistic_category=category.large_statistic_category,
-            )
-            .values_list("color", flat=True)
-            .first()
-        )
+        organization_type = obj.organization.type
+        org_cate = OrganizationsStatisticCategories.objects.filter(
+            organization_id=obj.organization_id,
+            large_statistic_category=category.large_statistic_category,
+            medium_statistic_category=category.medium_statistic_category,
+            small_statistic_category=category.small_statistic_category,
+        ).first()
+        if org_cate:
+            color = org_cate.color
+            deleted_type = org_cate.deleted_type
+
     formatted = []
     for attr, type_value in category_types:
         if (
             obj
-            and obj.organization.type == OrganizationTypes.CALENDAR.value
+            and organization_type == OrganizationTypes.CALENDAR.value
             and type_value == ScheduleCategoryTypes.SMALL.value
         ):
             continue
-        formatted.append(
-            {
-                "id": (
-                    getattr(category, attr).id
-                    if getattr(category, attr)
-                    else NONE_CATEGORY
-                ),
-                "name": (
-                    getattr(category, attr).name
-                    if getattr(category, attr)
-                    else NONE_CATEGORY
-                ),
-                "color": (
-                    color
-                    if type_value == ScheduleCategoryTypes.LARGE.value
-                    else None
-                ),
-                "type": type_value,
-            }
-        )
+
+        # Determine deleted text by delete level specific rules
+        deleted_text = ""
+        if deleted_type:
+            if deleted_type == ScheduleCategoryTypes.LARGE.value:
+                # All types show deleted
+                deleted_text = KEYWORDS["deleted"]
+            elif deleted_type == ScheduleCategoryTypes.MEDIUM.value:
+                # Medium & Small show deleted
+                if type_value in (
+                    ScheduleCategoryTypes.MEDIUM.value,
+                    ScheduleCategoryTypes.SMALL.value,
+                ):
+                    deleted_text = KEYWORDS["deleted"]
+            elif deleted_type == ScheduleCategoryTypes.SMALL.value:
+                # Only Small show deleted
+                if type_value == ScheduleCategoryTypes.SMALL.value:
+                    deleted_text = KEYWORDS["deleted"]
+
+        is_large_cate = type_value == ScheduleCategoryTypes.LARGE.value
+        if cate_obj := getattr(category, attr):
+            formatted.append(
+                {
+                    "id": cate_obj.id,
+                    "name": get_deleted_name_skill(cate_obj, deleted_text),
+                    "color": color if is_large_cate else None,
+                    "type": type_value,
+                }
+            )
+        else:
+            formatted.append(
+                {
+                    "id": NONE_CATEGORY,
+                    "name": NONE_CATEGORY,
+                    "color": color if is_large_cate else None,
+                    "type": type_value,
+                }
+            )
     return formatted
 
 
@@ -1110,5 +1177,21 @@ def get_deleted_name(obj, key="name"):
         str: The field value. If the object is soft-deleted (deleted_at is not None),
              the returned value will include the 'deleted' suffix defined in KEYWORDS.
     """
+    if not obj:
+        return None
+
     value = getattr(obj, key, "")
     return value if obj.deleted_at is None else f"{value}{KEYWORDS['deleted']}"
+
+
+def get_deleted_name_skill(obj, hierarchy_deleted=False):
+    """
+    Return deleted name of skill
+    """
+    if not obj:
+        return None
+
+    value = getattr(obj, "name", "")
+    if obj.deleted_at or hierarchy_deleted:
+        return f"{value}{KEYWORDS['deleted']}"
+    return value

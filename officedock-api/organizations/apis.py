@@ -5,6 +5,10 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import (
     Count,
     Q,
+    Prefetch,
+    OuterRef,
+    Q,
+    Subquery,
 )
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
@@ -689,24 +693,6 @@ class OrganizationCategoryHierarchyViewSet(
     pagination_class = None
     screen_name = Screens.CATEGORY_HIERARCHY.value
 
-    def get_queryset(self):
-        """
-        Filtering orgs by company.
-        """
-
-        user = self.request.user
-        queryset = super().get_queryset()
-
-        if (
-            self.request.query_params.get("is_only_calendar", "").lower()
-            == "true"
-        ):
-            queryset = queryset.filter(type=OrganizationTypes.CALENDAR.value)
-        else:
-            queryset = queryset.exclude(type=OrganizationTypes.CALENDAR.value)
-
-        return queryset.filter(company_id=user.company_id).order_by("-id")
-
     def get_serializer_class(self):
         """Custom serializer class"""
         if self.action == "create":
@@ -714,13 +700,88 @@ class OrganizationCategoryHierarchyViewSet(
 
         return super().get_serializer_class()
 
-    def get_serializer_context(self):
+    def get_queryset(self):
         """
-        Add request to context
+        Return organizations for the current user's company with prefetch
+        of statistic categories optimized to avoid N+1 queries.
         """
-        context = super().get_serializer_context()
-        context["request"] = self.request
-        return context
+        user = self.request.user
+        params = self.request.query_params
+
+        queryset = self._filter_organizations_by_type_and_company(
+            super().get_queryset(), user.company_id, params
+        )
+        stat_cat_qs = (
+            OrganizationsStatisticCategories.objects.all().select_related(
+                "large_statistic_category",
+                "medium_statistic_category",
+                "small_statistic_category",
+            )
+        )
+        stat_cat_qs = self._annotate_and_sort_stat_categories(stat_cat_qs)
+
+        # Prefetch to avoid N+1 queries in serializer
+        queryset = queryset.prefetch_related(
+            Prefetch("organizations_statistic_categories", queryset=stat_cat_qs)
+        )
+
+        return queryset.order_by("-id")
+
+    # ----------------------
+    # Sub-functions
+    # ----------------------
+
+    def _filter_organizations_by_type_and_company(
+        self, queryset, company_id, params
+    ):
+        """
+        Filter organizations by company and optionally by calendar type.
+        """
+        is_only_calendar = params.get("is_only_calendar", "").lower() == "true"
+        queryset = queryset.filter(company_id=company_id)
+
+        if is_only_calendar:
+            queryset = queryset.filter(type=OrganizationTypes.CALENDAR.value)
+        else:
+            queryset = queryset.exclude(type=OrganizationTypes.CALENDAR.value)
+
+        return queryset
+
+    def _annotate_and_sort_stat_categories(self, qs):
+        """
+        Annotate subqueries to sort by hierarchy: large -> medium -> individual
+        """
+        # Subquery: earliest created_at for each large category
+        large_subquery = (
+            qs.filter(
+                large_statistic_category=OuterRef("large_statistic_category")
+            )
+            .order_by("created_at")
+            .values("created_at")[:1]
+        )
+
+        # Subquery: earliest created_at for each large + medium category
+        large_medium_subquery = (
+            qs.filter(
+                large_statistic_category=OuterRef("large_statistic_category"),
+                medium_statistic_category=OuterRef("medium_statistic_category"),
+            )
+            .order_by("created_at")
+            .values("created_at")[:1]
+        )
+
+        return (
+            qs.annotate(
+                large_created_at=Subquery(large_subquery),
+                large_medium_created_at=Subquery(large_medium_subquery),
+            )
+            .order_by(
+                "large_created_at",
+                "large_medium_created_at",
+                "created_at",
+            )
+            .distinct()
+        )
 
     @extend_schema(
         parameters=[
@@ -828,7 +889,7 @@ class OrganizationCategoryHierarchyViewSet(
         serializer.is_valid(raise_exception=True)
         serializer_data = serializer.validated_data
         data_to_create = serializer_data.pop("items", [])
-        ids_to_delete = serializer_data.pop("ids", [])
+        items_to_delete = serializer_data.pop("items_to_delete", [])
 
         if data_to_create:
             for item in data_to_create:
@@ -858,6 +919,7 @@ class OrganizationCategoryHierarchyViewSet(
                     )
                 )
                 color = item.get("color", None)
+                deleted_type = item.get("deleted_type", None)
                 skills = item.pop("skills", [])
 
                 if organization_statistic_category:
@@ -925,6 +987,7 @@ class OrganizationCategoryHierarchyViewSet(
                     )
                     if color:
                         organization_statistic_category.color = color
+                    organization_statistic_category.deleted_type = deleted_type
                     organization_statistic_category.save()
 
                     # Remove skills
@@ -941,21 +1004,6 @@ class OrganizationCategoryHierarchyViewSet(
                         )
                     )
 
-                # Remove duplicate record
-                records = OrganizationsStatisticCategories.objects.filter(
-                    organization=organization,
-                    large_statistic_category=large_statistic_category,
-                    medium_statistic_category=medium_statistic_category,
-                    small_statistic_category=small_statistic_category,
-                ).order_by("-updated_at")
-                first_records = records.first()
-                ids = records.exclude(
-                    id=first_records.id if first_records else None
-                ).values_list("id", flat=True)
-                ids_to_delete = set(ids_to_delete) | set(
-                    ids
-                )  # Merge ids to delete
-
                 # Create new organization category skills
                 if organization_statistic_category and skills:
                     for skill in skills:
@@ -965,75 +1013,12 @@ class OrganizationCategoryHierarchyViewSet(
                         )
 
         # Handle deletion of organization statistic categories and their associated data
-        if ids_to_delete:
-            # Get all organization statistic categories that need to be deleted
-            org_sta_cates = OrganizationsStatisticCategories.objects.filter(
-                id__in=ids_to_delete
-            )
-
-            # Check if deleting these categories would remove all large or medium categories
-            # This is important because it affects how we handle the deletion of associated categories
-            (
-                delete_all_large,
-                delete_all_medium,
-            ) = self.check_statistic_category_deletion_impact(
-                company, org_sta_cates
-            )
-
-            # Process each organization statistic category for deletion
-            for item in org_sta_cates:
-                org = item.organization
-                # Get the statistic category values, defaulting to None if not set
-                large_stat = item.large_statistic_category or None
-                medium_stat = item.medium_statistic_category or None
-                small_stat = item.small_statistic_category or None
-
-                # Skip if no statistic categories are set
-                if not large_stat and not medium_stat and not small_stat:
-                    continue
-
-                # Get all categories in the company that are associated with either:
-                # 1. Tasks in the current organization
-                # 2. Schedules in the calendar organization
-                categories = Category.objects.filter(
-                    Q(company=company)
-                    & Q(
-                        Q(task__organization=org)
-                        | Q(schedule__organization=calendar_org)
-                    )
-                ).all()
-
-                # Delete categories that exactly match the large/medium/small statistic categories
-                # This handles the case where all three levels are specified
-                categories.filter(
-                    large_statistic_category=large_stat,
-                    medium_statistic_category=medium_stat,
-                    small_statistic_category=small_stat,
-                ).delete()
-
-                # Special handling for when deleting all large categories
-                # This also implies deleting all medium categories
-                if delete_all_large and large_stat:
-                    delete_all_medium = True
-                    # Delete categories that only have the large category set
-                    categories.filter(
-                        large_statistic_category=large_stat,
-                        medium_statistic_category=None,
-                        small_statistic_category=None,
-                    ).delete()
-
-                # Special handling for when deleting all medium categories
-                # This only applies when both large and medium categories are specified
-                if delete_all_medium and large_stat and medium_stat:
-                    # Delete categories that have both large and medium categories set
-                    categories.filter(
-                        large_statistic_category=large_stat,
-                        medium_statistic_category=medium_stat,
-                        small_statistic_category=None,
-                    ).delete()
-
-            # Finally, delete the organization statistic categories themselves
-            org_sta_cates.delete()
+        if items_to_delete:
+            for item in items_to_delete:
+                # Get all organization statistic categories that need to be deleted
+                org_sta_cates = OrganizationsStatisticCategories.objects.filter(
+                    id=item.get("id")
+                ).update(deleted_type=item.get("type"))
 
         return self.response_created()
 

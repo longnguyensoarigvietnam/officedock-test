@@ -155,7 +155,9 @@ class SkillSerializer(serializers.ModelSerializer):
         transformed_categories = []
         for category in categories:
             transformed_categories.append(
-                get_common_categories_with_none_category(category)
+                get_common_categories_with_none_category(
+                    category, deleted_type=category.deleted_type
+                )
             )
 
         return transformed_categories
@@ -658,7 +660,9 @@ class GroupStepSkillMapSerializer(SkillSerializer):
         transformed_categories = []
         for category in categories:
             transformed_categories.append(
-                get_common_categories_with_none_category(category)
+                get_common_categories_with_none_category(
+                    category, deleted_type=category.deleted_type
+                )
             )
 
         return transformed_categories
