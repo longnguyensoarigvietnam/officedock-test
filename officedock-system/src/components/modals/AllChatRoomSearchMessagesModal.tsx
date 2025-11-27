@@ -222,7 +222,7 @@ export const AllChatRoomSearchMessagesModal = ({
             </Button>
           </div>
           <div className="flex gap-2 items-center font-medium text-sm">
-            <p className="text-[#77858F]">検索結果</p>
+            <p className="text-[#77858F]">検索結果 AAA</p>
             <p className="text-primary">{searchMessageResults?.count || 0}件</p>
           </div>
         </div>
@@ -249,6 +249,15 @@ export const AllChatRoomSearchMessagesModal = ({
                       handleChangeRoom({
                         roomCode: String(messageDetail.chatRoom?.code),
                         messageId: String(messageDetail.id),
+                      });
+                    }}
+                    onGotoMessageReply={(data: {
+                      messageId: string | number;
+                      chatRoomCode: string;
+                    }) => {
+                      handleChangeRoom({
+                        roomCode: String(data.messageId),
+                        messageId: String(data.messageId),
                       });
                     }}
                     setDataPreviewFile={setDataPreviewFile}

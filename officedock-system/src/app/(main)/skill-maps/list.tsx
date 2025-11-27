@@ -133,6 +133,7 @@ const ListSkillsMap = () => {
         filterOrganizationIds: selectedFilterStepDetail
           ? Number(selectedFilterStepDetail.filterOrganizationId)
           : undefined,
+        is_deleted: 'false',
       },
       showLoadingIndicator: true,
     });

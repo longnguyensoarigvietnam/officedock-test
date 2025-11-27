@@ -68,6 +68,7 @@ export type MessageDetailProps = {
   msgEditing?: string;
   dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
   highlightedMessageId: string | null;
+  isSearchRoom?: boolean;
 
   setDataPreviewFile: Dispatch<
     SetStateAction<{
@@ -89,6 +90,7 @@ export const MessageDetailQuote = ({
   dashboardMemberList,
   highlightedMessageId,
   uuidQuote,
+  isSearchRoom = false,
   setDataPreviewFile,
   handleActionEditTask,
 }: MessageDetailProps) => {
@@ -255,6 +257,7 @@ export const MessageDetailQuote = ({
                     messageDetail={foundQuote}
                     uuidQuote={uuidQuote}
                     uuidList={uuidList}
+                    isSearchRoom={isSearchRoom}
                     isBookMark={isBookMark}
                     dashboardMemberList={dashboardMemberList}
                     highlightedMessageId={highlightedMessageId}
@@ -461,7 +464,7 @@ export const MessageDetailQuote = ({
                           users: listAllMember,
                           id: messageDetail.sender.id,
                         })}
-                      <span className="font-medium text-xs text-[#77858F]">
+                      <span className="font-medium text-xs text-[#77858F] ml-2">
                         {' '}
                         {messageDetail.sender?.organizations?.name}
                       </span>
@@ -513,10 +516,11 @@ export const MessageDetailQuote = ({
                                 messageDetail.message,
                                 messageDetail.mentions || [],
                               )}
-                              <div className="flex flex-col gap-2 !w-[100%]">
+                              <div className="flex flex-col gap-2 !w-[100%] mt-3">
                                 {messageDetail?.chatFiles &&
                                   messageDetail?.chatFiles.length > 0 && (
                                     <RenderFiles
+                                      isSearchRoom={isSearchRoom}
                                       key={messageDetail.uuid}
                                       dashboardMemberList={dashboardMemberList}
                                       uuidList={uuidList}
@@ -802,7 +806,7 @@ export const MessageDetailQuote = ({
                             users: listAllMember,
                             id: messageDetail.sender.id,
                           })}{' '}
-                        <span className="font-medium text-xs text-[#77858F]">
+                        <span className="font-medium text-xs text-[#77858F] ml-2">
                           {messageDetail.sender?.organizations?.name}
                         </span>
                       </p>

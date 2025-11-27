@@ -25,13 +25,13 @@ interface MessageHoverOptionsProps {
   handleRemoveReactionClick: (icon: string) => void;
   handleReplyMsg: ({
     user,
-    replyUuid,
+    replyId,
   }: {
     user: {
       id: number;
       name: string;
     };
-    replyUuid: string;
+    replyId: string;
   }) => void;
   handleQuoteMsgIcon: (data: {
     data: ChatMessageResponse;
@@ -176,7 +176,7 @@ export const MessageHoverOptions = ({
                       id: messageDetail.sender.id,
                       name: messageDetail.sender.fullName,
                     },
-                    replyUuid: messageDetail.uuid,
+                    replyId: String(messageDetail.id) || '',
                   });
                 }}
                 className="bg-[#EBF1F7] hover:opacity-90 rounded-full w-[30px] h-[30px] flex items-center justify-center hover:cursor-pointer">

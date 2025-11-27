@@ -601,7 +601,7 @@ const TaskCard = ({
               }
               handleMouseLeave();
             }}
-            className={`group  flex flex-col ${isTooSmallHeight && '!flex-row'} items-end justify-between h-full bg-transparent z-[20] w-full ${resourcePlan ? 'h-[calc(100%_-_27px)]' : 'h-[calc(100%_-_10px)]'} ${isSmallItem && '!h-full overflow-hidden'}`}>
+            className={`group  flex flex-col ${isTooSmallHeight && '!flex-row'} relative flex-shrink-0 items-end justify-between h-full bg-transparent z-[20] w-full ${resourcePlan ? 'h-[calc(100%_-_27px)]' : 'h-[calc(100%_-_10px)]'} ${isSmallItem && '!h-full overflow-hidden'}`}>
             <div
               className={`${isTooSmall && 'hidden'} w-full flex overflow-hidden h-full flex-col   flex-grow gap-[10px]`}>
               <div className="flex items-center gap-[6px] w-full">
@@ -623,7 +623,7 @@ const TaskCard = ({
                         : '0'
                       : '0',
                   }}
-                  className="font-bold  text-sm break-all truncate  w-full   ">
+                  className="font-bold  text-sm break-all truncate  w-full leading-[1.4]  ">
                   {event?.event instanceof Error
                     ? ''
                     : event?.event?.title || event?.event?.title != ''
@@ -701,18 +701,18 @@ const TaskCard = ({
             )}
 
             <div
-              className={`h-fit ${isTooSmallHeight ? '!w-fit flex flex-shrink-0' : 'flex-shrink-0'} w-full flex gap-[6px] items-end justify-end  `}>
+              className={`h-fit ${isTooSmallHeight ? '!w-fit flex flex-shrink-0' : 'flex-shrink-0'} absolute bottom-0 right-0 w-full flex gap-[6px] items-end justify-end  `}>
               {resourcePlan == true && (
                 <>
                   {isEvent && (
                     <ImageRound
                       src={`/icons/lock.svg`}
                       name="icon lock"
-                      className={` w-3 h-3 relative   top-[-5px] icon-circle `}
+                      className={` w-3 h-3 relative   top-0 icon-circle `}
                     />
                   )}
                   <div
-                    className={`w-[30px] h-[30px] ${isTooSmallHeight && 'flex-shrink-0 !w-[34px] !top-[3px]'}  ${isTooSmall && 'flex-shrink-0'} flex items-center justify-center relative top-[5px] right-[-5px]`}>
+                    className={`w-fit h-fit ${isTooSmallHeight && 'flex-shrink-0 !w-[34px] !top-0'}  ${isTooSmall && 'flex-shrink-0'} flex items-center justify-center relative top-[5px] right-[-4px]`}>
                     <ImageRound
                       src={`/icons/${isStart ? 'pause-task' : 'play-task'}.svg`}
                       name="Start task"

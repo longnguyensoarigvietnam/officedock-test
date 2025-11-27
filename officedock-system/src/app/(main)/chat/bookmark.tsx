@@ -591,6 +591,15 @@ const BookmarkList = ({
                     messageId: String(item.id),
                   });
                 }}
+                onGotoMessageReply={(data: {
+                  messageId: string | number;
+                  chatRoomCode: string;
+                }) => {
+                  handleChangeRoom({
+                    roomCode: String(data.chatRoomCode),
+                    messageId: String(data.messageId),
+                  });
+                }}
                 handleRemoveItemBookmark={handleRemoveItemBookmark}
               />
             </div>
@@ -770,6 +779,9 @@ const BookmarkList = ({
       {openSearchMessagesModal && (
         <SearchMessagesModal
           open={true}
+          chatRoomDetail={undefined}
+          highlightedMessageId={null}
+          handleActionEditTask={() => {}}
           isSearchingMessagesRef={isSearchingMessagesRef}
           chatRoomType={ChatRoomType.BOOKMARK}
           dashboardMemberList={dashboardMemberList}

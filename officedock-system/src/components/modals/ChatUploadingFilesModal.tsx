@@ -181,12 +181,13 @@ const ChatUploadingFilesModal = memo(
       <Modal
         open={open}
         isOutSideAction={false}
-        className="font-primary !rounded-[20px] text-gray-700 !p-0 w-[600px] "
+        className="font-primary  text-gray-700 !p-0 w-[600px]"
         titleClassName="!text-[14px] !text-[#5B6770] !font-medium"
-        headerClassName="bg-[#EBF1F7] !rounded-t-[20px] !rounded-b-none px-5 !py-[10px]"
+        headerClassName="bg-[#EBF1F7] !rounded-t-[20px]  !rounded-b-none px-5 !py-[10px]"
         closeIconClassName="!bg-white !rounded-full !p-[7px] !hover:cursor-pointer !shadow-sm"
         closeClassName="!mt-0 !w-4 !h-4 !hover:cursor-pointer"
-        contentClass="!w-[600px]"
+        contentClass="!w-[600px] !rounded-[20px] "
+        overlayClassName="!bg-transparent "
         onClose={() => {
           onClose();
         }}
@@ -330,7 +331,10 @@ const ChatUploadingFilesModal = memo(
               }>
               送信
             </Button>
-            <Button variant="outline" onClick={onClose} className="w-[100px] !h-[36px] !p-0">
+            <Button
+              variant="outline"
+              onClick={onClose}
+              className="w-[100px] !h-[36px] !p-0">
               キャンセル
             </Button>
           </div>

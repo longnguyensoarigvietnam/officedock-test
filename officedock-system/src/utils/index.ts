@@ -2150,7 +2150,6 @@ export const getInitialConditionMap = (): ConditionByMap => {
 export const extractAndRemoveMsgQuotes = (html: string) => {
   const result: { dataMsgId: string; dataTitle: string }[] = [];
   const allMsgIds: string[] = [];
-  let replyUuid: string | null = null;
 
   const div = document.createElement('div');
   div.innerHTML = html;
@@ -2159,20 +2158,12 @@ export const extractAndRemoveMsgQuotes = (html: string) => {
 
   paragraphs.forEach((p) => {
     const spanWithMsgId = p.querySelector('[data-msg-id]');
-    const spanWithReplyId = p.querySelector('[data-msg-reply-id]');
 
     if (spanWithMsgId) {
       const dataMsgId = spanWithMsgId.getAttribute('data-msg-id');
       const dataTitle = spanWithMsgId.getAttribute('data-title') || '';
       if (dataMsgId) {
         result.push({ dataMsgId, dataTitle });
-      }
-    }
-
-    if (spanWithReplyId && !replyUuid) {
-      const dataReplyId = spanWithReplyId.getAttribute('data-msg-reply-id');
-      if (dataReplyId) {
-        replyUuid = dataReplyId;
       }
     }
   });
@@ -2188,7 +2179,6 @@ export const extractAndRemoveMsgQuotes = (html: string) => {
   return {
     filterMsg: div.innerHTML,
     quotes: result,
-    replyUuid,
     allMsgIds,
   };
 };

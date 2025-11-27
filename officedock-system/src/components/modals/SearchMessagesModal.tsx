@@ -8,10 +8,10 @@ import {
   useRef,
   useState,
 } from 'react';
+import Image from 'next/image';
 
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
-import Image from 'next/image';
 
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import Button from '@components/common/Button';
@@ -41,10 +41,16 @@ import {
   SubmitLevelStatus,
   TaskRepetitiveValue,
 } from '@constants/enums';
-import { pageRouters } from '@constants/routers';
+import { apiRouters, pageRouters } from '@constants/routers';
 import { DELETED_EVENT_TITLE } from '@constants/message';
 
-import { ChatMessageResponse } from '@interfaces/chat';
+import {
+  ChatDashboardMember,
+  ChatFileDetailResponse,
+  ChatFileResponse,
+  ChatMessageResponse,
+  ChatRoomDetail,
+} from '@interfaces/chat';
 import { Profile } from '@interfaces/user';
 
 import { useSessionCache } from '@providers/SessionCacheProvider';
@@ -58,15 +64,22 @@ import {
 import {
   displayRepetitiveEventTime,
   formatWithParagraphTags,
-  getFileURL,
+  handleDownloadFile,
   highlightTextSafely,
   renderEventDatetimeInChat,
   renderScheduleChangeInCalendarRoom,
 } from '@utils';
 import { MessageHoverAllRoomsSearch } from '@components/chat/MessageHoverAllRoomsSearch';
+import RenderFiles from '@components/chat/renderFiles/RenderFiles';
+import { useMutation } from 'react-query';
+import api from '@base/api';
+import { MessageDetailQuote } from '@components/chat/quote/MessageDetailQuote';
+import MessageDetailQuoteText from '@components/chat/quote/MessageDetailQuoteText';
 
 interface SearchMessagesModalProps {
   open: boolean;
+  chatRoomDetail: ChatRoomDetail | undefined;
+  highlightedMessageId: string | null;
   isSearchingMessagesRef?: MutableRefObject<boolean>;
   searchChatMsg: string;
   dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
@@ -102,10 +115,12 @@ interface SearchMessagesModalProps {
   }) => void;
   onClose: () => void;
   handleBookmark: (data: { uuid: string; isBookmark: boolean }) => void;
+  handleActionEditTask: (id: number) => void;
 }
 
 export const SearchMessagesModal = ({
   open,
+  chatRoomDetail,
   isSearchingMessagesRef,
   searchChatMsg,
   searchMessageResults,
@@ -113,6 +128,7 @@ export const SearchMessagesModal = ({
   searchResultsPage,
   chatRoomType,
   dashboardMemberList,
+  highlightedMessageId,
   handleConfirmGetDataDetailEvent,
   setSearchMessageResults,
   setSearchResultsPage,
@@ -120,6 +136,7 @@ export const SearchMessagesModal = ({
   onGotoMessage,
   onSubmit,
   onClose,
+  handleActionEditTask,
   handleBookmark,
 }: SearchMessagesModalProps) => {
   const { data: session } = useSessionCache();
@@ -129,6 +146,14 @@ export const SearchMessagesModal = ({
   const resultsContainerRef = useRef<HTMLDivElement | null>(null);
 
   const [dataSearch, setDataSearch] = useState<ChatMessageResponse[]>([]);
+
+  // Preview files
+  const [_dataPreviewFile, setDataPreviewFile] = useState<{
+    msgId: string;
+    file: ChatFileResponse;
+    user: ChatDashboardMember;
+    createAt: string;
+  } | null>(null);
 
   useEffect(() => {
     if (searchMessageResults) {
@@ -347,86 +372,235 @@ export const SearchMessagesModal = ({
     return parseReactionsToImages(doc.body.innerHTML);
   };
 
-  const processMessage = (message: string, mentions: number[]) => {
+  const processMessage = (
+    message: string,
+    mentions: number[],
+    messageDetail: ChatMessageResponse,
+    uuidList: any[],
+  ) => {
     const highlightedMessage = highlightMentions(message, mentions);
 
     const dom = new DOMParser().parseFromString(
       highlightedMessage,
       'text/html',
     );
-
     const nodes = Array.from(dom.body.childNodes);
 
-    const processNode = (node: ChildNode, index: number) => {
-      if (node.nodeType === 1) {
-        const element = node as HTMLElement;
+    const processPElement = (element: HTMLElement, index: number) => {
+      const children: React.ReactNode[] = [];
 
-        if (element.tagName === 'P') {
-          const taskQuote = element.querySelector('span[data-task-id]');
-
-          if (taskQuote) {
-            const taskId = taskQuote.getAttribute('data-task-id');
-            const restOfContent = element.innerHTML.replace(
-              taskQuote.outerHTML,
-              '',
+      element.childNodes.forEach((child, i) => {
+        if (child.nodeType === Node.TEXT_NODE) {
+          const text = child.textContent?.trim();
+          if (text) {
+            children.push(
+              <span key={`${index}-${i}-text`} className="whitespace-pre-wrap">
+                {text}
+              </span>,
             );
+          }
+        }
 
+        if (child.nodeType === Node.ELEMENT_NODE) {
+          const el = child as HTMLElement;
+          if (el.dataset.taskId) {
+            const taskId = el.dataset.taskId;
             const parser = new DOMParser();
-            const doc = parser.parseFromString(
-              taskQuote.innerHTML,
-              'text/html',
-            );
-
+            const doc = parser.parseFromString(el.innerHTML, 'text/html');
             const spans = doc.querySelectorAll('span');
+            const targetSpan = spans[1]?.innerHTML || '';
 
-            const targetSpan = spans[1]?.outerHTML || '';
-
-            return (
-              <>
-                <div
-                  key={`${index}-quote`}
-                  id={taskId || undefined}
-                  className="flex mb-2 items-center w-full rounded-[6px] h-[42px] border-[1px] border-[#D2DBE1] bg-white px-4 gap-3 hover:cursor-pointer">
-                  <ImageRound
-                    className="w-[14px] h-[14px]"
-                    name="Task icon"
-                    src="/icons/gray-checkbox.svg"
-                  />
-                  <span
-                    className="text-sm font-medium"
-                    dangerouslySetInnerHTML={{ __html: targetSpan }}
-                  />
-                </div>
-
-                {restOfContent.trim() && (
-                  <p
-                    key={`${index}-rest`}
-                    className="text-chat-box font-normal text-sm -ml-1 p-1 rounded-[5px]"
-                    dangerouslySetInnerHTML={{ __html: restOfContent }}
-                  />
-                )}
-              </>
+            children.push(
+              <div
+                key={`${index}-${i}-task`}
+                id={taskId}
+                onClick={() => {
+                  if (taskId) handleActionEditTask(Number(taskId));
+                }}
+                className="flex mb-2 items-center w-full rounded-[6px] min-h-[42px] border border-[#D2DBE1] bg-white px-4 gap-3 hover:cursor-pointer">
+                <ImageRound
+                  className="w-[14px] h-[14px]"
+                  name="Task icon"
+                  src="/icons/gray-checkbox.svg"
+                />
+                <span
+                  className="text-sm font-medium  line-clamp-1 overflow-hidden text-[#228CDB]  break-all"
+                  dangerouslySetInnerHTML={{ __html: targetSpan }}
+                />
+              </div>,
             );
           }
 
-          return (
-            <p
-              key={index}
-              className="text-chat-box font-normal text-sm -ml-1 p-1 rounded-[5px]">
-              <span dangerouslySetInnerHTML={{ __html: element.innerHTML }} />
-            </p>
-          );
+          if (el.dataset.quoteMsg) {
+            const raw = el.dataset.msgData;
+            const foundQuote: ChatMessageResponse = raw
+              ? JSON.parse(raw)
+              : null;
+            if (foundQuote) {
+              children.push(
+                <div className={``}>
+                  <MessageDetailQuote
+                    key={`${index}-${i}-msg`}
+                    chatRoomDetail={chatRoomDetail}
+                    messageDetail={foundQuote}
+                    uuidQuote={foundQuote.uuid}
+                    uuidList={uuidList}
+                    isSearchRoom
+                    dashboardMemberList={dashboardMemberList}
+                    highlightedMessageId={highlightedMessageId}
+                    setDataPreviewFile={setDataPreviewFile}
+                    handleActionEditTask={handleActionEditTask}
+                  />
+                </div>,
+              );
+            }
+          }
+
+          if (el.dataset.quoteText) {
+            const dataTitle = el.dataset.title || '';
+            const raw = el.dataset.msgTextData;
+            const foundQuote: ChatMessageResponse = raw
+              ? JSON.parse(raw)
+              : null;
+            if (foundQuote) {
+              children.push(
+                <div className={`${index !== 0 && 'mt-5'}`}>
+                  <MessageDetailQuoteText
+                    key={`${index}-${i}-textquote`}
+                    messageDetail={foundQuote}
+                    dashboardMemberList={dashboardMemberList}
+                    title={dataTitle}
+                    uuidQuote={foundQuote.uuid}
+                  />
+                </div>,
+              );
+            }
+          }
+          if (el.dataset.msgReplyId) {
+            const title = el.dataset.title || '';
+
+            children.push(
+              <p key={`${index}-msg-reply`}>
+                <span
+                  className="inline-msg-quote flex items-center gap-[6px]"
+                  contentEditable={false}>
+                  <ImageRound
+                    name="Reply"
+                    src={'/icons/reply.svg'}
+                    className="w-[14px] h-[12px] "
+                    onClick={() => {
+                      // TODO: Handle go to reply msg
+                      // onGotoMessage({
+                      //   messageId: el.dataset.msgReplyId || '',
+                      //   chatRoomCode: messageDetail.chatRoom?.code || '',
+                      // });
+                    }}
+                  />
+                  <span style={{ color: '#77858F' }}>{title}</span>
+                </span>
+              </p>,
+            );
+          }
+          if (
+            el.classList.contains('mention') ||
+            el.dataset.type === 'mention'
+          ) {
+            const mentionText = el.textContent?.trim() || el.innerText || '';
+            if (mentionText) {
+              children.push(
+                <span
+                  key={`${index}-${i}-mention`}
+                  className="mention"
+                  data-type="mention"
+                  data-id={el.dataset.id}
+                  style={{ color: el.style.color }}>
+                  {mentionText}
+                </span>,
+              );
+            }
+          }
+          if (
+            el.tagName === 'SPAN' &&
+            el.getAttribute('data-src')?.includes('/icons/')
+          ) {
+            const src = el.getAttribute('data-src');
+            const name = el.getAttribute('alt') ?? '';
+            children.push(
+              <Image
+                key={`${index}-${i}-reaction`}
+                src={src!}
+                alt={name}
+                title={name}
+                width={20}
+                height={20}
+                className="inline-block align-middle mx-[2px] w-[20px] h-[20px]"
+              />,
+            );
+          }
+          // Fallback for unhandled inline tags
+          if (
+            !el.dataset.taskId &&
+            !el.dataset.quoteMsg &&
+            !el.dataset.quoteText &&
+            !el.dataset.msgReplyId &&
+            !el.classList.contains('mention')
+          ) {
+            children.push(
+              <span
+                key={`${index}-${i}-inline`}
+                dangerouslySetInnerHTML={{ __html: el.outerHTML }}
+              />,
+            );
+          }
         }
-      } else if (node.nodeType === 3) {
-        return node.textContent?.trim() ? (
-          <span key={index}>{node.textContent}</span>
-        ) : null;
+      });
+
+      return (
+        <div
+          key={`p-${index}`}
+          data-id={messageDetail.uuid}
+          className="text-chat-box font-normal text-sm -ml-1 p-1 rounded-[5px] ">
+          {children}
+        </div>
+      );
+    };
+
+    const processNode = (node: ChildNode, index: number) => {
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const element = node as HTMLElement;
+        if (element.tagName === 'P') {
+          return processPElement(element, index);
+        }
+      } else if (node.nodeType === Node.TEXT_NODE) {
+        const text = node.textContent?.trim();
+        return text ? <span key={`text-${index}`}>{text}</span> : null;
       }
       return null;
     };
 
     return nodes.map((node, index) => processNode(node, index));
   };
+
+  const handleDownloadFileName = async (fileUuid: string) => {
+    const apiUrl = apiRouters.FILE_DETAIL(`${fileUuid}`);
+
+    const { data } = await api.get<ChatFileDetailResponse>(apiUrl);
+    return data;
+  };
+
+  const { mutate: downloadFileName } = useMutation(
+    'downloadFileName',
+    handleDownloadFileName,
+    {
+      onSuccess: (data) => {
+        if (data.originalFile) {
+          handleDownloadFile(data?.originalFile || '', data?.fileName || '');
+        }
+      },
+      onError: () => {},
+      onSettled: () => {},
+    },
+  );
 
   return (
     <Modal
@@ -496,6 +670,20 @@ export const SearchMessagesModal = ({
           className="overflow-y-auto !max-h-[630px] h-[630px] bg-[#F8FAFC] rounded-[6px] p-4">
           {dataSearch.length > 0 ? (
             dataSearch.map((messageDetail) => {
+              let uuidListMain = [];
+              const parser = new DOMParser();
+              const doc = parser.parseFromString(
+                messageDetail?.message,
+                'text/html',
+              );
+              const pEl = doc.querySelector('p');
+
+              if (pEl) {
+                const raw = pEl.getAttribute('data-uuid');
+                uuidListMain = raw ? JSON.parse(raw) : [];
+              }
+              const uuidList = messageDetail?.chatFiles;
+
               return (
                 <div
                   key={messageDetail.id}
@@ -535,7 +723,7 @@ export const SearchMessagesModal = ({
                           ) : (
                             messageDetail.sender.fullName
                           )}{' '}
-                          <span className="font-normal text-xs text-[#77858F]">
+                          <span className="font-normal text-xs text-[#77858F] ml-2">
                             {chatRoomType != ChatRoomType.TASK &&
                               !(
                                 chatRoomType == ChatRoomType.BOOKMARK &&
@@ -590,46 +778,23 @@ export const SearchMessagesModal = ({
                                     session?.user.profile.fullName || '',
                                   ),
                                   messageDetail.mentions || [],
+                                  messageDetail,
+                                  uuidList,
                                 )}
-                                <div className="flex flex-col gap-2 !w-[100%]">
+                                <div className="flex flex-col gap-2 !w-[100%] mt-2">
                                   {messageDetail?.chatFiles &&
-                                    messageDetail?.chatFiles.length > 0 &&
-                                    messageDetail?.chatFiles.map(
-                                      (file, index) => {
-                                        return (
-                                          <div
-                                            key={index}
-                                            className="flex justify-between items-center !w-[100%]">
-                                            <div className="bg-white border-[#D2DBE1] border-[1px] rounded-[6px] p-[14px] flex gap-2 items-center !w-[calc(100%)]">
-                                              {file.fileType.includes(
-                                                'image',
-                                              ) && (
-                                                <div>
-                                                  <Image
-                                                    src={getFileURL(
-                                                      file?.compressedFile ||
-                                                        '',
-                                                    )}
-                                                    alt="Image"
-                                                    width={150}
-                                                    height={100}
-                                                  />
-                                                </div>
-                                              )}
-                                              <p
-                                                className={`text-primary font-medium text-[14px] break-words break-all max-w-full ${
-                                                  file.fileType.includes(
-                                                    'image',
-                                                  )
-                                                    ? 'max-w-[calc(100%_-_200px)]'
-                                                    : 'max-w-[calc(100%)]'
-                                                }`}>
-                                                {file.fileName}
-                                              </p>
-                                            </div>
-                                          </div>
-                                        );
-                                      },
+                                    messageDetail?.chatFiles.length > 0 && (
+                                      <RenderFiles
+                                        dashboardMemberList={
+                                          dashboardMemberList
+                                        }
+                                        isSearchRoom
+                                        uuidList={uuidList}
+                                        uuidMain={uuidListMain}
+                                        messageDetail={messageDetail}
+                                        downloadFileName={downloadFileName}
+                                        setDataPreviewFile={setDataPreviewFile}
+                                      />
                                     )}
                                 </div>
                               </div>
@@ -900,6 +1065,8 @@ export const SearchMessagesModal = ({
                                   session?.user.profile.fullName || '',
                                 ),
                                 messageDetail.mentions || [],
+                                messageDetail,
+                                uuidList,
                               )}
                             {messageDetail.type !== MessageType.MESSAGE &&
                               (messageDetail.task ? (
@@ -981,6 +1148,8 @@ export const SearchMessagesModal = ({
                                   session?.user.profile.fullName || '',
                                 ),
                                 messageDetail.mentions || [],
+                                messageDetail,
+                                uuidList,
                               )}
                             {messageDetail.type !== MessageType.MESSAGE && (
                               <div className="w-full flex justify-start">
@@ -1075,6 +1244,8 @@ export const SearchMessagesModal = ({
                             session?.user.profile.fullName || '',
                           ),
                           messageDetail.mentions || [],
+                          messageDetail,
+                          uuidList,
                         )}
                       </div>
                     )}
