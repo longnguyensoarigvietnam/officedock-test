@@ -61,8 +61,8 @@ import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 import { hasPermissionInArray } from '@utils';
 
 import api from '@base/api';
-import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 import ImageRound from '@components/common/ImageRound';
+import ConfirmHiddenModal from '@components/modals/ConfirmHiddenModal';
 
 const ListSkillsMap = () => {
   const { setIsLoading } = useContext(LoadingContext);
@@ -656,7 +656,7 @@ const ListSkillsMap = () => {
           })}
       </div>
 
-      <ConfirmDeleteModal
+      <ConfirmHiddenModal
         open={openConfirmDeleteModal}
         type="スキルマップ"
         message="すでに登録したスキルマップは、表示されたままです。"

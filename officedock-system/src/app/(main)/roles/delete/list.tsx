@@ -235,7 +235,7 @@ const ListRolesDelete = () => {
       <ConfirmRestoreModal
         open={openConfirmRestoreModal}
         name={selectedRoleToRestore?.name || ''}
-        type="権限"
+        type="この権限を復元しますか？"
         onConfirm={handleConfirmRestoreRole}
         onClose={() => setOpenConfirmRestoreModal(false)}
       />
