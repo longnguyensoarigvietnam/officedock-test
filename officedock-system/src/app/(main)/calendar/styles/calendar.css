@@ -424,6 +424,8 @@
   margin-left: 10px;
   padding-top: 0;
   padding-bottom: 18px;
+  font-weight: 500 !important;
+  font-size: 16px !important;
 }
 .calendar-custom .fc-multimonth-month {
   background-color: #f8fafc !important;
@@ -431,7 +433,7 @@
   padding-bottom: 26px !important;
   padding-left: 2rem !important;
   padding-right: 2rem !important;
-  border: 3px solid #ebf1f4 !important;
+  border: 1px solid #E6F3FB !important;
 }
 .calendar-custom .fc-multimonth-month .fc-daygrid-day-frame {
   padding: 0;
@@ -528,13 +530,13 @@
   padding-left: 20px;
 }
 .calendar-custom .hour-line::after {
-  background-color: #d2dbe1 !important;
+  background-color: #CBDCE7 !important;
   height: 2px !important;
   opacity: 1 !important;
 }
 
 .calendar-custom .half-hour-line::after {
-  background-color: #d2dbe1 !important;
+  background-color: #CBDCE7 !important;
 }
 .calendar-custom .fc-timegrid-slot-label-cushion.fc-scrollgrid-shrink-cushion {
   position: relative;
