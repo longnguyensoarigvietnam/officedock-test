@@ -172,11 +172,11 @@ const MultiSelectDropdown = ({
           }}>
           <div className="h-full">
             <div
-              className={` h-full flex relative w-full cursor-default rounded-[6px] border bg-white py-2  leading-5.5 pl-3 pr-10 text-left shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+              className={` h-full flex items-center relative w-full cursor-default rounded-[6px] border bg-white py-2  leading-5.5 pl-3 pr-10 text-left shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
                 disabled ? 'opacity-50 cursor-not-allowed' : ''
               } ${valueClassName} `}>
               <p
-                className={`block truncate ${!selected && 'text-gray-300'} text-left min-h-[24px] text-xs  ${labelClass}`}>
+                className={`block truncate ${!selected && 'text-gray-300'} text-left text-xs  ${labelClass}`}>
                 {customLabel
                   ? customLabel
                   : placeholder || <div className="h-[22px]"></div>}

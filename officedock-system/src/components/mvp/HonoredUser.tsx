@@ -91,7 +91,7 @@ export const HonoredUser = ({
           {userInfo?.mainOrganization?.name || ''}
         </p>
         <p
-          className={`text-[20px] w-[115px] max-w-[115px] truncate mb-[20px] ${direction == HonoredUserInfoDirection.VERTICAL ? 'text-center mb-[12px]' : 'mb-[10px]'}`}>
+          className={`text-[20px] w-[138px] max-w-[138px] truncate mb-[20px] ${direction == HonoredUserInfoDirection.VERTICAL ? 'text-center mb-[12px]' : 'mb-[10px]'}`}>
           {userInfo.fullName} <span className="text-xs">さん</span>
         </p>
         <div

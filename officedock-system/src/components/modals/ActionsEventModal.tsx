@@ -1543,6 +1543,7 @@ const ActionsEventModal = ({
                       <Checkbox
                         label="終日"
                         boxLabelClass="!ml-[6px]"
+                        classLabel="!font-normal"
                         onChange={(state) => {
                           setValue('isAllDay', state, { shouldDirty: true });
                           handleConfirmCheckOverlappingLocation();
@@ -1563,10 +1564,10 @@ const ActionsEventModal = ({
                           render={({ field: { onChange } }) => {
                             return (
                               <Dropdown
-                                className="h-[34px] !py-1 text-xs !border-[#77858F]"
-                                classNameTextData="!text-xs"
-                                classNameOption="!text-xs"
-                                classNameError="!text-xs"
+                                className="h-[34px] !py-1 !pl-[10px] !pr-4 text-sm !border-[#77858F]"
+                                classNameTextData="!text-sm"
+                                classNameOption="!text-sm"
+                                classNameError="!text-sm"
                                 labelOptionClass="!pr-0"
                                 disabled={isDisabled}
                                 options={TASK_REPETITIVE_OPTIONS}
@@ -2072,7 +2073,7 @@ const ActionsEventModal = ({
             <p className={`w-fit font-medium text-[14px] mt-9`}>
               予定カテゴリー
             </p>
-            <div className="w-[518px]">
+            <div className="w-[504px]">
               <p className="text-[#7F8991] mb-[14px] font-medium text-sm flex items-end leading-none">
                 カレンダー
               </p>
@@ -2082,15 +2083,15 @@ const ActionsEventModal = ({
                   name={'largeCategory'}
                   render={({ field: { value, onChange } }) => (
                     <Dropdown
-                      className="h-[34px] !py-1 text-xs !border-[1px] !border-[#77858F]"
-                      classNameTextData="!text-xs"
-                      classNameOption="!text-xs"
+                      className="h-[34px] !py-1 text-sm !border-[1px] !border-[#77858F]"
+                      classNameTextData="!text-sm"
+                      classNameOption="!text-sm"
                       options={[...dataOptionsCategoryLarge]}
                       selectedOption={[...dataOptionsCategoryLarge].find(
                         (element) =>
                           element.value == (value as OptionDropdownType)?.value,
                       )}
-                      placeholder={'大カテゴリー'}
+                      placeholder={'大カテゴリ'}
                       onChange={(e) => {
                         if (e.value != watch('largeCategory.value')) {
                           setValue(
@@ -2113,9 +2114,9 @@ const ActionsEventModal = ({
                       render={({ field: { value, onChange } }) => {
                         return (
                           <Dropdown
-                            className="h-[34px] !py-1 text-xs"
-                            classNameTextData="!text-xs"
-                            classNameOption="!text-xs"
+                            className="h-[34px] !py-1 text-sm"
+                            classNameTextData="!text-sm"
+                            classNameOption="!text-sm"
                             options={[...dataOptionsCategoryMedium]}
                             selectedOption={[...dataOptionsCategoryMedium].find(
                               (element) =>
@@ -2140,22 +2141,23 @@ const ActionsEventModal = ({
           <div>
             <div className="flex justify-between items-center">
               <div className="w-fit font-medium text-[14px]">タグ</div>
-              <div className="w-full max-w-[518px]">
-                <div className="w-[518px]">
+              <div className="w-full max-w-[504px]">
+                <div className="w-[504px]">
                   <MultiSelectDropdown
                     className="!h-[34px]"
                     disabled={isDisabled}
                     valueClassName="!border-[1px] !border-[#77858F]"
                     options={dataOptionsTags}
-                    optionClassName="!border-[1px] !border-[#77858F] max-w-[518px]"
+                    optionClassName="!border-[1px] !border-[#77858F] max-w-[504px]"
                     customLabel={
                       (watch('tagIds') ?? []).filter((tag) => tag.value)
                         .length > 0
                         ? `${(watch('tagIds') ?? []).filter((tag) => tag.value).length}件選択中`
                         : UNREGISTERED
                     }
-                    noDataClass="w-[518px]"
+                    noDataClass="w-[504px]"
                     labelOptionClass="break-words w-[465px]"
+                    labelClass="!text-sm"
                     selectedOptions={watch('tagIds') ?? []}
                     onChange={(selected) => {
                       let updatedTagIds = [];
@@ -2177,7 +2179,7 @@ const ActionsEventModal = ({
               </div>
             </div>
             <div
-              className={`flex flex-wrap gap-[10px] ml-[100px] ${
+              className={`flex flex-wrap gap-[10px] ml-[114px] ${
                 watch('tagIds')?.filter((tag) => !!tag.value)?.length &&
                 'mt-[14px]'
               }`}>
@@ -2219,16 +2221,16 @@ const ActionsEventModal = ({
           {/* Location */}
           <div className="flex justify-between items-center mb-[9px]">
             <p className="w-fit font-medium text-[14px]">場所</p>
-            <div className="w-[518px]">
+            <div className="w-[504px]">
               <Controller
                 control={control}
                 name={'location'}
                 render={({ field: { value, onChange } }) => (
                   <Dropdown
-                    className="h-[34px] !py-1 text-xs max-w-[518px] !border-[1px] !border-[#77858F] !rounded-md"
-                    classNameTextData="!text-xs"
-                    classNameOption="!text-xs w-[518px]"
-                    classNameError="!text-xs"
+                    className="h-[34px] !py-1 text-sm max-w-[504px] !border-[1px] !border-[#77858F] !rounded-md"
+                    classNameTextData="!text-sm"
+                    classNameOption="!text-sm w-[504px]"
+                    classNameError="!text-sm"
                     placeholder="選択してください"
                     disabled={isDisabled}
                     options={dataOptionsEventLocation}
@@ -2272,7 +2274,7 @@ const ActionsEventModal = ({
                 <div className="relative">
                   <Input
                     placeholder="名前を検索"
-                    className={`!w-[518px] h-[34px] pl-9 focus:!shadow-none !border-[1px] !border-[#77858F] !rounded-md`}
+                    className={`!w-[504px] h-[34px] pl-8 !text-sm focus:!shadow-none !border-[1px] !border-[#77858F] !placeholder-[#BABABA] !rounded-md`}
                     onChange={(e) => setSearchName(e.target.value)}
                     disabled={isDisabled}
                   />

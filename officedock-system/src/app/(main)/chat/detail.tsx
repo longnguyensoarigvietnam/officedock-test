@@ -2376,7 +2376,7 @@ const ChatDetail = ({
                       {renderImageRound(chatRoomDetail)}
                     </div>
                     <p
-                      className={`text-[20px] font-bold text-ellipsis break-all overflow-hidden ${chatRoomDetail?.type != ChatRoomType.GROUP ? 'w-fit max-w-[100%]' : 'max-w-[calc(100%_-_380px)]'}`}
+                      className={`text-[20px] font-semibold text-ellipsis break-all overflow-hidden ${chatRoomDetail?.type != ChatRoomType.GROUP ? 'w-fit max-w-[100%]' : 'max-w-[calc(100%_-_380px)]'}`}
                       style={{
                         display: '-webkit-box',
                         WebkitLineClamp: 2,
