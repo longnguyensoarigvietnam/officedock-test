@@ -370,7 +370,11 @@ class SkillMapViewSet(
                     output_field=IntegerField(),
                 )
             ).order_by("priority")
-            users = list(organization.users.all().order_by("created_at"))
+            users = list(
+                organization.users.filter(deleted_at__isnull=True)
+                .all()
+                .order_by("created_at")
+            )
             # Find the user's position in the list
             try:
                 index = users.index(user)  # Get index of the requesting user

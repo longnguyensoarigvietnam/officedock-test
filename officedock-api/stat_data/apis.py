@@ -87,7 +87,11 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
             organization = validate_company_organization(
                 user.company_id, organization_id
             )
-            users = list(organization.users.all().order_by("created_at"))
+            users = list(
+                organization.users.filter(deleted_at__isnull=True)
+                .all()
+                .order_by("created_at")
+            )
             # Find the user's position in the list
             try:
                 index = users.index(user)  # Get index of the requesting user
