@@ -469,26 +469,6 @@ export const MessageDetail = ({
             }
           }
           if (
-            el.tagName === 'IMG' &&
-            el.getAttribute('src')?.includes('/icons/') &&
-            el.getAttribute('alt') &&
-            el.getAttribute('title')
-          ) {
-            const src = el.getAttribute('src');
-            const name = el.getAttribute('alt') ?? '';
-            children.push(
-              <Image
-                key={`${index}-${i}-reaction`}
-                src={src!}
-                alt={name}
-                title={name}
-                width={20}
-                height={20}
-                className="inline-block align-middle mx-[2px] w-[20px] h-[20px]"
-              />,
-            );
-          }
-          if (
             el.tagName === 'SPAN' &&
             el.getAttribute('data-src')?.includes('/icons/')
           ) {

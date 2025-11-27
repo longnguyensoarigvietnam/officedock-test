@@ -4,18 +4,20 @@ import Modal from '../common/Modal';
 import Button from '../common/Button';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
-export type ConfirmRestoreModalProps = {
+export type ConfirmDeleteModalProps = {
   open: boolean;
   name?: string;
   type: string;
+  classNameMsg?: string;
   message?: string;
+  message2?: string;
   userColor?: string;
   userAvatarUrl?: string | undefined;
   onConfirm: () => void;
   onClose: () => void;
 };
 
-const ConfirmRestoreModal = memo(
+const ConfirmHiddenModal = memo(
   ({
     open,
     name,
@@ -23,9 +25,11 @@ const ConfirmRestoreModal = memo(
     userColor,
     userAvatarUrl,
     message,
+    message2,
+    classNameMsg,
     onConfirm,
     onClose,
-  }: ConfirmRestoreModalProps) => {
+  }: ConfirmDeleteModalProps) => {
     return (
       <Modal
         open={open}
@@ -44,16 +48,20 @@ const ConfirmRestoreModal = memo(
                 />
               </div>
             )}
-            <p className="text-black font-medium break-all line-clamp-3 text-base text-center">
+            <p className="text-black font-medium break-all line-clamp-3 text-[15px] text-center">
               {name}
             </p>
           </div>
         )}
         <div className="text-center mb-10">
-          <p className="text-sm text-black leading-6 text-neutral-02">{type}</p>
-          <p className="text-[#77858F] font-normal text-[13px] mt-[10px]">
+          <p className="text-sm text-black leading-6 text-neutral-02">{`この${type}を非表示にしますか？`}</p>
+          <p
+            className={`text-[#77858F] font-normal text-[13px] mt-[10px] ${classNameMsg}`}>
             {message}
           </p>
+          {message2 && (
+            <p className="text-[#77858F] font-normal text-[13px]">{message2}</p>
+          )}
         </div>
         <div className="flex justify-center gap-3  items-center">
           <Button
@@ -76,4 +84,4 @@ const ConfirmRestoreModal = memo(
   },
 );
 
-export default ConfirmRestoreModal;
+export default ConfirmHiddenModal;

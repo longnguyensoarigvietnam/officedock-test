@@ -453,7 +453,7 @@ const ListDeleteTags = () => {
 
       <ConfirmRestoreModal
         open={openConfirmRestoreModal}
-        type="タグ"
+        type="このタグを復元しますか？"
         name={selectedTagToRestore?.name}
         onConfirm={handleConfirmRestoreTag}
         onClose={() => setOpenConfirmRestoreModal(false)}

@@ -18,7 +18,6 @@ import { Table, TableBody, TableHeader } from '@components/common/Table';
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
 import Pagination from '@components/common/Pagination';
-import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 import InputSearch from '@components/common/InputSearch';
 import ActionsTagModal from '@components/modals/ActionsTagModal';
 import Dropdown from '@components/common/Dropdown';
@@ -58,6 +57,7 @@ import { Organizations } from '@interfaces/organization';
 import { hasPermissionInArray } from '@utils';
 
 import api from '@base/api';
+import ConfirmHiddenModal from '@components/modals/ConfirmHiddenModal';
 
 const ListTags = () => {
   const { setIsLoading } = useContext(LoadingContext);
@@ -648,7 +648,7 @@ const ListTags = () => {
         </div>
       </div>
 
-      <ConfirmDeleteModal
+      <ConfirmHiddenModal
         open={openConfirmDeleteModal}
         name={selectedTagToDelete?.name || ''}
         type="タグ"

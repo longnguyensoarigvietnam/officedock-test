@@ -28,9 +28,7 @@ import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 
 import { OptionDropdownType } from '@interfaces/common';
-import {
-  User,
-} from '@interfaces/user';
+import { User } from '@interfaces/user';
 
 import api from '@base/api';
 
@@ -191,7 +189,9 @@ const ListUsersDelete = () => {
                 src={'/icons/dark-close-eye.svg'}
                 className={`w-[16px] h-[13px] opacity-80`}
               />
-              <span className="text-[#77858F] text-xs font-medium">非表示一覧</span>
+              <span className="text-[#77858F] text-xs font-medium">
+                非表示一覧
+              </span>
             </div>
           </div>
           <Link
@@ -403,7 +403,7 @@ const ListUsersDelete = () => {
 
       <ConfirmRestoreModal
         open={openConfirmRestoreModal}
-        type="ユーザー"
+        type="このユーザーを本当に復元しますか？"
         name={selectedUserToRestore?.profile.fullName}
         userColor={selectedUserToRestore?.avatarColor}
         userAvatarUrl={selectedUserToRestore?.avatar}

@@ -927,7 +927,6 @@ const ActionsEventModal = ({
     const creationDataCommonDataCustom = creationDataCommonData || dataCommon;
     if (!creationDataCommonDataCustom) return;
 
-    const repeatType = watch('repeatType') as OptionDropdownType | undefined;
     const startDateStr = watch('startDate');
     const startTimeStr = watch('startTime');
     const participantIds = watch('participantIds') || [];
@@ -943,35 +942,36 @@ const ActionsEventModal = ({
 
     let eventMembers: EventParticipant[] = [];
     let eventOrganizations: EventParticipant[] = [];
+
+    // ============================================================
+    // MEMBERS
+    // ============================================================
     if (creationDataCommonDataCustom.allMembers) {
       let rawMembers = creationDataCommonDataCustom.allMembers;
 
-      // CASE CREATE → remove all deleted members
+      // CREATE → remove deleted user
       if (action === ActionsEvent.CREATE) {
         rawMembers = rawMembers.filter((m) => !m.deletedAt);
       }
 
-      // CASE EDIT → apply date logic (repeatType ONCE)
+      // EDIT
       if (action === ActionsEvent.EDIT && eventStart instanceof Date) {
         rawMembers = rawMembers.filter((member) => {
+          const isSelected = participantIds.includes(member.id);
+
+          // not deleted → always show
           if (!member.deletedAt) return true;
 
           const deletedAtDate = new Date(member.deletedAt);
-          const isValid = deletedAtDate > eventStart;
 
-          // Remove invalid user from participantIds
-          if (!isValid && participantIds.includes(member.id)) {
-            setValue(
-              'participantIds',
-              participantIds.filter((id) => id !== member.id),
-            );
-          }
+          // removed before eventStart → always hide
+          if (deletedAtDate < eventStart) return false;
 
-          return isValid;
+          // deleted on the same day or after eventStart → only show if selected before
+          return isSelected;
         });
       }
 
-      // Map to EventParticipant
       eventMembers = rawMembers.map((member) => ({
         id: `${EventParticipantType.USER}-${member.id}`,
         fullName: member.fullName,
@@ -981,78 +981,63 @@ const ActionsEventModal = ({
         avatarUrl: member.avatar || '',
       }));
     }
+
+    // ============================================================
+    // ORGANIZATIONS
+    // ============================================================
     if (creationDataCommonDataCustom.organizationUsers) {
       const rawOrgs = creationDataCommonDataCustom.organizationUsers;
-
       let processedOrgs = rawOrgs;
 
+      // CREATE
       if (action === ActionsEvent.CREATE) {
         processedOrgs = rawOrgs
           .map((org) => {
-            const validUsers = org.users
-              ? org.users.filter((u) => !u.deletedAt)
-              : [];
-
-            // if org has no valid users → remove org
-            if (validUsers.length === 0) return null;
-
+            const validUsers = org.users?.filter((u) => !u.deletedAt) || [];
+            if (!validUsers.length) return null;
             return { ...org, users: validUsers };
           })
           .filter(Boolean) as typeof rawOrgs;
       }
 
-      // ------------------------------------------------------------
-      // CASE EDIT → same logic as members
-      // ------------------------------------------------------------
-      if (
-        action === ActionsEvent.EDIT &&
-        repeatType?.label === TaskRepetitiveType.ONCE &&
-        eventStart instanceof Date
-      ) {
+      // EDIT
+      if (action === ActionsEvent.EDIT && eventStart instanceof Date) {
         processedOrgs = rawOrgs
           .map((org) => {
-            const validUsers = org.users
-              ? org.users.filter((u) => {
-                  if (!u.deletedAt) return true;
+            const users =
+              org.users?.filter((user) => {
+                const isSelected = participantIds.includes(user.id);
 
-                  const deletedAtDate = new Date(u.deletedAt);
-                  const isValid = deletedAtDate > eventStart;
+                if (!user.deletedAt) return true;
 
-                  // Remove invalid user from participantIds
-                  if (!isValid && participantIds.includes(u.id)) {
-                    setValue(
-                      'participantIds',
-                      participantIds.filter((id) => id !== u.id),
-                    );
-                  }
+                const deletedAtDate = new Date(user.deletedAt);
 
-                  return isValid;
-                })
-              : [];
+                if (deletedAtDate < eventStart) return false;
 
-            if (validUsers.length === 0) return null;
+                return isSelected;
+              }) || [];
 
-            return { ...org, users: validUsers };
+            if (!users.length) return null;
+
+            return { ...org, users };
           })
           .filter(Boolean) as typeof rawOrgs;
       }
 
-      // Map to EventParticipant
       eventOrganizations = processedOrgs.map((org) => ({
         id: `${EventParticipantType.ORGANIZATION}-${org.id}`,
         fullName: org.name,
         type: EventParticipantType.ORGANIZATION,
-        userIds: org.users ? org.users.map((u) => u.id) : [],
+        userIds: org.users?.map((u) => u.id) || [],
         color: org.iconColor || '#228CDB',
         avatarUrl: org.icon || '',
       }));
 
-      // Map dropdown
       setDataOptionsOrganizations(
         processedOrgs.map((org) => ({
           value: org.id || '',
           label: org.name,
-          userIds: org.users ? org.users.map((u) => u.id) : [],
+          userIds: org.users?.map((u) => u.id) || [],
           iconColor: org.iconColor || '#228CDB',
           avatarUrl: org.icon || '',
         })),
@@ -1060,7 +1045,7 @@ const ActionsEventModal = ({
     }
 
     // ============================================================
-    //  SET FINAL PARTICIPANTS
+    // FINAL PARTICIPANTS
     // ============================================================
     setDataOptionsParticipants([...eventOrganizations, ...eventMembers]);
   };

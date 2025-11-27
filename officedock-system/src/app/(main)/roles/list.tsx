@@ -9,7 +9,6 @@ import ImageRound from '@components/common/ImageRound';
 import { Table, TableBody, TableHeader } from '@components/common/Table';
 import Pagination from '@components/common/Pagination';
 import Dropdown from '@components/common/Dropdown';
-import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 import InputSearch from '@components/common/InputSearch';
 
 import { LoadingContext } from '@providers/LoadingProvider';
@@ -34,6 +33,7 @@ import { RoleDetail } from '@interfaces/role';
 import { hasPermissionInArray } from '@utils';
 
 import api from '@base/api';
+import ConfirmHiddenModal from '@components/modals/ConfirmHiddenModal';
 
 const ListRoles = () => {
   const [openConfirmDeleteModal, setOpenConfirmDeleteModal] = useState(false);
@@ -295,7 +295,7 @@ const ListRoles = () => {
           </div>
         </div>
       </div>
-      <ConfirmDeleteModal
+      <ConfirmHiddenModal
         open={openConfirmDeleteModal}
         name={selectedRoleToDelete?.name || ''}
         type="権限"

@@ -11,7 +11,6 @@ import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import ActionsUserModal from '@components/modals/ActionsUserModal';
 import Pagination from '@components/common/Pagination';
-import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 import InputSearch from '@components/common/InputSearch';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
@@ -57,6 +56,7 @@ import { ResponseError } from '@interfaces/response';
 
 import api from '@base/api';
 import Link from 'next/link';
+import ConfirmHiddenModal from '@components/modals/ConfirmHiddenModal';
 
 const ListUsers = () => {
   const { data: session } = useSessionCache();
@@ -852,7 +852,7 @@ const ListUsers = () => {
         </div>
       </div>
 
-      <ConfirmDeleteModal
+      <ConfirmHiddenModal
         open={openConfirmDeleteModal}
         type="ユーザー"
         message="すでに登録したチームカテゴリーは、表示されたままです。"
