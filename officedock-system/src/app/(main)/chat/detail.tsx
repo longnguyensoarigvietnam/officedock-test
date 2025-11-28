@@ -1317,8 +1317,7 @@ const ChatDetail = ({
         uuid: file.uuid,
       };
     });
-    const { filterMsg, replyUuid, allMsgIds } =
-      extractAndRemoveMsgQuotes(newMsg);
+    const { filterMsg, allMsgIds } = extractAndRemoveMsgQuotes(newMsg);
     let matchedMessagesQuote: ChatMessageResponse[] = [];
 
     if (allMsgIds && allMsgIds.length > 0) {
@@ -1385,7 +1384,6 @@ const ChatDetail = ({
       mentionIds,
       files: uploadFiles.map((file) => file.file),
       fileUuids: [...uploadFiles.map((file) => file.uuid), ...dataUuidQuote],
-      replyUuid: replyUuid ? replyUuid : undefined,
       quote: quote,
     });
   };
@@ -1832,13 +1830,13 @@ const ChatDetail = ({
   // Reply Msg
   const handleReplyMsg = ({
     user,
-    replyUuid,
+    replyId,
   }: {
     user: {
       id: number;
       name: string;
     };
-    replyUuid: string;
+    replyId: string;
   }) => {
     if (!editor) return;
 
@@ -1848,7 +1846,7 @@ const ChatDetail = ({
       .insertContent({
         type: 'msgReply',
         attrs: {
-          id: replyUuid,
+          id: replyId,
           title: `@${user.name}`,
         },
       })
@@ -2673,6 +2671,14 @@ const ChatDetail = ({
                             handleResetChatRoomNotification={
                               handleResetChatRoomNotification
                             }
+                            onGotoMessage={(data: {
+                              messageId: string | number;
+                            }) => {
+                              setOpenSearchMessagesModal(false);
+                              gotoSelectedMessage({
+                                bookmarkMessageId: Number(data.messageId),
+                              });
+                            }}
                           />
                         </div>
                       ))}
@@ -2741,6 +2747,14 @@ const ChatDetail = ({
                             handleResetChatRoomNotification={
                               handleResetChatRoomNotification
                             }
+                            onGotoMessage={(data: {
+                              messageId: string | number;
+                            }) => {
+                              setOpenSearchMessagesModal(false);
+                              gotoSelectedMessage({
+                                bookmarkMessageId: Number(data.messageId),
+                              });
+                            }}
                           />
                         </div>
                       ))}
@@ -3022,11 +3036,9 @@ const ChatDetail = ({
                 style={{
                   boxShadow: '-4px 0px 8px 0px #0000000F',
                 }}
-                className={`transition-all flex-shrink-0 duration-500 ease-in-out ${
-                  isExtendMoreData
-                    ? 'w-[320px] opacity-100 translate-x-0'
-                    : 'w-0 opacity-0 max-w-0 translate-x-4'
-                } bg-[#F5F8FB] rounded-tl-xl  rounded-bl-xl`}>
+                className={`transition-all duration-300 ease-out flex-shrink-0 overflow-hidden
+  ${isExtendMoreData ? 'max-w-[320px] opacity-100' : 'max-w-0 opacity-0'}
+  bg-[#F5F8FB] rounded-tl-xl rounded-bl-xl`}>
                 {isExtendMoreData && (
                   <MemoDataChat
                     initialLoad={initialLoad}
@@ -3097,12 +3109,15 @@ const ChatDetail = ({
       {openSearchMessagesModal && (
         <SearchMessagesModal
           open={true}
+          chatRoomDetail={chatRoomDetail}
           isSearchingMessagesRef={isSearchingMessagesRef}
           dashboardMemberList={dashboardMemberList}
           searchMessageResults={searchMessageResults}
           searchChatMsg={searchChatMsg}
           chatRoomType={chatRoomDetail?.type || ''}
+          highlightedMessageId={highlightedMessageId}
           setSearchChatMsg={setSearchChatMsg}
+          handleActionEditTask={handleActionEditTask}
           searchResultsPage={searchResultsPage}
           setSearchMessageResults={setSearchMessageResults}
           setSearchResultsPage={setSearchResultsPage}

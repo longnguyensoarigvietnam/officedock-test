@@ -77,6 +77,7 @@ export type MessageDetailProps = {
       errorMsg?: string;
     }
   >;
+  onGotoMessage: (data: { messageId: string | number }) => void;
   messageDetail: ChatMessageResponse;
   msgEditing?: string;
   dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
@@ -84,13 +85,13 @@ export type MessageDetailProps = {
   highlightedMessageId: string | null;
   handleReplyMsg: ({
     user,
-    replyUuid,
+    replyId,
   }: {
     user: {
       id: number;
       name: string;
     };
-    replyUuid: string;
+    replyId: string;
   }) => void;
   setPreserveFiles: Dispatch<
     SetStateAction<
@@ -434,7 +435,6 @@ export const MessageDetail = ({
           }
           if (el.dataset.msgReplyId) {
             const title = el.dataset.title || '';
-
             children.push(
               <p key={`${index}-msg-reply`}>
                 <span
@@ -443,7 +443,13 @@ export const MessageDetail = ({
                   <ImageRound
                     name="Reply"
                     src={'/icons/reply.svg'}
-                    className="w-[14px] h-[12px] hover:cursor-pointer"
+                    className="w-[14px] h-[12px]"
+                    onClick={() => {
+                      // TODO: Handle go to reply msg
+                      // onGotoMessage({
+                      //   messageId: el.dataset.msgReplyId || '',
+                      // });
+                    }}
                   />
                   <span style={{ color: '#77858F' }}>{title}</span>
                 </span>
@@ -659,7 +665,7 @@ export const MessageDetail = ({
                       {messageDetail.sender.fullName}
                       <span
                         data-id={messageDetail.uuid}
-                        className="font-medium text-xs text-[#77858F]">
+                        className="font-medium text-xs text-[#77858F] ml-2">
                         {' '}
                         {messageDetail.sender?.organizations?.name}
                       </span>
@@ -729,15 +735,14 @@ export const MessageDetail = ({
                                   }
                                 />
                               ) : (
-                                <div className="flex flex-col gap-2 !w-[100%]">
+                                <div className="flex flex-col gap-2 !w-[100%] mt-3">
                                   {messageDetail?.chatFiles &&
                                     messageDetail?.chatFiles.length > 0 && (
                                       <RenderFiles
                                         dashboardMemberList={
                                           dashboardMemberList
                                         }
-                                        isMain
-                                        uuidList={uuidListMain}
+                                        uuidList={uuidList}
                                         uuidMain={uuidListMain}
                                         messageDetail={messageDetail}
                                         downloadFileName={downloadFileName}
@@ -1284,7 +1289,7 @@ export const MessageDetail = ({
                   <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
                     <p className="max-w-full break-all">
                       {messageDetail.sender.fullName}{' '}
-                      <span className="font-medium text-xs text-[#77858F]">
+                      <span className="font-medium text-xs text-[#77858F] ml-2">
                         {messageDetail.sender?.organizations?.name}
                       </span>
                     </p>
@@ -1409,7 +1414,7 @@ export const MessageDetail = ({
                   <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
                     <p className="max-w-full break-all">
                       {messageDetail.sender.fullName}{' '}
-                      <span className="font-medium text-xs text-[#77858F]">
+                      <span className="font-medium text-xs text-[#77858F] ml-2">
                         {messageDetail.sender?.organizations?.name}
                       </span>
                     </p>

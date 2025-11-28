@@ -307,14 +307,16 @@ const ListViewByStatus = ({
           <p className="text-[#77858F] text-[14px]">{count}</p>
         )}
         {listId == `${StatusValueTask.COMPLETED}` && (
-          <ImageRound
-            src={`/icons/archive-treasure.svg`}
-            name="archive-treasure"
-            className="w-fit h-fit cursor-pointer"
-            onClick={() => {
-              handleViewArchive && handleViewArchive();
-            }}
-          />
+          <DynamicTooltip content="アーカイブタスクを見る" placement="top">
+            <ImageRound
+              src={`/icons/archive-treasure.svg`}
+              name="archive-treasure"
+              className="w-fit h-fit cursor-pointer"
+              onClick={() => {
+                handleViewArchive && handleViewArchive();
+              }}
+            />
+          </DynamicTooltip>
         )}
       </div>
       {extendByStatus.find((list) => list.id == listId)?.status &&

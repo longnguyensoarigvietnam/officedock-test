@@ -391,7 +391,7 @@ const Sidebar = ({ className }: Props) => {
   if (session && hasFullPaymentPermissions(session.user.permissions)) return;
   return (
     <aside
-      className={`overflow-x-hidden  overflow-y-hidden relative transition-all duration-300 ${expanded ? 'w-52 min-w-[208px] rounded-tr-[60px]  rounded-br-[60px]' : 'w-20 min-w-[70px] rounded-tr-[30px]  rounded-br-[30px]'} flex flex-col ${className}`}
+      className={`overflow-x-hidden flex-shrink-0  overflow-y-hidden relative transition-all duration-300 ${expanded ? 'w-52 min-w-[208px] rounded-tr-[60px]  rounded-br-[60px]' : 'w-20 min-w-[70px] rounded-tr-[30px]  rounded-br-[30px]'} flex flex-col ${className}`}
       style={{
         background:
           today &&

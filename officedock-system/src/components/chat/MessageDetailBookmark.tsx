@@ -89,6 +89,10 @@ export type MessageDetailProps = {
   handleActionEditTask: (id: number) => void;
   handleConfirmGetDataDetailEvent: (id: string) => void;
   onGotoMessage: () => void;
+  onGotoMessageReply: (data: {
+    messageId: string | number;
+    chatRoomCode: string;
+  }) => void;
   handleRemoveItemBookmark?: (uuid: string) => void;
   handleBookmark?: (data: { uuid: string; isBookmark: boolean }) => void;
 };
@@ -323,7 +327,14 @@ export const MessageDetailBookmark = ({
                   <ImageRound
                     name="Reply"
                     src={'/icons/reply.svg'}
-                    className="w-[14px] h-[12px] hover:cursor-pointer"
+                    className="w-[14px] h-[12px]"
+                    onClick={() => {
+                      // TODO: Handle go to reply msg
+                      // onGotoMessageReply({
+                      //   messageId: el.dataset.msgReplyId || '',
+                      //   chatRoomCode: messageDetail?.chatRoom?.code || '',
+                      // });
+                    }}
                   />
                   <span style={{ color: '#77858F' }}>{title}</span>
                 </span>
@@ -541,7 +552,7 @@ export const MessageDetailBookmark = ({
                 <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
                   <p className="max-w-full break-all">
                     {messageDetail.sender.fullName}{' '}
-                    <span className="font-medium text-xs text-[#77858F]">
+                    <span className="font-medium text-xs text-[#77858F] ml-2">
                       {messageDetail.sender?.organizations?.name}
                     </span>
                   </p>
@@ -591,9 +602,8 @@ export const MessageDetailBookmark = ({
                               messageDetail?.chatFiles.length > 0 && (
                                 <RenderFiles
                                   dashboardMemberList={dashboardMemberList}
-                                  uuidList={uuidListMain}
+                                  uuidList={uuidList}
                                   uuidMain={uuidListMain}
-                                  isMain
                                   messageDetail={messageDetail}
                                   downloadFileName={downloadFileName}
                                   setDataPreviewFile={setDataPreviewFile}
@@ -869,7 +879,7 @@ export const MessageDetailBookmark = ({
                   ) : (
                     <p className="max-w-full break-all">
                       {messageDetail.sender.fullName}{' '}
-                      <span className="font-medium text-xs text-[#77858F]">
+                      <span className="font-medium text-xs text-[#77858F] ml-2">
                         {messageDetail.sender?.organizations?.name}
                       </span>
                     </p>
@@ -991,7 +1001,7 @@ export const MessageDetailBookmark = ({
                 <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
                   <p className="max-w-full break-all">
                     {messageDetail.sender.fullName}{' '}
-                    <span className="font-medium text-xs text-[#77858F]">
+                    <span className="font-medium text-xs text-[#77858F] ml-2">
                       {messageDetail.sender?.organizations?.name}
                     </span>
                   </p>
@@ -1094,7 +1104,7 @@ export const MessageDetailBookmark = ({
                 <div className="flex gap-2 items-baseline font-semibold text-[15px] pr-2">
                   <p className="max-w-full break-all">
                     {messageDetail.sender.fullName}{' '}
-                    <span className="font-medium text-xs text-[#77858F]">
+                    <span className="font-medium text-xs text-[#77858F] ml-2">
                       {messageDetail.sender?.organizations?.name}
                     </span>
                   </p>

@@ -180,6 +180,7 @@ const PercentageTeamTags = ({
           label: user.user.fullName,
           percent: user.percent,
           avatarColor: user.user.avatarColor,
+          avatarUrl: user.user?.avatar || '',
         })) || [],
     );
     // Get list id
@@ -437,7 +438,6 @@ const PercentageTeamTags = ({
   };
 
   const [hasHover, setHasHover] = useState<string>('');
-
   return (
     <>
       <div

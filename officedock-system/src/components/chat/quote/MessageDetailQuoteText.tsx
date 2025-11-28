@@ -64,7 +64,7 @@ const MessageDetailQuoteText = ({
                   users: listAllMember,
                   id: messageDetail.sender.id,
                 })}
-              <span className="font-medium text-xs text-[#77858F]">
+              <span className="font-medium text-xs text-[#77858F] ml-2">
                 {' '}
                 {messageDetail.sender?.organizations?.name}
               </span>

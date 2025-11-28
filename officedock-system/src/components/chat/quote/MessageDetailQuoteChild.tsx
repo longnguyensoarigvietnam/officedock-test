@@ -76,6 +76,7 @@ export type MessageDetailProps = {
       createAt: string;
     } | null>
   >;
+  isSearchRoom?: boolean;
 
   handleActionEditTask: (id: number) => void;
 };
@@ -83,6 +84,7 @@ export type MessageDetailProps = {
 export const MessageDetailQuoteChild = ({
   uuidQuote,
   uuidList,
+  isSearchRoom = false,
   isBookMark,
   chatRoomDetail,
   messageDetail,
@@ -254,6 +256,7 @@ export const MessageDetailQuoteChild = ({
                     uuidQuote={uuidQuote}
                     uuidList={uuidList}
                     isBookMark={isBookMark}
+                    isSearchRoom={isSearchRoom}
                     dashboardMemberList={dashboardMemberList}
                     highlightedMessageId={highlightedMessageId}
                     setDataPreviewFile={setDataPreviewFile}
@@ -460,7 +463,7 @@ export const MessageDetailQuoteChild = ({
                           users: listAllMember,
                           id: messageDetail.sender.id,
                         })}
-                      <span className="font-medium text-xs text-[#77858F]">
+                      <span className="font-medium text-xs text-[#77858F] ml-2">
                         {' '}
                         {messageDetail.sender?.organizations?.name}
                       </span>
@@ -513,10 +516,11 @@ export const MessageDetailQuoteChild = ({
                                 messageDetail.message,
                                 messageDetail.mentions || [],
                               )}
-                              <div className="flex flex-col gap-2 !w-[100%]">
+                              <div className="flex flex-col gap-2 !w-[100%] mt-3">
                                 {messageDetail?.chatFiles &&
                                   messageDetail?.chatFiles.length > 0 && (
                                     <RenderFiles
+                                      isSearchRoom={isSearchRoom}
                                       dashboardMemberList={dashboardMemberList}
                                       uuidList={uuidList}
                                       uuidMain={uuidListMain}
@@ -801,7 +805,7 @@ export const MessageDetailQuoteChild = ({
                             users: listAllMember,
                             id: messageDetail.sender.id,
                           })}{' '}
-                        <span className="font-medium text-xs text-[#77858F]">
+                        <span className="font-medium text-xs text-[#77858F] ml-2">
                           {messageDetail.sender?.organizations?.name}
                         </span>
                       </p>
@@ -912,7 +916,7 @@ export const MessageDetailQuoteChild = ({
                           users: listAllMember,
                           id: messageDetail.sender.id,
                         })}{' '}
-                      <span className="font-medium text-xs text-[#77858F]">
+                      <span className="font-medium text-xs text-[#77858F] ml-2">
                         {messageDetail.sender?.organizations?.name}
                       </span>
                     </p>
@@ -1016,7 +1020,7 @@ export const MessageDetailQuoteChild = ({
                           users: listAllMember,
                           id: messageDetail.sender.id,
                         })}{' '}
-                      <span className="font-medium text-xs text-[#77858F]">
+                      <span className="font-medium text-xs text-[#77858F] ml-2">
                         {messageDetail.sender?.organizations?.name}
                       </span>
                     </p>

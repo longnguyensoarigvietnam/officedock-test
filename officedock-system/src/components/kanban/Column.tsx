@@ -394,24 +394,27 @@ const Column = ({
             <span>{title}</span>
             {!isMyRoutine && (
               <span
-                className={`text-[#77858F] ${(selectedOptionZoom.value as number) <= 50 && 'hidden'} ${count > 99 && (selectedOptionZoom.value as number) < 75 && '!text-[10px]'}`}>
+                className={`text-[#77858F] ${count > 99 && (selectedOptionZoom.value as number) < 75 && '!text-[10px]'}`}>
                 {count}
               </span>
             )}
           </div>
           <div className="flex items-center gap-1">
             {columnId == `${StatusValueTask.COMPLETED}` && (
-              <ImageRound
-                src={`/icons/archive-treasure.svg`}
-                name="archive-treasure"
-                className="w-fit h-fit cursor-pointer"
-                onClick={() => {
-                  handleViewArchive && handleViewArchive();
-                }}
-              />
+              <DynamicTooltip content="アーカイブタスクを見る" placement="top">
+                <ImageRound
+                  src={`/icons/archive-treasure.svg`}
+                  name="archive-treasure"
+                  className="w-fit h-fit cursor-pointer"
+                  onClick={() => {
+                    handleViewArchive && handleViewArchive();
+                  }}
+                />
+              </DynamicTooltip>
             )}
 
             {session?.user.permissions &&
+              columnId != `${StatusValueTask.COMPLETED}` &&
               hasPermissionInArray(
                 session?.user.permissions,
                 PermissionsSystem.MY_TASK_ADD,
