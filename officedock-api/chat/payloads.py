@@ -1,7 +1,10 @@
 from collections import defaultdict
 from uuid import UUID
 
+from django.db.models import F, Case, CharField, Value, When
+from django.db.models.functions import Concat
 
+from base.messages import KEYWORDS
 from chat.constants import ChatRoomTypes
 from chat.models import ChatRoom, ChatMessage, Bookmark, Reaction
 from chat.serializers import ChatFileSerializer, UserPayloadMsgSerializer
@@ -143,19 +146,28 @@ def build_chat_message_payload(full_messages, request_user=None):
             "organization": sm["organization"],
             "skill": {
                 "id": sm["skill__id"],
-                "name": sm["skill__name"],
+                "name": sm["skill_name"],
             },
             "status": sm["status"],
             "comment": sm["comment"],
         }
-        for sm in SubmitLevelHistory.objects.filter(
-            id__in=submit_level_ids
-        ).values(
+        for sm in SubmitLevelHistory.objects.filter(id__in=submit_level_ids)
+        .annotate(
+            skill_name=Case(
+                When(
+                    skill__deleted_at__isnull=False,
+                    then=Concat(F("skill__name"), Value(KEYWORDS["deleted"])),
+                ),
+                default=F("skill__name"),
+                output_field=CharField(),
+            )
+        )
+        .values(
             "id",
             "staff",
             "organization",
             "skill__id",
-            "skill__name",
+            "skill_name",
             "status",
             "comment",
         )
