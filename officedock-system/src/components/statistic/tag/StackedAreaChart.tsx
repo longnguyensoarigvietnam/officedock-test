@@ -563,6 +563,12 @@ const StackedAreaChart = ({
       tickAmount: 4,
       labels: {
         formatter: (val: any) => `${val}%`,
+        labels: {
+          style: {
+            fontSize: '14px',
+            colors: '#77858F',
+          },
+        },
       },
       max: 100,
       min: 0,
@@ -579,7 +585,7 @@ const StackedAreaChart = ({
         align: 'center',
         style: {
           fontSize: '14px',
-          colors: '#939FA7',
+          colors: '#77858F',
         },
       },
     },
@@ -704,7 +710,7 @@ const StackedAreaChart = ({
       header: () => {
         return (
           <div
-            className="flex gap-1 items-center justify-center"
+            className="flex gap-6 items-center justify-center"
             onClick={() => {
               if (
                 !durationSortingStatus ||
@@ -747,7 +753,7 @@ const StackedAreaChart = ({
       header: () => {
         return (
           <div
-            className="flex gap-1 items-center justify-center"
+            className="flex gap-2 items-center justify-center"
             onClick={() => {
               if (
                 !percentageSortingStatus ||
