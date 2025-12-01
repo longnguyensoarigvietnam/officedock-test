@@ -230,6 +230,10 @@ class CompanyService:
                         currency="jpy",
                         interval="month",
                     )
+        is_change_price = (
+            company.company_plan.monthly_fee != validated_data["monthly_fee"]
+        )
+        is_change_plan = company.company_plan.name != CUSTOM_PLAN
         self.update_new_plan(
             company,
             plan,
@@ -242,7 +246,10 @@ class CompanyService:
             exchangeable_amount=validated_data["exchangeable_amount"],
             limit_person=validated_data["limit_person"],
         )
-        if company.status != CompanyStatus.PENDING_APPROVAL.value:
+
+        if company.status != CompanyStatus.PENDING_APPROVAL.value and (
+            is_change_price or is_change_plan
+        ):
             self.upgrade_plan(company, plan, is_custom_plan=True)
 
     def cancellation_pending_contract(self, company):
