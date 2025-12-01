@@ -230,9 +230,7 @@ def calculate_progress_skill_map(
             not in user.organizations.values_list("id", flat=True)
         )
     )
-    # Skip calculate new duration when pending progress
-    if is_create_duration and is_common_pending_progress:
-        return
+
     for skill in org_cat_skills:
         # Find an existing skill map entry for the user that’s active and incomplete.
         skill_map = SkillMap.objects.filter(
@@ -266,7 +264,13 @@ def calculate_progress_skill_map(
                 or not skill_map.is_valid
                 or skill_map.skill.deleted_at
             )
-
+            # Skip calculate new duration when pending progress
+            if (
+                is_create_duration
+                and is_common_pending_progress
+                and duration.id not in measure_task_duration_ids
+            ):
+                continue
             if (
                 is_edit_duration
                 or duration
