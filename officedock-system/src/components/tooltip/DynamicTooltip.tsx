@@ -75,7 +75,7 @@ export const DynamicTooltip = ({
       ? createPortal(
           <div
             className={clsx(
-              'fixed z-50 px-2 py-1 bg-[#5B6770] text-white text-sm rounded shadow pointer-events-none transform -translate-x-1/2',
+              'fixed z-[999999] px-2 py-1 bg-[#5B6770] text-white text-sm rounded shadow pointer-events-none transform -translate-x-1/2',
               {
                 '-translate-y-full': placement === 'top',
                 'translate-y-0': placement === 'bottom',
