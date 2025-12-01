@@ -6,14 +6,19 @@ import Modal from '@components/common/Modal';
 type Props = {
   open: boolean;
   onClose: () => void;
-  onNavigateToDotMoney: () => Promise<void>
+  onNavigateToDotMoney: () => Promise<void>;
 };
 
-const DataCompanyPointChangeModal = ({ open, onClose, onNavigateToDotMoney }: Props) => {
+const DataCompanyPointChangeModal = ({
+  open,
+  onClose,
+  onNavigateToDotMoney,
+}: Props) => {
   return (
     <Modal
       open={open}
       className="font-primary bg-white w-[678px]  text-black overflow-y-auto !rounded-[20px] !py-7 px-[47px]"
+      contentClass="!my-auto"
       isOutSideAction={false}
       onClose={onClose}>
       <div className="flex justify-center">
@@ -45,7 +50,10 @@ const DataCompanyPointChangeModal = ({ open, onClose, onNavigateToDotMoney }: Pr
         <Button onClick={onClose} variant="outline" className="w-[128px] h-9">
           キャンセル
         </Button>
-        <Button onClick={onNavigateToDotMoney} variant="post" className="w-[128px] h-9">
+        <Button
+          onClick={onNavigateToDotMoney}
+          variant="post"
+          className="w-[128px] h-9">
           交換する
         </Button>
       </div>

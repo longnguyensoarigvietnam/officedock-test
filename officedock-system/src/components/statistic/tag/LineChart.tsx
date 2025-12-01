@@ -841,7 +841,7 @@ const LineChart = ({
         <div className="flex items-center gap-x-5">
           <div className="flex items-center gap-[10px] ">
             <ImageRound
-              className={`w-7 h-4  hover:cursor-pointer`}
+              className={`w-fit h-fit  hover:cursor-pointer`}
               name="statistic line chart icon"
               src={`/icons/statistic-line-chart.svg`}
             />
@@ -1103,7 +1103,7 @@ const LineChart = ({
               <StatisticLineChartTableSkeleton />
             ) : (
               <Table
-                className={`border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-md ${tableData.length && 'max-h-[500px] overflow-y-auto'}`}>
+                className={`border border-[#D2DBE1] !ring-0 bg-white !pt-0 py-0 mt-5 rounded-[10px] ${tableData.length && 'max-h-[500px] overflow-y-auto'}`}>
                 <thead>
                   {table.getHeaderGroups().map((headerGroup) => (
                     <tr
