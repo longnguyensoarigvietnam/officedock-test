@@ -1223,7 +1223,7 @@ const ActionsTaskModalTeam = ({
               disabled={isCheckActionPermission}
               autoCompleteInput
               placeholder="タスクのタイトル"
-              className={`shadow-none text-2xl leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[46px] focus:!shadow-none focus:border !border-[1px] rounded-md  ${!errors?.title ? '!border-[#77858F]' : '!border-error'}`}
+              className={`shadow-none text-2xl leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[42px] focus:!shadow-none focus:border !border-[1px] rounded-md  ${!errors?.title ? '!border-[#77858F]' : '!border-error'}`}
               register={register('title', {
                 required: watch('title') !== null ? true : false,
                 maxLength: {
@@ -1259,7 +1259,7 @@ const ActionsTaskModalTeam = ({
               variant="outline"
               type="button"
               onClick={onClose}
-              className="w-[86px] !rounded-md  h-[34px] !text-sm !px-0">
+              className="w-[86px] !rounded-md  h-[36px] !text-sm !px-0">
               キャンセル
             </Button>
           </div>
@@ -1466,12 +1466,12 @@ const ActionsTaskModalTeam = ({
           </div>
           {/* Tag */}
           <div className="flex  gap-[10px] items-start">
-            <div className="w-full max-w-[100px] mt-2 text-[14px] font-medium">
+            <div className="w-full max-w-[100px] flex-shrink-0 mt-2 text-[14px] font-medium">
               タグ
             </div>
             <div className="w-full max-w-[518px]">
               <div className="flex gap-2 max-w-[518px]">
-                <div className="w-[454px]">
+                <div className="w-[463px]">
                   <MultiSelectDropdown
                     className="!h-[34px]"
                     labelClass="!min-h-0 !text-sm"
@@ -1573,7 +1573,7 @@ const ActionsTaskModalTeam = ({
               <div className="w-full max-w-[100px] text-[14px] font-medium">
                 ステータス
               </div>
-              <div className="w-full max-w-[180px]">
+              <div className="w-full max-w-[130px]">
                 <Controller
                   control={control}
                   name={'statusId'}
@@ -1737,7 +1737,7 @@ const ActionsTaskModalTeam = ({
                       </div>
                     ) : (
                       <div
-                        className="flex gap-1 items-center hover:cursor-pointer"
+                        className="flex gap-1 ml-[10px] items-center hover:cursor-pointer"
                         onClick={() => {
                           setShowDeadlineTimeSetting(true);
                         }}>
@@ -1752,7 +1752,7 @@ const ActionsTaskModalTeam = ({
                       </div>
                     )}
 
-                    <div>
+                    <div className="ml-4">
                       <ImageRound
                         onClick={() => {
                           setIsFormTouched(true);
@@ -1897,7 +1897,7 @@ const ActionsTaskModalTeam = ({
               {/* Plan date */}
               {!isRoutineTaskModal && (
                 <div className="flex gap-[10px] items-start">
-                  <div className="w-full max-w-[100px] mt-2 text-[14px] font-medium">
+                  <div className="w-full max-w-[100px] flex-shrink-0 mt-2 text-[14px] font-medium">
                     実施予定日時
                   </div>
                   <div className="w-full max-w-[525px] flex flex-col gap-1 items-start ">

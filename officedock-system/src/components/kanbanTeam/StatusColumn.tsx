@@ -263,7 +263,7 @@ const StatusColumn = ({
       <div className="flex items-center justify-between pr-[10px]">
         <div
           style={{
-            gap: `6px`,
+            gap: `8px`,
             marginBottom: isExtendData ? '14px' : '0',
           }}
           className="flex items-center text-sm break-all font-medium  ">

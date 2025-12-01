@@ -1158,7 +1158,7 @@ const ActionsTaskModal = ({
           <div className="flex flex-col gap-[10px]">
             {/* Organization */}
             <div className="flex gap-[10px] items-center">
-              <div className="w-full max-w-[100px]"></div>
+              <div className="w-full max-w-[100px] flex-shrink-0"></div>
               <div className="w-full max-w-[525px]">
                 <Controller
                   control={control}
@@ -1592,7 +1592,7 @@ const ActionsTaskModal = ({
                         </div>
                       )}
 
-                      <div>
+                      <div className="relative left-[10px]">
                         <ImageRound
                           onClick={() => {
                             setIsFormTouched(true);
@@ -1735,7 +1735,7 @@ const ActionsTaskModal = ({
               {/* Plan date */}
               {!isRoutineTaskModal && (
                 <div className="flex gap-[10px] items-start">
-                  <div className="w-full max-w-[100px] mt-2 text-[14px] font-medium">
+                  <div className="w-full max-w-[100px] mt-2 flex-shrink-0 text-[14px] font-medium">
                     実施予定日時
                   </div>
                   <div className="w-full max-w-[525px] flex flex-col gap-1 items-start ">

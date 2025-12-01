@@ -2363,7 +2363,7 @@ const ChatDetail = ({
             }}>
             {/* Header */}
             <div
-              className="flex justify-between items-center px-4 py-2 min-h-[78px] gap-3 !w-[calc(100%_-_20px)] ml-auto border-b-[2px] rounded-bl-[24px] text-white"
+              className="flex justify-between items-center px-4 py-2 min-h-[78px] gap-3 !w-[calc(100%_-_20px)] ml-auto  rounded-bl-[24px] text-white"
               style={{
                 background: 'linear-gradient(to right, #289BF2, #73CCDF)',
               }}>
@@ -2584,7 +2584,7 @@ const ChatDetail = ({
                 {/* Message list */}
                 <div
                   ref={chatContainerRef}
-                  className={`${chatRoomDetail?.type == ChatRoomType.TASK || chatRoomDetail?.type == ChatRoomType.SKILL || chatRoomDetail?.type == ChatRoomType.CALENDAR ? 'h-[calc(100vh_-_170px)]' : 'h-[calc(100vh_-_386px)]'} pb-3 ${dataMessageDetail.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden'}  overflow-x-hidden scrollbar-gutter-stable flex pr-0 flex-col-reverse scroll-smooth`}>
+                  className={`${chatRoomDetail?.type == ChatRoomType.TASK || chatRoomDetail?.type == ChatRoomType.SKILL || chatRoomDetail?.type == ChatRoomType.CALENDAR ? 'h-[calc(100vh_-_170px)]' : 'h-[calc(100vh_-_386px)]'} pb-3 ${dataMessageDetail.length > 0 && !initialLoad ? 'overflow-y-auto' : 'overflow-y-hidden'} pt-2 overflow-x-hidden scrollbar-gutter-stable flex pr-0 flex-col-reverse scroll-smooth`}>
                   {isLoadingNewer && (
                     <div className="flex  flex-col items-start ml-3">
                       <RowSkeleton
@@ -2633,6 +2633,7 @@ const ChatDetail = ({
                             item.id == gotoMessageId ? gotoMessageRef : null
                           }>
                           <MessageDetail
+                            isExtendMoreData={isExtendMoreData}
                             chatRoomDetail={chatRoomDetail}
                             uploadFileStatus={uploadFileStatus}
                             messageDetail={item}
@@ -2709,6 +2710,7 @@ const ChatDetail = ({
                             item.id == gotoMessageId ? gotoMessageRef : null
                           }>
                           <MessageDetail
+                            isExtendMoreData={isExtendMoreData}
                             chatRoomDetail={chatRoomDetail}
                             uploadFileStatus={uploadFileStatus}
                             messageDetail={item}
@@ -2893,7 +2895,8 @@ const ChatDetail = ({
                                       handleQuoteTaskUser={handleQuoteTaskUser}
                                     />
                                   )}
-                                <DynamicTooltip
+                                {/* TODO: Implement Aa chat */}
+                                {/* <DynamicTooltip
                                   content={'書式設定'}
                                   placement="top">
                                   <p className="!font-thin text-[#77858F] hover:bg-[#77858F26] rounded-full p-[3px] hover:cursor-pointer flex justify-between items-center w-8 h-8">
@@ -2901,7 +2904,7 @@ const ChatDetail = ({
                                       Aa
                                     </span>
                                   </p>
-                                </DynamicTooltip>
+                                </DynamicTooltip> */}
                               </div>
 
                               <div className="flex items-center gap-[14px]">

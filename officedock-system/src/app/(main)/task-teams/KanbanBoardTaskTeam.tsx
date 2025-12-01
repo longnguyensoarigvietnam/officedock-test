@@ -414,7 +414,7 @@ const KanbanBoardTaskTeam = () => {
 
     return (
       <>
-        <p className="mr-8 text-[#77858F] font-medium text-[13px]">
+        <p className="mr-[21px] text-[#77858F] font-medium text-[13px]">
           メンバー{participants.length}人
         </p>
         <div className="flex items-center">
@@ -426,14 +426,14 @@ const KanbanBoardTaskTeam = () => {
                 <CustomUserAvatar
                   avatarUrl={item?.avatarUrl || ''}
                   avatarColor={item?.color || ''}
-                  size={32}
+                  size={30}
                   customClassName={`${!item?.avatarUrl && '!mt-0'}`}
                 />
               </div>
             );
           })}
           {remainingCount > 0 && (
-            <div className="ml-[-10px] relative flex items-center justify-center bg-[#97A9B2] border-[1px] border-white rounded-full text-sm text-white w-[36px] h-[36px]">
+            <div className="ml-[-10px] relative flex items-center justify-center bg-[#97A9B2] border-[1px] border-white rounded-full text-xs text-white w-[30px] h-[30px]">
               +{remainingCount}
             </div>
           )}
@@ -2485,7 +2485,7 @@ const KanbanBoardTaskTeam = () => {
         <div className="flex-shrink-0">
           <div className="mb-[30px] flex items-center justify-between">
             <div className="flex items-center">
-              <div className="flex gap-1 items-center">
+              <div className="flex items-center">
                 {selectedOrganization?.imgComponent && (
                   <div className="w-[34px] h-[34px] scale-[1.4167] flex justify-center items-center">
                     {selectedOrganization.imgComponent}
@@ -2495,7 +2495,7 @@ const KanbanBoardTaskTeam = () => {
                   {selectedOrganization?.label}
                 </p>
               </div>
-              <div className="flex justify-center bg-white p-[6px] rounded-[20px] items-center gap-2 ml-5 ">
+              <div className="flex justify-center bg-white p-[6px] rounded-[20px] items-center gap-[6px] ml-5 ">
                 <Button
                   disabled={isLoadingDataTask}
                   variant={'primary'}
@@ -2668,7 +2668,7 @@ const KanbanBoardTaskTeam = () => {
               </>
 
               <InputSearch
-                className="w-[300px] h-[34px] py-0 bg-white !rounded-[20px]"
+                className="w-[300px] h-[34px] py-0 bg-white ml-2 !rounded-[20px]"
                 inputClassName="h-[34px] bg-white border-none !rounded-[20px] text-sm placeholder-[#77858F]"
                 iconClassName="w-[14px] h-[14px]"
                 placeholder="タスク、キーワードを検索"
@@ -2700,18 +2700,18 @@ const KanbanBoardTaskTeam = () => {
                     });
                   }}
                   style={{ boxShadow: '0px 1px 5px 0px #00000033' }}
-                  className="flex gap-2 !p-[10px] !border-none">
+                  className="flex gap-2 !h-[34px] !p-[10px] !border-none">
                   <div
                     style={{
-                      padding: '6.5px',
+                      padding: '4px',
                     }}
                     className={`rounded-full cursor-pointer w-fit  bg-white `}>
                     <ImageRound
-                      src={`/icons/add.svg`}
+                      src={`/icons/add-blue.svg`}
                       name="Add"
                       style={{
-                        width: `${(247 / 247) * 9}px`,
-                        height: `${(247 / 247) * 9}px`,
+                        width: `8px`,
+                        height: `8px`,
                       }}
                     />
                   </div>
@@ -2723,7 +2723,7 @@ const KanbanBoardTaskTeam = () => {
         </div>
 
         {/* BOARD DATA */}
-        <div className="h-fit flex-grow  overflow-y-auto mt-6 w-full overflow-x-auto">
+        <div className="h-fit flex-grow  overflow-y-auto  w-full overflow-x-auto">
           {!isLoadingDataTask ? (
             <DragDropContext
               onDragStart={() => {

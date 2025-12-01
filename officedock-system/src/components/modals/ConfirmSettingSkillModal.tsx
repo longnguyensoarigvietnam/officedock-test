@@ -39,7 +39,9 @@ export const ConfirmSettingSkillModal = ({
     : 1;
   const progressPercent = confirmSettingSkillInfo?.progressPercent || 0;
   const showTwinklingStars =
-    confirmSettingSkillInfo?.progressPercent == 100 && !stepCompleted;
+    confirmSettingSkillInfo?.progressPercent == 100 &&
+    !stepCompleted &&
+    !confirmSettingSkillInfo?.skill.deletedAt;
   let strokeColor = '';
   switch (step) {
     case 1:

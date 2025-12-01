@@ -81,7 +81,7 @@ const DetailProgressData = ({
         )}
       </div>
       <div
-        className={`group w-full !h-[12px] relative  bg-gray-300 ${classProgressClass}`}>
+        className={`group w-full !h-[12px] relative  bg-[#EBF1F7] ${classProgressClass}`}>
         <div
           className="h-full transition-all duration-500 rounded-[4px]"
           style={{
@@ -165,7 +165,7 @@ const DetailProgressData = ({
               )}
             </div>
             <div
-              className={`w-full group relative h-[10px] bg-gray-300 ${classProgressUserClass}`}>
+              className={`w-full group relative h-[10px] bg-[#EBF1F7] ${classProgressUserClass}`}>
               <div
                 className="h-full transition-all duration-500"
                 style={{

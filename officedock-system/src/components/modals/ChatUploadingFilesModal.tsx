@@ -250,12 +250,12 @@ const ChatUploadingFilesModal = memo(
                 </div>
               )}
             </div>
-
-            <DynamicTooltip content={'書式設定'} placement="top">
+            {/* TODO: Implement Aa chat */}
+            {/* <DynamicTooltip content={'書式設定'} placement="top">
               <p className="!font-thin text-[#77858F] hover:bg-[#77858F26] rounded-full p-[3px] hover:cursor-pointer flex justify-between items-center w-8 h-8">
                 <span className="w-[20px] ml-1 mt-[-3px]">Aa</span>
               </p>
-            </DynamicTooltip>
+            </DynamicTooltip> */}
           </div>
           <div className="mb-3">
             <EditorContent
