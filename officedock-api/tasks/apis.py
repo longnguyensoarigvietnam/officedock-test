@@ -1089,13 +1089,18 @@ class TaskViewSet(
                     is_minus=True,
                     case=case,
                     organization=current_org,
+                    is_change_categories=True,
                 )
             # Update new categories
             create_categories_by_model(task, categories)
             for user in task.people_in_charge.all():
                 # Plus skill map process have new categories of updated task
                 calculate_progress_skill_map(
-                    task, user, case=case, old_task_updated=old_task_updated
+                    task,
+                    user,
+                    case=case,
+                    old_task_updated=old_task_updated,
+                    is_change_categories=True,
                 )
         elif (
             previous != completed
@@ -1338,7 +1343,7 @@ class TaskViewSet(
 
                     for user in task.people_in_charge.all():
                         calculate_progress_skill_map(
-                            task, user, is_minus=minus, case=case, is_plus=False
+                            task, user, is_minus=minus, case=case
                         )
                 for user in task.people_in_charge.all():
                     send_web_socket_event(

@@ -222,3 +222,4 @@ class SkillMapSkillLevel(BaseModel):
     is_complete = models.BooleanField(default=False)
     popup = models.BooleanField(default=True)
     measure_task_ids = models.JSONField(null=True, blank=True)
+    measure_task_duration_ids = models.JSONField(null=True, blank=True)
