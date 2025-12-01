@@ -85,6 +85,7 @@ const TwoLineLabelPlugin = {
 };
 
 ChartJS.register(ArcElement, Tooltip, Legend, ChartDataLabels);
+ChartJS.defaults.font.family = 'Noto Sans JP, sans-serif';
 
 interface PieChartProps {
   isTeam?: boolean;

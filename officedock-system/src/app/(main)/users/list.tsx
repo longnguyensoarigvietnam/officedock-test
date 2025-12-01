@@ -855,7 +855,7 @@ const ListUsers = () => {
       <ConfirmHiddenModal
         open={openConfirmDeleteModal}
         type="ユーザー"
-        message="すでに登録したチームカテゴリーは、表示されたままです。"
+        message="紐づいている要素からも見えなくなります。"
         message2="あとで「非表示一覧」から復元することも可能です。"
         name={selectedUserToDelete?.profile.fullName}
         userColor={selectedUserToDelete?.avatarColor}

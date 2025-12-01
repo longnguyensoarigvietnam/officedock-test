@@ -726,7 +726,7 @@ const LineChart = ({
       header: () => {
         return (
           <div
-            className="flex gap-1 items-center justify-center"
+            className="flex gap-6 items-center justify-center"
             onClick={() => {
               if (
                 !durationSortingStatus ||
@@ -769,7 +769,7 @@ const LineChart = ({
       header: () => {
         return (
           <div
-            className="flex gap-1 items-center justify-center"
+            className="flex gap-2 items-center justify-center"
             onClick={() => {
               if (
                 !percentageSortingStatus ||

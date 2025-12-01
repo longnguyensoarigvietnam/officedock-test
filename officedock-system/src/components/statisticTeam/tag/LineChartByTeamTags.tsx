@@ -1352,7 +1352,7 @@ const LineChartByTeamTags = ({
       header: () => {
         return (
           <div
-            className="flex gap-1 items-center justify-center"
+            className="flex gap-6 items-center justify-center"
             onClick={() => {
               if (
                 !durationSortingStatus ||
@@ -1444,7 +1444,7 @@ const LineChartByTeamTags = ({
       header: () => {
         return (
           <div
-            className="flex gap-1 items-center justify-center cursor-pointer"
+            className="flex gap-2 items-center justify-center cursor-pointer"
             onClick={() => {
               if (
                 !percentageSortingStatus ||
