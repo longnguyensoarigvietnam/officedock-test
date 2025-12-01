@@ -85,7 +85,6 @@ const TwoLineLabelPlugin = {
 };
 
 ChartJS.register(ArcElement, Tooltip, Legend, ChartDataLabels);
-ChartJS.register(TwoLineLabelPlugin);
 
 interface PieChartProps {
   isTeam?: boolean;
@@ -317,6 +316,7 @@ const PieChartCustom = ({
         }}
         data={chartData}
         options={options}
+        plugins={[TwoLineLabelPlugin]}
       />
       {tooltipData && (
         <div

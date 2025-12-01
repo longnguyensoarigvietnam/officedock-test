@@ -862,7 +862,7 @@ const TableChart = ({
         </div>
       </div>
 
-      <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0  py-0 mt-5 rounded-md">
+      <Table className="border border-[#D2DBE1] !ring-0 bg-white !pt-0  py-0 mt-5 rounded-[10px]">
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr

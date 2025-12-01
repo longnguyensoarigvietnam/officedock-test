@@ -1125,7 +1125,7 @@ const LineChartCompare = ({
         <div className="flex items-center gap-x-5">
           <div className="flex items-center gap-[10px] w-fit flex-shrink-0">
             <ImageRound
-              className={`w-7 h-4  hover:cursor-pointer`}
+              className={`w-fit h-fit  hover:cursor-pointer`}
               name="statistic line chart icon"
               src={`/icons/statistic-line-chart.svg`}
             />
@@ -1377,7 +1377,7 @@ const LineChartCompare = ({
             (!isFetchingStatisticAllTeamTaskDurationsList &&
               !isFetchingStatisticAllTeamTaskDurationsCompareList) ? (
               <Table
-                className={`w-full border border-gray-300 mt-5 rounded-md ${tableData.length && 'max-h-[500px] overflow-y-auto'}`}>
+                className={`w-full border border-gray-300 mt-5 rounded-[10px] ${tableData.length && 'max-h-[500px] overflow-y-auto'}`}>
                 <thead>
                   {table.getHeaderGroups().map((headerGroup) => (
                     <tr
