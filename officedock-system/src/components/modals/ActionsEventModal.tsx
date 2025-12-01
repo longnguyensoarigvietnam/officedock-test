@@ -950,7 +950,7 @@ const ActionsEventModal = ({
       let rawMembers = creationDataCommonDataCustom.allMembers;
 
       // CREATE → remove deleted user
-      if (action === ActionsEvent.CREATE) {
+      if (action !== ActionsEvent.EDIT) {
         rawMembers = rawMembers.filter((m) => !m.deletedAt);
       }
 
@@ -990,7 +990,7 @@ const ActionsEventModal = ({
       let processedOrgs = rawOrgs;
 
       // CREATE
-      if (action === ActionsEvent.CREATE) {
+      if (action !== ActionsEvent.EDIT) {
         processedOrgs = rawOrgs
           .map((org) => {
             const validUsers = org.users?.filter((u) => !u.deletedAt) || [];
