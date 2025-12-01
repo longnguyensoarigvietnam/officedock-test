@@ -222,7 +222,7 @@ def calculate_progress_skill_map(
         .values_list("skill", flat=True)
         .distinct()
     )
-    is_pending_progress = (
+    is_common_pending_progress = (
         (organization.deleted_at)
         or (user.deleted_at)
         or (
@@ -231,7 +231,7 @@ def calculate_progress_skill_map(
         )
     )
     # Skip calculate new duration when pending progress
-    if is_create_duration and is_pending_progress:
+    if is_create_duration and is_common_pending_progress:
         return
     for skill in org_cat_skills:
         # Find an existing skill map entry for the user that’s active and incomplete.
@@ -261,8 +261,8 @@ def calculate_progress_skill_map(
                 and old_task_updated < current_skill_level.created_at
             )
             # If subtracting progress, make sure the task is already in the tracked list.
-            is_pending_progress = (
-                is_pending_progress
+            is_skill_deleted_or_invalid = (
+                is_common_pending_progress
                 or not skill_map.is_valid
                 or skill_map.skill.deleted_at
             )
@@ -273,13 +273,13 @@ def calculate_progress_skill_map(
                 and duration.id in measure_task_duration_ids
             ):
                 calculate_progress_duration_for_skill_map(
-                    current_skill_level, user, is_pending_progress
+                    current_skill_level, user, is_skill_deleted_or_invalid
                 )
                 continue
 
             if (
                 (is_minus and task.id not in measure_task_ids)
-                or (not is_minus and is_pending_progress)
+                or (not is_minus and is_skill_deleted_or_invalid)
                 or is_task_updated_before_skill
             ):
                 continue
@@ -349,7 +349,9 @@ def calculate_progress_skill_map(
                     and current_skill_level.measure_count
                     <= actual_measure_count
                     and current_skill_level.popup
-                    and not (is_pending_progress or not skill_map.is_valid)
+                    and not (
+                        is_skill_deleted_or_invalid or not skill_map.is_valid
+                    )
                 ):
                     _send_socket_show_popup_complete(
                         skill_map,
