@@ -576,7 +576,7 @@ export const SkillMapByOrganizationPanel = ({
                                 <ImageRound
                                   name="Comment"
                                   src={'/icons/comment.svg'}
-                                  className="w-[16px] h-[14px] cursor-pointer"
+                                  className="w-[16px] h-[14px] relative top-[-7px] cursor-pointer"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setSelectedSkillMapToViewComment(skill.id);

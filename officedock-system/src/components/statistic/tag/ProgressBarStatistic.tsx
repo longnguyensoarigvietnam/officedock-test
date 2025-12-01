@@ -98,7 +98,7 @@ const ProgressBarStatistic = ({
         </div>
 
         <div
-          className={`group w-full relative h-4 bg-gray-300 ${classProgressClass}`}>
+          className={`group w-full relative h-4 bg-[#EBF1F7] ${classProgressClass}`}>
           <div
             ref={containerRef}
             onMouseLeave={() => {

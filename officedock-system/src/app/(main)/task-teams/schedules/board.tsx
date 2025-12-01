@@ -892,7 +892,7 @@ const ScheduleTeamBoard = () => {
 
     return (
       <>
-        <p className="mr-8 text-[#77858F] font-medium text-[13px]">
+        <p className="mr-5 text-[#77858F] font-medium text-[13px]">
           メンバー{participants.length}人
         </p>
         <div className="flex items-center">
@@ -904,14 +904,14 @@ const ScheduleTeamBoard = () => {
                 <CustomUserAvatar
                   avatarUrl={item?.avatarUrl || ''}
                   avatarColor={item?.color || ''}
-                  size={32}
+                  size={30}
                   customClassName={`${!item?.avatarUrl && '!mt-0'}`}
                 />
               </div>
             );
           })}
           {remainingCount > 0 && (
-            <div className="ml-[-10px] relative flex items-center justify-center bg-[#97A9B2] border-[1px] border-white rounded-full text-sm text-white w-[36px] h-[36px]">
+            <div className="ml-[-10px] relative flex items-center justify-center bg-[#97A9B2] border-[1px] border-white rounded-full text-sm text-white w-[30px] h-[30px]">
               +{remainingCount}
             </div>
           )}
@@ -999,8 +999,8 @@ const ScheduleTeamBoard = () => {
   }, [currentResources]);
 
   return (
-    <div className="w-full h-full relative">
-      <div className="pt-[30px] px-10  font-medium  w-full">
+    <div className="w-full h-full flex flex-col relative">
+      <div className="pt-[30px] px-10 h-fit flex-shrink-0  font-medium  w-full">
         <div className="mb-[30px] flex items-center justify-between">
           <div className="flex items-center">
             <div className="flex gap-1 items-center">
@@ -1440,7 +1440,7 @@ const ScheduleTeamBoard = () => {
         </div>
       </div>
       {isLoadingSchedule && (
-        <div className="absolute h-[calc(100vh_-_150px)] w-full z-[30] ">
+        <div className="absolute h-[calc(100vh_-_220px)] bottom-0 w-full z-[30] ">
           <RowSkeleton
             numberOfRows={1}
             className="h-full flex-grow !rounded-[14px] w-[calc(100%)] !bg-[#E6F3FB] !bg-[linear-gradient(100deg,_#ffffff00_40%,_#ffffff80_50%,_#ffffff00_60%)] !bg-[length:200%_100%]"
@@ -1450,7 +1450,7 @@ const ScheduleTeamBoard = () => {
       )}
       <div
         key={pathname}
-        className={`w-full relative  overflow-visible min-w-0 calendar-team-custom day ${getAllDayEventCountText(events)} `}
+        className={`w-full relative flex-grow  overflow-visible min-w-0 calendar-team-custom day ${getAllDayEventCountText(events)} `}
         style={{ overflowX: 'auto', width: '100%' }}>
         <FullCalendar
           ref={calendarRef}
@@ -1474,11 +1474,11 @@ const ScheduleTeamBoard = () => {
               (member) => String(member.id) == String(resource.resource.id),
             );
             return (
-              <div className="flex items-center justify-start gap-2">
+              <div className="flex items-center justify-start gap-[10px]">
                 <CustomUserAvatar
                   avatarUrl={memberInfo?.avatarUrl || ''}
                   avatarColor={memberInfo?.color || ''}
-                  size={36}
+                  size={30}
                 />
                 <p className="line-clamp-2 break-all max-w-[100%] text-[15px] font-medium text-black">
                   {resource.resource.title}
@@ -1490,7 +1490,7 @@ const ScheduleTeamBoard = () => {
           headerToolbar={false}
           datesSet={handleDatesSet}
           locale={'ja-JP'}
-          height={'70vh'}
+          height={'98%'}
           dayMinWidth={300}
           stickyFooterScrollbar={true}
           events={modifyEvents(events)}
@@ -1577,7 +1577,7 @@ const ScheduleTeamBoard = () => {
         style={{
           boxShadow: '0px 2px 8px 0px #0000001A',
         }}
-        className={`w-[180px] px-3 z-20 h-[38px] absolute rounded-[100px] right-[70px] bottom-[35px] bg-white flex items-center `}>
+        className={`w-[180px]  px-3 z-20 h-[38px] absolute rounded-[100px] right-[70px] bottom-[35px] bg-white flex items-center `}>
         <RangeSlider
           min={18}
           max={100}

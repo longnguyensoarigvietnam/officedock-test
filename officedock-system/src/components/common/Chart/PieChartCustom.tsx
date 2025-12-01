@@ -9,13 +9,83 @@ import {
   ChartOptions,
 } from 'chart.js';
 import { useEffect, useRef, useState } from 'react';
-import ChartDataLabels, { Context } from 'chartjs-plugin-datalabels';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 
 import { OptionDropdownType } from '@interfaces/common';
 import { StatisticCategoryInfo } from '@interfaces/statistic';
 import ModalCustomTooltip from '@components/tooltip/ModalCustomTooltip';
+// Custom plugin draws 2 lines of text (label + %)
+const TwoLineLabelPlugin = {
+  id: 'twoLineLabelPlugin',
+  afterDatasetsDraw(chart: any) {
+    const { ctx } = chart;
+
+    const meta = chart.getDatasetMeta(0);
+    if (!meta || !meta.data) return;
+
+    const labels = chart.data?.labels || [];
+    const dataset = chart.data?.datasets?.[0];
+    if (!dataset || !dataset.data) return;
+
+    const values = dataset.data as number[];
+
+    ctx.save();
+
+    meta.data.forEach((arc: any, index: number) => {
+      const value = values[index];
+      if (!value && value !== 0) return;
+
+      const rawLabel = labels?.[index] || '';
+      const maxLength = 10;
+      const label =
+        rawLabel.length > maxLength
+          ? rawLabel.substring(0, maxLength) + '...'
+          : rawLabel;
+
+      if (!arc || !arc.tooltipPosition) return;
+      const pos = arc.tooltipPosition();
+      if (!pos) return;
+
+      const x = pos.x;
+      const y = pos.y;
+
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#fff';
+
+      // ✦ 1) ONLY SHOW LABEL IF value >= 20
+      if (value >= 20) {
+        ctx.font = '14px "Noto Sans JP", sans-serif';
+        ctx.fillText(label, x, y - 16);
+      }
+
+      // ✦ 2) Value 24px
+      ctx.font = '400 24px "Noto Sans JP", sans-serif';
+      const valueText = `${value}`;
+      const valueWidth = ctx.measureText(valueText).width;
+
+      // ✦ 3) Percent symbol % (14px)
+      ctx.font = '14px "Noto Sans JP", sans-serif';
+      const percentWidth = ctx.measureText('%').width;
+
+      const totalWidth = valueWidth + percentWidth;
+      const startX = x - totalWidth / 2;
+
+      // Value (big)
+      ctx.font = '400 24px "Noto Sans JP", sans-serif';
+      ctx.fillText(valueText, startX + valueWidth / 2, y + 8);
+
+      // Percent symbol (small)
+      ctx.font = '14px "Noto Sans JP", sans-serif';
+      ctx.fillText('%', startX + valueWidth + percentWidth / 2, y + 10);
+    });
+
+    ctx.restore();
+  },
+};
 
 ChartJS.register(ArcElement, Tooltip, Legend, ChartDataLabels);
+ChartJS.register(TwoLineLabelPlugin);
 
 interface PieChartProps {
   isTeam?: boolean;
@@ -92,7 +162,6 @@ const PieChartCustom = ({
     }
     return acc;
   }, []);
-
   const chartRef = useRef<any>(null);
 
   const makeGradientColor = (
@@ -190,27 +259,7 @@ const PieChartCustom = ({
         },
       },
       datalabels: {
-        formatter: (value, context: Context) => {
-          if (value < 20) return `${value}%`;
-          const label = String(
-            context.chart.data.labels?.[context.dataIndex] || '',
-          );
-          const maxLabelLength = 10;
-          const truncatedLabel =
-            label.length > maxLabelLength
-              ? `${label.substring(0, maxLabelLength)}...`
-              : label;
-          return `${truncatedLabel}\n${value}%`;
-        },
-        color: '#fff',
-        font: {
-          size: 14,
-          weight: 500,
-          family: '"Noto Sans JP", sans-serif',
-        },
-        align: 'center',
-        anchor: 'center',
-        textAlign: 'center',
+        display: false,
       },
     },
   };

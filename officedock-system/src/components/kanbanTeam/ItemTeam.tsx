@@ -348,7 +348,7 @@ const ItemTeam = ({
                               ? '12px'
                               : '9px',
                         }}
-                        className="flex items-center justify-center font-medium text-primary bg-[#DFE6EA] rounded">
+                        className="flex items-center justify-center font-medium text-primary bg-[#EBF1F7] rounded">
                         重要
                       </div>
                     ) : null}

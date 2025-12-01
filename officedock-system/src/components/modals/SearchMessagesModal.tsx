@@ -606,12 +606,12 @@ export const SearchMessagesModal = ({
     <Modal
       open={open}
       isOutSideAction={false}
-      className="font-primary !rounded-[20px] text-black !p-0 !w-[1000px] !min-w-[1000px] h-[790px]"
+      className="font-primary !rounded-[20px] text-black !p-0 !w-full min-h-[600px] h-[calc(100vh_-_203px)]"
       titleClassName="!text-[14px] !text-[#5B6770] !font-medium"
       headerClassName="bg-[#EBF1F7] !rounded-t-[20px] !rounded-b-none px-5 !py-[10px]"
       closeIconClassName="!bg-white !rounded-full !p-[7px] !hover:cursor-pointer"
       closeClassName="!mt-0 !w-4 !h-4 !hover:cursor-pointer"
-      contentClass="!w-[1000px] !rounded-[20px]"
+      contentClass=" !min-w-[900px] !w-[calc(100vw_-_440px)] !max-w-[1000px] !mx-auto !rounded-[20px]"
       onClose={() => {
         onClose();
       }}
@@ -642,7 +642,7 @@ export const SearchMessagesModal = ({
               }}
             />
             <Button
-              className="!w-[60px] rounded-[6px] h-[36px] !px-[12px] font-medium text-sm"
+              className="!w-[60px] rounded-[6px]  h-[36px] !px-[12px] font-medium text-sm"
               disabled={!searchChatMsg}
               onClick={() => {
                 setSearchMessageResults(undefined);
@@ -667,7 +667,7 @@ export const SearchMessagesModal = ({
         </div>
         <div
           ref={resultsContainerRef}
-          className="overflow-y-auto !max-h-[630px] h-[630px] bg-[#F8FAFC] rounded-[6px] p-4">
+          className="overflow-y-auto min-h-[450px] h-[calc(100vh_-_363px)] bg-[#F8FAFC] rounded-[6px] p-4">
           {dataSearch.length > 0 ? (
             dataSearch.map((messageDetail) => {
               let uuidListMain = [];

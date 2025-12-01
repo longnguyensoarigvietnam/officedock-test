@@ -69,6 +69,7 @@ import {
 import api from '@base/api';
 
 export type MessageDetailProps = {
+  isExtendMoreData?: boolean;
   chatRoomDetail: ChatRoomDetail | undefined;
   uploadFileStatus: Record<
     string,
@@ -141,6 +142,7 @@ export type MessageDetailProps = {
 };
 
 export const MessageDetail = ({
+  isExtendMoreData = false,
   chatRoomDetail,
   uploadFileStatus,
   messageDetail,
@@ -649,7 +651,7 @@ export const MessageDetail = ({
   return (
     <Fragment>
       {messageDetail && (
-        <div className="group px-4">
+        <div className={`group px-4 ${!isExtendMoreData && 'pr-[44px]'} `}>
           {(chatRoomDetail?.type === ChatRoomType.PRIVATE ||
             chatRoomDetail?.type === ChatRoomType.GROUP ||
             chatRoomDetail?.type === ChatRoomType.SELF) && (

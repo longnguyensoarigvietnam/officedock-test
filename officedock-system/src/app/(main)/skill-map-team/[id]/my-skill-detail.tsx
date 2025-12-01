@@ -143,7 +143,8 @@ const MySkillDetailByUser = ({ detailSkillData }: Props) => {
                               </div>
                             </div>
                           </div>
-                          <div className="min-w-[290px] text-xs max-w-[290px] flex-shrink-0 break-words border-r px-5 border-[#D2DBE1]">
+                          <div
+                            className={`min-w-[290px] ${lastValidSkill.skill.deletedAt && 'invisible'} text-xs max-w-[290px] flex-shrink-0 break-words border-r px-5 border-[#D2DBE1]`}>
                             <p>対応タスクを始めてから</p>
                             <div className="flex gap-[2px] items-end mt-[4px]">
                               {lastValidSkill.level.measureCount !== null && (

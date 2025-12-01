@@ -54,6 +54,7 @@ const FilterStatisticModal = ({ open, close }: Props) => {
   };
 
   const handleSearch = () => {
+    if (tagsOptions.length == 0) return;
     setIsLoadingLarge(true);
     setIsLoadingMedium(true);
     setIsLoadingOrganization(true);
@@ -133,7 +134,10 @@ const FilterStatisticModal = ({ open, close }: Props) => {
         <Button variant="outline" onClick={close} className="h-9">
           キャンセル
         </Button>
-        <Button onClick={handleSearch} className="h-9" disabled={isHasLoading}>
+        <Button
+          onClick={handleSearch}
+          className="h-9"
+          disabled={isHasLoading || tagsOptions.length == 0}>
           絞り込む
         </Button>
       </div>

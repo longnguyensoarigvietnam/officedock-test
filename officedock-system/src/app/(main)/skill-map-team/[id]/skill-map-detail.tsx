@@ -255,7 +255,9 @@ export const SkillMapDetailByUser = ({
                         const hasComment = skill.isHaveComment;
                         const progressPercent = skill?.progressPercent || 0;
                         const showTwinklingStars =
-                          skill?.progressPercent == 100 && !stepCompleted;
+                          skill?.progressPercent == 100 &&
+                          !stepCompleted &&
+                          !skill.skill.deletedAt;
                         let strokeColor = '';
                         switch (step) {
                           case 1:
@@ -303,32 +305,32 @@ export const SkillMapDetailByUser = ({
                                     <TwinklingIcon
                                       className="absolute top-[-10px] left-[-10px]"
                                       delay={0}
-                                      iconUrl='/icons/blue-star.svg'
+                                      iconUrl="/icons/blue-star.svg"
                                     />
                                     <TwinklingIcon
                                       className="absolute top-[5px] right-[-15px]"
                                       delay={0.5}
-                                      iconUrl='/icons/blue-star.svg'
+                                      iconUrl="/icons/blue-star.svg"
                                     />
                                     <TwinklingIcon
                                       className="absolute top-[-15px] right-[5px]"
                                       delay={0.8}
-                                      iconUrl='/icons/blue-star.svg'
+                                      iconUrl="/icons/blue-star.svg"
                                     />
                                     <TwinklingIcon
                                       className="absolute bottom-[5px] left-[-15px]"
                                       delay={1}
-                                      iconUrl='/icons/blue-star.svg'
+                                      iconUrl="/icons/blue-star.svg"
                                     />
                                     <TwinklingIcon
                                       className="absolute bottom-[-15px] left-[5px]"
                                       delay={1.2}
-                                      iconUrl='/icons/blue-star.svg'
+                                      iconUrl="/icons/blue-star.svg"
                                     />
                                     <TwinklingIcon
                                       className="absolute bottom-[-10px] right-[-10px]"
                                       delay={1.5}
-                                      iconUrl='/icons/blue-star.svg'
+                                      iconUrl="/icons/blue-star.svg"
                                     />
                                   </div>
                                 )}
@@ -355,16 +357,19 @@ export const SkillMapDetailByUser = ({
                                       <div className="w-[16px]"></div>
                                     )}
                                   </div>
-
-                                  <div>
-                                    <SkillMapProgressBar
-                                      value={progressPercent}
-                                      strokeColor={strokeColor}
-                                      trailColor={
-                                        stepCompleted ? '#D2DBE1' : '#EBF1F7'
-                                      }
-                                    />
-                                  </div>
+                                  {skill.skill.deletedAt ? (
+                                    <div></div>
+                                  ) : (
+                                    <div>
+                                      <SkillMapProgressBar
+                                        value={progressPercent}
+                                        strokeColor={strokeColor}
+                                        trailColor={
+                                          stepCompleted ? '#D2DBE1' : '#EBF1F7'
+                                        }
+                                      />
+                                    </div>
+                                  )}
                                 </div>
                                 <div className="w-[60px] flex justify-end">
                                   {' '}

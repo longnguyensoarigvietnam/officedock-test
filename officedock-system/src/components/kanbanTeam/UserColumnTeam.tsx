@@ -88,7 +88,7 @@ const UserColumnTeam = ({
               <CustomUserAvatar
                 avatarUrl={user?.avatar || ''}
                 avatarColor={user?.avatarColor || ''}
-                size={33}
+                size={30}
               />
               <p
                 style={{
@@ -119,7 +119,7 @@ const UserColumnTeam = ({
             </div>
             <div
               style={{
-                gap: `${(columnWidth / 247) * 10}px`,
+                gap: `${(columnWidth / 247) * 7}px`,
               }}
               className="flex items-center">
               <DynamicTooltip content="タスクを新規作成" placement="top">

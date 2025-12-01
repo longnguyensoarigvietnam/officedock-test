@@ -239,8 +239,19 @@ export const EventListModal = ({
     }
 
     if (showOrganizationAvatar) return showOrgAvatars(organizationIds);
-    if (checkShowUserAvatar(event.participants))
-      return showUserAvatars(event.participants || []);
+    if (checkShowUserAvatar(event.participants)) {
+      const filteredParticipants = event.participants?.filter((p) => {
+        if (!p.deletedAt) return true;
+
+        const deletedDate = new Date(p.deletedAt);
+
+        if (deletedDate < new Date(event.start)) return false;
+
+        return true;
+      });
+
+      return showUserAvatars(filteredParticipants || []);
+    }
 
     return null;
   };

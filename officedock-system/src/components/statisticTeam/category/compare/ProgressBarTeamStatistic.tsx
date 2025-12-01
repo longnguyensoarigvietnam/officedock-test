@@ -200,7 +200,7 @@ const ProgressBarTeamStatisticCompare = ({
             </div>
           </div>
           <div
-            className={`group w-full relative h-4 bg-gray-300 ${classProgressClass}`}>
+            className={`group w-full relative h-4 bg-[#EBF1F7] ${classProgressClass}`}>
             <div
               ref={containerRef}
               onMouseLeave={() => {
@@ -403,7 +403,7 @@ const ProgressBarTeamStatisticCompare = ({
         {/* Item Compare */}
         <div className="mt-[6px]">
           <div
-            className={`group w-full relative h-4 bg-gray-300 ${classProgressClass}`}>
+            className={`group w-full relative h-4 bg-[#EBF1F7] ${classProgressClass}`}>
             <div
               ref={containerCompareRef}
               onMouseLeave={() => {
@@ -637,7 +637,7 @@ const ProgressBarTeamStatisticCompare = ({
                 </div>
               </div>
               <div
-                className={`w-full group relative h-[10px] bg-gray-300 ${classProgressUserClass}`}>
+                className={`w-full group relative h-[10px] bg-[#EBF1F7] ${classProgressUserClass}`}>
                 <div
                   ref={containerUserRef}
                   onMouseLeave={() => {
@@ -767,7 +767,7 @@ const ProgressBarTeamStatisticCompare = ({
             {/* user item compare */}
             <div className="mt-[6px]">
               <div
-                className={`w-full group relative h-[10px] bg-gray-300  ${classProgressUserClass}`}>
+                className={`w-full group relative h-[10px] bg-[#EBF1F7]  ${classProgressUserClass}`}>
                 <div
                   ref={containerUserCompareRef}
                   onMouseLeave={() => {
