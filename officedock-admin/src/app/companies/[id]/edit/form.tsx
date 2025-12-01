@@ -46,7 +46,6 @@ import { PHONE_REGEX } from '@constants/regex';
 import {
   COMPANY_CUSTOM_PLAN_OPTIONS,
   COMPANY_STATUS_OPTIONS,
-  CUSTOM_PLAN_LABEL,
   NAME_OTHER_OPTION,
   OTHER_OPTION_VALUE,
 } from '@constants';
@@ -230,18 +229,9 @@ const EditCompanyForm = () => {
       value.responsiblePersonMail = companyDetail?.responsiblePersonMail;
       value.contract.phone = companyDetail.contract?.phone;
       value.contract.address = companyDetail.contract?.address;
-      value.customPlan.exchangeableAmount =
-        companyDetail.plan?.name == CUSTOM_PLAN_LABEL
-          ? companyDetail.plan?.exchangeableAmount ?? null
-          : null;
-      value.customPlan.limitPerson =
-        companyDetail.plan?.name == CUSTOM_PLAN_LABEL
-          ? companyDetail.plan?.limitPerson ?? null
-          : null;
-      value.customPlan.monthlyFee =
-        companyDetail.plan?.name == CUSTOM_PLAN_LABEL
-          ? companyDetail.plan?.monthlyFee ?? null
-          : null;
+      value.customPlan.exchangeableAmount = companyDetail.plan?.exchangeableAmount ?? null;
+      value.customPlan.limitPerson = companyDetail.plan?.limitPerson ?? null;
+      value.customPlan.monthlyFee = companyDetail.plan?.monthlyFee ?? null;
 
       value.contract.industry = companyDetail.contract?.industry
         ? industryOptions.find(
