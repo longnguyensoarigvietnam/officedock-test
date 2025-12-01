@@ -171,6 +171,7 @@ const EditCompanyForm = () => {
     handleSubmit,
     setError,
     clearErrors,
+    setValue,
     formState: { errors },
   } = useForm<EditCompanyType>({
     mode: 'onSubmit',
@@ -437,6 +438,15 @@ const EditCompanyForm = () => {
               clearErrors('customPlan.exchangeableAmount');
               clearErrors('customPlan.monthlyFee');
               clearErrors('customPlan.limitPerson');
+              if(e.value != CompanyPlan.CUSTOM_PLAN && companyDetail){
+                setValue('customPlan.exchangeableAmount', companyDetail.plan?.exchangeableAmount ?? null);
+                setValue('customPlan.monthlyFee', companyDetail.plan?.monthlyFee ?? null);
+                setValue('customPlan.limitPerson', companyDetail.plan?.limitPerson ?? null);
+              } else{
+                setValue('customPlan.exchangeableAmount', null);
+                setValue('customPlan.monthlyFee', null);
+                setValue('customPlan.limitPerson', null);
+              }
             }}
             error={getErrorMessage(errors, 'plan')}
             disabled={
