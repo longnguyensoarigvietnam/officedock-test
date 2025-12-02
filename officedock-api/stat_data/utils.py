@@ -24,7 +24,7 @@ from django.utils.timezone import now
 from rest_framework.exceptions import ValidationError
 
 from base.messages import ERROR_MESSAGES, KEYWORDS
-from calendars.constants import CalendarTypes
+from calendars.constants import CalendarTypes, ScheduleCategoryTypes
 from calendars.models import Schedule
 from common.constants import (
     DATE_REGEX,
@@ -33,6 +33,7 @@ from common.constants import (
 from common.models import Category
 from common.utils import (
     format_duration,
+    get_deleted_name_skill,
     time_str_to_timedelta,
 )
 from organizations.constants import CategoryColors
@@ -271,8 +272,20 @@ def aggregate_durations(
             organization_id__in=all_org_ids,
             large_statistic_category_id__in=all_category_ids,
         )
-        .only("organization_id", "large_statistic_category_id", "color", "id")
-        .values("organization_id", "large_statistic_category_id", "color", "id")
+        .only(
+            "deleted_type",
+            "organization_id",
+            "large_statistic_category_id",
+            "color",
+            "id",
+        )
+        .values(
+            "deleted_type",
+            "organization_id",
+            "large_statistic_category_id",
+            "color",
+            "id",
+        )
     )
     # Map organization-category pairs to their metadata for fast lookup
     org_cat_map = {
@@ -318,10 +331,9 @@ def aggregate_durations(
         else:
             category = large_category
 
-        category_name = category.name if category else NONE_CATEGORY
-        category_id = category.id if category else NONE_CATEGORY
-        category_color = None
         index = 0
+        category_color = None
+        is_large_cate_hierarchy_deleted = None
 
         org_cat_key = (
             organization.id,
@@ -334,7 +346,19 @@ def aggregate_durations(
         ):
             category_color = org_cat_map[org_cat_key]["color"]
             index = org_cat_map[org_cat_key]["id"]
-        if category_id == NONE_CATEGORY:
+            is_large_cate_hierarchy_deleted = (
+                org_cat_map[org_cat_key]["deleted_type"]
+                == ScheduleCategoryTypes.LARGE.value
+            )
+
+        if category:
+            category_name = get_deleted_name_skill(
+                category, is_large_cate_hierarchy_deleted
+            )
+            category_id = category.id
+        else:
+            category_name = NONE_CATEGORY
+            category_id = NONE_CATEGORY
             category_color = CategoryColors.GRAY.value
 
         key = (

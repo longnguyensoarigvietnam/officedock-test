@@ -15,6 +15,7 @@ from organizations.managers import (
     UserOrganizationWithoutCalendarTypeManager,
 )
 from users.constants import AvatarColors
+from calendars.constants import ScheduleCategoryTypes
 
 
 class Organization(BaseModel):
@@ -133,6 +134,15 @@ class OrganizationsStatisticCategories(BaseModel):
     )
     index = models.IntegerField(null=True, default=1)
     color = models.CharField(max_length=20, blank=True, null=True)
+
+    # Detect deletion status per level to display the correct name,
+    # since a record may be deleted at one level but still valid at other levels.
+    deleted_type = models.CharField(
+        max_length=20,
+        blank=True,
+        null=True,
+        choices=ScheduleCategoryTypes.choices(),
+    )
 
     def save(self, *args, **kwargs):
         """

@@ -2,9 +2,7 @@ from django.db.models import (
     F,
     Case,
     CharField,
-    OuterRef,
     Q,
-    Subquery,
     Value,
     When,
 )
@@ -14,7 +12,11 @@ from rest_framework.exceptions import ValidationError
 
 from base.messages import ERROR_MESSAGES, KEYWORDS
 from common.constants import AVATAR_GCS_EXPIRATION_SECONDS
-from common.utils import compare_categories, get_signed_url
+from common.utils import (
+    compare_categories,
+    get_deleted_name_skill,
+    get_signed_url,
+)
 from roles.constants import Actions, Screens
 from roles.utils import has_permission
 from skills.models import StatisticCategory, Skill
@@ -24,6 +26,7 @@ from .models import (
     Organization,
     OrganizationsStatisticCategories,
 )
+from calendars.constants import ScheduleCategoryTypes
 
 
 class BaseOrganizationSerializer(serializers.ModelSerializer):
@@ -59,17 +62,18 @@ class BaseStatisticCategorySerializer(serializers.ModelSerializer):
     Serializer for statistic category
     """
 
+    name = serializers.SerializerMethodField()
+
     class Meta:
         model = StatisticCategory
-        fields = [
-            "id",
-            "name",
-            "uuid",
-            "team",
-        ]
+        fields = ["id", "name", "uuid", "team", "deleted_at"]
+
+    def get_name(self, obj):
+        is_hidden = self.context.get("is_hidden")
+        return get_deleted_name_skill(obj, is_hidden)
 
 
-class StatisticCategorySerializer(BaseStatisticCategorySerializer):
+class StatisticCategorySerializer(serializers.ModelSerializer):
     """
     Serializer for statistic category
     """
@@ -140,9 +144,9 @@ class StatisticCategoryStructionSerializer(serializers.ModelSerializer):
     Serializer for the Statistic Category Struction.
     """
 
-    large_statistic_category = BaseStatisticCategorySerializer()
-    medium_statistic_category = BaseStatisticCategorySerializer()
-    small_statistic_category = BaseStatisticCategorySerializer()
+    large_statistic_category = serializers.SerializerMethodField()
+    medium_statistic_category = serializers.SerializerMethodField()
+    small_statistic_category = serializers.SerializerMethodField()
     skills = serializers.SerializerMethodField()
 
     class Meta:
@@ -155,7 +159,57 @@ class StatisticCategoryStructionSerializer(serializers.ModelSerializer):
             "index",
             "skills",
             "color",
+            "deleted_type",
         ]
+
+    def get_large_statistic_category(self, obj):
+        """
+        Return serialized data for the large-level statistic category.
+        If the object has been deleted at the large category level,
+        mark this category as hidden.
+        """
+        is_hidden = obj.deleted_type == ScheduleCategoryTypes.LARGE.value
+
+        data = BaseStatisticCategorySerializer(
+            obj.large_statistic_category, context={"is_hidden": is_hidden}
+        ).data
+        data["is_hidden"] = is_hidden
+        return data
+
+    def get_medium_statistic_category(self, obj):
+        """
+        Return serialized data for the medium-level statistic category.
+        Mark hidden if the category is deleted at the medium or higher level
+        (medium or large), since that implies this category is no longer visible.
+        """
+        is_hidden = obj.deleted_type in [
+            ScheduleCategoryTypes.MEDIUM.value,
+            ScheduleCategoryTypes.LARGE.value,
+        ]
+
+        data = BaseStatisticCategorySerializer(
+            obj.medium_statistic_category, context={"is_hidden": is_hidden}
+        ).data
+        data["is_hidden"] = is_hidden
+        return data
+
+    def get_small_statistic_category(self, obj):
+        """
+        Return serialized data for the small-level statistic category.
+        Mark hidden if the category is deleted at the small level or above
+        (small, medium, or large), meaning any parent-level deletion affects visibility.
+        """
+        is_hidden = obj.deleted_type in [
+            ScheduleCategoryTypes.SMALL.value,
+            ScheduleCategoryTypes.MEDIUM.value,
+            ScheduleCategoryTypes.LARGE.value,
+        ]
+
+        data = BaseStatisticCategorySerializer(
+            obj.small_statistic_category, context={"is_hidden": is_hidden}
+        ).data
+        data["is_hidden"] = is_hidden
+        return data
 
     def get_skills(self, obj):
         """
@@ -567,6 +621,110 @@ Begin handle organization category hierarchy
 """
 
 
+class OrgStatisticCategoryHierarchySerializer(serializers.ModelSerializer):
+    """
+    Serializer for the Statistic Category Struction.
+    """
+
+    large_statistic_category = serializers.SerializerMethodField()
+    medium_statistic_category = serializers.SerializerMethodField()
+    small_statistic_category = serializers.SerializerMethodField()
+    skills = serializers.SerializerMethodField()
+
+    class Meta:
+        model = OrganizationsStatisticCategories
+        fields = [
+            "id",
+            "large_statistic_category",
+            "medium_statistic_category",
+            "small_statistic_category",
+            "index",
+            "skills",
+            "color",
+            "deleted_type",
+        ]
+
+    def get_large_statistic_category(self, obj):
+        """
+        Return serialized data for the large-level statistic category.
+        If the object has been deleted at the large category level,
+        mark this category as hidden.
+        """
+        is_hidden = obj.deleted_type == ScheduleCategoryTypes.LARGE.value
+
+        data = BaseStatisticCategorySerializer(
+            obj.large_statistic_category
+        ).data
+        data["is_hidden"] = is_hidden
+        return data
+
+    def get_medium_statistic_category(self, obj):
+        """
+        Return serialized data for the medium-level statistic category.
+        Mark hidden if the category is deleted at the medium or higher level
+        (medium or large), since that implies this category is no longer visible.
+        """
+        is_hidden = obj.deleted_type in [
+            ScheduleCategoryTypes.MEDIUM.value,
+            ScheduleCategoryTypes.LARGE.value,
+        ]
+
+        data = BaseStatisticCategorySerializer(
+            obj.medium_statistic_category
+        ).data
+        data["is_hidden"] = is_hidden
+        return data
+
+    def get_small_statistic_category(self, obj):
+        """
+        Return serialized data for the small-level statistic category.
+        Mark hidden if the category is deleted at the small level or above
+        (small, medium, or large), meaning any parent-level deletion affects visibility.
+        """
+        is_hidden = obj.deleted_type in [
+            ScheduleCategoryTypes.SMALL.value,
+            ScheduleCategoryTypes.MEDIUM.value,
+            ScheduleCategoryTypes.LARGE.value,
+        ]
+
+        data = BaseStatisticCategorySerializer(
+            obj.small_statistic_category
+        ).data
+        data["is_hidden"] = is_hidden
+        return data
+
+    def get_skills(self, obj):
+        """
+        Get list of skills based on the organization statistic category.
+        """
+
+        # Using prefetch_related for efficient skill retrieval
+        skills = (
+            obj.organizations_statistic_categories_skills.select_related(
+                "skill"
+            )
+            .order_by("id")
+            .distinct()
+        ).values_list("skill")
+
+        # Rename the keys to match expected output
+        return [
+            {"id": id, "name": name}
+            for id, name in skills.annotate(
+                name=Case(
+                    When(
+                        skill__deleted_at__isnull=False,
+                        then=Concat(
+                            F("skill__name"), Value(KEYWORDS["deleted"])
+                        ),
+                    ),
+                    default=F("skill__name"),
+                    output_field=CharField(),
+                )
+            ).values_list("skill__id", "name")
+        ]
+
+
 class OrganizationCategoryHierarchySerializer(BaseOrganizationSerializer):
     """
     Serializer for the Organization category hierarchy.
@@ -595,41 +753,10 @@ class OrganizationCategoryHierarchySerializer(BaseOrganizationSerializer):
         # Get all related records for the current organization
         base_qs = obj.organizations_statistic_categories.all()
 
-        # Subquery to get the earliest created_at for each large category group
-        large_subquery = (
-            base_qs.filter(
-                large_statistic_category=OuterRef("large_statistic_category"),
-            )
-            .order_by("created_at")
-            .values("created_at")[:1]
-        )
-
-        # Subquery to get the earliest created_at for each large + medium category group
-        large_medium_subquery = (
-            base_qs.filter(
-                large_statistic_category=OuterRef("large_statistic_category"),
-                medium_statistic_category=OuterRef("medium_statistic_category"),
-            )
-            .order_by("created_at")
-            .values("created_at")[:1]
-        )
-
-        # Then sort the entire queryset by these timestamps to ensure chronological grouping
-        grouped_qs = (
-            base_qs.annotate(
-                large_created_at=Subquery(large_subquery),
-                large_medium_created_at=Subquery(large_medium_subquery),
-            )
-            .order_by(
-                "large_created_at",  # Primary sort: by earliest large category creation time
-                "large_medium_created_at",  # Secondary sort: by earliest large+medium category creation time
-                "created_at",  # Tertiary sort: individual record creation time
-            )
-            .distinct()
-        )
-
         # Serialize and return the data
-        return StatisticCategoryStructionSerializer(grouped_qs, many=True).data
+        return OrgStatisticCategoryHierarchySerializer(
+            base_qs, many=True, context=self.context
+        ).data
 
 
 class StatisticCategoryFieldSerializer(serializers.Serializer):
@@ -688,7 +815,19 @@ class OrgCategoryHierarchySerializer(serializers.ModelSerializer):
             "index",
             "color",
             "skill_ids",
+            "deleted_type",
         ]
+
+
+class OrganizationCategoryHierarchyForDeleteSerializer(serializers.Serializer):
+    """
+    Serializer for the Organization category hierarchy delete multi.
+    """
+
+    id = serializers.IntegerField()
+    type = serializers.ChoiceField(
+        choices=ScheduleCategoryTypes.choices(), required=False, allow_null=True
+    )
 
 
 class OrganizationCategoryHierarchyForCreateSerializer(serializers.Serializer):
@@ -696,9 +835,12 @@ class OrganizationCategoryHierarchyForCreateSerializer(serializers.Serializer):
     Serializer for the Organization category hierarchy create multi.
     """
 
+    # List items for create new or update
     items = OrgCategoryHierarchySerializer(many=True, required=False)
-    ids = serializers.ListField(
-        child=serializers.IntegerField(), allow_null=True, required=False
+
+    # List items for delete or restore (when restore then set type is null)
+    items_to_delete = OrganizationCategoryHierarchyForDeleteSerializer(
+        many=True, allow_null=True, required=False
     )
 
     def validate_category(self, category_data, organization, company_id):

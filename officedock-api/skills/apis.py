@@ -56,7 +56,6 @@ from submit_levels.models import SubmitLevelHistory
 from roles.constants import Screens, Actions, SelectionResultOptions
 from base.filters import FilterByPermission
 from submit_levels.serializers import SubmitLevelSerializer
-from tasks.models import TaskDuration
 from users.models import User, RoleDetail
 from users.serializers import BaseUserSerializer
 
@@ -139,27 +138,20 @@ class StatisticCategoryViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         return self.response_ok()
 
-    @transaction.atomic
     def perform_destroy(self, instance):
-        """Handle destroy statistic category"""
-        has_actual_durations = TaskDuration.objects.filter(
-            Q(task__categories__large_statistic_category=instance)
-            | Q(task__categories__medium_statistic_category=instance)
-            | Q(task__categories__small_statistic_category=instance)
-            | Q(schedule__categories__large_statistic_category=instance)
-            | Q(schedule__categories__medium_statistic_category=instance)
-            | Q(schedule__categories__small_statistic_category=instance)
-        ).exists()
-        if has_actual_durations:
-            raise ValidationError(
-                {
-                    "detail": ERROR_MESSAGES[
-                        "cannot_delete_category_has_actual_duration"
-                    ]
-                }
-            )
+        """Handle soft delete statistic category"""
+        instance.soft_delete()
 
-        instance.delete()
+    @action(
+        detail=True, methods=["POST"], url_path="restore", serializer_class=None
+    )
+    def restore_category(self, request, uuid=None):
+        """
+        Handle restore of deleted category
+        """
+        category = self.get_object()
+        category.restore()
+        return self.response_ok()
 
 
 @extend_schema(tags=["System > Manage Skill Map"])
