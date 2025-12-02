@@ -68,6 +68,10 @@ ChartJS.register(
   Legend,
   Filler,
 );
+ChartJS.defaults.font.family = 'Noto Sans JP, sans-serif';
+ChartJS.defaults.font.size = 14;
+ChartJS.defaults.font.weight = 'bold';
+ChartJS.defaults.color = '#77858F';
 
 type Props = {
   startDate: Date;
@@ -563,11 +567,11 @@ const StackedAreaChart = ({
       tickAmount: 4,
       labels: {
         formatter: (val: any) => `${val}%`,
-        labels: {
-          style: {
-            fontSize: '14px',
-            colors: '#77858F',
-          },
+        style: {
+          fontSize: '14px',
+          colors: '#77858F',
+          fontFamily: 'Noto Sans JP, sans-serif',
+          fontWeight: 500,
         },
       },
       max: 100,
@@ -586,6 +590,8 @@ const StackedAreaChart = ({
         style: {
           fontSize: '14px',
           colors: '#77858F',
+          fontFamily: 'Noto Sans JP, sans-serif',
+          fontWeight: 500,
         },
       },
     },
@@ -1043,7 +1049,7 @@ const StackedAreaChart = ({
                 type="area"
                 height={380}
               />
-              <div className="flex flex-wrap gap-x-[30px] gap-y-3 mt-4 justify-end px-[30px]">
+              <div className="flex flex-wrap gap-x-[30px] gap-y-3 justify-end px-[30px]">
                 {dataChart.map((s, index) => (
                   <div key={index} className="flex items-center gap-2 mb-2">
                     <div

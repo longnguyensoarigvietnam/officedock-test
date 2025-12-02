@@ -141,7 +141,7 @@ const ResizeTextArea = ({
           }
         }}
         placeholder="コメントを書く"
-        className="h-full resize-none border !border-[#77858F]"
+        className="h-full resize-none border !border-[#77858F] "
       />
       {/* Nút resize */}
       <div

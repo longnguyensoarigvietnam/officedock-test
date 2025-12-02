@@ -86,7 +86,7 @@
   .fc
   .fc-timeGridDay-view
   .fc-timegrid-slot-label-cushion.fc-scrollgrid-shrink-cushion {
-  font-weight: 600;
+  font-weight: 500;
   color: rgb(148 163 184);
 }
 
@@ -223,6 +223,7 @@
 .daily-custom .fc-v-event {
   border: none !important;
   background-color: transparent !important;
+  padding: 0 7px;
 }
 .daily-custom .fc-timegrid-event .fc-event-main {
   padding: 0 !important;
@@ -330,4 +331,7 @@
 }
 .daily-custom .css-hlgwow {
   padding-top: 3px !important;
+}
+.daily-custom .css-1dimb5e-singleValue {
+  font-size: 13px;
 }

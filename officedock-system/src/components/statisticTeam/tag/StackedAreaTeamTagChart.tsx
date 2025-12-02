@@ -839,11 +839,11 @@ const StackedAreaTeamTagChart = ({
       tickAmount: 4,
       labels: {
         formatter: (val: any) => `${val}%`,
-        labels: {
-          style: {
-            fontSize: '14px',
-            colors: '#77858F',
-          },
+        style: {
+          fontSize: '14px',
+          colors: '#77858F',
+          fontFamily: 'Noto Sans JP, sans-serif',
+          fontWeight: 500,
         },
       },
       max: 100,
@@ -862,6 +862,8 @@ const StackedAreaTeamTagChart = ({
         style: {
           fontSize: '14px',
           colors: '#77858F',
+          fontFamily: 'Noto Sans JP, sans-serif',
+          fontWeight: 500,
         },
       },
     },
@@ -1503,7 +1505,7 @@ const StackedAreaTeamTagChart = ({
                 type="area"
                 height={380}
               />
-              <div className="flex flex-wrap gap-x-[30px] gap-y-3 mt-4 justify-end px-[30px]">
+              <div className="flex flex-wrap gap-x-[30px] gap-y-3 justify-end px-[30px]">
                 {dataChart.map((s, index) => (
                   <div key={index} className="flex items-center gap-2 mb-2">
                     <div

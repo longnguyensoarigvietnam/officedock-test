@@ -487,7 +487,7 @@ const ActionDetailDaily = ({
   };
 
   return (
-    <div className="flex gap-[10px] w-[52px] ">
+    <div className="flex gap-[10px] w-[52px] justify-end">
       {/* Todo icon */}
       <div>
         <div

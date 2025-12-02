@@ -226,55 +226,54 @@ const ItemTeam = ({
         <div>
           <div
             className={`relative ${content.status?.id === StatusValueTask.MY_ROUTINE && 'min-h-[81px]'} ${selectedOptionZoom.value !== 50 && 'gap-2'} ex-event-draggable   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid    bg-white shadow-common rounded-[20px] text-xs flex flex-col  mb-[14px] `}>
-            <div className="relative w-[100%] h-full">
-              <>
-                <div
-                  style={{
-                    top: `${(columnWidth / 247) * 12}px`,
-                    right: `${(columnWidth / 247) * 12}px`,
-                  }}
-                  onClick={() => {
-                    if (content.pinAt) {
-                      handleUnPinItem(`${content.id}`);
-                    } else {
-                      handlePinItem(`${content.id}`);
+            <>
+              <div
+                style={{
+                  top: `${(columnWidth / 247) * 12}px`,
+                  right: `${(columnWidth / 247) * 12}px`,
+                }}
+                onClick={() => {
+                  if (content.pinAt) {
+                    handleUnPinItem(`${content.id}`);
+                  } else {
+                    handlePinItem(`${content.id}`);
+                  }
+                }}
+                className={`absolute   ${content.pinAt ? '' : 'opacity-0 group-hover:opacity-100'} `}>
+                <DynamicTooltip
+                  content={content.pinAt ? 'ピンを外す' : 'ピン留め'}
+                  placement="right">
+                  <ImageRound
+                    src={
+                      content.pinAt
+                        ? `/icons/pin-task.svg`
+                        : `/icons/unpin-task.svg`
                     }
-                  }}
-                  className={`absolute   ${content.pinAt ? '' : 'opacity-0 group-hover:opacity-100'} `}>
-                  <DynamicTooltip
-                    content={content.pinAt ? 'ピンを外す' : 'ピン留め'}
-                    placement="right">
-                    <ImageRound
-                      src={
-                        content.pinAt
-                          ? `/icons/pin-task.svg`
-                          : `/icons/unpin-task.svg`
-                      }
-                      name="Pin icon"
-                      style={{
-                        width:
-                          (selectedOptionZoom.value as number) > 75
-                            ? '14px'
-                            : (selectedOptionZoom.value as number) === 75
-                              ? '12px'
-                              : `10px`,
-                        height:
-                          (selectedOptionZoom.value as number) > 75
-                            ? '14px'
-                            : (selectedOptionZoom.value as number) === 75
-                              ? '12px'
-                              : `10px`,
-                      }}
-                      className=" text-gray-400 cursor-pointer"
-                    />
-                  </DynamicTooltip>
-                </div>
-              </>
-            </div>
+                    name="Pin icon"
+                    style={{
+                      width:
+                        (selectedOptionZoom.value as number) > 75
+                          ? '14px'
+                          : (selectedOptionZoom.value as number) === 75
+                            ? '12px'
+                            : `10px`,
+                      height:
+                        (selectedOptionZoom.value as number) > 75
+                          ? '14px'
+                          : (selectedOptionZoom.value as number) === 75
+                            ? '12px'
+                            : `10px`,
+                    }}
+                    className=" text-gray-400 cursor-pointer"
+                  />
+                </DynamicTooltip>
+              </div>
+            </>
+
             <div
               style={{
-                paddingTop: `${(columnWidth / 247) * 12}px`,
-                paddingBottom: `${(columnWidth / 247) * 12}px`,
+                paddingTop: `${(columnWidth / 247) * 20}px`,
+                paddingBottom: `${(columnWidth / 247) * 20}px`,
                 paddingLeft: `${(columnWidth / 247) * 18}px`,
                 paddingRight: `${(columnWidth / 247) * 12}px`,
               }}
