@@ -1195,3 +1195,40 @@ def get_deleted_name_skill(obj, hierarchy_deleted=False):
     if obj.deleted_at or hierarchy_deleted:
         return f"{value}{KEYWORDS['deleted']}"
     return value
+
+
+def get_organization_name(obj, unassigned=False):
+    """
+    Return deleted/unassigned name of organization
+    """
+    if not obj:
+        return None
+
+    name = getattr(obj, "name", "")
+
+    if obj.deleted_at:
+        name += KEYWORDS["deleted"]
+        return name
+
+    if bool(unassigned):
+        name += KEYWORDS["unassigned"]
+
+    return name
+
+
+def get_user_name(obj, unassigned=False):
+    """
+    Return deleted/unassigned name of  user
+    """
+    if not obj:
+        return None
+
+    name = getattr(obj, "full_name", "")
+
+    if obj.deleted_at:
+        return name
+
+    if bool(unassigned):
+        name += KEYWORDS["unassigned"]
+
+    return name

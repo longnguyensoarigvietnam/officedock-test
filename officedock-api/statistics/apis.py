@@ -74,13 +74,14 @@ from stat_data.utils import (
     get_list_task_with_total_duration,
 )
 from tasks.constants import TaskCategoryTypes
-from tasks.models import Task
+from tasks.models import PeopleInChargeTasks, Task
 from users.models import User
 from users.serializers import BaseUserProfileSerializer
 from roles.constants import Screens
 from base.permissions import ActionPermission
 from statistics.services.export import ExportTaskService
 from statistics.constants import ExportType, PeriodClassification
+from statistics.utils import get_all_organization_id
 
 
 @extend_schema(tags=["System > Statistics"])
@@ -159,11 +160,7 @@ class StatisticViewSet(BaseAPIViewSet):
         if user_id:
             user = get_object_or_404(User, id=user_id)
         if organization_ids_param == ALL_TEAM:
-            organization_ids = (
-                Organization.all_objects.filter(users__in=[user])
-                .values_list("id", flat=True)
-                .distinct()
-            )
+            organization_ids = get_all_organization_id([user])
         else:
             organization_ids = split_id_from_string(organization_ids_param)
 
@@ -676,9 +673,7 @@ class StatisticViewSet(BaseAPIViewSet):
         end_of_day = datetime.combine(end_date, time.max)
         calendar_org = user.company.get_calendar_organization()
         if organization_ids_param is None or organization_ids_param == ALL_TEAM:
-            organization_ids = Organization.all_objects.filter(
-                users=user
-            ).values_list("id", flat=True)
+            organization_ids = get_all_organization_id([user])
         else:
             organization_ids = split_id_from_string(organization_ids_param)
 
@@ -845,7 +840,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                 id__in=split_id_from_string(user_ids_param)
             )
         else:
-            org = (
+            orgs = (
                 organizations
                 if not organization_get_members_id
                 else [
@@ -854,7 +849,15 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                     )
                 ]
             )
-            users = User.objects.filter(organizations__in=org).distinct()
+            task_user_ids = list(
+                PeopleInChargeTasks.objects.filter(
+                    task__organization__in=orgs
+                ).values_list("user_id", flat=True)
+            )
+            users = User.objects.filter(
+                Q(id__in=task_user_ids) | Q(organizations__in=orgs)
+            ).distinct()
+
         start_of_day = datetime.combine(from_date, time.min)
         end_of_day = datetime.combine(end_date, time.max)
         data = {}
@@ -1005,7 +1008,14 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                         company, organization_get_members_id
                     )
                 ]
-            users = User.objects.filter(organizations__in=orgs).distinct()
+            task_user_ids = list(
+                PeopleInChargeTasks.objects.filter(
+                    task__organization__in=orgs
+                ).values_list("user_id", flat=True)
+            )
+            users = User.objects.filter(
+                Q(id__in=task_user_ids) | Q(organizations__in=orgs)
+            ).distinct()
 
         start_of_day = datetime.combine(from_date, time.min)
         end_of_day = datetime.combine(end_date, time.max)
@@ -1425,11 +1435,9 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
         if not users:
             return self.response_ok(data)
 
-        organization_ids = (
-            Organization.all_objects.filter(users__in=users)
-            .values_list("id", flat=True)
-            .distinct()
-        )
+        # Get all org ids include team not assigned
+        organization_ids = get_all_organization_id(users)
+
         if tag_ids_param:
             tag_ids = split_id_from_string(tag_ids_param)
 
@@ -1551,9 +1559,9 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                     users.select_related("profile"), many=True
                 ).data
 
-        organization_ids = Organization.all_objects.filter(
-            users__in=users
-        ).values_list("id", flat=True)
+        # Get all org ids include team not assigned
+        organization_ids = get_all_organization_id(users)
+
         tag_ids = split_id_from_string(tag_ids_param)
 
         durations = get_list_durations_by_users(

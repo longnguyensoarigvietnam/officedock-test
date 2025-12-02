@@ -1022,15 +1022,17 @@ def _handle_structure_data_for_team(
     # Restructure data
     for data in team_data:
         org_id = data["organization_id"]
-        org_name = data["organization_name"]
         duration = data["duration"]
-        key = "main_org"
-        color = MAIN_TEAM_COLOR
-        if org_id != main_organization.id and org_id == calendar_organization.id:
+
+        if main_organization and org_id == main_organization.id:
+            org_name = data["organization_name"]
+            key = "main_org"
+            color = MAIN_TEAM_COLOR
+        elif org_id == calendar_organization.id:
             key = "calendar_org"
             org_name = CALENDAR
             color = CALENDAR_COLOR
-        elif org_id != main_organization.id:
+        else:
             key = "sub_org"
             org_name = SUB_TEAM
             color = SUB_TEAM_COLOR

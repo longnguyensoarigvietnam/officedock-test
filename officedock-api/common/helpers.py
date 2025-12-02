@@ -1,4 +1,4 @@
-from django.db.models import F, Q, Prefetch
+from django.db.models import F, Q, Case, IntegerField, Prefetch, Value, When
 from django.utils.timezone import now
 from calendars.serializers import EventLocationSerializer
 from common.serializers import (
@@ -15,6 +15,7 @@ from common.utils import (
     filter_include_deleted_skill,
     filter_include_deleted_user,
     get_deleted_name,
+    get_user_name,
     transform_statistic_categories,
 )
 from companies.constants import CompanyStatus
@@ -36,8 +37,8 @@ from stat_data.constants import ALL_TEAM
 from surveys.models import Survey
 from tags.serializers import BaseTagSerializer
 from tasks.constants import TaskCategoryTypes
-from tasks.models import TaskStatus
-from users.models import Role, RoleDetail
+from tasks.models import PeopleInChargeTasks, TaskStatus
+from users.models import Role, RoleDetail, User
 from users.serializers import (
     RoleSerializer,
     SettingSerializer,
@@ -246,10 +247,33 @@ def get_data_organization_team_statistic(user, company, organization):
     organizations = CreationDataOrganizationWithStructCategorySerializer(
         [organization, calendar_org], many=True, context={"user": user}
     ).data
-    users = organization.users.order_by(
-        F("deleted_at").asc(nulls_first=True), "created_at"
+    task_user_ids = list(
+        PeopleInChargeTasks.objects.filter(
+            task__organization=organization
+        ).values_list("user_id", flat=True)
     )
-    members = CreationDataUserSerializer(users, many=True).data
+    org_user_ids = list(organization.users.values_list("id", flat=True))
+    all_user_ids = set(org_user_ids + task_user_ids)
+    users = (
+        User.objects.filter(id__in=all_user_ids)
+        .annotate(
+            assigned=Case(
+                When(id__in=org_user_ids, then=Value(1)),
+                default=Value(0),
+                output_field=IntegerField(),
+            )
+        )
+        .order_by(
+            F("deleted_at").asc(nulls_first=True), "-assigned", "created_at"
+        )
+    )
+    members = []
+    for u in users:
+        data = CreationDataUserSerializer(u).data
+        data["full_name"] = (
+            get_user_name(u, hasattr(u, "assigned") and u.assigned == 0),
+        )
+        members.append(data)
 
     for org in organizations:
         org["members"] = members
@@ -285,7 +309,15 @@ def get_data_organization_my_statistic(user, organizations, company):
     """
     Get data for filter my statistic
     """
-    organizations = user.organizations.order_by("-deleted_at")
+
+    task_org_ids = list(
+        PeopleInChargeTasks.objects.filter(user=user)
+        .values_list("task__organization_id", flat=True)
+        .distinct()
+    )
+    organizations = organizations.filter(
+        Q(users=user) | Q(id__in=task_org_ids)
+    ).order_by("-deleted_at").distinct()
     orgs = CreationDataOrganizationWithStructCategorySerializer(
         organizations, many=True, context={"user": user}
     ).data
