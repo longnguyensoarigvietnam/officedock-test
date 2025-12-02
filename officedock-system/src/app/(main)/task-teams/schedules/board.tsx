@@ -1109,14 +1109,20 @@ const ScheduleTeamBoard = () => {
               ) : (
                 <div className="!w-[8px] !h-[10px]"></div>
               )}
-              <div className="flex items-end font-normal gap-2">
-                <p className="text-[30px] text-[#5B6770]  font-medium">
-                  {displayMonth}月
-                </p>
-                <p className="text-[30px] text-[#5B6770] font-medium">
-                  {displayDay}日
-                </p>
-                <p className="text-[18px] mb-[5px] text-[#5B6770] font-medium">
+              <div className="flex items-end font-normal gap-[6px]">
+                <div className="flex items-center">
+                  <p className="text-[20px] text-[#5B6770]  font-medium">
+                    {displayMonth}
+                  </p>
+                  <p className="text-[18px] text-[#5B6770]  font-medium">月</p>
+                </div>
+                <div className="flex items-center">
+                  <p className="text-[20px] text-[#5B6770] font-medium">
+                    {displayDay}
+                  </p>
+                  <p className="text-[18px] text-[#5B6770] font-medium">日</p>
+                </div>
+                <p className="text-[14px] mb-[2px] text-[#5B6770] font-medium">
                   (
                   {getJapaneseDayName(
                     calendarRef.current
@@ -1193,7 +1199,7 @@ const ScheduleTeamBoard = () => {
                         }
                       }
                     }}
-                    className={`${selectedOptionShow === ItemScheduleTitleType.PLANS && !isLoadingDataTask ? '!bg-[#3CABF3]' : '!border-[#A7B7C2] !text-[#A7B7C2] !bg-[#EBF1F7]  '}   h-6 w-[80px] !px-0 !py-0 text-xs font-bold !rounded-[20px] `}>
+                    className={`${selectedOptionShow === ItemScheduleTitleType.PLANS && !isLoadingDataTask ? '!bg-[#3CABF3]' : '!border-[#A7B7C2] !text-[#A7B7C2] !bg-[#E6F3FB]  '}   h-6 w-[80px] !px-0 !py-0 text-xs font-bold !rounded-[20px] `}>
                     予定
                   </Button>
                   <Button
@@ -1231,7 +1237,7 @@ const ScheduleTeamBoard = () => {
                         }
                       }
                     }}
-                    className={`${selectedOptionShow === ItemScheduleTitleType.ACTUAL && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2]  !bg-[#EBF1F7] '} h-6 w-[80px] !px-0 !py-0 text-xs font-bold !rounded-[20px]   `}>
+                    className={`${selectedOptionShow === ItemScheduleTitleType.ACTUAL && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2]  !bg-[#E6F3FB] '} h-6 w-[80px] !px-0 !py-0 text-xs font-bold !rounded-[20px]   `}>
                     実績
                   </Button>
                 </>
@@ -1272,7 +1278,7 @@ const ScheduleTeamBoard = () => {
                         }
                       }
                     }}
-                    className={`${selectedOptionShow === ItemScheduleTitleType.PLANS && !isLoadingDataTask ? '!bg-[#3CABF3]' : '!border-[#A7B7C2] !text-[#A7B7C2] !bg-[#EBF1F7]  '}   h-6 w-[80px] !px-0 !py-0 text-xs font-bold !rounded-[20px] `}>
+                    className={`${selectedOptionShow === ItemScheduleTitleType.PLANS && !isLoadingDataTask ? '!bg-[#3CABF3]' : '!border-[#A7B7C2] !text-[#A7B7C2] !bg-[#E6F3FB]  '}   h-6 w-[80px] !px-0 !py-0 text-xs font-bold !rounded-[20px] `}>
                     予定
                   </Button>
                   <Button
@@ -1310,7 +1316,7 @@ const ScheduleTeamBoard = () => {
                         }
                       }
                     }}
-                    className={`${selectedOptionShow === ItemScheduleTitleType.ACTUAL && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2]  !bg-[#EBF1F7] '} h-6 w-[80px] !px-0 !py-0 text-xs font-bold !rounded-[20px]   `}>
+                    className={`${selectedOptionShow === ItemScheduleTitleType.ACTUAL && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2]  !bg-[#E6F3FB] '} h-6 w-[80px] !px-0 !py-0 text-xs font-bold !rounded-[20px]   `}>
                     実績
                   </Button>
                 </>
@@ -1319,7 +1325,7 @@ const ScheduleTeamBoard = () => {
                   <Button
                     disabled={isLoadingSchedule}
                     variant="option"
-                    className={`${selectedOptionShow === ItemScheduleTitleType.PLANS && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] !bg-[#EBF1F7]  '} !bg-[#3CABF3]  h-6 w-[80px] !px-0 !py-0 text-xs font-bold !rounded-[20px]`}>
+                    className={`${selectedOptionShow === ItemScheduleTitleType.PLANS && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] !bg-[#E6F3FB]  '} !bg-[#3CABF3]  h-6 w-[80px] !px-0 !py-0 text-xs font-bold !rounded-[20px]`}>
                     予定
                   </Button>
                 </>
@@ -1440,7 +1446,7 @@ const ScheduleTeamBoard = () => {
         </div>
       </div>
       {isLoadingSchedule && (
-        <div className="absolute h-[calc(100vh_-_220px)] bottom-0 w-full z-[30] ">
+        <div className="absolute h-[calc(100vh_-_260px)] bottom-0 w-full z-[30] ">
           <RowSkeleton
             numberOfRows={1}
             className="h-full flex-grow !rounded-[14px] w-[calc(100%)] !bg-[#E6F3FB] !bg-[linear-gradient(100deg,_#ffffff00_40%,_#ffffff80_50%,_#ffffff00_60%)] !bg-[length:200%_100%]"

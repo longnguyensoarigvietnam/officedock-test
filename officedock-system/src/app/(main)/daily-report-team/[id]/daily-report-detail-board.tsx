@@ -913,9 +913,24 @@ const DailyReportDetailBoard = () => {
   const columns: ColumnDef<dataTaskDailyTable>[] = [
     {
       id: 'expand',
-      header: 'タスク名',
       size: 20,
-      cell: () => <></>,
+      accessorKey: 'name',
+      enableSorting: false,
+      header: () => {
+        return (
+          <p className="text-[#77858F] px-[18px] font-medium text-xs text-left">
+            タスク名
+          </p>
+        );
+      },
+      cell: (info) => {
+        const value = info.getValue() as string;
+        return (
+          <div className="font-medium px-[18px] text-[16px] break-all line-clamp-3 text-left text-black">
+            {value}
+          </div>
+        );
+      },
     },
     {
       accessorKey: 'LARGE',
@@ -944,7 +959,7 @@ const DailyReportDetailBoard = () => {
             className={`daily-custom text-left custom-statistic  h-[30px] mt-[12px] ${isHasChild && '!mt-[19px]  mb-[18px]'}`}>
             <div className="flex justify-between h-full relative rounded-md gap-1">
               <SingleSelect
-                className="border-none shadow-none min-w-[162px] h-[30px] bg-[#EBF1F7] rounded-md"
+                className="border-none shadow-none min-w-[159px] h-[30px] bg-[#EBF1F7] rounded-md"
                 defaultValue={optionData.find(
                   (element) =>
                     element.value ===
@@ -1006,7 +1021,7 @@ const DailyReportDetailBoard = () => {
                   }
                 }}
               />
-              <div className="flex items-center  w-3 h-[30px]">
+              <div className="flex items-center  w-3 mx-2 h-[30px]">
                 <ImageRound
                   className={`w-fit h-fit `}
                   src="/icons/play-statistic.svg"
@@ -1084,7 +1099,7 @@ const DailyReportDetailBoard = () => {
             <div className="flex justify-between h-full relative  rounded-md gap-1">
               <div className="w-full">
                 <SingleSelect
-                  className="border-none h-6 text-xs min-w-[162px]  rounded-md  !py-0  !pl-0 !shadow-none !text-left bg-[#EBF1F7]"
+                  className="border-none h-6 text-xs min-w-[159px]  rounded-md  !py-0  !pl-0 !shadow-none !text-left bg-[#EBF1F7]"
                   defaultValue={optionMedium.find(
                     (element) =>
                       element.value ===
@@ -1153,7 +1168,7 @@ const DailyReportDetailBoard = () => {
                   }}
                 />
               </div>
-              <div className="flex items-center  w-3 h-[30px]">
+              <div className="flex items-center  w-3 mx-2 h-[30px]">
                 <ImageRound
                   className={`w-fit h-fit `}
                   src="/icons/play-statistic.svg"
@@ -1246,7 +1261,7 @@ const DailyReportDetailBoard = () => {
           <div
             className={`daily-custom text-left custom-statistic mt-[12px] ${isHasChild && '!mt-[19px]  mb-[18px]'}`}>
             <SingleSelect
-              className="border-none h-[30px] text-xs min-w-[162px]  rounded-md  !py-0  !pl-0 !shadow-none !text-left bg-[#EBF1F7]"
+              className="border-none h-[30px] text-xs min-w-[159px]  rounded-md  !py-0  !pl-0 !shadow-none !text-left bg-[#EBF1F7]"
               defaultValue={optionSmall.find(
                 (element) =>
                   element.value ===
@@ -1384,13 +1399,13 @@ const DailyReportDetailBoard = () => {
 
         return (
           <div
-            className={`font-bold text-xs mt-2 relative ${isHasChild ? 'top-[-12px]' : 'top-[-3px]'} `}>
+            className={`font-bold text-xs mt-2 relative ${isHasChild ? 'top-[-12px]' : 'top-[-3px]'} min-w-[150px] `}>
             {isRowParent && isAnyRunning ? (
               <p>計測中</p>
             ) : (
-              <div className="flex text-[10px] w-full justify-center items-center ">
-                <div className="bg-transparent p-1">
-                  <div className="w-12">
+              <div className="flex text-[10px] w-full justify-center items-center px-[14px]">
+                <div className="bg-transparent pr-1">
+                  <div className="w-full">
                     <Input
                       defaultValue={
                         isRowParent
@@ -1429,15 +1444,15 @@ const DailyReportDetailBoard = () => {
                           );
                         }
                       }}
-                      className="!w-[50px] !h-[30px] !py-0 bg-[#EBF1F7] text-black !text-xs !pb-[2px] font-normal rounded-[3px] !px-0 text-center !border-none  !opacity-100"
+                      className="!w-full !h-[30px] !py-0 bg-[#EBF1F7] text-black !text-sm !pb-[2px] font-normal rounded-[3px] !px-0 text-center !border-none  !opacity-100"
                     />
                   </div>
                 </div>
-                <div className="h-full flex items-center text-base font-normal text-[#77858F]">
+                <div className="h-full flex-shrink-0 flex items-center text-base font-normal text-[#77858F]">
                   ~
                 </div>
-                <div className="bg-transparent p-1">
-                  <div className="w-12">
+                <div className="bg-transparent pl-1">
+                  <div className="w-full">
                     <Input
                       disabled={
                         !isPermissionAction ||
@@ -1477,7 +1492,7 @@ const DailyReportDetailBoard = () => {
                           );
                         }
                       }}
-                      className={`${row.original.isRunning && 'cursor-not-allowed'} !w-[50px] rounded-[3px] !h-[30px] !py-0 bg-[#EBF1F7] text-black !pb-[2px] !text-xs font-normal text-center  !px-0 !border-none  !opacity-100`}
+                      className={`${row.original.isRunning && 'cursor-not-allowed'} !w-full rounded-[3px] !h-[30px] !py-0 bg-[#EBF1F7] text-black !pb-[2px] !text-sm font-normal text-center  !px-0 !border-none  !opacity-100`}
                     />
                   </div>
                 </div>
@@ -1500,7 +1515,7 @@ const DailyReportDetailBoard = () => {
 
         return (
           <div
-            className="flex gap-1 items-center justify-center cursor-pointer"
+            className="flex gap-1 items-center justify-center cursor-pointer min-w-[110px]"
             onClick={() => {
               const newSortState = isAsc
                 ? [{ id: column.id, desc: true }]
@@ -2131,7 +2146,7 @@ const DailyReportDetailBoard = () => {
                 />
               )}
             </div>
-            <div className="flex gap-4">
+            <div className="flex gap-[10px]">
               <Button
                 variant="outline"
                 className="border-none h-[34px] w-[48px] !px-0 !py-0"
@@ -2245,7 +2260,11 @@ const DailyReportDetailBoard = () => {
           </div>
         </div>
         <div className=" flex gap-3">
-          <div className="w-[262px] px-5 bg-[#F8FAFC] h-[calc(100vh_-_260px)] rounded-[30px] daily-custom  overflow-y-auto">
+          <div
+            style={{
+              boxShadow: '0px 4px 10px 0px #0000000D',
+            }}
+            className="w-[262px] flex-shrink-0 px-5 bg-[#F8FAFC] h-[calc(100vh_-_260px)] rounded-[30px] daily-custom  overflow-y-auto">
             <p className=" pt-[30px] mb-2">スケジュール実績</p>
             <FullCalendar
               ref={calendarRef}
@@ -2282,7 +2301,11 @@ const DailyReportDetailBoard = () => {
               locale="ja"
             />
           </div>
-          <div className="w-[calc(100%_-_260px)] h-[calc(100vh_-_260px)] font-medium overflow-y-auto mr-5 bg-[#F8FAFC] p-[30px] rounded-[30px]">
+          <div
+            style={{
+              boxShadow: '0px 4px 10px 0px #0000000D',
+            }}
+            className="w-[calc(100%_-_260px)] h-[calc(100vh_-_260px)] font-medium overflow-y-auto mr-5 bg-[#F8FAFC] p-[30px] rounded-[30px]">
             <div className="overflow-y-auto">
               <p className="text-base text-[#77858F]">カテゴリーの割合</p>
               <div className="flex pt-5">
@@ -2300,7 +2323,7 @@ const DailyReportDetailBoard = () => {
 
                 <section className="flex-1 flex flex-col items-start gap-4 justify-start">
                   <div className="w-fit h-14 flex items-center font-medium justify-center gap-1 text-[34px]">
-                    <span className="text-sm font-medium pt-6 mr-2">
+                    <span className="text-sm font-medium pt-4 mr-2">
                       合計時間
                     </span>
                     {hoursConvert}{' '}
@@ -2340,8 +2363,12 @@ const DailyReportDetailBoard = () => {
               </div>
             </div>
             <div className="mt-5 h-[548px]">
-              <p className="text-base font-medium text-[#77858F]">タスク一覧</p>
-              <Table className=" border border-[#D2DBE1] !ring-0 bg-white h-[496px] !pt-0 overflow-y-auto py-0 mt-5 rounded-[10px]">
+              <p className="text-base font-medium text-[#77858F] mb-3">
+                タスク一覧
+              </p>
+              <Table
+                classCustom="!py-0"
+                className=" border border-[#D2DBE1] !ring-0 bg-white h-[496px] !pt-0 overflow-y-auto py-0  rounded-[10px]">
                 <thead className="bg-gray-100 sticky z-10">
                   {table.getHeaderGroups().map((headerGroup) => (
                     <tr
@@ -2352,7 +2379,7 @@ const DailyReportDetailBoard = () => {
                           <th
                             key={header.id}
                             colSpan={2}
-                            className=" p-2 text-left !text-xs font-medium !text-[#77858F]">
+                            className=" py-2 !px-0 text-left !text-xs font-medium !text-[#77858F]">
                             {flexRender(
                               header.column.columnDef.header,
                               header.getContext(),
@@ -2392,7 +2419,7 @@ const DailyReportDetailBoard = () => {
                           <td
                             rowSpan={2}
                             className={`${index === 3 || index === 4 ? '' : ''} !pr-0 border-b border-[#D2DBE1] w-[18px] !pl-0`}>
-                            <></>
+                            <div className="w-[18px]"></div>
                           </td>
                           {row
                             .getVisibleCells()
@@ -2401,7 +2428,7 @@ const DailyReportDetailBoard = () => {
                               <td
                                 key={cell.id}
                                 style={{ width: '20%' }}
-                                className={`!pt-0 !pb-1 !pl-0 ${cellIndex !== 2 ? '!pr-0' : '!pr-[14px]'}`}>
+                                className={`!pt-0 !pb-1 !pl-0 ${cellIndex !== 2 ? '!pr-0' : '!pr-[18px]'}`}>
                                 {flexRender(
                                   cell.column.columnDef.cell,
                                   cell.getContext(),
@@ -2416,7 +2443,7 @@ const DailyReportDetailBoard = () => {
                               <td
                                 key={cell.id}
                                 rowSpan={2}
-                                className={`p-2 !pl-2 border-l  ${!isParent && cellIndex === 1 && 'border-l-0'} border-b !pr-0 border-[#D2DBE1]`}>
+                                className={`py-2 !px-0 border-l  ${!isParent && cellIndex === 1 && 'border-l-0'} border-b !pr-0 border-[#D2DBE1]`}>
                                 {flexRender(
                                   cell.column.columnDef.cell,
                                   cell.getContext(),
@@ -2429,7 +2456,7 @@ const DailyReportDetailBoard = () => {
                           className={`${row.depth > 0 ? 'bg-[#F8FAFC]' : 'bg-white'}  !border-none !pr-0`}>
                           <td
                             colSpan={3}
-                            className={`text-left !pt-0 !pl-0  !pr-0  border-b border-[#D2DBE1]`}>
+                            className={`text-left !pt-0 !pl-0  !pr-[18px]  border-b border-[#D2DBE1]`}>
                             <div
                               className={`flex items-center justify-between  ${isHasChild ? 'pb-[19px]' : 'relative top-[-8px]'} ${!isParent && 'relative top-[-4px]'}`}>
                               <div className=" w-full break-all text-base font-medium text-black flex items-start gap-[6px]">

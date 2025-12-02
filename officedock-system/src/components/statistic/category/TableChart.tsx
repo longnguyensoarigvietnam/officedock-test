@@ -295,7 +295,7 @@ const TableChart = ({
       enableSorting: false,
       header: () => {
         return (
-          <p className="text-[#77858F] px-[12px] font-medium text-xs text-left">
+          <p className="text-[#77858F] px-[18px] font-medium text-xs text-left">
             タスク名
           </p>
         );
@@ -392,7 +392,7 @@ const TableChart = ({
       enableSorting: false,
       header: () => {
         return (
-          <p className="text-[#77858F] font-medium text-xs text-left">
+          <p className="text-[#77858F] pl-[14px] pr-[18px] font-medium text-xs text-left">
             カテゴリー
           </p>
         );
@@ -464,7 +464,7 @@ const TableChart = ({
         }
 
         return (
-          <div className=" flex gap-2 items-center">
+          <div className=" flex gap-2 pl-[14px] pr-[18px] items-center">
             {/* Organization */}
             <div className="statistic-custom w-[24%] flex justify-between h-full relative rounded-md gap-2">
               <SingleSelect
@@ -549,7 +549,7 @@ const TableChart = ({
                   }
                 }}
               />
-              <div className="flex items-center  w-3 h-[30px]">
+              <div className="flex items-center  relative left-[2px] w-3 h-[30px]">
                 <ImageRound
                   className={`w-fit h-fit `}
                   src="/icons/play-statistic.svg"
@@ -630,7 +630,7 @@ const TableChart = ({
                   }
                 }}
               />
-              <div className="flex items-center  w-3 h-[30px]">
+              <div className="flex items-center  relative left-[2px]  w-3 h-[30px]">
                 <ImageRound
                   className={`w-fit h-fit `}
                   src="/icons/play-statistic.svg"
@@ -718,7 +718,7 @@ const TableChart = ({
                   }
                 }}
               />
-              <div className="flex items-center  w-3 h-[30px]">
+              <div className="flex items-center  relative left-[2px]  w-3 h-[30px]">
                 <ImageRound
                   className={`w-fit h-fit `}
                   src="/icons/play-statistic.svg"
@@ -912,7 +912,7 @@ const TableChart = ({
                     minWidth: header.getSize(),
                     maxWidth: header.getSize(),
                   }}
-                  className={`p-[12px] cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
+                  className={`py-[12px] !px-0 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
                   onClick={header.column.getToggleSortingHandler()}>
                   {flexRender(
                     header.column.columnDef.header,
@@ -934,7 +934,7 @@ const TableChart = ({
                     minWidth: cell.column.getSize(),
                     maxWidth: cell.column.getSize(),
                   }}
-                  className={`${index !== 0 ? 'border-l' : ''} !p-2`}>
+                  className={`${index !== 0 ? 'border-l' : ''} !py-2 !px-0`}>
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>
               ))}

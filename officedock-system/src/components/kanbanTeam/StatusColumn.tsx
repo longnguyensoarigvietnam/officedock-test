@@ -297,6 +297,7 @@ const StatusColumn = ({
                 <div
                   style={{
                     paddingRight: '10px',
+                    paddingLeft: '3px',
                     minHeight: '130px',
                   }}>
                   {items.map((task, index) => (

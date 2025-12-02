@@ -2499,7 +2499,7 @@ const KanbanBoardTaskTeam = () => {
                 <Button
                   disabled={isLoadingDataTask}
                   variant={'primary'}
-                  className={`!py-0 !px-0 font-bold w-[90px] h-7
+                  className={`!py-0 !px-0 font-bold w-[90px] h-7 !border-none
               !rounded-[20px] text-xs`}>
                   タスク
                 </Button>
@@ -2643,7 +2643,7 @@ const KanbanBoardTaskTeam = () => {
                         ? 'primary'
                         : 'outline'
                   }
-                  className={`${dataOrderRing === FilterTypeKanban.DEADLINE && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] !bg-[#EBF1F7]  '}  h-6 w-20 !px-0 !py-0 text-xs font-bold !rounded-[20px]`}>
+                  className={`${dataOrderRing === FilterTypeKanban.DEADLINE && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2] !bg-[#E6F3FB]  '}  h-6 w-20 !px-0 !py-0 text-xs font-bold !rounded-[20px]`}>
                   締切期間
                 </Button>
                 <Button
@@ -2662,14 +2662,14 @@ const KanbanBoardTaskTeam = () => {
                         ? 'primary'
                         : 'outline'
                   }
-                  className={`${dataOrderRing === FilterTypeKanban.IMPORTANT && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2]  !bg-[#EBF1F7] '} h-6 w-20 !px-0 !py-0 text-xs font-bold !rounded-[20px]   `}>
+                  className={`${dataOrderRing === FilterTypeKanban.IMPORTANT && !isLoadingDataTask ? '' : '!border-[#A7B7C2] !text-[#A7B7C2]  !bg-[#E6F3FB] '} h-6 w-20 !px-0 !py-0 text-xs font-bold !rounded-[20px]   `}>
                   重要
                 </Button>
               </>
 
               <InputSearch
-                className="w-[300px] h-[34px] py-0 bg-white ml-2 !rounded-[20px]"
-                inputClassName="h-[34px] bg-white border-none !rounded-[20px] text-sm placeholder-[#77858F]"
+                className="w-[300px] h-[34px] py-0 bg-[#F8FAFC] ml-2 !rounded-[20px]"
+                inputClassName="h-[34px] bg-[#F8FAFC] border-none !rounded-[20px] text-sm placeholder-[#77858F]"
                 iconClassName="w-[14px] h-[14px]"
                 placeholder="タスク、キーワードを検索"
                 // TODO : Implement search task

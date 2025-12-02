@@ -27,6 +27,12 @@ p:has(.inline-msg-quote) {
   width: 100%;
 }
 
+textarea::placeholder {
+  font-family: 'Noto Sans JP', sans-serif !important;
+  font-weight: 400 !important;
+  color: #77858f !important;
+}
+
 .truncate-oneline {
   display: -webkit-box;
   -webkit-line-clamp: 1;
@@ -106,7 +112,7 @@ html *::-webkit-scrollbar-track {
   --b: 1.8px;
   --m: 1.9;
 
-  background: #228CDB;
+  background: #228cdb;
   --R: calc(var(--s) * sqrt(var(--m) * var(--m) + 1) + var(--b) / 2);
   height: calc(2 * var(--R));
   width: 44%;
@@ -375,9 +381,9 @@ input[type='checkbox']:focus {
   transform: scale(1);
   transform-origin: center;
 }
-.custom-tiptap-editor{
+.custom-tiptap-editor {
   width: 100% !important;
   max-width: 100% !important;
-  overflow-wrap: break-word;  /* handles long words */
-  word-break: break-word;     /* fallback */
+  overflow-wrap: break-word; /* handles long words */
+  word-break: break-word; /* fallback */
 }

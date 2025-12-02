@@ -8,10 +8,80 @@ import {
   ChartData,
   ChartOptions,
 } from 'chart.js';
-import ChartDataLabels, { Context } from 'chartjs-plugin-datalabels';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { useEffect } from 'react';
 
 ChartJS.register(ArcElement, Tooltip, Legend, ChartDataLabels);
+ChartJS.defaults.font.family = 'Noto Sans JP, sans-serif';
+
+const TwoLineLabelPlugin = {
+  id: 'twoLineLabelPlugin',
+  afterDatasetsDraw(chart: any) {
+    const { ctx } = chart;
+
+    const meta = chart.getDatasetMeta(0);
+    if (!meta || !meta.data) return;
+
+    const labels = chart.data?.labels || [];
+    const dataset = chart.data?.datasets?.[0];
+    if (!dataset || !dataset.data) return;
+
+    const values = dataset.data as number[];
+
+    ctx.save();
+
+    meta.data.forEach((arc: any, index: number) => {
+      const value = values[index];
+      if (!value && value !== 0) return;
+
+      const rawLabel = labels?.[index] || '';
+      const maxLength = 10;
+      const label =
+        rawLabel.length > maxLength
+          ? rawLabel.substring(0, maxLength) + '...'
+          : rawLabel;
+
+      if (!arc || !arc.tooltipPosition) return;
+      const pos = arc.tooltipPosition();
+      if (!pos) return;
+
+      const x = pos.x;
+      const y = pos.y;
+
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#fff';
+
+      // ✦ 1) ONLY SHOW LABEL IF value >= 20
+      if (value >= 20) {
+        ctx.font = '500 14px "Noto Sans JP", sans-serif';
+        ctx.fillText(label, x, y - 16);
+      }
+
+      // ✦ 2) Value 24px
+      ctx.font = '400 24px "Noto Sans JP", sans-serif';
+      const valueText = `${value}`;
+      const valueWidth = ctx.measureText(valueText).width;
+
+      // ✦ 3) Percent symbol % (14px)
+      ctx.font = '14px "Noto Sans JP", sans-serif';
+      const percentWidth = ctx.measureText('%').width;
+
+      const totalWidth = valueWidth + percentWidth;
+      const startX = x - totalWidth / 2;
+
+      // Value (big)
+      ctx.font = '400 24px "Noto Sans JP", sans-serif';
+      ctx.fillText(valueText, startX + valueWidth / 2, y + 8);
+
+      // Percent symbol (small)
+      ctx.font = '14px "Noto Sans JP", sans-serif';
+      ctx.fillText('%', startX + valueWidth + percentWidth / 2, y + 10);
+    });
+
+    ctx.restore();
+  },
+};
 
 interface PieChartProps {
   id?: string;
@@ -62,11 +132,11 @@ const PieChart = ({
     datasets: [
       {
         data: filteredData.map((item) => item.value),
-        backgroundColor: filteredData.map(
-          (item) => item.color || defaultColors[0],
-        ),
-        borderColor: colorLabel !== '#fff' ? colorLabel : 'white',
-        borderWidth: 0.5,
+        backgroundColor: colors?.length
+          ? filteredData.map((item, i) => colors[i])
+          : defaultColors.slice(0, filteredData.length),
+        borderColor: colorLabel !== 'fff' ? colorLabel : '#fff',
+        borderWidth: 1,
         hoverOffset: 0,
       },
     ],
@@ -151,26 +221,7 @@ const PieChart = ({
         },
       },
       datalabels: {
-        formatter: (value, context: Context) => {
-          if (value < 20) return `${value}%`;
-
-          const label = String(
-            context.chart.data.labels?.[context.dataIndex] || '',
-          );
-          const maxLabelLength = 10;
-          const truncatedLabel =
-            label.length > maxLabelLength
-              ? `${label.substring(0, maxLabelLength)}...`
-              : label;
-
-          return `${truncatedLabel}\n${value}%`;
-        },
-        color: colorLabel,
-        font: {
-          size: 14,
-          weight: 500,
-          family: '"Noto Sans JP", sans-serif',
-        },
+        display: false,
       },
     },
     hover: {
@@ -193,7 +244,7 @@ const PieChart = ({
 
   return (
     <div id={id} className={`w-96 h-96 my-0 mx-auto ${className}`}>
-      <Pie data={chartData} options={options} />
+      <Pie data={chartData} options={options} plugins={[TwoLineLabelPlugin]} />
     </div>
   );
 };

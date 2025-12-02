@@ -155,7 +155,7 @@ const SingleSelect = ({
       {showArrow && !isDisabled && (
         <div
           onClick={() => setMenuIsOpen(!menuIsOpen)}
-          className="absolute top-1/2 -translate-y-1/2 right-1">
+          className="absolute top-1/2 -translate-y-1/2 right-[6px]">
           <Image
             alt="Arrow dropdown icon"
             src={'/icons/arrow-down.svg'}

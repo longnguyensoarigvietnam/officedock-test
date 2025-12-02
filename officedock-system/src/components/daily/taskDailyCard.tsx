@@ -1,6 +1,10 @@
 import React from 'react';
 import { EventContentArg } from '@fullcalendar/core/index.js';
-import { convertToTimeString, isMoreThanSixtyMinutes } from '@utils/date';
+import {
+  convertToTimeString,
+  getMinuteDifference,
+  isMoreThanSixtyMinutes,
+} from '@utils/date';
 import { generateVerticalGradient } from '@utils';
 
 type Props = {
@@ -30,20 +34,29 @@ const TaskDailyCard = ({ event, isDownload }: Props) => {
             {event.event.title}
           </p>
 
-          {event.timeText && differentTime && !isCalculate && event && (
-            <p
-              className={`text-xs ${isDownload ? '-translate-y-[50%] h-8' : ''}`}>
-              {event.timeText}
-            </p>
-          )}
-          {isCalculate && (
-            <p
-              className={`text-xs ${isDownload ? '-translate-y-[50%] h-8' : ''}`}>
-              {event.event?.extendedProps?.startedAt &&
-                convertToTimeString(event.event?.extendedProps?.startedAt)}{' '}
-              ~ 計測中
-            </p>
-          )}
+          <div className="flex items-center gap-2 text-[11px]">
+            {event.timeText && differentTime && !isCalculate && event && (
+              <p
+                className={`text-xs ${isDownload ? '-translate-y-[50%] h-8' : ''}`}>
+                {event.timeText}
+              </p>
+            )}
+            {!isCalculate && (
+              <p className="break-all">
+                {getMinuteDifference(event.timeText)}分
+              </p>
+            )}
+            {isCalculate && (
+              <p
+                className={`text-xs ${isDownload ? '-translate-y-[50%] h-8' : ''}`}>
+                {event.event?.extendedProps?.startedAt &&
+                  convertToTimeString(
+                    event.event?.extendedProps?.startedAt,
+                  )}{' '}
+                ~ 計測中
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </>

@@ -76,6 +76,11 @@ ChartJS.register(
   Filler,
 );
 
+ChartJS.defaults.font.family = 'Noto Sans JP, sans-serif';
+ChartJS.defaults.font.size = 14;
+ChartJS.defaults.font.weight = 'bold';
+ChartJS.defaults.color = '#77858F';
+
 type Props = {
   startDate: Date;
   endDate: Date | null;
