@@ -1,6 +1,6 @@
 'use client';
 
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation } from 'react-query';
 import Link from 'next/link';
@@ -10,6 +10,8 @@ import { AxiosError } from 'axios';
 
 import Dropdown from '@components/common/Dropdown';
 import Button from '@components/common/Button';
+import ImageRound from '@components/common/ImageRound';
+import Switch from '@components/common/Switch';
 
 import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 import { useErrorToast } from '@hooks/useErrorToast';
@@ -18,12 +20,17 @@ import useOrganizationCategoryHierarchyList from '@hooks/useOrganizationCategory
 
 import { OptionDropdownType } from '@interfaces/common';
 import {
+  HierarchyCategoryUpdatePayload,
   OrganizationCategoryRow,
+  SelectedOrganizationCategoryRow,
   StatisticCategory,
 } from '@interfaces/hierarchy';
 import { CreationDataSkill, Skill } from '@interfaces/skills';
 
-import { AddCategoryHierarchyType, PermissionsSystem } from '@constants/enums';
+import {
+  AddCategoryHierarchyType,
+  PermissionsSystem,
+} from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
 import { ALL_TEAMS_OPTION } from '@constants';
 import {
@@ -51,29 +58,8 @@ const EditHierarchyForm = () => {
   const { data: session } = useSessionCache();
   const [hierarchyList, setHierarchyList] = useState<HierarchyDetail[]>([]);
   const [categoryList, setCategoryList] = useState<OptionDropdownType[]>([]);
-  const [selectedHierarchiesToDelete, setSelectedHierarchiesToDelete] =
-    useState<string[]>([]);
   const [selectedHierarchiesToUpdate, setSelectedHierarchiesToUpdate] =
-    useState<
-      {
-        organizationStatisticCategoryId: string | number | null;
-        organizationId: number;
-        largeStatisticCategory: {
-          name: string;
-          uuid: string;
-        } | null;
-        mediumStatisticCategory: {
-          name: string;
-          uuid: string;
-        } | null;
-        smallStatisticCategory: {
-          name: string;
-          uuid: string;
-        } | null;
-        color: string;
-        skillIds: number[];
-      }[]
-    >([]);
+    useState<SelectedOrganizationCategoryRow[]>([]);
   const [organizationList, setOrganizationList] = useState<
     OptionDropdownType[]
   >([]);
@@ -97,6 +83,8 @@ const EditHierarchyForm = () => {
   const { showToast } = useToast();
   const showErrorToast = useErrorToast();
   const [isTyping, setIsTyping] = useState<boolean>(false);
+  const [isHiddenList, setIsHiddenList] = useState<boolean>(false);
+  const [isPending, startTransition] = useTransition();
 
   useCreationDataCommon({
     options: {
@@ -186,19 +174,12 @@ const EditHierarchyForm = () => {
       },
     );
     if (
-      selectedHierarchiesToDelete.length == 0 &&
       tempSelectedHierarchiesToUpdate.length == 0
     ) {
       router.push(pageRouters.TEAM_CATEGORY_MANAGEMENT.href);
     } else {
       updateOrganizationCategoryHierarchy({
-        ids: selectedHierarchiesToDelete
-          ? selectedHierarchiesToDelete
-              .map((hierarchyId) =>
-                !isUUID(hierarchyId) ? hierarchyId : undefined,
-              )
-              .filter((id): id is string => id !== undefined)
-          : [],
+        itemsToDelete: [],
         items: tempSelectedHierarchiesToUpdate,
       });
     }
@@ -206,34 +187,14 @@ const EditHierarchyForm = () => {
 
   const handleUpdateOrganizationCategoryHierarchyList = async ({
     items,
-    ids,
-  }: {
-    items: {
-      organizationStatisticCategoryId: string | number | null;
-      organizationId: number;
-      largeStatisticCategory: {
-        name: string;
-        uuid: string;
-      } | null;
-      mediumStatisticCategory: {
-        name: string;
-        uuid: string;
-      } | null;
-      smallStatisticCategory: {
-        name: string;
-        uuid: string;
-      } | null;
-      color: string;
-      skillIds: number[];
-    }[];
-    ids: string[];
-  }) => {
+    itemsToDelete,
+  }: HierarchyCategoryUpdatePayload) => {
     setIsLoading(true);
     const { data } = await api.post(
       apiRouters.ORGANIZATION_CATEGORY_HIERARCHY_LIST,
       {
         items,
-        ids,
+        itemsToDelete,
       },
     );
     return data;
@@ -244,7 +205,6 @@ const EditHierarchyForm = () => {
     handleUpdateOrganizationCategoryHierarchyList,
     {
       onSuccess: async () => {
-        setSelectedHierarchiesToDelete([]);
         setSelectedHierarchiesToUpdate([]);
         showToast({
           description: SUCCESS_UPDATE_MESSAGE,
@@ -267,16 +227,19 @@ const EditHierarchyForm = () => {
       large: {
         label: org.largeStatisticCategory?.name || '',
         value: org.largeStatisticCategory?.uuid || '',
+        isHidden: org.largeStatisticCategory?.isHidden || false,
         showBy: AddCategoryHierarchyType.PULLDOWN,
       },
       medium: {
         label: org.mediumStatisticCategory?.name || '',
         value: org.mediumStatisticCategory?.uuid || '',
+        isHidden: org.mediumStatisticCategory?.isHidden || false,
         showBy: AddCategoryHierarchyType.PULLDOWN,
       },
       small: {
         label: org.smallStatisticCategory?.name || '',
         value: org.smallStatisticCategory?.uuid || '',
+        isHidden: org.smallStatisticCategory?.isHidden || false,
         showBy: AddCategoryHierarchyType.PULLDOWN,
       },
       skills: org.skills.map((skill) => {
@@ -288,7 +251,6 @@ const EditHierarchyForm = () => {
       color: org.color,
     }));
   };
-
   useOrganizationCategoryHierarchyDetail({
     organizationId: Number(selectedOrganizationOption.value),
     conditions: [Boolean(selectedOrganizationOption.value)],
@@ -298,16 +260,19 @@ const EditHierarchyForm = () => {
         large: {
           label: org.largeStatisticCategory?.name || '',
           value: org.largeStatisticCategory?.uuid || '',
+          isHidden: org.largeStatisticCategory?.isHidden || false,
           showBy: AddCategoryHierarchyType.PULLDOWN,
         },
         medium: {
           label: org.mediumStatisticCategory?.name || '',
           value: org.mediumStatisticCategory?.uuid || '',
+          isHidden: org.mediumStatisticCategory?.isHidden || false,
           showBy: AddCategoryHierarchyType.PULLDOWN,
         },
         small: {
           label: org.smallStatisticCategory?.name || '',
           value: org.smallStatisticCategory?.uuid || '',
+          isHidden: org.smallStatisticCategory?.isHidden || false,
           showBy: AddCategoryHierarchyType.PULLDOWN,
         },
         skills: org.skills.map((skill) => {
@@ -318,13 +283,14 @@ const EditHierarchyForm = () => {
         }),
         color: org.color,
       }));
-      setHierarchyList([
+      const tempList = [
         {
           id: data.id,
           name: data.name,
           statisticCategories,
         },
-      ]);
+      ];
+      setHierarchyList(tempList);
     },
     onSettled: () => {
       setIsLoading(false);
@@ -345,41 +311,69 @@ const EditHierarchyForm = () => {
     onSettled: () => setIsLoading(false),
   });
 
+  useEffect(() => {
+    setIsLoading(Boolean(isPending));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPending]);
+
   return (
     <div className="flex flex-col h-full">
       <div className="sticky z-[21] top-[0px] px-10 pt-8 pb-3 bg-[#E6F3FB]">
-        <div className="flex gap-4 items-center mb-5">
-          <p className="text-black font-medium text-[26px] leading-[1]">
-            業務カテゴリー設定
-          </p>
-          <div className="flex gap-2 bg-white w-fit p-[6px] rounded-[20px]">
-            <Link href={pageRouters.CATEGORY_MANAGEMENT.href}>
+        <div className="flex justify-between mb-5">
+          <div className="flex gap-4 items-center">
+            <p className="text-black font-medium text-[26px] leading-[1]">
+              業務カテゴリー設定
+            </p>
+            <div className="flex gap-2 bg-white w-fit p-[6px] rounded-[20px]">
+              <Link href={pageRouters.CATEGORY_MANAGEMENT.href}>
+                <Button
+                  variant="outline"
+                  className={`w-[128px] !p-0 text-xs h-[28px] !font-bold !text-[#77858F] !bg-[#EBF1F7] border-none !rounded-[20px]`}>
+                  社内共通カテゴリー
+                </Button>
+              </Link>
+
               <Button
-                variant="outline"
-                className={`w-[128px] !p-0 text-xs h-[28px] !font-bold !text-[#77858F] !bg-[#EBF1F7] border-none !rounded-[20px]`}>
-                社内共通カテゴリー
+                variant="primary"
+                className={`w-[128px] !p-0 text-xs h-[28px] !font-bold text-white border-none !rounded-[20px]`}>
+                チームカテゴリー
               </Button>
-            </Link>
 
-            <Button
-              variant="primary"
-              className={`w-[128px] !p-0 text-xs h-[28px] !font-bold text-white border-none !rounded-[20px]`}>
-              チームカテゴリー
-            </Button>
-
-            {session?.user.permissions &&
-              hasPermissionInArray(
-                session?.user.permissions,
-                PermissionsSystem.CATEGORY_HIERARCHY_VIEW,
-              ) && (
-                <Link href={pageRouters.CALENDAR_CATEGORY_MANAGEMENT.href}>
-                  <Button
-                    variant="outline"
-                    className={`w-[140px] !p-0 text-xs h-[28px] !font-bold !text-[#77858F] !bg-[#EBF1F7] border-none !rounded-[20px]`}>
-                    カレンダーカテゴリー
-                  </Button>
-                </Link>
-              )}
+              {session?.user.permissions &&
+                hasPermissionInArray(
+                  session?.user.permissions,
+                  PermissionsSystem.CATEGORY_HIERARCHY_VIEW,
+                ) && (
+                  <Link href={pageRouters.CALENDAR_CATEGORY_MANAGEMENT.href}>
+                    <Button
+                      variant="outline"
+                      className={`w-[140px] !p-0 text-xs h-[28px] !font-bold !text-[#77858F] !bg-[#EBF1F7] border-none !rounded-[20px]`}>
+                      カレンダーカテゴリー
+                    </Button>
+                  </Link>
+                )}
+            </div>
+          </div>
+          <div className="flex gap-[10px] items-center">
+            <div className="flex items-center text-steel text-xs font-medium">
+              <p>「</p>
+              <ImageRound
+                name="Hide"
+                src={'/icons/dark-close-eye.svg'}
+                className="w-[16px] h-[13px] ml-[2px] mr-1 hover:cursor-pointer"
+              />
+              <p>非表示カテゴリー」を表示</p>
+            </div>
+            <Switch
+              sizeClassName="!w-[48px] !h-[28px]"
+              toggleClassName="!w-5 !h-5 !ml-[2px]"
+              enableColor="#228CDB"
+              disableColor="#CDD7DC"
+              enable={isHiddenList}
+              onChange={(e) => {
+                startTransition(() => setIsHiddenList(e));
+              }}
+            />
           </div>
         </div>
 
@@ -387,7 +381,7 @@ const EditHierarchyForm = () => {
           <div>
             <Dropdown
               options={organizationList}
-              className="!w-[220px] !h-[34px] !py-0 !border-[1px] !border-[#77858F]"
+              className="!w-[220px] !h-[34px] !py-0 !border-[1px] !border-steel"
               classNameOption="!w-[220px]"
               selectedOption={organizationList.find(
                 (element) => element.value == selectedOrganizationOption.value,
@@ -408,7 +402,6 @@ const EditHierarchyForm = () => {
                 className="w-[100px] !p-0 !h-[34px]"
                 onClick={() => {
                   setSelectedHierarchiesToUpdate([]);
-                  setSelectedHierarchiesToDelete([]);
                 }}>
                 キャンセル
               </Button>
@@ -431,6 +424,7 @@ const EditHierarchyForm = () => {
               <TableComponent
                 key={data.id}
                 hierarchyList={data}
+                isHiddenList={isHiddenList}
                 categoryList={categoryList}
                 dataOptionsSkill={
                   dataOptionsSkill.find(
@@ -440,7 +434,6 @@ const EditHierarchyForm = () => {
                 organizationName={data.name}
                 setIsTyping={setIsTyping}
                 setHierarchyList={setHierarchyList}
-                setSelectedHierarchiesToDelete={setSelectedHierarchiesToDelete}
                 setSelectedHierarchiesToUpdate={setSelectedHierarchiesToUpdate}
               />
             ))}
@@ -449,6 +442,7 @@ const EditHierarchyForm = () => {
           <TableComponent
             hierarchyList={hierarchyList[0]}
             organizationName={hierarchyList[0].name}
+            isHiddenList={isHiddenList}
             categoryList={categoryList}
             dataOptionsSkill={
               dataOptionsSkill.find(
@@ -457,7 +451,6 @@ const EditHierarchyForm = () => {
             }
             setIsTyping={setIsTyping}
             setHierarchyList={setHierarchyList}
-            setSelectedHierarchiesToDelete={setSelectedHierarchiesToDelete}
             setSelectedHierarchiesToUpdate={setSelectedHierarchiesToUpdate}
           />
         )}

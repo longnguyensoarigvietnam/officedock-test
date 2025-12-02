@@ -44,10 +44,10 @@ import { LoadingContext } from '@providers/LoadingProvider';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 import { useToast } from '@providers/ToastProvider';
 
+import { ResponseError } from '@interfaces/response';
 import { Category } from '@interfaces/category';
 
 import api from '@base/api';
-import { ResponseError } from '@interfaces/response';
 
 const ListCategory = () => {
   const { setIsLoading } = useContext(LoadingContext);

@@ -11,6 +11,8 @@ import { HierarchyType } from '@constants/enums';
 
 import { OrganizationCategoryRow } from '@interfaces/hierarchy';
 
+import useTeamCategory from '@hooks/useTeamCategory';
+
 interface HierarchyDetail {
   id: number | string;
   name: string;
@@ -24,23 +26,52 @@ const HierarchyTable = ({
   hierarchyList: HierarchyDetail;
   organizationName: string;
 }) => {
+  const {
+    checkIsHiddenCategory,
+    findLastUniqueLargeIndexes,
+    findLastUniqueMediumIndexes,
+    findLastSmallInEachLarge,
+    findLastDisplayedSmallInEachLarge,
+  } = useTeamCategory({ hierarchyList });
+
   const uniqueLargeCount = new Set(
-    hierarchyList.statisticCategories.map((item) => item.large.value),
+    hierarchyList.statisticCategories
+      .filter(
+        (hierarchy) =>
+          hierarchy.large.showBy &&
+          !checkIsHiddenCategory({
+            type: HierarchyType.LARGE,
+            originalRow: hierarchy,
+          }),
+      )
+      .map((item) => item.large.value),
   ).size;
   const uniqueMediumCount = new Set(
-    hierarchyList.statisticCategories.map(
-      (item) => `${item.large.value}-${item.medium.value}`,
-    ),
+    hierarchyList.statisticCategories
+      .filter(
+        (hierarchy) =>
+          hierarchy.medium.showBy &&
+          !checkIsHiddenCategory({
+            type: HierarchyType.MEDIUM,
+            originalRow: hierarchy,
+          }),
+      )
+      .map((item) => `${item.large.value}-${item.medium.value}`),
   ).size;
   const uniqueSmallCount = hierarchyList.statisticCategories.filter(
-    (hierarchy) => hierarchy.small.showBy,
+    (hierarchy) =>
+      hierarchy.small.showBy &&
+      !checkIsHiddenCategory({
+        type: HierarchyType.SMALL,
+        originalRow: hierarchy,
+      }),
   ).length;
 
   const columns = [
     {
       accessorKey: HierarchyType.LARGE,
       header: () => (
-        <div className="flex justify-between px-5">
+        <div className="flex justify-between pl-[18px] pr-[14px]">
           <p>大カテゴリー</p>
           <p>{uniqueLargeCount}</p>
         </div>
@@ -49,7 +80,7 @@ const HierarchyTable = ({
     {
       accessorKey: HierarchyType.MEDIUM,
       header: () => (
-        <div className="flex justify-between px-5">
+        <div className="flex justify-between px-[14px]">
           <p>中カテゴリー</p>
           <p>{uniqueMediumCount}</p>
         </div>
@@ -58,7 +89,7 @@ const HierarchyTable = ({
     {
       accessorKey: HierarchyType.SMALL,
       header: () => (
-        <div className="flex justify-between px-5">
+        <div className="flex justify-between px-[14px]">
           <p>小カテゴリー</p>
           <p>{uniqueSmallCount}</p>
         </div>
@@ -67,7 +98,7 @@ const HierarchyTable = ({
     {
       accessorKey: 'skills',
       header: () => (
-        <p className="font-medium text-xs text-[#77858F] text-left px-5">
+        <p className="font-medium text-xs text-[#77858F] text-left px-[14px]">
           スキルの紐付け
         </p>
       ),
@@ -122,59 +153,6 @@ const HierarchyTable = ({
     HierarchyType.MEDIUM,
   );
 
-  const findLastUniqueMediumIndexes = (data: OrganizationCategoryRow[]): number[] => {
-    const lastIndexes: number[] = [];
-    let currentLargeValue: number | string | null = null;
-    let mediumIndexes: Record<number | string, number> = {}; // Tracks first occurrence of each medium value
-    let lastMediumIndex: number | null = null;
-
-    for (let i = 0; i < data.length; i++) {
-      const { large, medium } = data[i];
-
-      // If the large category changes, reset tracking
-      if (large.value !== currentLargeValue) {
-        if (lastMediumIndex !== null) lastIndexes.push(lastMediumIndex); // Store last unique medium index of previous large group
-        currentLargeValue = large.value;
-        mediumIndexes = {}; // Reset for new large group
-        lastMediumIndex = null; // Reset for new group
-      }
-
-      // Store only the first occurrence of each medium
-      if (mediumIndexes[medium.value] === undefined) {
-        mediumIndexes[medium.value] = i;
-        lastMediumIndex = i; // Track last added medium index
-      }
-    }
-
-    // Push the last tracked index of the final large group
-    if (lastMediumIndex !== null) lastIndexes.push(lastMediumIndex);
-
-    return lastIndexes;
-  };
-
-  const findLastUniqueLargeIndexes = (data: OrganizationCategoryRow[]): number[] => {
-    const lastIndexes: number[] = [];
-    let lastLargeIndex: number | null = null;
-    let currentLargeValue: number | string | null = null;
-
-    for (let i = 0; i < data.length; i++) {
-      const { large } = data[i];
-
-      // If the large category changes, store the last large index
-      if (large.value !== currentLargeValue) {
-        if (lastLargeIndex !== null) lastIndexes.push(lastLargeIndex);
-        currentLargeValue = large.value;
-      }
-
-      lastLargeIndex = i; // Always update with the last index of the large group
-    }
-
-    // Push the last tracked index of the final large group
-    if (lastLargeIndex !== null) lastIndexes.push(lastLargeIndex);
-
-    return lastIndexes;
-  };
-
   // Call the function
   const lastLargeIndexes = findLastUniqueLargeIndexes(
     hierarchyList.statisticCategories,
@@ -184,8 +162,22 @@ const HierarchyTable = ({
     hierarchyList.statisticCategories,
   );
 
+  const lastDisplayedMediumIndexesInEachLarge = findLastUniqueMediumIndexes(
+    hierarchyList.statisticCategories,
+    true,
+  );
+
+  const lastSmallIndexesInEachLarge = findLastSmallInEachLarge(
+    hierarchyList.statisticCategories,
+  );
+
+  const lastDisplayedSmallIndexesInEachLarge =
+    findLastDisplayedSmallInEachLarge(hierarchyList.statisticCategories);
+
   return (
-    <div className="w-full p-5 bg-[#F8FAFC] rounded-[30px]" style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
+    <div
+      className="w-full p-5 bg-[#F8FAFC] rounded-[30px]"
+      style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
       <p className="text-[#77858F] text-[16px] font-medium mb-4 max-w-[100%] break-all">
         {organizationName}
       </p>
@@ -208,66 +200,158 @@ const HierarchyTable = ({
         </thead>
         <tbody>
           {table.getRowModel().rows.map((row, rowIndex) => {
+            const isHiddenLargeCategory = checkIsHiddenCategory({
+              type: HierarchyType.LARGE,
+              originalRow: row.original,
+            });
+            const isHiddenMediumCategory = checkIsHiddenCategory({
+              type: HierarchyType.MEDIUM,
+              originalRow: row.original,
+            });
+            const isHiddenSmallCategory = checkIsHiddenCategory({
+              type: HierarchyType.SMALL,
+              originalRow: row.original,
+            });
+            const rows = table.getRowModel().rows;
+            const lastIndex = rows.length - 1;
+            const secondLastLargeIndex =
+              Array.isArray(lastLargeIndexes) && lastLargeIndexes.length >= 2
+                ? lastLargeIndexes[lastLargeIndexes.length - 2]
+                : null;
+
             return (
-              <tr key={row.id} className="h-[1px]">
+              <tr
+                key={row.id}
+                style={{
+                  height: isHiddenLargeCategory ? '0px' : '1px',
+                }}>
                 {largeRowspan[rowIndex] > 0 && (
                   <td
-                    className={`${table.getRowModel().rows.length - 1 != rowIndex && 'border-b-[1px]'} border-r-[1px] w-[25%] max-w-[25%] break-all border-[#D2DBE1] h-full`}
-                    style={{ height: 'inherit' }}
+                    className={`${
+                      lastIndex !== rowIndex &&
+                      secondLastLargeIndex !== null &&
+                      secondLastLargeIndex + 1 !== rowIndex &&
+                      'border-b-[1px]'
+                    } border-r-[1px] !w-1/4 border-[#D2DBE1] h-full !p-0 ${isHiddenLargeCategory && '!border-b-0'}`}
+                    style={{
+                      height: isHiddenLargeCategory ? '0px' : 'inherit',
+                    }}
                     rowSpan={largeRowspan[rowIndex]}>
-                    <div className="p-3 h-full flex items-center gap-3">
+                    <div
+                      className={`pr-[14px] pl-[18px] py-5 h-full flex items-center gap-[14px] ${isHiddenLargeCategory && 'hidden'}`}>
                       <div className="relative">
                         <div
-                          className={`w-[14px] h-[14px] rounded-full hover:cursor-pointer`}
+                          className={`w-[14px] h-[14px] rounded-full hover:cursor-pointer ${isHiddenLargeCategory && 'hidden'}`}
                           style={{ backgroundColor: `${row.original.color}` }}
                         />
                       </div>
-                      <p className="text-sm flex justify-left items-center font-medium py-4">
-                        {row.original.large.label || NO_OPTION_CATEGORY}
-                      </p>
+                      {isHiddenLargeCategory ? (
+                        <div className="hidden w-full"></div>
+                      ) : (
+                        <p className="text-sm flex justify-left items-center font-medium">
+                          {row.original.large.label || NO_OPTION_CATEGORY}
+                        </p>
+                      )}
                     </div>
                   </td>
                 )}
                 {mediumRowspan[rowIndex] > 0 && (
                   <td
-                    className={`w-[25%] max-w-[25%] break-all px-3 ${lastMediumIndexes.includes(rowIndex) && table.getRowModel().rows.length - 1 != rowIndex && 'border-b-[1px] border-[#D2DBE1]'} border-r-[1px] h-full`}
-                    style={{ height: 'inherit' }}
+                    className={`w-1/4 !p-0`}
+                    style={{
+                      height: isHiddenLargeCategory ? '0px' : 'inherit',
+                    }}
                     rowSpan={mediumRowspan[rowIndex]}>
-                    <p
-                      className={`text-sm h-full flex justify-left items-center font-medium py-4 ${!lastMediumIndexes.includes(rowIndex) && 'border-b-[1px] border-[#D2DBE1]'} `}>
-                      {row.original.medium.label || NO_OPTION_CATEGORY}
-                    </p>
+                    <div
+                      className={`${!lastMediumIndexes.includes(rowIndex) ? 'mx-[14px]' : 'px-[14px]'} flex flex-col !h-full ${isHiddenMediumCategory && '!p-0'}  ${
+                        (!isHiddenMediumCategory &&
+                          !lastDisplayedMediumIndexesInEachLarge.includes(
+                            rowIndex,
+                          ) &&
+                          !lastMediumIndexes
+                            .slice(0, lastMediumIndexes.length - 1)
+                            .includes(rowIndex)) ||
+                        (lastMediumIndexes.includes(rowIndex) &&
+                          lastDisplayedMediumIndexesInEachLarge.at(-1) !=
+                            rowIndex)
+                          ? 'border-b-[1px] border-[#D2DBE1]'
+                          : ''
+                      } ${isHiddenLargeCategory && isHiddenMediumCategory ? '!border-0' : ''}`}>
+                      {isHiddenMediumCategory ? (
+                        <>
+                          <div className="hidden w-full"></div>
+                        </>
+                      ) : (
+                        <div
+                          className={`flex items-center h-full gap-2 flex-wrap w-full py-5
+                            `}>
+                          <p className="text-sm flex justify-left items-center font-medium">
+                            {row.original.medium.label || NO_OPTION_CATEGORY}
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </td>
                 )}
                 <td
-                  className={`w-[25%] max-w-[25%] break-all px-3 ${lastLargeIndexes.includes(rowIndex) && table.getRowModel().rows.length - 1 != rowIndex && 'border-b-[1px] border-[#D2DBE1]'} border-r-[1px] h-full`}
-                  style={{ height: 'inherit' }}>
-                  <p
-                    className={`text-sm h-full flex justify-left items-center font-medium py-4 ${!lastLargeIndexes.includes(rowIndex) && 'border-b-[1px] border-[#D2DBE1]'} `}>
-                    {row.original.small.label || NO_OPTION_CATEGORY}
-                  </p>
+                  className={`${lastSmallIndexesInEachLarge.slice(0, lastSmallIndexesInEachLarge.length - 1).includes(rowIndex) && 'border-b-[1px]'} border-x-[1px] border-[#D2DBE1] w-1/4 !py-0 ${isHiddenLargeCategory && 'hidden'} px-[14px]`}
+                  style={{
+                    height: isHiddenLargeCategory ? '0px' : 'inherit',
+                  }}>
+                  {isHiddenSmallCategory ? (
+                    <>
+                      <div className="hidden w-full"></div>
+                    </>
+                  ) : (
+                    <div
+                      className={`flex items-center h-full gap-2 flex-wrap py-5 
+                        ${
+                          !lastLargeIndexes.includes(rowIndex) &&
+                          !lastDisplayedSmallIndexesInEachLarge.includes(
+                            rowIndex,
+                          ) &&
+                          'border-b-[1px] border-[#D2DBE1]'
+                        }`}>
+                      <p className="text-sm flex justify-left items-center font-medium">
+                        {row.original.small.label || NO_OPTION_CATEGORY}
+                      </p>
+                    </div>
+                  )}
                 </td>
                 <td
-                  className={`h-full px-3 w-[25%] max-w-[25%] break-all ${lastLargeIndexes.includes(rowIndex) && table.getRowModel().rows.length - 1 != rowIndex && 'border-b-[1px]'} border-l-[1px] border-[#D2DBE1]`}
-                  style={{ height: 'inherit' }}>
-                  <div
-                    className={`flex items-center h-full gap-2 flex-wrap py-4 ${!lastLargeIndexes.includes(rowIndex) && 'border-b-[1px] border-[#D2DBE1]'}`}>
-                    {row.original.skills.length > 0 ? (
-                      row.original.skills.map((skill) => {
-                        return (
-                          <div
-                            key={skill.value}
-                            className="flex items-center justify-center bg-[#77858F] !h-fit min-w-[35px] px-[10px] !py-[5px] rounded-[20px]">
-                            <p className="text-white text-xs font-medium">
-                              {skill.label}
-                            </p>
-                          </div>
-                        );
-                      })
-                    ) : (
-                      <div className="py-[5px]"></div>
-                    )}
-                  </div>
+                  className={`align-top h-full ${lastSmallIndexesInEachLarge.slice(0, lastSmallIndexesInEachLarge.length - 1).includes(rowIndex) && 'border-b-[1px] border-[#D2DBE1]'} !w-1/4 max-w-[1/4] ${isHiddenLargeCategory && 'hidden'} px-[14px]`}
+                  style={{
+                    height: isHiddenLargeCategory ? '0px' : 'inherit',
+                  }}>
+                  {isHiddenSmallCategory ? (
+                    <div className="hidden"></div>
+                  ) : (
+                    <div
+                      className={`flex items-center h-full gap-2 flex-wrap py-4 
+                        ${
+                          !lastLargeIndexes.includes(rowIndex) &&
+                          !lastDisplayedSmallIndexesInEachLarge.includes(
+                            rowIndex,
+                          ) &&
+                          'border-b-[1px] border-[#D2DBE1]'
+                        }`}>
+                      {row.original.skills.length > 0 ? (
+                        row.original.skills.map((skill) => {
+                          return (
+                            <div
+                              key={skill.value}
+                              className="flex items-center justify-center bg-[#77858F] !h-fit min-w-[35px] px-[10px] !py-[5px] rounded-[20px]">
+                              <p className="text-white text-xs font-medium">
+                                {skill.label}
+                              </p>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className="py-[5px]"></div>
+                      )}
+                    </div>
+                  )}
                 </td>
               </tr>
             );

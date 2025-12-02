@@ -346,18 +346,18 @@ export const EventListModal = ({
                       {event ? showEventAvatars(event) : <></>}
                       <div className="flex flex-col gap-[10px]">
                         <p
-                          className={`font-semibold max-w-[150px] truncate leading-[1] ${event?.id && event?.id.includes('holiday') && 'text-error'}`}>
+                          className={`font-semibold max-w-[150px] truncate ${event?.id && event?.id.includes('holiday') && 'text-error'}`}>
                           {event.title || ''}
                         </p>
                         <div className="flex gap-1">
                           <div className="flex">
                             {event && event.allDay && (
-                              <p className="text-[11px] mr-1 leading-none">
+                              <p className="text-[11px] mr-1 leading-[1.2]">
                                 終日
                               </p>
                             )}
                             <p
-                              className={`text-[11px] leading-none ${
+                              className={`text-[11px] leading-[1.2] ${
                                 event?.start &&
                                 event?.end &&
                                 !isSameDay(
@@ -379,7 +379,7 @@ export const EventListModal = ({
                               !event.allDay &&
                               event.start &&
                               event.end && (
-                                <div className="flex gap-1 items-center text-[11px] leading-none">
+                                <div className="flex gap-1 items-center text-[11px] leading-[1.2]">
                                   <p>
                                     {formatHoursAndMinutesForDateTime(
                                       new Date(event.start),
@@ -394,7 +394,7 @@ export const EventListModal = ({
                                 </div>
                               )}
                           </div>
-                          <p className="text-[11px] truncate max-w-[78px] leading-none">
+                          <p className="text-[11px] truncate max-w-[78px] leading-[1.2]">
                             {event.location?.name}
                           </p>
                         </div>

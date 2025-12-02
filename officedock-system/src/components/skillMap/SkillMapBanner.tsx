@@ -42,7 +42,7 @@ export const SkillMapBanner = ({
             </p>
           </div>
         </div>
-        <div className="text-xs font-medium w-fit flex-grow flex-shrink-0">
+        <div className="text-xs font-medium w-fit flex-grow flex-shrink-0 hidden">
           <div className="bg-[#FFFFFF40] w-full h-[104px] rounded-[10px] px-[30px] py-[25px] flex flex-col gap-2">
             <div className="flex items-center gap-[10px] font-medium text-base">
               <Image

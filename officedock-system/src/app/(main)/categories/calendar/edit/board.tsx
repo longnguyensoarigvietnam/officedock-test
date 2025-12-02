@@ -1,6 +1,13 @@
 'use client';
 
-import { Dispatch, SetStateAction, useContext, useState } from 'react';
+import {
+  Dispatch,
+  SetStateAction,
+  useContext,
+  useEffect,
+  useState,
+  useTransition,
+} from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation } from 'react-query';
 import Link from 'next/link';
@@ -9,12 +16,19 @@ import { validate as isUUID } from 'uuid';
 import { AxiosError } from 'axios';
 
 import Button from '@components/common/Button';
+import ImageRound from '@components/common/ImageRound';
+import Switch from '@components/common/Switch';
 
 import { useErrorToast } from '@hooks/useErrorToast';
 import useCalendarCategoryHierarchyDetail from '@hooks/useCalendarCategoryDetail';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 import { OptionDropdownType } from '@interfaces/common';
-import { CalendarCategoryRow } from '@interfaces/hierarchy';
+import {
+  CalendarCategoryRow,
+  CalendarHierarchyCategoryUpdatePayload,
+  SelectedCalendarCategoryRow,
+} from '@interfaces/hierarchy';
 
 import { AddCategoryHierarchyType, PermissionsSystem } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
@@ -32,7 +46,6 @@ import { hasPermissionInArray } from '@utils';
 import TableComponent from './form';
 
 import api from '@base/api';
-import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 interface HierarchyDetail {
   id: number | string;
@@ -46,25 +59,12 @@ const EditHierarchyBoard = () => {
   const [hierarchyDetail, setHierarchyDetail] =
     useState<HierarchyDetail | null>(null);
   const [categoryList, setCategoryList] = useState<OptionDropdownType[]>([]);
+  const [isHiddenList, setIsHiddenList] = useState<boolean>(false);
+  const [isPending, startTransition] = useTransition();
 
   // Actions
-  const [selectedHierarchiesToDelete, setSelectedHierarchiesToDelete] =
-    useState<string[]>([]);
   const [selectedHierarchiesToUpdate, setSelectedHierarchiesToUpdate] =
-    useState<
-      {
-        organizationStatisticCategoryId: string | number | null;
-        largeStatisticCategory: {
-          name: string;
-          uuid: string;
-        } | null;
-        mediumStatisticCategory: {
-          name: string;
-          uuid: string;
-        } | null;
-        color: string;
-      }[]
-    >([]);
+    useState<SelectedCalendarCategoryRow[]>([]);
 
   const { setIsLoading } = useContext(LoadingContext);
 
@@ -102,11 +102,13 @@ const EditHierarchyBoard = () => {
           large: {
             label: org.largeStatisticCategory?.name || '',
             value: org.largeStatisticCategory?.uuid || '',
+            isHidden: org.largeStatisticCategory?.isHidden || false,
             showBy: AddCategoryHierarchyType.PULLDOWN,
           },
           medium: {
             label: org.mediumStatisticCategory?.name || '',
             value: org.mediumStatisticCategory?.uuid || '',
+            isHidden: org.mediumStatisticCategory?.isHidden || false,
             showBy: AddCategoryHierarchyType.PULLDOWN,
           },
           color: org.color,
@@ -134,19 +136,12 @@ const EditHierarchyBoard = () => {
       },
     );
     if (
-      selectedHierarchiesToDelete.length == 0 &&
       tempSelectedHierarchiesToUpdate.length == 0
     ) {
       router.push(pageRouters.CALENDAR_CATEGORY_MANAGEMENT.href);
     } else {
       updateCalendarCategoryHierarchy({
-        ids: selectedHierarchiesToDelete
-          ? selectedHierarchiesToDelete
-              .map((hierarchyId) =>
-                !isUUID(hierarchyId) ? hierarchyId : undefined,
-              )
-              .filter((id): id is string => id !== undefined)
-          : [],
+        itemsToDelete: [],
         items: tempSelectedHierarchiesToUpdate,
       });
     }
@@ -154,22 +149,8 @@ const EditHierarchyBoard = () => {
 
   const handleUpdateCalendarCategoryHierarchyList = async ({
     items,
-    ids,
-  }: {
-    items: {
-      organizationStatisticCategoryId: string | number | null;
-      largeStatisticCategory: {
-        name: string;
-        uuid: string;
-      } | null;
-      mediumStatisticCategory: {
-        name: string;
-        uuid: string;
-      } | null;
-      color: string;
-    }[];
-    ids: string[];
-  }) => {
+    itemsToDelete,
+  }: CalendarHierarchyCategoryUpdatePayload) => {
     setIsLoading(true);
     const { data } = await api.post(
       `${apiRouters.ORGANIZATION_CATEGORY_HIERARCHY_LIST}?is_only_calendar=true`,
@@ -180,7 +161,7 @@ const EditHierarchyBoard = () => {
             organizationId: hierarchyDetail?.id,
           };
         }),
-        ids,
+        itemsToDelete,
       },
     );
     return data;
@@ -191,7 +172,6 @@ const EditHierarchyBoard = () => {
     handleUpdateCalendarCategoryHierarchyList,
     {
       onSuccess: async () => {
-        setSelectedHierarchiesToDelete([]);
         setSelectedHierarchiesToUpdate([]);
         showToast({
           description: SUCCESS_UPDATE_MESSAGE,
@@ -207,41 +187,69 @@ const EditHierarchyBoard = () => {
     },
   );
 
+  useEffect(() => {
+    setIsLoading(Boolean(isPending));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPending]);
+
   return (
     <div className="flex flex-col h-full">
       <div className="sticky z-[21] top-[0px] px-10 pt-8 pb-3 bg-[#E6F3FB]">
-        <div className="flex gap-4 items-center mb-5">
-          <p className="text-black font-medium text-[26px] leading-[1]">
-            業務カテゴリー設定
-          </p>
-          <div className="flex gap-2 bg-white w-fit p-[6px] rounded-[20px]">
-            <Link href={pageRouters.CATEGORY_MANAGEMENT.href}>
-              <Button
-                variant="outline"
-                className={`w-[128px] !p-0 text-xs h-[28px] !font-bold !text-[#77858F] !bg-[#EBF1F7] border-none !rounded-[20px]`}>
-                社内共通カテゴリー
-              </Button>
-            </Link>
-
-            <Link href={pageRouters.TEAM_CATEGORY_MANAGEMENT.href}>
-              <Button
-                variant="outline"
-                className={`w-[128px] !p-0 text-xs h-[28px] !font-bold !text-[#77858F] !bg-[#EBF1F7] border-none !rounded-[20px]`}>
-                チームカテゴリー
-              </Button>
-            </Link>
-
-            {session?.user.permissions &&
-              hasPermissionInArray(
-                session?.user.permissions,
-                PermissionsSystem.CATEGORY_HIERARCHY_UPDATE,
-              ) && (
+        <div className="flex justify-between mb-5">
+          <div className="flex gap-4 items-center">
+            <p className="text-black font-medium text-[26px] leading-[1]">
+              業務カテゴリー設定
+            </p>
+            <div className="flex gap-2 bg-white w-fit p-[6px] rounded-[20px]">
+              <Link href={pageRouters.CATEGORY_MANAGEMENT.href}>
                 <Button
-                  variant="primary"
-                  className={`w-[140px] !p-0 text-xs h-[28px] !font-bold text-white border-none !rounded-[20px]`}>
-                  カレンダーカテゴリー
+                  variant="outline"
+                  className={`w-[128px] !p-0 text-xs h-[28px] !font-bold !text-[#77858F] !bg-[#EBF1F7] border-none !rounded-[20px]`}>
+                  社内共通カテゴリー
                 </Button>
-              )}
+              </Link>
+
+              <Link href={pageRouters.TEAM_CATEGORY_MANAGEMENT.href}>
+                <Button
+                  variant="outline"
+                  className={`w-[128px] !p-0 text-xs h-[28px] !font-bold !text-[#77858F] !bg-[#EBF1F7] border-none !rounded-[20px]`}>
+                  チームカテゴリー
+                </Button>
+              </Link>
+
+              {session?.user.permissions &&
+                hasPermissionInArray(
+                  session?.user.permissions,
+                  PermissionsSystem.CATEGORY_HIERARCHY_UPDATE,
+                ) && (
+                  <Button
+                    variant="primary"
+                    className={`w-[140px] !p-0 text-xs h-[28px] !font-bold text-white border-none !rounded-[20px]`}>
+                    カレンダーカテゴリー
+                  </Button>
+                )}
+            </div>
+          </div>
+          <div className="flex gap-[10px] items-center">
+            <div className="flex items-center text-steel text-xs font-medium">
+              <p>「</p>
+              <ImageRound
+                name="Hide"
+                src={'/icons/dark-close-eye.svg'}
+                className="w-[16px] h-[13px] ml-[2px] mr-1 hover:cursor-pointer"
+              />
+              <p>非表示カテゴリー」を表示</p>
+            </div>
+            <Switch
+              sizeClassName="!w-[48px] !h-[28px]"
+              toggleClassName="!w-5 !h-5 !ml-[2px]"
+              enableColor="#228CDB"
+              disableColor="#CDD7DC"
+              enable={isHiddenList}
+              onChange={(e) => {
+                startTransition(() => setIsHiddenList(e));
+              }}
+            />
           </div>
         </div>
 
@@ -252,7 +260,6 @@ const EditHierarchyBoard = () => {
               className="w-[100px] !p-0 !h-[34px]"
               onClick={() => {
                 setSelectedHierarchiesToUpdate([]);
-                setSelectedHierarchiesToDelete([]);
               }}>
               キャンセル
             </Button>
@@ -271,12 +278,12 @@ const EditHierarchyBoard = () => {
         {hierarchyDetail && (
           <TableComponent
             hierarchyDetail={hierarchyDetail}
+            isHiddenList={isHiddenList}
             categoryList={categoryList}
             setIsTyping={setIsTyping}
             setHierarchyDetail={
               setHierarchyDetail as Dispatch<SetStateAction<HierarchyDetail>>
             }
-            setSelectedHierarchiesToDelete={setSelectedHierarchiesToDelete}
             setSelectedHierarchiesToUpdate={setSelectedHierarchiesToUpdate}
           />
         )}

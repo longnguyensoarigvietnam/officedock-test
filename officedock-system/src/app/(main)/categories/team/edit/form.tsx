@@ -5,19 +5,17 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { useMutation } from 'react-query';
 
 import { CircleColorPicker } from '@components/common/CircleColorPicker';
 import TableDropdown from '@components/common/Dropdown/TableDropdown';
 import ImageRound from '@components/common/ImageRound';
-import MultiSelect from '@components/common/MultiSelect';
 import { Table } from '@components/common/Table';
 import WarningChangeHierarchyCategoryModal from '@components/modals/WarningChangeHierarchyCategoryModal';
-import WarningDeleteHierarchyCategoryModal from '@components/modals/WarningDeleteHierarchyCategoryModal';
+import MultiSectionBox from '@components/common/MultiSectionBox';
 import { OptionsBoxToAddCategory } from '@components/category/OptionsBoxToAddCategory';
+import ConfirmArchiveModal from '@components/modals/ConfirmArchiveModal';
 
-import { HIERARCHY_COLOR_LIST } from '@constants';
-import { apiRouters } from '@constants/routers';
+import { HIERARCHY_COLOR_LIST, NO_OPTION_CATEGORY } from '@constants';
 import {
   AddCategoryHierarchyType,
   HierarchyType,
@@ -25,9 +23,14 @@ import {
 } from '@constants/enums';
 
 import { OptionDropdownType } from '@interfaces/common';
-import { OrganizationCategoryRow } from '@interfaces/hierarchy';
+import {
+  OrganizationCategoryRow,
+  SelectedOrganizationCategoryRow,
+} from '@interfaces/hierarchy';
 
-import api from '@base/api';
+import { buildCategory, getDeletedTypeFromRow, getRestoreType } from '@utils';
+
+import useTeamCategory from '@hooks/useTeamCategory';
 
 interface HierarchyDetail {
   id: number | string;
@@ -40,9 +43,9 @@ const TableComponent = ({
   categoryList,
   organizationName,
   dataOptionsSkill,
+  isHiddenList,
   setIsTyping,
   setHierarchyList,
-  setSelectedHierarchiesToDelete,
   setSelectedHierarchiesToUpdate,
 }: {
   hierarchyList: HierarchyDetail;
@@ -52,30 +55,11 @@ const TableComponent = ({
     value: number;
     label: string;
   }[];
+  isHiddenList: boolean;
   setIsTyping: Dispatch<SetStateAction<boolean>>;
   setHierarchyList: Dispatch<SetStateAction<HierarchyDetail[]>>;
-  setSelectedHierarchiesToDelete: Dispatch<SetStateAction<string[]>>;
   setSelectedHierarchiesToUpdate: Dispatch<
-    SetStateAction<
-      {
-        organizationStatisticCategoryId: string | number | null;
-        organizationId: number;
-        largeStatisticCategory: {
-          name: string;
-          uuid: string;
-        } | null;
-        mediumStatisticCategory: {
-          name: string;
-          uuid: string;
-        } | null;
-        smallStatisticCategory: {
-          name: string;
-          uuid: string;
-        } | null;
-        color: string;
-        skillIds: number[];
-      }[]
-    >
+    SetStateAction<SelectedOrganizationCategoryRow[]>
   >;
 }) => {
   const [openColorBox, setOpenColorBox] = useState<{
@@ -87,8 +71,6 @@ const TableComponent = ({
   });
   const [warningChangeCategoryModalOpen, setWarningChangeCategoryModalOpen] =
     useState<boolean>(false);
-  const [warningDeleteCategoryModalOpen, setWarningDeleteCategoryModalOpen] =
-    useState<boolean>(false);
   const [categoryDropdownOptions, setCategoryDropdownOptions] = useState<
     OptionDropdownType[]
   >([]);
@@ -97,6 +79,36 @@ const TableComponent = ({
     newValue: OptionDropdownType;
     type: string;
   } | null>(null);
+
+  const [pendingArchiveCategory, setPendingArchiveCategory] = useState<{
+    originalRow?: OrganizationCategoryRow;
+    type: string;
+  } | null>(null);
+  const [openConfirmArchiveModal, setOpenConfirmArchiveModal] =
+    useState<boolean>(false);
+
+  const [pendingRestoreCategory, setPendingRestoreCategory] = useState<{
+    originalRow?: OrganizationCategoryRow;
+    type: string;
+  } | null>(null);
+  const [openConfirmRestoreModal, setOpenConfirmRestoreModal] = useState<{
+    status: boolean;
+    name: string | null;
+  }>({
+    status: false,
+    name: null,
+  });
+
+  const {
+    checkIsHiddenCategory,
+    checkHasHiddenCategoryInARow,
+    sameLarge,
+    sameMedium,
+    sameSmall,
+    findLastUniqueMediumIndexes,
+    findLastSmallInEachLarge,
+    findLastUniqueSmallIndexes,
+  } = useTeamCategory({ hierarchyList });
 
   useEffect(() => {
     if (categoryList) {
@@ -107,107 +119,61 @@ const TableComponent = ({
     }
   }, [categoryList, hierarchyList.id]);
 
-  const findLastUniqueMediumIndexes = (
-    data: OrganizationCategoryRow[],
-  ): number[] => {
-    const lastIndexes: number[] = [];
-    let currentLargeValue: number | string | null = null;
-    let mediumIndexes: Record<number | string, number> = {}; // Tracks first occurrence of each medium value
-    let lastMediumIndex: number | null = null;
-
-    for (let i = 0; i < data.length; i++) {
-      const { large, medium } = data[i];
-
-      // If the large category changes, reset tracking
-      if (large.value !== currentLargeValue) {
-        if (lastMediumIndex !== null) lastIndexes.push(lastMediumIndex); // Store last unique medium index of previous large group
-        currentLargeValue = large.value;
-        mediumIndexes = {}; // Reset for new large group
-        lastMediumIndex = null; // Reset for new group
-      }
-
-      // Store only the first occurrence of each medium
-      if (mediumIndexes[medium.value] === undefined) {
-        mediumIndexes[medium.value] = i;
-        lastMediumIndex = i; // Track last added medium index
-      }
-    }
-
-    // Push the last tracked index of the final large group
-    if (lastMediumIndex !== null) lastIndexes.push(lastMediumIndex);
-
-    return lastIndexes;
-  };
-
-  const findLastUniqueSmallIndexes = (
-    data: OrganizationCategoryRow[],
-  ): number[] => {
-    const lastIndexes: number[] = [];
-    let currentLargeValue: number | string | null = null;
-    let currentMediumValue: number | string | null = null;
-    let smallIndexes: Record<number | string, number> = {}; // Track first occurrence of each small value
-    let lastSmallIndex: number | null = null;
-
-    for (let i = 0; i < data.length; i++) {
-      const { large, medium, small } = data[i];
-
-      // If the large category changes, reset tracking
-      if (large.value !== currentLargeValue) {
-        if (lastSmallIndex !== null) lastIndexes.push(lastSmallIndex); // Store last small index of previous large group
-        currentLargeValue = large.value;
-        currentMediumValue = null; // Reset medium tracking
-        smallIndexes = {}; // Reset for new large group
-        lastSmallIndex = null;
-      }
-
-      // If the medium category changes, reset tracking
-      if (medium.value !== currentMediumValue) {
-        if (lastSmallIndex !== null) lastIndexes.push(lastSmallIndex); // Store last small index of previous medium group
-        currentMediumValue = medium.value;
-        smallIndexes = {}; // Reset for new medium group
-        lastSmallIndex = null;
-      }
-
-      // Store only the first occurrence of each small
-      if (smallIndexes[small.value] === undefined) {
-        smallIndexes[small.value] = i;
-        lastSmallIndex = i; // Track last added small index
-      }
-    }
-
-    // Push the last tracked index of the final large/medium group
-    if (lastSmallIndex !== null) lastIndexes.push(lastSmallIndex);
-
-    return lastIndexes;
-  };
-
   const lastMediumIndexes = findLastUniqueMediumIndexes(
     hierarchyList.statisticCategories,
+  );
+
+  const lastSmallIndexesInDisplayedList = findLastUniqueSmallIndexes(
+    hierarchyList.statisticCategories,
+    true,
   );
 
   const lastSmallIndexes = findLastUniqueSmallIndexes(
     hierarchyList.statisticCategories,
   );
 
+  const lastSmallIndexesInEachLarge = findLastSmallInEachLarge(
+    hierarchyList.statisticCategories,
+  );
+
   const uniqueLargeCount = new Set(
     hierarchyList.statisticCategories
-      .filter((hierarchy) => hierarchy.large.showBy)
+      .filter(
+        (hierarchy) =>
+          hierarchy.large.showBy &&
+          !checkIsHiddenCategory({
+            type: HierarchyType.LARGE,
+            originalRow: hierarchy,
+          }),
+      )
       .map((item) => item.large.value),
   ).size;
   const uniqueMediumCount = new Set(
     hierarchyList.statisticCategories
-      .filter((hierarchy) => hierarchy.medium.showBy)
+      .filter(
+        (hierarchy) =>
+          hierarchy.medium.showBy &&
+          !checkIsHiddenCategory({
+            type: HierarchyType.MEDIUM,
+            originalRow: hierarchy,
+          }),
+      )
       .map((item) => `${item.large.value}-${item.medium.value}`),
   ).size;
   const uniqueSmallCount = hierarchyList.statisticCategories.filter(
-    (hierarchy) => hierarchy.small.showBy,
+    (hierarchy) =>
+      hierarchy.small.showBy &&
+      !checkIsHiddenCategory({
+        type: HierarchyType.SMALL,
+        originalRow: hierarchy,
+      }),
   ).length;
 
   const columns = [
     {
       accessorKey: HierarchyType.LARGE,
       header: () => (
-        <div className="flex justify-between px-5">
+        <div className="flex justify-between pl-[18px] pr-[14px]">
           <p>大カテゴリー</p>
           <p>{uniqueLargeCount}</p>
         </div>
@@ -216,7 +182,7 @@ const TableComponent = ({
     {
       accessorKey: HierarchyType.MEDIUM,
       header: () => (
-        <div className="flex justify-between px-5">
+        <div className="flex justify-between px-[14px]">
           <p>中カテゴリー</p>
           <p>{uniqueMediumCount}</p>
         </div>
@@ -225,7 +191,7 @@ const TableComponent = ({
     {
       accessorKey: HierarchyType.SMALL,
       header: () => (
-        <div className="flex justify-between px-5">
+        <div className="flex justify-between px-[14px]">
           <p>小カテゴリー</p>
           <p>{uniqueSmallCount}</p>
         </div>
@@ -234,7 +200,7 @@ const TableComponent = ({
     {
       accessorKey: 'skills',
       header: () => (
-        <p className="font-medium text-xs text-[#77858F] text-left px-5">
+        <p className="font-medium text-xs text-[#77858F] text-left px-[14px]">
           スキルの紐付け
         </p>
       ),
@@ -289,6 +255,57 @@ const TableComponent = ({
     HierarchyType.MEDIUM,
   );
 
+  const insertOrReplaceSmallCategory = (
+    prev: HierarchyDetail[],
+    targetOrgId: string,
+    rowInfo: OrganizationCategoryRow,
+    newRow: OrganizationCategoryRow,
+  ) => {
+    return prev.map((org) => {
+      if (org.id !== targetOrgId) return org;
+
+      const updatedCategories = [...org.statisticCategories];
+
+      // Find all indexes with the same `large` & `medium`
+      const sameGroupIndexes = updatedCategories
+        .map((item, index) =>
+          item.large.value === rowInfo.large.value &&
+          item.medium.value === rowInfo.medium.value
+            ? index
+            : -1,
+        )
+        .filter((index) => index !== -1); // Remove -1 values
+
+      // Check for empty `small` slot
+      const emptySmallIndex = sameGroupIndexes.find((index) => {
+        const small = updatedCategories[index].small;
+
+        return isUUID(small?.label); // is empty (UUID)
+      });
+
+      if (emptySmallIndex !== undefined) {
+        // Replace the empty row with the new row instead of adding a new one
+        updatedCategories[emptySmallIndex] = {
+          ...newRow,
+          id: updatedCategories[emptySmallIndex].id, // keep original ID
+        };
+      } else {
+        // Otherwise, add the new row after the last occurrence
+        const lastIndex = sameGroupIndexes.at(-1);
+        if (lastIndex !== undefined) {
+          updatedCategories.splice(lastIndex + 1, 0, newRow);
+        } else {
+          updatedCategories.push(newRow);
+        }
+      }
+
+      return {
+        ...org,
+        statisticCategories: updatedCategories,
+      };
+    });
+  };
+
   const handleAddSmallCategory = (
     option: string,
     rowInfo: OrganizationCategoryRow,
@@ -307,53 +324,60 @@ const TableComponent = ({
       skills: rowInfo.skills,
     };
 
-    setHierarchyList((prev) => {
-      // Create a deep copy of the hierarchy list
-      const updatedHierarchyList = prev.map((org) => ({
-        ...org,
-        statisticCategories: [...org.statisticCategories],
-      }));
+    setHierarchyList((prev) =>
+      insertOrReplaceSmallCategory(
+        prev,
+        hierarchyList.id as string,
+        rowInfo,
+        newRow,
+      ),
+    );
+  };
 
-      const foundOrganizationHierarchyIndex = updatedHierarchyList.findIndex(
-        (hierarchy) => hierarchy.id === hierarchyList.id,
-      );
+  const insertOrReplaceMediumCategory = (
+    prev: HierarchyDetail[],
+    targetOrgId: string,
+    rowInfo: OrganizationCategoryRow,
+    newRow: OrganizationCategoryRow,
+  ) => {
+    return prev.map((org) => {
+      if (org.id !== targetOrgId) return org;
 
-      if (foundOrganizationHierarchyIndex !== -1) {
-        const targetOrg = updatedHierarchyList[foundOrganizationHierarchyIndex];
+      const updatedCategories = [...org.statisticCategories];
 
-        // Find all indexes where the same `large` & `medium` category appears
-        const sameGroupIndexes = targetOrg.statisticCategories
-          .map((item, index) =>
-            item.large.value === rowInfo.large.value &&
-            item.medium.value === rowInfo.medium.value
-              ? index
-              : -1,
-          )
-          .filter((index) => index !== -1); // Remove -1 values
+      const sameGroupIndexes = updatedCategories
+        .map((item, index) =>
+          item.large.value === rowInfo.large.value ? index : -1,
+        )
+        .filter((index) => index !== -1); // Remove -1 values
 
-        // Find if there is already an empty `small` row
-        const emptySmallIndex = sameGroupIndexes.find((index) =>
-          isUUID(targetOrg.statisticCategories[index].small?.label),
-        );
+      // Find if there is already an empty `medium` row
+      const emptyMediumIndex = sameGroupIndexes.find((index) => {
+        const medium = updatedCategories[index].medium;
 
-        if (emptySmallIndex !== undefined) {
-          // Replace the empty row with the new row instead of adding a new one
-          targetOrg.statisticCategories[emptySmallIndex] = {
-            ...newRow,
-            id: targetOrg.statisticCategories[emptySmallIndex].id,
-          };
+        return isUUID(medium?.label);
+      });
+
+      if (emptyMediumIndex !== undefined) {
+        // Replace the empty row with the new row instead of adding a new one
+        updatedCategories[emptyMediumIndex] = {
+          ...newRow,
+          id: updatedCategories[emptyMediumIndex].id, // keep original ID
+        };
+      } else {
+        // Otherwise, add the new row after the last occurrence
+        const lastIndex = sameGroupIndexes.at(-1);
+        if (lastIndex !== undefined) {
+          updatedCategories.splice(lastIndex + 1, 0, newRow);
         } else {
-          // Otherwise, add the new row after the last occurrence
-          const lastIndex = sameGroupIndexes.pop();
-          if (lastIndex !== undefined) {
-            targetOrg.statisticCategories.splice(lastIndex + 1, 0, newRow);
-          } else {
-            targetOrg.statisticCategories.push(newRow);
-          }
+          updatedCategories.push(newRow);
         }
       }
 
-      return updatedHierarchyList;
+      return {
+        ...org,
+        statisticCategories: updatedCategories,
+      };
     });
   };
 
@@ -378,103 +402,104 @@ const TableComponent = ({
       },
       skills: rowInfo.skills,
     };
-    setHierarchyList((prev) => {
-      // Create a deep copy of the hierarchy list
-      const updatedHierarchyList = prev.map((org) => ({
+    setHierarchyList((prev) =>
+      insertOrReplaceMediumCategory(
+        prev,
+        hierarchyList.id as string,
+        rowInfo,
+        newRow,
+      ),
+    );
+  };
+
+  const insertLargeCategory = (
+    prev: HierarchyDetail[],
+    targetId: string,
+    newRow: OrganizationCategoryRow,
+  ) => {
+    return prev.map((org) => {
+      if (org.id !== targetId) return org;
+
+      return {
         ...org,
-        statisticCategories: [...org.statisticCategories],
-      }));
-
-      const foundOrganizationHierarchyIndex = updatedHierarchyList.findIndex(
-        (hierarchy) => hierarchy.id === hierarchyList.id,
-      );
-
-      if (foundOrganizationHierarchyIndex !== -1) {
-        const targetOrg = updatedHierarchyList[foundOrganizationHierarchyIndex];
-
-        const sameGroupIndexes = targetOrg.statisticCategories
-          .map((item, index) =>
-            item.large.value === rowInfo.large.value ? index : -1,
-          )
-          .filter((index) => index !== -1); // Remove -1 values
-
-        // Find if there is already an empty `small` row
-        const emptyMediumIndex = sameGroupIndexes.find((index) =>
-          isUUID(targetOrg.statisticCategories[index].medium?.label),
-        );
-
-        if (emptyMediumIndex !== undefined) {
-          // Replace the empty row with the new row instead of adding a new one
-          targetOrg.statisticCategories[emptyMediumIndex] = {
-            ...newRow,
-            id: targetOrg.statisticCategories[emptyMediumIndex].id,
-          };
-        } else {
-          // Otherwise, add the new row after the last occurrence
-          const lastIndex = sameGroupIndexes.pop();
-          if (lastIndex !== undefined) {
-            targetOrg.statisticCategories.splice(lastIndex + 1, 0, newRow);
-          } else {
-            targetOrg.statisticCategories.push(newRow);
-          }
-        }
-      }
-
-      return updatedHierarchyList;
+        statisticCategories: [...org.statisticCategories, newRow],
+      };
     });
   };
 
   const handleAddLargeCategory = (option: string) => {
     const newUuid = uuidv4();
-    setHierarchyList((prev) => {
-      const updatedHierarchyList = prev.map((org) => ({
-        ...org,
-        statisticCategories: [...org.statisticCategories],
-      }));
+    const newRow = {
+      id: newUuid,
+      color: HIERARCHY_COLOR_LIST[0],
+      large: {
+        label: newUuid,
+        value: newUuid,
+        showBy: option,
+      },
+      medium: {
+        label: newUuid,
+        value: newUuid,
+        showBy: '',
+      },
+      small: {
+        label: newUuid,
+        value: newUuid,
+        showBy: '',
+      },
+      skills: [],
+    };
+    setHierarchyList((prev) =>
+      insertLargeCategory(prev, hierarchyList.id as string, newRow),
+    );
+  };
 
-      const foundOrganizationHierarchyIndex = updatedHierarchyList.findIndex(
-        (hierarchy) => hierarchy.id === hierarchyList.id,
-      );
+  const updateHierarchyCategoryByInput = (
+    list: (typeof hierarchyList)[], // type of your hierarchy list
+    variables: {
+      name: string;
+      uuid: string;
+      type: string;
+      rowInfo: OrganizationCategoryRow;
+    },
+  ) => {
+    return list.map((org) => {
+      if (org.id !== hierarchyList.id) return org;
 
-      if (foundOrganizationHierarchyIndex !== -1) {
-        const newRow = {
-          id: newUuid,
-          color: HIERARCHY_COLOR_LIST[0],
-          large: {
-            label: newUuid,
-            value: newUuid,
-            showBy: option,
-          },
-          medium: {
-            label: newUuid,
-            value: newUuid,
-            showBy: '',
-          },
-          small: {
-            label: newUuid,
-            value: newUuid,
-            showBy: '',
-          },
-          skills: [],
+      const updatedCategories = org.statisticCategories.map((hierarchy) => {
+        if (!variables.rowInfo || hierarchy.id !== variables.rowInfo.id)
+          return hierarchy;
+
+        const newCategory = {
+          label: variables.name || variables.uuid,
+          value: variables.uuid,
+          showBy: AddCategoryHierarchyType.INPUT,
         };
 
-        // Ensure deep immutability
-        updatedHierarchyList[foundOrganizationHierarchyIndex] = {
-          ...updatedHierarchyList[foundOrganizationHierarchyIndex],
-          statisticCategories: [
-            ...updatedHierarchyList[foundOrganizationHierarchyIndex]
-              .statisticCategories,
-            newRow,
-          ],
-        };
-      }
+        if (variables.type === HierarchyType.LARGE) {
+          return { ...hierarchy, large: newCategory };
+        } else if (variables.type === HierarchyType.MEDIUM) {
+          if (hierarchy.large.value === variables.rowInfo.large.value) {
+            return { ...hierarchy, medium: newCategory };
+          }
+        } else {
+          if (
+            hierarchy.large.value === variables.rowInfo.large.value &&
+            hierarchy.medium.value === variables.rowInfo.medium.value
+          ) {
+            return { ...hierarchy, small: newCategory };
+          }
+        }
 
-      return updatedHierarchyList;
+        return hierarchy;
+      });
+
+      return { ...org, statisticCategories: updatedCategories };
     });
   };
 
   // Set category when onBlur triggers
-  const handleSetNewCategory = (variables: {
+  const handleChangeCategoryByInput = (variables: {
     name: string;
     uuid: string;
     type: string;
@@ -519,6 +544,8 @@ const TableComponent = ({
           skillIds: variables.rowInfo.skills.map((skill: OptionDropdownType) =>
             Number(skill.value),
           ),
+          deletedType:
+            variables.rowInfo && getDeletedTypeFromRow(variables.rowInfo),
         };
       } else if (variables.type == HierarchyType.MEDIUM) {
         newEntry = {
@@ -551,6 +578,8 @@ const TableComponent = ({
           skillIds: variables.rowInfo.skills.map((skill: OptionDropdownType) =>
             Number(skill.value),
           ),
+          deletedType:
+            variables.rowInfo && getDeletedTypeFromRow(variables.rowInfo),
         };
       } else {
         newEntry = {
@@ -583,6 +612,8 @@ const TableComponent = ({
           skillIds: variables.rowInfo.skills.map((skill: OptionDropdownType) =>
             Number(skill.value),
           ),
+          deletedType:
+            variables.rowInfo && getDeletedTypeFromRow(variables.rowInfo),
         };
       }
 
@@ -596,76 +627,7 @@ const TableComponent = ({
 
       return updatedHierarchiesToUpdate;
     });
-    setHierarchyList((prev) => {
-      const updatedHierarchyList = prev.map((org) => ({
-        ...org,
-        statisticCategories: [...org.statisticCategories],
-      }));
-
-      const foundOrganizationHierarchyIndex = updatedHierarchyList.findIndex(
-        (hierarchy) => hierarchy.id == hierarchyList.id,
-      );
-      if (foundOrganizationHierarchyIndex !== -1) {
-        let updatedCategories: OrganizationCategoryRow[] = [];
-        if (variables.type == HierarchyType.LARGE) {
-          updatedCategories = updatedHierarchyList[
-            foundOrganizationHierarchyIndex
-          ].statisticCategories.map((hierarchy) =>
-            hierarchy.id == variables.rowInfo.id
-              ? {
-                  ...hierarchy,
-                  large: {
-                    label: variables.name || variables.uuid,
-                    value: variables.uuid,
-                    showBy: AddCategoryHierarchyType.INPUT,
-                  },
-                }
-              : hierarchy,
-          );
-        } else if (variables.type == HierarchyType.MEDIUM) {
-          updatedCategories = updatedHierarchyList[
-            foundOrganizationHierarchyIndex
-          ].statisticCategories.map((hierarchy) =>
-            variables.rowInfo &&
-            hierarchy.id == variables.rowInfo.id &&
-            hierarchy.large.value === variables.rowInfo.large.value
-              ? {
-                  ...hierarchy,
-                  medium: {
-                    label: variables.name || variables.uuid,
-                    value: variables.uuid,
-                    showBy: AddCategoryHierarchyType.INPUT,
-                  },
-                }
-              : hierarchy,
-          );
-        } else {
-          updatedCategories = updatedHierarchyList[
-            foundOrganizationHierarchyIndex
-          ].statisticCategories.map((hierarchy) =>
-            variables.rowInfo &&
-            hierarchy.id == variables.rowInfo.id &&
-            hierarchy.large.value === variables.rowInfo.large.value &&
-            hierarchy.medium.value === variables.rowInfo.medium.value
-              ? {
-                  ...hierarchy,
-                  small: {
-                    label: variables.name || variables.uuid,
-                    value: variables.uuid,
-                    showBy: AddCategoryHierarchyType.INPUT,
-                  },
-                }
-              : hierarchy,
-          );
-        }
-
-        updatedHierarchyList[
-          foundOrganizationHierarchyIndex
-        ].statisticCategories = updatedCategories;
-      }
-
-      return updatedHierarchyList;
-    });
+    setHierarchyList((prev) => updateHierarchyCategoryByInput(prev, variables));
     setIsTyping(false);
   };
 
@@ -681,19 +643,79 @@ const TableComponent = ({
       .filter((value) => value !== '');
   };
 
+  const updateHierarchyLargeCategoryByPulldown = (
+    prev: HierarchyDetail[],
+    targetOrgId: number,
+    originalLargeValue: string | undefined,
+    newLarge: {
+      value: string | number;
+      label: string;
+      showBy: string;
+    },
+  ) => {
+    return prev.map((org) => {
+      if (org.id !== targetOrgId) return org;
+
+      const statisticCategories = org.statisticCategories;
+
+      const matchedRows = statisticCategories
+        .filter((item) => item.large.value === originalLargeValue)
+        .map((item) => ({ ...item, large: newLarge }));
+
+      const remainingRows = statisticCategories.filter(
+        (item) => item.large.value !== originalLargeValue,
+      );
+
+      // Find last index of newLarge.value in remaining rows
+      const lastIndex = remainingRows.reduce((acc, item, idx) => {
+        return item.large.value === newLarge.value ? idx : acc;
+      }, -1);
+
+      const newStatisticCategories = [...remainingRows];
+
+      if (lastIndex !== -1) {
+        newStatisticCategories.splice(lastIndex + 1, 0, ...matchedRows);
+      } else {
+        // Instead of pushing, find the **original** position of row.original.large.value
+        const originalIndex = statisticCategories.findIndex(
+          (item) => item.large.value === originalLargeValue,
+        );
+        if (originalIndex !== -1) {
+          // Insert in the same position as original row
+          newStatisticCategories.splice(originalIndex, 0, ...matchedRows);
+        } else {
+          // If no match found, append to the end
+          newStatisticCategories.push(...matchedRows);
+        }
+      }
+
+      // Remove duplicates based on large|medium|small labels
+      const uniqueMap = new Map<string, boolean>();
+      const filteredStatisticCategories = newStatisticCategories.filter(
+        (item) => {
+          const key = `${isUUID(item.large.label) ? '' : item.large.label}|${isUUID(item.medium.label) ? '' : item.medium.label}|${isUUID(item.small?.label) ? '' : item.small?.label}`;
+          if (uniqueMap.has(key)) return false;
+          uniqueMap.set(key, true);
+          return true;
+        },
+      );
+
+      return { ...org, statisticCategories: filteredStatisticCategories };
+    });
+  };
+
   const handleChangeLargeCategoryByPulldown = (
     originalRow: OrganizationCategoryRow | undefined,
     e: OptionDropdownType,
   ) => {
+    const newLarge = {
+      label: e.label,
+      value: e.value,
+      showBy: AddCategoryHierarchyType.PULLDOWN,
+    };
     setSelectedHierarchiesToUpdate((prev) => {
       const updatedHierarchiesToUpdate = [...prev];
       const statisticCategories = hierarchyList.statisticCategories;
-
-      const newLarge = {
-        label: e.label,
-        value: e.value,
-        showBy: AddCategoryHierarchyType.PULLDOWN,
-      };
 
       const matchedRows = statisticCategories
         .filter((item) => item.large.value === originalRow?.large.value)
@@ -731,6 +753,7 @@ const TableComponent = ({
                   },
             color: row.color,
             skillIds: row.skills.map((skill) => Number(skill.value)),
+            deletedType: row && getDeletedTypeFromRow(row),
           };
         });
       } else {
@@ -763,6 +786,7 @@ const TableComponent = ({
                   },
             color: originalRow?.color,
             skillIds: originalRow?.skills.map((skill) => Number(skill.value)),
+            deletedType: originalRow && getDeletedTypeFromRow(originalRow),
           },
         ];
       }
@@ -809,81 +833,91 @@ const TableComponent = ({
       return updatedHierarchiesToUpdate;
     });
 
-    setHierarchyList((prev) => {
-      const updatedHierarchyList = prev.map((org) => ({
-        ...org,
-        statisticCategories: [...org.statisticCategories],
-      }));
+    setHierarchyList((prev) =>
+      updateHierarchyLargeCategoryByPulldown(
+        prev,
+        hierarchyList.id as number,
+        originalRow?.large.value as string,
+        newLarge,
+      ),
+    );
+  };
 
-      const foundOrganizationHierarchyIndex = updatedHierarchyList.findIndex(
-        (hierarchy) => hierarchy.id === hierarchyList.id,
+  const updateHierarchyMediumCategoryByPulldown = (
+    prev: HierarchyDetail[],
+    targetOrgId: number,
+    originalRow: OrganizationCategoryRow | undefined,
+    newMedium: {
+      value: string | number;
+      label: string;
+      showBy: string;
+    },
+  ) => {
+    return prev.map((org) => {
+      if (org.id !== targetOrgId) return org;
+
+      const statisticCategories = org.statisticCategories;
+
+      // Separate matching and non-matching rows
+      const matchedRows = statisticCategories
+        .filter(
+          (item) =>
+            item.medium.value === originalRow?.medium.value &&
+            item.large.value === originalRow?.large.value,
+        )
+        .map((item) => ({ ...item, medium: newMedium }));
+
+      const remainingRows = statisticCategories.filter(
+        (item) =>
+          !(
+            item.medium.value === originalRow?.medium.value &&
+            item.large.value === originalRow?.large.value
+          ),
       );
 
-      if (foundOrganizationHierarchyIndex !== -1) {
-        const statisticCategories =
-          updatedHierarchyList[foundOrganizationHierarchyIndex]
-            .statisticCategories;
+      // Find the last index where newMedium.value already exists
+      let lastIndex = -1;
+      remainingRows.forEach((item, index) => {
+        if (
+          item.large.value === originalRow?.large.value &&
+          item.medium.value === newMedium.value
+        )
+          lastIndex = index;
+      });
 
-        const newLarge = {
-          label: e.label,
-          value: e.value,
-          showBy: AddCategoryHierarchyType.PULLDOWN,
-        };
-
-        // Separate matching and non-matching rows
-        const matchedRows = statisticCategories
-          .filter((item) => item.large.value === originalRow?.large.value)
-          .map((item) => ({
-            ...item,
-            large: newLarge,
-          }));
-
-        const remainingRows = statisticCategories.filter(
-          (item) => item.large.value !== originalRow?.large.value,
+      // Maintain position if lastIndex is -1
+      const newStatisticCategories = [...remainingRows];
+      if (lastIndex !== -1) {
+        newStatisticCategories.splice(lastIndex + 1, 0, ...matchedRows);
+      } else {
+        // Instead of pushing, find the **original** position of row.original.medium.value
+        const originalIndex = statisticCategories.findIndex(
+          (item) =>
+            item.medium.value === originalRow?.medium.value &&
+            item.large.value === originalRow?.large.value,
         );
 
-        // Find the last index where newLarge.value already exists
-        let lastIndex = -1;
-        remainingRows.forEach((item, index) => {
-          if (item.large.value === newLarge.value) lastIndex = index;
-        });
-
-        const newStatisticCategories = [...remainingRows];
-        if (lastIndex !== -1) {
-          newStatisticCategories.splice(lastIndex + 1, 0, ...matchedRows);
+        if (originalIndex !== -1) {
+          // Insert in the same position as original row
+          newStatisticCategories.splice(originalIndex, 0, ...matchedRows);
         } else {
-          // Instead of pushing, find the **original** position of row.original.large.value
-          const originalIndex = statisticCategories.findIndex(
-            (item) => item.large.value === originalRow?.large.value,
-          );
-
-          if (originalIndex !== -1) {
-            // Insert in the same position as original row
-            newStatisticCategories.splice(originalIndex, 0, ...matchedRows);
-          } else {
-            // If no match found, append to the end
-            newStatisticCategories.push(...matchedRows);
-          }
+          // If no match found, append to the end
+          newStatisticCategories.push(...matchedRows);
         }
-
-        const uniqueMap = new Map();
-        const filteredStatisticCategories = newStatisticCategories.filter(
-          (item) => {
-            const key = `${isUUID(item.large.label) ? '' : item.large.label}|${isUUID(item.medium.label) ? '' : item.medium.label}|${isUUID(item.small?.label) ? '' : item.small?.label}`;
-            if (uniqueMap.has(key)) return false;
-            uniqueMap.set(key, true);
-            return true;
-          },
-        );
-
-        // Update hierarchy list
-        updatedHierarchyList[foundOrganizationHierarchyIndex] = {
-          ...updatedHierarchyList[foundOrganizationHierarchyIndex],
-          statisticCategories: filteredStatisticCategories,
-        };
       }
 
-      return updatedHierarchyList;
+      // Remove duplicates
+      const uniqueMap = new Map<string, boolean>();
+      const filteredStatisticCategories = newStatisticCategories.filter(
+        (item) => {
+          const key = `${isUUID(item.large.label) ? '' : item.large.label}|${isUUID(item.medium.label) ? '' : item.medium.label}|${isUUID(item.small?.label) ? '' : item.small?.label}`;
+          if (uniqueMap.has(key)) return false;
+          uniqueMap.set(key, true);
+          return true;
+        },
+      );
+
+      return { ...org, statisticCategories: filteredStatisticCategories };
     });
   };
 
@@ -891,14 +925,14 @@ const TableComponent = ({
     originalRow: OrganizationCategoryRow | undefined,
     e: OptionDropdownType,
   ) => {
+    const newMedium = {
+      label: e.label,
+      value: e.value,
+      showBy: AddCategoryHierarchyType.PULLDOWN,
+    };
     setSelectedHierarchiesToUpdate((prev) => {
       const updatedHierarchiesToUpdate = [...prev];
       const statisticCategories = hierarchyList.statisticCategories;
-      const newMedium = {
-        label: e.label,
-        value: e.value,
-        showBy: AddCategoryHierarchyType.PULLDOWN,
-      };
       const matchedRows = statisticCategories
         .filter(
           (item) =>
@@ -937,6 +971,7 @@ const TableComponent = ({
                 },
           color: row.color,
           skillIds: row.skills.map((skill) => Number(skill.value)),
+          deletedType: row && getDeletedTypeFromRow(row),
         };
       });
 
@@ -955,97 +990,45 @@ const TableComponent = ({
 
       return updatedHierarchiesToUpdate;
     });
-    setHierarchyList((prev) => {
-      const updatedHierarchyList = prev.map((org) => ({
-        ...org,
-        statisticCategories: [...org.statisticCategories],
-      }));
+    setHierarchyList((prev) =>
+      updateHierarchyMediumCategoryByPulldown(
+        prev,
+        hierarchyList.id as number,
+        originalRow,
+        newMedium,
+      ),
+    );
+  };
 
-      const foundOrganizationHierarchyIndex = updatedHierarchyList.findIndex(
-        (hierarchy) => hierarchy.id == hierarchyList.id,
+  const updateHierarchySmallCategoryByPulldown = (
+    prev: HierarchyDetail[],
+    targetOrgId: number,
+    originalRowId: string | undefined,
+    newSmall: {
+      label: string;
+      value: string | number;
+      showBy: AddCategoryHierarchyType;
+    },
+  ) => {
+    return prev.map((org) => {
+      if (org.id !== targetOrgId) return org;
+
+      const updatedCategories = org.statisticCategories.map((hierarchy) =>
+        hierarchy.id === originalRowId
+          ? { ...hierarchy, small: newSmall }
+          : hierarchy,
       );
 
-      if (foundOrganizationHierarchyIndex !== -1) {
-        const statisticCategories =
-          updatedHierarchyList[foundOrganizationHierarchyIndex]
-            .statisticCategories;
+      // Remove duplicates
+      const uniqueMap = new Map<string, boolean>();
+      const filteredCategories = updatedCategories.filter((item) => {
+        const key = `${isUUID(item.large.label) ? '' : item.large.label}|${isUUID(item.medium.label) ? '' : item.medium.label}|${isUUID(item.small?.label) ? '' : item.small?.label}`;
+        if (uniqueMap.has(key)) return false;
+        uniqueMap.set(key, true);
+        return true;
+      });
 
-        const newMedium = {
-          label: e.label,
-          value: e.value,
-          showBy: AddCategoryHierarchyType.PULLDOWN,
-        };
-
-        // Separate matching and non-matching rows
-        const matchedRows = statisticCategories
-          .filter(
-            (item) =>
-              item.medium.value == originalRow?.medium.value &&
-              item.large.value == originalRow?.large.value,
-          )
-          .map((item) => ({
-            ...item,
-            medium: newMedium,
-          }));
-
-        const remainingRows = statisticCategories.filter(
-          (item) =>
-            !(
-              item.medium.value == originalRow?.medium.value &&
-              item.large.value == originalRow?.large.value
-            ),
-        );
-
-        // Find the last index where newMedium.value already exists
-        let lastIndex = -1;
-        remainingRows.forEach((item, index) => {
-          if (
-            item.large.value == originalRow?.large.value &&
-            item.medium.value === newMedium.value
-          )
-            lastIndex = index;
-        });
-
-        // Maintain position if lastIndex is -1
-        const newStatisticCategories = [...remainingRows];
-        if (lastIndex !== -1) {
-          newStatisticCategories.splice(lastIndex + 1, 0, ...matchedRows);
-        } else {
-          // Instead of pushing, find the **original** position of row.original.medium.value
-          const originalIndex = statisticCategories.findIndex(
-            (item) =>
-              item.medium.value == originalRow?.medium.value &&
-              item.large.value == originalRow?.large.value,
-          );
-
-          if (originalIndex !== -1) {
-            // Insert in the same position as original row
-            newStatisticCategories.splice(originalIndex, 0, ...matchedRows);
-          } else {
-            // If no match found, append to the end
-            newStatisticCategories.push(...matchedRows);
-          }
-        }
-
-        // Remove duplicates
-        const uniqueMap = new Map();
-        const filteredStatisticCategories = newStatisticCategories.filter(
-          (item) => {
-            const key = `${isUUID(item.large.label) ? '' : item.large.label}|${isUUID(item.medium.label) ? '' : item.medium.label}|${isUUID(item.small?.label) ? '' : item.small?.label}`;
-            if (uniqueMap.has(key)) return false;
-            uniqueMap.set(key, true);
-            return true;
-          },
-        );
-
-        // Update hierarchy list
-        updatedHierarchyList[foundOrganizationHierarchyIndex] = {
-          ...updatedHierarchyList[foundOrganizationHierarchyIndex],
-          statisticCategories: filteredStatisticCategories,
-        };
-      }
-
-      return updatedHierarchyList;
+      return { ...org, statisticCategories: filteredCategories };
     });
   };
 
@@ -1053,6 +1036,11 @@ const TableComponent = ({
     originalRow: OrganizationCategoryRow | undefined,
     e: OptionDropdownType,
   ) => {
+    const newSmall = {
+      label: e.label,
+      value: e.value,
+      showBy: AddCategoryHierarchyType.PULLDOWN,
+    };
     setSelectedHierarchiesToUpdate((prev) => {
       const updatedHierarchiesToUpdate = [...prev];
 
@@ -1095,6 +1083,7 @@ const TableComponent = ({
             newEntry.organizationStatisticCategoryId!,
           color: newEntry.color!,
           skillIds: newEntry.skillIds!,
+          deletedType: originalRow && getDeletedTypeFromRow(originalRow),
         };
       } else {
         // Otherwise, add it
@@ -1104,493 +1093,708 @@ const TableComponent = ({
             newEntry.organizationStatisticCategoryId!,
           color: newEntry.color!,
           skillIds: newEntry.skillIds!,
+          deletedType: originalRow && getDeletedTypeFromRow(originalRow),
         });
       }
 
       return updatedHierarchiesToUpdate;
     });
-    setHierarchyList((prev) => {
-      const updatedHierarchyList = prev.map((org) => ({
-        ...org,
-        statisticCategories: [...org.statisticCategories],
-      }));
-
-      const foundOrganizationHierarchyIndex = updatedHierarchyList.findIndex(
-        (hierarchy) => hierarchy.id == hierarchyList.id,
-      );
-
-      if (foundOrganizationHierarchyIndex !== -1) {
-        const updatedCategories = updatedHierarchyList[
-          foundOrganizationHierarchyIndex
-        ].statisticCategories.map((hierarchy) =>
-          hierarchy.id === originalRow?.id
-            ? {
-                ...hierarchy,
-                small: {
-                  label: e.label,
-                  value: e.value,
-                  showBy: AddCategoryHierarchyType.PULLDOWN,
-                },
-              }
-            : hierarchy,
-        );
-
-        const uniqueMap = new Map();
-        const filteredCategories = updatedCategories.filter((item) => {
-          const key = `${isUUID(item.large.label) ? '' : item.large.label}|${isUUID(item.medium.label) ? '' : item.medium.label}|${isUUID(item.small?.label) ? '' : item.small?.label}`;
-          if (uniqueMap.has(key)) return false;
-          uniqueMap.set(key, true);
-          return true;
-        });
-
-        updatedHierarchyList[
-          foundOrganizationHierarchyIndex
-        ].statisticCategories = filteredCategories;
-      }
-
-      return updatedHierarchyList;
-    });
+    setHierarchyList((prev) =>
+      updateHierarchySmallCategoryByPulldown(
+        prev,
+        hierarchyList.id as number,
+        originalRow?.id as string,
+        newSmall,
+      ),
+    );
   };
 
-  const handleDeleteLargeHierarchyCategory = (
-    oldLargeValue: string | number,
-  ) => {
-    setSelectedHierarchiesToDelete((prev) => {
-      const currentHierarchiesToDelete = [...(prev || [])];
+  const updateHierarchyPayloadWhenArchive = ({
+    originalRow,
+    type,
+  }: {
+    originalRow: OrganizationCategoryRow;
+    type: StatisticCategoryType;
+  }) => {
+    const matchingRowIds = hierarchyList.statisticCategories
+      .filter((row) => {
+        switch (type) {
+          case StatisticCategoryType.LARGE:
+            return sameLarge(row, originalRow);
+          case StatisticCategoryType.MEDIUM:
+            return sameMedium(row, originalRow);
+          case StatisticCategoryType.SMALL:
+            return sameSmall(row, originalRow);
+        }
+      })
+      .map((row) => row.id);
 
-      const matchingHierarchies = hierarchyList.statisticCategories
-        .filter((item) => item.large.value === oldLargeValue)
-        .map((hierarchy) => String(hierarchy.id)); // Convert IDs to strings
-
-      return [...currentHierarchiesToDelete, ...matchingHierarchies]; // Spread to avoid nested arrays
-    });
     setSelectedHierarchiesToUpdate((prev) => {
-      const currentHierarchiesToUpdate = [...(prev || [])];
+      const prevSelectedHierarchies = [...prev];
 
-      return currentHierarchiesToUpdate.filter(
-        (hierarchy) => hierarchy.largeStatisticCategory?.uuid != oldLargeValue,
-      );
-    });
-    setHierarchyList((prev) => {
-      const updatedHierarchyList = prev.map((org) => ({
-        ...org,
-        statisticCategories: [...org.statisticCategories],
-      }));
-
-      const foundOrganizationHierarchyIndex = updatedHierarchyList.findIndex(
-        (hierarchy) => hierarchy.id === hierarchyList.id,
-      );
-
-      if (foundOrganizationHierarchyIndex !== -1) {
-        updatedHierarchyList[foundOrganizationHierarchyIndex] = {
-          ...updatedHierarchyList[foundOrganizationHierarchyIndex],
-          statisticCategories: [
-            ...updatedHierarchyList[
-              foundOrganizationHierarchyIndex
-            ].statisticCategories.filter(
-              (hierarchy) => hierarchy.large.value != oldLargeValue,
-            ),
-          ],
-        };
-      }
-
-      return updatedHierarchyList;
-    });
-  };
-
-  const handleDeleteMediumHierarchyCategory = (
-    oldLargeValue: string | number,
-    oldMediumValue: string | number,
-  ) => {
-    const newUuid = uuidv4();
-    setSelectedHierarchiesToDelete((prev) => {
-      const matchedRowsWithLargeValue =
-        hierarchyList.statisticCategories.filter(
-          (item) => item.large.value == oldLargeValue,
+      matchingRowIds.forEach((rowId) => {
+        const existingHierarchyIndex = prevSelectedHierarchies.findIndex(
+          (item) => item.organizationStatisticCategoryId == rowId,
         );
-      const currentHierarchiesToDelete = [...(prev || [])];
-      if (matchedRowsWithLargeValue.length > 1) {
-        const matchingHierarchies = hierarchyList.statisticCategories
-          .filter(
-            (item) =>
-              item.large.value === oldLargeValue &&
-              item.medium.value === oldMediumValue,
-          )
-          .map((hierarchy) => String(hierarchy.id)); // Convert IDs to strings
 
-        return [...currentHierarchiesToDelete, ...matchingHierarchies]; // Spread to avoid nested arrays
-      } else {
-        return currentHierarchiesToDelete;
-      }
-    });
-    setSelectedHierarchiesToUpdate((prev) => {
-      const matchedRowsWithLargeValue =
-        hierarchyList.statisticCategories.filter(
-          (item) => item.large.value == oldLargeValue,
-        );
-      if (matchedRowsWithLargeValue.length > 1) {
-        const currentHierarchiesToUpdate = [...(prev || [])];
-
-        return currentHierarchiesToUpdate.filter(
-          (hierarchy) =>
-            !(
-              hierarchy.largeStatisticCategory?.uuid == oldLargeValue &&
-              hierarchy.mediumStatisticCategory?.uuid == oldMediumValue
-            ),
-        );
-      } else {
-        const updatedHierarchiesToUpdate = [...prev];
-        const statisticCategories = hierarchyList.statisticCategories;
-        const newMedium = {
-          label: newUuid,
-          value: newUuid,
-          showBy: AddCategoryHierarchyType.PULLDOWN,
-        };
-        const matchedRows = statisticCategories
-          .filter(
-            (item) =>
-              item.medium.value === oldMediumValue &&
-              item.large.value === oldLargeValue,
-          )
-          .map((item) => ({
-            ...item,
-            medium: newMedium,
-          }));
-
-        const updatedHierarchies = matchedRows.map((row) => {
-          return {
-            organizationStatisticCategoryId: row.id,
-            organizationId: hierarchyList.id as number,
-            largeStatisticCategory:
-              row.large.label == '' || isUUID(row.large.label as string)
-                ? null
-                : {
-                    name: row.large.label as string,
-                    uuid: row.large.value as string,
-                  },
-            mediumStatisticCategory:
-              row.medium.label == '' || isUUID(row.medium.label as string)
-                ? null
-                : {
-                    name: row.medium.label as string,
-                    uuid: row.medium.value as string,
-                  },
-            smallStatisticCategory:
-              row.small.label == '' || isUUID(row.small.label as string)
-                ? null
-                : {
-                    name: row.small.label as string,
-                    uuid: row.small.value as string,
-                  },
-            color: row.color,
-            skillIds: row.skills.map((skill) => Number(skill.value)),
-          };
-        });
-
-        updatedHierarchies.forEach((updatedHierarchy) => {
-          const existingIndex = updatedHierarchiesToUpdate.findIndex(
-            (item) =>
-              item.organizationStatisticCategoryId ===
-              updatedHierarchy.organizationStatisticCategoryId,
-          );
-          if (existingIndex != -1) {
-            updatedHierarchiesToUpdate[existingIndex] = updatedHierarchy;
-          } else {
-            updatedHierarchiesToUpdate.push(updatedHierarchy);
-          }
-        });
-
-        return updatedHierarchiesToUpdate;
-      }
-    });
-    setHierarchyList((prev) => {
-      const updatedHierarchyList = prev.map((org) => ({
-        ...org,
-        statisticCategories: [...org.statisticCategories],
-      }));
-
-      const foundOrganizationHierarchyIndex = updatedHierarchyList.findIndex(
-        (hierarchy) => hierarchy.id == hierarchyList.id,
-      );
-
-      if (foundOrganizationHierarchyIndex !== -1) {
-        const statisticCategories =
-          updatedHierarchyList[foundOrganizationHierarchyIndex]
-            .statisticCategories;
-
-        const matchedRowsWithLargeValue = statisticCategories.filter(
-          (item) => item.large.value == oldLargeValue,
-        );
-        if (matchedRowsWithLargeValue.length == 1) {
-          const newMedium = {
-            label: newUuid as string,
-            value: newUuid,
-            showBy: AddCategoryHierarchyType.PULLDOWN,
-          };
-
-          // Separate matching and non-matching rows
-          const matchedRows = statisticCategories
-            .filter(
-              (item) =>
-                item.medium.value == oldMediumValue &&
-                item.large.value == oldLargeValue,
-            )
-            .map((item) => ({
-              ...item,
-              medium: newMedium,
-            }));
-
-          const remainingRows = statisticCategories.filter(
-            (item) =>
-              !(
-                item.medium.value == oldMediumValue &&
-                item.large.value == oldLargeValue
-              ),
-          );
-
-          // Find the last index where newMedium.value already exists
-          let lastIndex = -1;
-          remainingRows.forEach((item, index) => {
-            if (
-              item.large.value == oldLargeValue &&
-              item.medium.value === newMedium.value
-            )
-              lastIndex = index;
-          });
-
-          // Maintain position if lastIndex is -1
-          const newStatisticCategories = [...remainingRows];
-          if (lastIndex !== -1) {
-            newStatisticCategories.splice(lastIndex + 1, 0, ...matchedRows);
-          } else {
-            // Instead of pushing, find the **original** position of row.original.medium.value
-            const originalIndex = statisticCategories.findIndex(
-              (item) =>
-                item.medium.value == oldMediumValue &&
-                item.large.value == oldLargeValue,
-            );
-
-            if (originalIndex !== -1) {
-              // Insert in the same position as original row
-              newStatisticCategories.splice(originalIndex, 0, ...matchedRows);
-            } else {
-              // If no match found, append to the end
-              newStatisticCategories.push(...matchedRows);
-            }
-          }
-
-          // Remove duplicates
-          const uniqueMap = new Map();
-          const filteredStatisticCategories = newStatisticCategories.filter(
-            (item) => {
-              const key = `${isUUID(item.large.label) ? '' : item.large.label}|${isUUID(item.medium.label) ? '' : item.medium.label}|${isUUID(item.small?.label) ? '' : item.small?.label}`;
-              if (uniqueMap.has(key)) return false;
-              uniqueMap.set(key, true);
-              return true;
-            },
-          );
-
-          // Update hierarchy list
-          updatedHierarchyList[foundOrganizationHierarchyIndex] = {
-            ...updatedHierarchyList[foundOrganizationHierarchyIndex],
-            statisticCategories: filteredStatisticCategories,
+        if (existingHierarchyIndex != -1) {
+          prevSelectedHierarchies[existingHierarchyIndex] = {
+            ...prevSelectedHierarchies[existingHierarchyIndex],
+            deletedType: type,
           };
         } else {
-          updatedHierarchyList[foundOrganizationHierarchyIndex] = {
-            ...updatedHierarchyList[foundOrganizationHierarchyIndex],
-            statisticCategories: [
-              ...updatedHierarchyList[
-                foundOrganizationHierarchyIndex
-              ].statisticCategories.filter(
-                (hierarchy) =>
-                  !(
-                    hierarchy.large.value == oldLargeValue &&
-                    hierarchy.medium.value == oldMediumValue
-                  ),
-              ),
-            ],
-          };
-        }
-      }
+          const existingHierarchy = hierarchyList.statisticCategories.find(
+            (item) => item.id == rowId,
+          );
 
-      return updatedHierarchyList;
+          const newEntry = {
+            organizationStatisticCategoryId: rowId!,
+            organizationId: hierarchyList.id as number,
+            largeStatisticCategory: buildCategory(
+              existingHierarchy!.large as { label: string; value: string },
+            ),
+            mediumStatisticCategory: buildCategory(
+              existingHierarchy!.medium as { label: string; value: string },
+            ),
+            smallStatisticCategory: buildCategory(
+              existingHierarchy!.small as { label: string; value: string },
+            ),
+            color: existingHierarchy?.color || '',
+            skillIds: existingHierarchy?.skills.length
+              ? existingHierarchy?.skills.map((s) => Number(s.value))
+              : [],
+            deletedType: type,
+          };
+
+          prevSelectedHierarchies.push(newEntry);
+        }
+      });
+      return prevSelectedHierarchies;
     });
   };
 
-  const handleDeleteSmallHierarchyCategory = (
-    oldLargeOption: OptionDropdownType,
-    oldMediumOption: OptionDropdownType,
-    oldSmallOption: OptionDropdownType,
-    oldRowId: string | number,
-    oldRowSkill: OptionDropdownType[],
-    oldRowColor: string,
+  const handleArchiveLargeHierarchyCategory = (
+    originalRow: OrganizationCategoryRow,
   ) => {
-    const newUuid = uuidv4();
-    setSelectedHierarchiesToDelete((prev) => {
-      const matchedRowsWithLargeValue =
-        hierarchyList.statisticCategories.filter(
-          (item) =>
-            item.large.value == oldLargeOption.value &&
-            item.medium.value == oldMediumOption.value,
-        );
-      const currentHierarchiesToDelete = [...(prev || [])];
+    updateHierarchyPayloadWhenArchive({
+      originalRow,
+      type: StatisticCategoryType.LARGE,
+    });
+    setHierarchyList((prev) => {
+      return prev.map((org) => {
+        if (org.id !== hierarchyList.id) return org;
 
-      if (matchedRowsWithLargeValue.length > 1) {
-        const matchingHierarchies = hierarchyList.statisticCategories
-          .filter(
-            (item) =>
-              item.large.value == oldLargeOption.value &&
-              item.medium.value == oldMediumOption.value &&
-              item.small.value == oldSmallOption.value,
-          )
-          .map((hierarchy) => String(hierarchy.id)); // Convert IDs to strings
+        return {
+          ...org,
+          statisticCategories: org.statisticCategories.map((row) => {
+            if (row.large.value != originalRow.large.value) return row;
+            return {
+              ...row,
+              large: {
+                ...row.large,
+                isHidden: true,
+              },
+              medium: {
+                ...row.medium,
+                isHidden: true,
+              },
+              small: {
+                ...row.small,
+                isHidden: true,
+              },
+            };
+          }),
+        };
+      });
+    });
+  };
 
-        return [...currentHierarchiesToDelete, ...matchingHierarchies]; // Spread to avoid nested arrays
-      } else {
-        return currentHierarchiesToDelete;
+  const findAffectedRows = (
+    hierarchyList: OrganizationCategoryRow[],
+    originalRow: OrganizationCategoryRow,
+    type: StatisticCategoryType,
+  ): OrganizationCategoryRow[] => {
+    return hierarchyList.filter((row) => {
+      switch (type) {
+        case StatisticCategoryType.LARGE:
+          return (
+            row.large.isHidden && row.large.value === originalRow.large.value
+          );
+
+        case StatisticCategoryType.MEDIUM:
+          return (
+            (row.large.isHidden &&
+              row.large.value === originalRow.large.value) ||
+            (row.medium.isHidden &&
+              row.medium.value === originalRow.medium.value &&
+              row.large.value === originalRow.large.value)
+          );
+
+        case StatisticCategoryType.SMALL:
+          return (
+            (row.large.isHidden &&
+              row.large.value === originalRow.large.value) ||
+            (row.medium.isHidden &&
+              row.medium.value === originalRow.medium.value &&
+              row.large.value === originalRow.large.value) ||
+            (row.small.isHidden &&
+              row.small.value === originalRow.small.value &&
+              row.medium.value === originalRow.medium.value &&
+              row.large.value === originalRow.large.value)
+          );
+
+        default:
+          return false;
       }
     });
+  };
+
+  const handleRestoreHierarchyCategory = (
+    originalRow: OrganizationCategoryRow,
+    type: StatisticCategoryType,
+  ) => {
+    const affectedRows = findAffectedRows(
+      hierarchyList.statisticCategories,
+      originalRow,
+      type,
+    );
+
     setSelectedHierarchiesToUpdate((prev) => {
-      const matchedRowsWithLargeValue =
-        hierarchyList.statisticCategories.filter(
-          (item) =>
-            item.large.value == oldLargeOption.value &&
-            item.medium.value == oldMediumOption.value,
-        );
-      if (matchedRowsWithLargeValue.length > 1) {
-        const currentHierarchiesToUpdate = [...(prev || [])];
+      let next = prev.map((item) => ({ ...item })); // deep clone level-1
 
-        return currentHierarchiesToUpdate.filter(
-          (hierarchy) =>
-            !(
-              hierarchy.largeStatisticCategory?.uuid == oldLargeOption.value &&
-              hierarchy.mediumStatisticCategory?.uuid ==
-                oldMediumOption.value &&
-              hierarchy.smallStatisticCategory?.uuid == oldSmallOption.value
-            ),
+      affectedRows.forEach((row) => {
+        const deletedType = getRestoreType({ row, originalRow, type });
+        const existingIndex = next.findIndex(
+          (i) => i.organizationStatisticCategoryId === row.id,
         );
-      } else {
-        const updatedHierarchiesToUpdate = [...prev];
-
-        const existingIndex = updatedHierarchiesToUpdate.findIndex(
-          (item) => item.organizationStatisticCategoryId === oldRowId,
-        );
-
-        const newEntry = {
-          organizationStatisticCategoryId: oldRowId,
-          organizationId: hierarchyList.id as number,
-          largeStatisticCategory:
-            oldLargeOption.label == '' || isUUID(oldLargeOption.label as string)
-              ? null
-              : {
-                  name: oldLargeOption.label as string,
-                  uuid: oldLargeOption.value as string,
-                },
-          mediumStatisticCategory:
-            oldMediumOption.label == '' ||
-            isUUID(oldMediumOption.label as string)
-              ? null
-              : {
-                  name: oldMediumOption.label as string,
-                  uuid: oldMediumOption.value as string,
-                },
-          smallStatisticCategory: null,
-          color: oldRowColor,
-          skillIds: oldRowSkill.map((skill) => Number(skill.value)),
-        };
 
         if (existingIndex !== -1) {
-          // If it exists, replace it
-          updatedHierarchiesToUpdate[existingIndex] = newEntry;
+          // produce a new array replacing the item
+          next = next.map((i, idx) =>
+            idx === existingIndex ? { ...i, deletedType } : i,
+          );
         } else {
-          // Otherwise, add it
-          updatedHierarchiesToUpdate.push(newEntry);
+          // append new item immutably
+          next = [
+            ...next,
+            {
+              organizationStatisticCategoryId: row.id,
+              organizationId: hierarchyList.id as number,
+              largeStatisticCategory: buildCategory(
+                row.large as { label: string; value: string },
+              ),
+              mediumStatisticCategory: buildCategory(
+                row.medium as { label: string; value: string },
+              ),
+              smallStatisticCategory: buildCategory(
+                row.small as { label: string; value: string },
+              ),
+              color: row.color!,
+              skillIds: row.skills.map((s) => Number(s.value)),
+              deletedType,
+            },
+          ];
         }
+      });
 
-        return updatedHierarchiesToUpdate;
-      }
+      return next;
+    });
+
+    switch (type) {
+      case StatisticCategoryType.LARGE:
+        setHierarchyList((prev) => {
+          return prev.map((org) => {
+            if (org.id !== hierarchyList.id) return org;
+
+            return {
+              ...org,
+              statisticCategories: org.statisticCategories.map((row) => {
+                return {
+                  ...row,
+
+                  // Requirement: same large → unhide large
+                  large: sameLarge(row, originalRow)
+                    ? { ...row.large, isHidden: false }
+                    : row.large,
+                };
+              }),
+            };
+          });
+        });
+        break;
+      case StatisticCategoryType.MEDIUM:
+        setHierarchyList((prev) => {
+          return prev.map((org) => {
+            if (org.id !== hierarchyList.id) return org;
+
+            return {
+              ...org,
+              statisticCategories: org.statisticCategories.map((row) => {
+                return {
+                  ...row,
+
+                  // Requirement #1: same large → unhide large
+                  large: sameLarge(row, originalRow)
+                    ? { ...row.large, isHidden: false }
+                    : row.large,
+
+                  // Requirement #2: same large+medium → unhide medium
+                  medium:
+                    sameLarge(row, originalRow) && sameMedium(row, originalRow)
+                      ? { ...row.medium, isHidden: false }
+                      : row.medium,
+                };
+              }),
+            };
+          });
+        });
+        break;
+      case StatisticCategoryType.SMALL:
+        setHierarchyList((prev) => {
+          return prev.map((org) => {
+            if (org.id !== hierarchyList.id) return org;
+
+            return {
+              ...org,
+              statisticCategories: org.statisticCategories.map((row) => {
+                return {
+                  ...row,
+
+                  // Requirement #1: same large → unhide large
+                  large: sameLarge(row, originalRow)
+                    ? { ...row.large, isHidden: false }
+                    : row.large,
+
+                  // Requirement #2: same large+medium → unhide medium
+                  medium:
+                    sameLarge(row, originalRow) && sameMedium(row, originalRow)
+                      ? { ...row.medium, isHidden: false }
+                      : row.medium,
+
+                  // Requirement #3: only this small becomes unhidden
+                  small: sameSmall(row, originalRow)
+                    ? { ...row.small, isHidden: false }
+                    : row.small,
+                };
+              }),
+            };
+          });
+        });
+        break;
+    }
+  };
+
+  const handleArchiveMediumHierarchyCategory = (
+    originalRow: OrganizationCategoryRow,
+  ) => {
+    updateHierarchyPayloadWhenArchive({
+      originalRow,
+      type: StatisticCategoryType.MEDIUM,
     });
     setHierarchyList((prev) => {
-      const updatedHierarchyList = prev.map((org) => ({
+      return prev.map((org) => {
+        if (org.id !== hierarchyList.id) return org;
+
+        return {
+          ...org,
+          statisticCategories: org.statisticCategories.map((row) => {
+            if (
+              !(
+                row.large.value == originalRow.large.value &&
+                row.medium.value == originalRow.medium.value
+              )
+            )
+              return row;
+            return {
+              ...row,
+              large: {
+                ...row.large,
+              },
+              medium: {
+                ...row.medium,
+                isHidden: true,
+              },
+              small: {
+                ...row.small,
+                isHidden: true,
+              },
+            };
+          }),
+        };
+      });
+    });
+  };
+
+  const handleArchiveSmallHierarchyCategory = (
+    originalRow: OrganizationCategoryRow,
+  ) => {
+    updateHierarchyPayloadWhenArchive({
+      originalRow,
+      type: StatisticCategoryType.SMALL,
+    });
+
+    setHierarchyList((prev) => {
+      return prev.map((org) => {
+        if (org.id !== hierarchyList.id) return org;
+
+        return {
+          ...org,
+          statisticCategories: org.statisticCategories.map((row) => {
+            if (
+              !(
+                row.large.value == originalRow.large.value &&
+                row.medium.value == originalRow.medium.value &&
+                row.small.value == originalRow.small.value
+              )
+            )
+              return row;
+            return {
+              ...row,
+              large: {
+                ...row.large,
+              },
+              medium: {
+                ...row.medium,
+              },
+              small: {
+                ...row.small,
+                isHidden: true,
+              },
+            };
+          }),
+        };
+      });
+    });
+  };
+
+  const updateColorInHierarchyList = (
+    prevList: any[],
+    orgId: string,
+    largeValue: string,
+    newColor: string,
+  ) => {
+    return prevList.map((org) => {
+      if (org.id != orgId) return org;
+
+      return {
         ...org,
-        statisticCategories: [...org.statisticCategories],
-      }));
+        statisticCategories: org.statisticCategories.map((item: any) =>
+          item.large.value == largeValue ? { ...item, color: newColor } : item,
+        ),
+      };
+    });
+  };
 
-      const foundOrganizationHierarchyIndex = updatedHierarchyList.findIndex(
-        (hierarchy) => hierarchy.id === hierarchyList.id,
-      );
+  const handleChangeColor = (newColor: string, largeValue: string) => {
+    setSelectedHierarchiesToUpdate((prev) => {
+      const updatedHierarchiesToUpdate = [...prev];
+      const statisticCategories = hierarchyList.statisticCategories;
 
-      if (foundOrganizationHierarchyIndex !== -1) {
-        const statisticCategories =
-          updatedHierarchyList[foundOrganizationHierarchyIndex]
-            .statisticCategories;
+      const matchedRows = statisticCategories
+        .filter((item) => item.large.value == largeValue)
+        .map((item) => ({
+          ...item,
+          color: newColor,
+        }));
+      const updatedHierarchies = matchedRows.map((row) => {
+        return {
+          organizationStatisticCategoryId: row.id,
+          organizationId: hierarchyList.id as number,
+          largeStatisticCategory:
+            row.large.label == '' || isUUID(row.large.label as string)
+              ? null
+              : {
+                  name: row.large.label as string,
+                  uuid: row.large.value as string,
+                },
+          mediumStatisticCategory:
+            row.medium.label == '' || isUUID(row.medium.label as string)
+              ? null
+              : {
+                  name: row.medium.label as string,
+                  uuid: row.medium.value as string,
+                },
+          smallStatisticCategory:
+            row.small.label == '' || isUUID(row.small.label as string)
+              ? null
+              : {
+                  name: row.small.label as string,
+                  uuid: row.small.value as string,
+                },
+          color: row.color,
+          skillIds: row.skills.map((skill) => Number(skill.value)),
+          deletedType: row && getDeletedTypeFromRow(row),
+        };
+      });
 
-        const matchedRowsWithLargeValue = statisticCategories.filter(
+      updatedHierarchies.forEach((updatedHierarchy) => {
+        const existingIndex = updatedHierarchiesToUpdate.findIndex(
           (item) =>
-            item.large.value == oldLargeOption.value &&
-            item.medium.value == oldMediumOption.value,
+            item.organizationStatisticCategoryId ===
+            updatedHierarchy.organizationStatisticCategoryId,
         );
-        if (matchedRowsWithLargeValue.length == 1) {
-          const updatedCategories = updatedHierarchyList[
-            foundOrganizationHierarchyIndex
-          ].statisticCategories.map((hierarchy) =>
-            hierarchy.id === oldRowId
-              ? {
-                  ...hierarchy,
-                  small: {
-                    label: newUuid,
-                    value: newUuid,
-                    showBy: AddCategoryHierarchyType.PULLDOWN,
-                  },
-                }
-              : hierarchy,
-          );
-
-          const uniqueMap = new Map();
-          const filteredCategories = updatedCategories.filter((item) => {
-            const key = `${isUUID(item.large.label) ? '' : item.large.label}|${isUUID(item.medium.label) ? '' : item.medium.label}|${isUUID(item.small?.label) ? '' : item.small?.label}`;
-            if (uniqueMap.has(key)) return false;
-            uniqueMap.set(key, true);
-            return true;
-          });
-
-          updatedHierarchyList[
-            foundOrganizationHierarchyIndex
-          ].statisticCategories = filteredCategories;
+        if (existingIndex != -1) {
+          updatedHierarchiesToUpdate[existingIndex] = updatedHierarchy;
         } else {
-          updatedHierarchyList[foundOrganizationHierarchyIndex] = {
-            ...updatedHierarchyList[foundOrganizationHierarchyIndex],
-            statisticCategories: [
-              ...updatedHierarchyList[
-                foundOrganizationHierarchyIndex
-              ].statisticCategories.filter(
-                (hierarchy) =>
-                  !(
-                    hierarchy.large.value == oldLargeOption.value &&
-                    hierarchy.medium.value == oldMediumOption.value &&
-                    hierarchy.small.value == oldSmallOption.value
-                  ),
-              ),
-            ],
-          };
+          updatedHierarchiesToUpdate.push(updatedHierarchy);
         }
-      }
+      });
 
-      return updatedHierarchyList;
+      return updatedHierarchiesToUpdate;
+    });
+    setHierarchyList((prev) =>
+      updateColorInHierarchyList(
+        prev,
+        hierarchyList.id as string,
+        largeValue,
+        newColor,
+      ),
+    );
+    setOpenColorBox({
+      status: false,
+      uuid: '',
     });
   };
 
-  // Check delete hierarchy category
-  const handleCheckDeleteHierarchyCategory = async (ids: string[]) => {
-    return await api.post(apiRouters.CHECK_ACTUAL_DURATION, {
-      ids,
+  const getHiddenMediumsForLarge = (largeValue: string) => {
+    return hierarchyList.statisticCategories
+      .filter((row) => row.large.value == largeValue && row.medium.isHidden)
+      .map((row) => row.medium.value);
+  };
+
+  const getHiddenSmallsForLargeAndMedium = (
+    largeValue: string,
+    mediumValue: string,
+  ) => {
+    return hierarchyList.statisticCategories
+      .filter(
+        (row) =>
+          row.large.value == largeValue &&
+          row.medium.value == mediumValue &&
+          row.small.isHidden,
+      )
+      .map((row) => row.small.value);
+  };
+
+  const getAllSmallsForMedium = (largeValue: string, mediumValue: string) => {
+    return hierarchyList.statisticCategories
+      .filter(
+        (row) =>
+          row.large.value == largeValue && row.medium.value == mediumValue,
+      )
+      .map((row) => row.small.value);
+  };
+
+  const getAllMediumsAndSmallsForLarge = (largeValue: string) => {
+    const mediumList = hierarchyList.statisticCategories
+      .filter((row) => row.large.value == largeValue)
+      .map((row) => row.medium.value);
+    const smallList = hierarchyList.statisticCategories
+      .filter((row) => row.large.value == largeValue)
+      .map((row) => row.small.value);
+    return [...mediumList, ...smallList];
+  };
+
+  const getHiddenSmallsForMedium = (
+    largeValue: string,
+    mediumValue: string,
+  ) => {
+    return hierarchyList.statisticCategories
+      .filter(
+        (row) =>
+          row.large.value == largeValue &&
+          row.medium.value == mediumValue &&
+          row.small.isHidden,
+      )
+      .map((row) => row.small.value);
+  };
+
+  const getDisabledMediumValuesForLarge = (largeValue: string) => {
+    return hierarchyList.statisticCategories
+      .filter((row) => row.large.value === largeValue)
+      .filter((row) =>
+        checkHasHiddenCategoryInARow({
+          originalRow: row,
+          type: HierarchyType.MEDIUM,
+        }),
+      )
+      .map((row) => row.medium.value);
+  };
+
+  const getHiddenLargeCategoryList = () => {
+    return hierarchyList.statisticCategories
+      .filter((row) => row.large.isHidden)
+      .map((row) => row.large.value);
+  };
+
+  const getDisabledLargeCategoryList = () => {
+    return hierarchyList.statisticCategories
+      .filter((row) =>
+        checkHasHiddenCategoryInARow({
+          originalRow: row,
+          type: HierarchyType.LARGE,
+        }),
+      )
+      .map((row) => row.large.value);
+  };
+
+  const getMediumDropdownOptions = (
+    row: OrganizationCategoryRow,
+    categoryDropdownOptions: OptionDropdownType[],
+  ) => {
+    const largeValue = row.large.value as string;
+    const mediumValue = row.medium.value as string;
+
+    const hiddenMediums = getHiddenMediumsForLarge(largeValue);
+    const hiddenSmalls = getHiddenSmallsForMedium(largeValue, mediumValue);
+    const disabledMediums = getDisabledMediumValuesForLarge(largeValue);
+    const allSmallForMedium = getAllSmallsForMedium(largeValue, mediumValue);
+
+    return categoryDropdownOptions.filter((option) => {
+      return (
+        option.value !== largeValue &&
+        option.value !== '' &&
+        !allSmallForMedium.includes(option.value) &&
+        !hiddenMediums.includes(option.value) &&
+        !hiddenSmalls.includes(option.value) &&
+        !disabledMediums.includes(option.value)
+      );
     });
   };
 
-  const { mutateAsync: checkDeleteHierarchyCategory } = useMutation(
-    'postCheckDeleteHierarchyCategory',
-    handleCheckDeleteHierarchyCategory,
-  );
+  const getSmallDropdownOptions = (
+    row: OrganizationCategoryRow,
+    categoryDropdownOptions: OptionDropdownType[],
+    excludedSmalls: (string | number)[],
+  ) => {
+    const largeValue = row.large.value as string;
+    const mediumValue = row.medium.value as string;
+
+    const hiddenSmallsForLargeAndMedium = getHiddenSmallsForLargeAndMedium(
+      largeValue,
+      mediumValue,
+    );
+
+    return categoryDropdownOptions.filter((option) => {
+      return (
+        option.value !== largeValue &&
+        option.value !== mediumValue &&
+        option.value !== '' &&
+        !excludedSmalls.includes(option.value) &&
+        !hiddenSmallsForLargeAndMedium.includes(option.value)
+      );
+    });
+  };
+
+  const getLargeDropdownOptions = (
+    row: OrganizationCategoryRow,
+    categoryDropdownOptions: OptionDropdownType[],
+  ) => {
+    const largeValue = row.large.value as string;
+
+    const hiddenLarges = getHiddenLargeCategoryList();
+    const disabledLarges = getDisabledLargeCategoryList();
+    const mediumsAndSmallForLarge = getAllMediumsAndSmallsForLarge(largeValue);
+
+    return categoryDropdownOptions.filter((option) => {
+      return (
+        option.value !== '' &&
+        !mediumsAndSmallForLarge.includes(option.value) &&
+        !hiddenLarges.includes(option.value) &&
+        !disabledLarges.includes(option.value)
+      );
+    });
+  };
+
+  const shouldShowMediumBorderBottom = ({
+    rowIndex,
+    isHiddenList,
+    isHiddenMediumCategory,
+  }: {
+    rowIndex: number;
+    isHiddenList: boolean;
+    isHiddenMediumCategory: boolean;
+  }) => {
+    const isLastMedium = lastMediumIndexes.includes(rowIndex);
+
+    if (!isHiddenList) {
+      // Normal mode → border only at last medium
+      return isLastMedium;
+    }
+
+    // Hidden list mode → show under text row OR last medium
+    const isTextRow = isHiddenMediumCategory;
+
+    return isTextRow || isLastMedium;
+  };
+
+  const shouldShowSmallBorderBottom = ({
+    row,
+    rowIndex,
+    isHiddenSmallCategory,
+  }: {
+    row: OrganizationCategoryRow;
+    rowIndex: number;
+    isHiddenSmallCategory: boolean;
+  }) => {
+    const smallsInMedium = hierarchyList.statisticCategories.filter(
+      (r) =>
+        r.large.value === row.large.value &&
+        r.medium.value === row.medium.value &&
+        !r.small.isHidden,
+    );
+
+    const isLastSmallInEmptyMedium =
+      smallsInMedium.length === 0 &&
+      lastSmallIndexes.includes(rowIndex) &&
+      !row.medium.isHidden &&
+      !row.large.isHidden;
+
+    if (isHiddenList) {
+      return isHiddenSmallCategory
+        ? !lastSmallIndexesInEachLarge.includes(rowIndex)
+        : !lastSmallIndexesInEachLarge.includes(rowIndex) &&
+            (isLastSmallInEmptyMedium || lastSmallIndexes.includes(rowIndex));
+    }
+    return (
+      !isHiddenSmallCategory &&
+      !lastSmallIndexesInEachLarge.includes(rowIndex) &&
+      (isLastSmallInEmptyMedium || lastSmallIndexes.includes(rowIndex))
+    );
+  };
+
+  const shouldShowAddSmallButton = (
+    row: OrganizationCategoryRow,
+    rowIndex: number,
+  ) => {
+    if (isHiddenList) {
+      // Archived list: show only for last small
+      return (
+        lastSmallIndexes.includes(rowIndex) &&
+        !row.medium.isHidden &&
+        !row.large.isHidden
+      );
+    }
+
+    // Displayed list:
+    // Show if:
+    // 1) there are smalls in this medium and this is the last one
+    // 2) OR there are NO smalls in this medium
+    const smallsInMedium = hierarchyList.statisticCategories.filter(
+      (r) =>
+        r.large.value === row.large.value &&
+        r.medium.value === row.medium.value &&
+        !r.small.isHidden,
+    );
+
+    return (
+      (smallsInMedium.length === 0 &&
+        lastSmallIndexes.includes(rowIndex) &&
+        !row.medium.isHidden &&
+        !row.large.isHidden) ||
+      lastSmallIndexesInDisplayedList.includes(rowIndex)
+    );
+  };
 
   return (
     <div
@@ -1599,14 +1803,16 @@ const TableComponent = ({
       <p className="text-[#77858F] text-[16px] font-medium my-2 max-w-[100%] break-all">
         {organizationName}
       </p>
-      <Table className="w-full h-full bg-white !rounded-[10px]">
+      <Table
+        className="w-full h-full bg-white !rounded-[10px]"
+        tableClassName="!w-full !table-fixed">
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
+              {headerGroup.headers.map((header, index) => (
                 <th
                   key={header.id}
-                  className="text-[#77858F] bg-[#F8FAFC] border-r-[1px] w-1/4 font-medium text-xs py-3">
+                  className={`text-[#77858F] bg-[#F8FAFC] ${headerGroup.headers.length - 1 != index && 'border-r-[1px] border-[#D2DBE1]'} w-1/4 font-medium text-xs py-3`}>
                   {flexRender(
                     header.column.columnDef.header,
                     header.getContext(),
@@ -1619,17 +1825,40 @@ const TableComponent = ({
         <tbody>
           {table.getRowModel().rows.map((row, rowIndex) => {
             const excludedSmalls = getExcludedSmalls(row.original);
+            const isHiddenLargeCategory = checkIsHiddenCategory({
+              type: HierarchyType.LARGE,
+              originalRow: row.original,
+            });
+            const isHiddenMediumCategory = checkIsHiddenCategory({
+              type: HierarchyType.MEDIUM,
+              originalRow: row.original,
+            });
+            const isHiddenSmallCategory = checkIsHiddenCategory({
+              type: HierarchyType.SMALL,
+              originalRow: row.original,
+            });
             return (
-              <tr key={row.id} className="h-[1px]">
+              <tr
+                key={row.id}
+                style={{
+                  height:
+                    isHiddenLargeCategory && !isHiddenList ? '0px' : '1px',
+                }}>
                 {largeRowspan[rowIndex] > 0 && (
                   <td
-                    className="border-[1px] !w-1/4 border-[#D2DBE1] h-full"
-                    style={{ height: 'inherit' }}
+                    className={`border-b-[1px] border-r-[1px] !w-1/4 border-[#D2DBE1] h-full !p-0 ${isHiddenLargeCategory && !isHiddenList && '!border-b-0'}`}
+                    style={{
+                      height:
+                        isHiddenLargeCategory && !isHiddenList
+                          ? '0px'
+                          : 'inherit',
+                    }}
                     rowSpan={largeRowspan[rowIndex]}>
-                    <div className="p-3 h-full flex items-center gap-3">
+                    <div
+                      className={`p-[14px] pl-[18px] h-full flex items-center gap-[14px] ${isHiddenLargeCategory && !isHiddenList && 'hidden'}`}>
                       <div className="relative">
                         <div
-                          className={`w-[14px] h-[14px] rounded-full hover:cursor-pointer`}
+                          className={`w-[14px] h-[14px] rounded-full hover:cursor-pointer ${isHiddenLargeCategory && !isHiddenList && 'hidden'}`}
                           style={{ backgroundColor: `${row.original.color}` }}
                           onClick={() => {
                             setOpenColorBox({
@@ -1641,126 +1870,12 @@ const TableComponent = ({
                         {row.original.id == openColorBox.uuid && (
                           <div className="absolute left-5 -top-5 z-50">
                             <CircleColorPicker
-                              onChange={(newColor) => {
-                                setSelectedHierarchiesToUpdate((prev) => {
-                                  const updatedHierarchiesToUpdate = [...prev];
-                                  const statisticCategories =
-                                    hierarchyList.statisticCategories;
-
-                                  const matchedRows = statisticCategories
-                                    .filter(
-                                      (item) =>
-                                        item.large.value ===
-                                        row.original.large.value,
-                                    )
-                                    .map((item) => ({
-                                      ...item,
-                                      color: newColor,
-                                    }));
-                                  const updatedHierarchies = matchedRows.map(
-                                    (row) => {
-                                      return {
-                                        organizationStatisticCategoryId: row.id,
-                                        organizationId:
-                                          hierarchyList.id as number,
-                                        largeStatisticCategory:
-                                          row.large.label == '' ||
-                                          isUUID(row.large.label as string)
-                                            ? null
-                                            : {
-                                                name: row.large.label as string,
-                                                uuid: row.large.value as string,
-                                              },
-                                        mediumStatisticCategory:
-                                          row.medium.label == '' ||
-                                          isUUID(row.medium.label as string)
-                                            ? null
-                                            : {
-                                                name: row.medium
-                                                  .label as string,
-                                                uuid: row.medium
-                                                  .value as string,
-                                              },
-                                        smallStatisticCategory:
-                                          row.small.label == '' ||
-                                          isUUID(row.small.label as string)
-                                            ? null
-                                            : {
-                                                name: row.small.label as string,
-                                                uuid: row.small.value as string,
-                                              },
-                                        color: row.color,
-                                        skillIds: row.skills.map((skill) =>
-                                          Number(skill.value),
-                                        ),
-                                      };
-                                    },
-                                  );
-
-                                  updatedHierarchies.forEach(
-                                    (updatedHierarchy) => {
-                                      const existingIndex =
-                                        updatedHierarchiesToUpdate.findIndex(
-                                          (item) =>
-                                            item.organizationStatisticCategoryId ===
-                                            updatedHierarchy.organizationStatisticCategoryId,
-                                        );
-                                      if (existingIndex != -1) {
-                                        updatedHierarchiesToUpdate[
-                                          existingIndex
-                                        ] = updatedHierarchy;
-                                      } else {
-                                        updatedHierarchiesToUpdate.push(
-                                          updatedHierarchy,
-                                        );
-                                      }
-                                    },
-                                  );
-
-                                  return updatedHierarchiesToUpdate;
-                                });
-                                setHierarchyList((prev) => {
-                                  const updatedHierarchyList = prev.map(
-                                    (org) => ({
-                                      ...org,
-                                      statisticCategories: [
-                                        ...org.statisticCategories,
-                                      ],
-                                    }),
-                                  );
-
-                                  const foundOrganizationHierarchyIndex =
-                                    updatedHierarchyList.findIndex(
-                                      (hierarchy) =>
-                                        hierarchy.id === hierarchyList.id,
-                                    );
-
-                                  if (foundOrganizationHierarchyIndex !== -1) {
-                                    const updatedCategories =
-                                      updatedHierarchyList[
-                                        foundOrganizationHierarchyIndex
-                                      ].statisticCategories.map((hierarchy) =>
-                                        hierarchy.large.value ===
-                                        row.original.large.value
-                                          ? {
-                                              ...hierarchy,
-                                              color: newColor,
-                                            }
-                                          : hierarchy,
-                                      );
-
-                                    updatedHierarchyList[
-                                      foundOrganizationHierarchyIndex
-                                    ].statisticCategories = updatedCategories;
-                                  }
-
-                                  return updatedHierarchyList;
-                                });
-                                setOpenColorBox({
-                                  status: false,
-                                  uuid: '',
-                                });
-                              }}
+                              onChange={(newColor) =>
+                                handleChangeColor(
+                                  newColor,
+                                  row.original.large.value as string,
+                                )
+                              }
                               onClose={() => {
                                 setOpenColorBox({
                                   status: false,
@@ -1771,22 +1886,40 @@ const TableComponent = ({
                           </div>
                         )}
                       </div>
-                      {row.original.large.showBy ==
-                      AddCategoryHierarchyType.INPUT ? (
-                        <div className="flex flex-col !h-full w-full">
-                          <div className="mb-1 !h-full w-full">
+                      {isHiddenLargeCategory ? (
+                        !isHiddenList ? (
+                          <div className="hidden w-full"></div>
+                        ) : (
+                          <p className="text-sm ml-[-6px] flex-1 break-all font-medium text-black opacity-30">
+                            {row.original.large.label &&
+                            !isUUID(row.original.large.label)
+                              ? row.original.large.label
+                              : NO_OPTION_CATEGORY}
+                          </p>
+                        )
+                      ) : row.original.large.showBy ==
+                        AddCategoryHierarchyType.INPUT ? (
+                        <div className="flex flex-col !h-full w-[calc(100%_-_58px)]">
+                          <div className="!h-full">
                             <input
                               key={JSON.stringify(row.original.large)}
                               type="text"
-                              className={`w-full !h-full !min-h-[46px] p-2 text-black rounded-[5px]`}
+                              className={`w-full !h-full text-sm !min-h-[34px] px-[10px] py-[6px] text-black rounded-[6px] ${
+                                row.original.large.isHidden &&
+                                isHiddenList &&
+                                'opacity-50'
+                              }`}
                               placeholder="新しいカテゴリーを入力"
                               defaultValue={
                                 !isUUID(row.original.large.label)
                                   ? row.original.large.label
                                   : ''
                               }
+                              disabled={
+                                row.original.large.isHidden && isHiddenList
+                              }
                               onBlur={(e) => {
-                                handleSetNewCategory({
+                                handleChangeCategoryByInput({
                                   name: e.target.value,
                                   uuid: String(row.original.large.value) || '',
                                   type: HierarchyType.LARGE,
@@ -1802,78 +1935,80 @@ const TableComponent = ({
                       ) : (
                         row.original.large.showBy ==
                           AddCategoryHierarchyType.PULLDOWN && (
-                          <TableDropdown
-                            key={JSON.stringify(row.original.large)}
-                            options={[
-                              ...categoryDropdownOptions.filter(
-                                (option) =>
-                                  option.value !== row.original.medium.value && // Prevent selecting the same as medium
-                                  option.value !== row.original.small.value && // Prevent selecting the same as small
-                                  option.value !== '',
-                              ),
-                            ]}
-                            minDropdownHeight={240}
-                            className="h-full !rounded-[5px] w-full flex-grow"
-                            valueClassName="!border-[#77858F]"
-                            labelClass="w-[160px]"
-                            selectedOption={
-                              row.original.large &&
-                              !isUUID(row.original.large.label)
-                                ? {
-                                    label: row.original.large.label,
-                                    value: row.original.large.value,
-                                  }
-                                : undefined
-                            }
-                            onPendingChange={(e) => {
-                              const oldLargeOption = row.original.large;
-                              if (e.value == oldLargeOption.value) return;
-                              if (
-                                row.original.large.label &&
-                                !isUUID(row.original.large.label) &&
-                                !isUUID(row.original.id as string)
-                              ) {
-                                setWarningChangeCategoryModalOpen(true);
-                                setPendingSelection({
-                                  // oldLargeOption,
-                                  originalRow: row.original,
-                                  newValue: e,
-                                  type: StatisticCategoryType.LARGE,
-                                });
-                              } else {
-                                handleChangeLargeCategoryByPulldown(
-                                  row.original,
-                                  e,
-                                );
+                          <div className="h-full w-[calc(100%_-_58px)]">
+                            <TableDropdown
+                              key={JSON.stringify(row.original.large)}
+                              options={getLargeDropdownOptions(
+                                row.original,
+                                categoryDropdownOptions,
+                              )}
+                              minDropdownHeight={240}
+                              className="h-full w-full flex-grow"
+                              labelOptionClass="!text-sm"
+                              valueClassName="!border-[#77858F] !rounded-[6px] !py-1 !pl-[10px]"
+                              labelClass="w-[150px] !text-sm"
+                              disabled={
+                                row.original.large.isHidden && isHiddenList
                               }
-                            }}
-                          />
+                              selectedOption={
+                                row.original.large &&
+                                !isUUID(row.original.large.label)
+                                  ? {
+                                      label: row.original.large.label,
+                                      value: row.original.large.value,
+                                    }
+                                  : undefined
+                              }
+                              onPendingChange={(e) => {
+                                const oldLargeOption = row.original.large;
+                                if (e.value == oldLargeOption.value) return;
+                                if (
+                                  row.original.large.label &&
+                                  !isUUID(row.original.large.label) &&
+                                  !isUUID(row.original.id as string)
+                                ) {
+                                  setWarningChangeCategoryModalOpen(true);
+                                  setPendingSelection({
+                                    originalRow: row.original,
+                                    newValue: e,
+                                    type: StatisticCategoryType.LARGE,
+                                  });
+                                } else {
+                                  handleChangeLargeCategoryByPulldown(
+                                    row.original,
+                                    e,
+                                  );
+                                }
+                              }}
+                            />
+                          </div>
                         )
                       )}
-
                       <ImageRound
-                        name="Delete"
-                        src={'/icons/delete-gray.svg'}
-                        className="w-[15px] h-[17px] ml-[-5px] hover:cursor-pointer"
-                        onClick={async () => {
-                          const oldLargeValue = row.original.large.value;
-                          const matchingHierarchies =
-                            hierarchyList.statisticCategories
-                              .filter(
-                                (item) => item.large.value === oldLargeValue,
-                              )
-                              .filter(
-                                (hierarchy) => !isUUID(String(hierarchy.id)),
-                              )
-                              .map((hierarchy) => String(hierarchy.id));
-                          const { data } =
-                            await checkDeleteHierarchyCategory(
-                              matchingHierarchies,
-                            );
-                          if (!data.hasActualDuration) {
-                            handleDeleteLargeHierarchyCategory(oldLargeValue);
+                        name="Hide"
+                        src={`/icons/${
+                          isHiddenLargeCategory
+                            ? 'dark-close-eye'
+                            : 'gray-open-eye'
+                        }.svg`}
+                        className={`w-[16px] h-[13px] ${isHiddenLargeCategory && !isHiddenList && 'hidden'} ${isUUID(row.original.large.label) ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'}`}
+                        onClick={() => {
+                          if (isUUID(row.original.large.label)) return;
+                          if (isHiddenLargeCategory) {
+                            setPendingRestoreCategory({
+                              originalRow: row.original,
+                              type: StatisticCategoryType.LARGE,
+                            });
+                            setOpenConfirmRestoreModal({
+                              name: row.original.large.label,
+                              status: true,
+                            });
                           } else {
-                            setWarningDeleteCategoryModalOpen(true);
+                            setPendingArchiveCategory({
+                              originalRow: row.original,
+                              type: StatisticCategoryType.LARGE,
+                            });
+                            setOpenConfirmArchiveModal(true);
                           }
                         }}
                       />
@@ -1882,28 +2017,81 @@ const TableComponent = ({
                 )}
                 {mediumRowspan[rowIndex] > 0 && (
                   <td
-                    className="border-[1px] w-1/4 border-[#D2DBE1]"
-                    style={{ height: 'inherit' }}
+                    className={`w-1/4 !p-0`}
+                    style={{
+                      height:
+                        isHiddenLargeCategory && !isHiddenList
+                          ? '0px'
+                          : 'inherit',
+                    }}
                     rowSpan={mediumRowspan[rowIndex]}>
-                    <div className="p-3 flex flex-col !h-[100%]">
-                      <div
-                        className={`flex items-center ${lastMediumIndexes.includes(rowIndex) ? 'h-[calc(100%_-_46px)]' : 'h-[calc(100%)]'} mb-3 gap-3`}>
-                        {row.original.medium.showBy ==
-                        AddCategoryHierarchyType.INPUT ? (
-                          <div className="flex flex-col !h-full w-full">
-                            <div className="mb-1 !h-full w-full">
+                    <div
+                      className={`${isHiddenList && !lastMediumIndexes.includes(rowIndex) ? 'py-[14px] mx-[14px]' : 'p-[14px]'} flex flex-col !h-full ${isHiddenMediumCategory && !isHiddenList && '!p-0'}
+                       ${
+                         shouldShowMediumBorderBottom({
+                           rowIndex,
+                           isHiddenList,
+                           isHiddenMediumCategory,
+                         })
+                           ? 'border-b-[1px] border-[#D2DBE1]'
+                           : ''
+                       } ${isHiddenLargeCategory && isHiddenMediumCategory && !isHiddenList ? '!border-0' : ''}`}>
+                      <div className={`flex items-center !h-full gap-[14px]`}>
+                        {isHiddenMediumCategory ? (
+                          !isHiddenList ? (
+                            <>
+                              <div className="hidden w-full"></div>
+                              {lastMediumIndexes.includes(rowIndex) &&
+                                (!isHiddenLargeCategory || isHiddenList) && (
+                                  <OptionsBoxToAddCategory
+                                    text={'中カテゴリーを追加'}
+                                    customClassName={`pt-[10px] pb-[14px] px-[14px] w-full`}
+                                    addCategoryUsingInput={() =>
+                                      handleAddMediumCategory(
+                                        AddCategoryHierarchyType.INPUT,
+                                        row.original,
+                                      )
+                                    }
+                                    addCategoryUsingDropdown={() =>
+                                      handleAddMediumCategory(
+                                        AddCategoryHierarchyType.PULLDOWN,
+                                        row.original,
+                                      )
+                                    }
+                                  />
+                                )}
+                            </>
+                          ) : (
+                            <p className="text-sm flex-1 break-all font-medium text-black opacity-30">
+                              {row.original.medium.label &&
+                              !isUUID(row.original.medium.label)
+                                ? row.original.medium.label
+                                : NO_OPTION_CATEGORY}
+                            </p>
+                          )
+                        ) : row.original.medium.showBy ==
+                          AddCategoryHierarchyType.INPUT ? (
+                          <div className="flex flex-col !h-full w-[calc(100%_-_30px)]">
+                            <div className="!h-full w-full">
                               <input
                                 key={JSON.stringify(row.original.medium)}
                                 type="text"
-                                className={`w-full !h-full !min-h-[46px] p-2 text-black rounded-[5px]`}
+                                className={`w-full !h-full text-sm !min-h-[34px] px-[10px] py-[6px] text-black rounded-[6px] ${
+                                  row.original.medium.isHidden &&
+                                  isHiddenList &&
+                                  'opacity-50'
+                                }`}
                                 placeholder="新しいカテゴリーを入力"
                                 defaultValue={
                                   !isUUID(row.original.medium.label)
                                     ? row.original.medium.label
                                     : ''
                                 }
+                                disabled={
+                                  row.original.medium.isHidden && isHiddenList
+                                }
                                 onBlur={(e) => {
-                                  handleSetNewCategory({
+                                  handleChangeCategoryByInput({
                                     name: e.target.value,
                                     uuid:
                                       String(row.original.medium.value) || '',
@@ -1920,23 +2108,18 @@ const TableComponent = ({
                         ) : (
                           row.original.medium.showBy ==
                             AddCategoryHierarchyType.PULLDOWN && (
-                            <div className={`w-full h-full`}>
+                            <div className={` w-[calc(100%_-_30px)] h-full`}>
                               <TableDropdown
                                 key={JSON.stringify(row.original.medium)}
-                                options={[
-                                  ...categoryDropdownOptions.filter(
-                                    (option) =>
-                                      option.value !==
-                                        row.original.large.value &&
-                                      option.value !==
-                                        row.original.small.value &&
-                                      option.value !== '',
-                                  ),
-                                ]}
+                                options={getMediumDropdownOptions(
+                                  row.original,
+                                  categoryDropdownOptions,
+                                )}
                                 minDropdownHeight={240}
-                                className="h-full !rounded-[5px] w-full flex-grow"
-                                valueClassName="!border-[#77858F]"
-                                labelClass="w-[160px]"
+                                className="h-full w-full flex-grow"
+                                labelOptionClass="!text-sm"
+                                valueClassName="!border-[#77858F] !rounded-[6px] !py-1 !pl-[10px]"
+                                labelClass="w-[180px] !text-sm"
                                 selectedOption={
                                   row.original.medium &&
                                   !isUUID(row.original.medium.label)
@@ -1945,6 +2128,9 @@ const TableComponent = ({
                                         value: row.original.medium.value,
                                       }
                                     : undefined
+                                }
+                                disabled={
+                                  row.original.medium.isHidden && isHiddenList
                                 }
                                 onPendingChange={(e) => {
                                   const oldMediumOption = row.original.medium;
@@ -1973,84 +2159,121 @@ const TableComponent = ({
                         )}
                         {row.original.medium.showBy && (
                           <ImageRound
-                            name="Delete"
-                            src={'/icons/delete-gray.svg'}
-                            className="w-[15px] h-[17px] ml-[-5px] hover:cursor-pointer"
-                            onClick={async () => {
-                              const oldLargeValue = row.original.large.value;
-                              const oldMediumValue = row.original.medium.value;
-                              const matchingHierarchies =
-                                hierarchyList.statisticCategories
-                                  .filter(
-                                    (item) =>
-                                      item.large.value === oldLargeValue &&
-                                      item.medium.value === oldMediumValue,
-                                  )
-                                  .filter(
-                                    (hierarchy) =>
-                                      !isUUID(String(hierarchy.id)),
-                                  )
-                                  .map((hierarchy) => String(hierarchy.id));
-                              const { data } =
-                                await checkDeleteHierarchyCategory(
-                                  matchingHierarchies,
-                                );
-                              if (!data.hasActualDuration) {
-                                handleDeleteMediumHierarchyCategory(
-                                  oldLargeValue,
-                                  oldMediumValue,
-                                );
+                            name="Hide"
+                            src={`/icons/${row.original.medium.isHidden ? 'dark-close-eye' : 'gray-open-eye'}.svg`}
+                            className={`w-[16px] h-[13px] ${isHiddenMediumCategory && !isHiddenList && 'hidden'} ${isUUID(row.original.medium.label) ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'}`}
+                            onClick={() => {
+                              if (
+                                isUUID(row.original.medium.label) &&
+                                !isHiddenList
+                              )
+                                return;
+                              if (row.original.medium.isHidden) {
+                                setPendingRestoreCategory({
+                                  originalRow: row.original,
+                                  type: StatisticCategoryType.MEDIUM,
+                                });
+                                setOpenConfirmRestoreModal({
+                                  name: row.original.medium.label,
+                                  status: true,
+                                });
                               } else {
-                                setWarningDeleteCategoryModalOpen(true);
+                                setPendingArchiveCategory({
+                                  originalRow: row.original,
+                                  type: StatisticCategoryType.MEDIUM,
+                                });
+                                setOpenConfirmArchiveModal(true);
                               }
                             }}
                           />
                         )}
                       </div>
-
-                      {lastMediumIndexes.includes(rowIndex) && (
-                        <>
-                          <OptionsBoxToAddCategory
-                            text={'中カテゴリーを追加'}
-                            addCategoryUsingInput={() =>
-                              handleAddMediumCategory(
-                                AddCategoryHierarchyType.INPUT,
-                                row.original,
-                              )
-                            }
-                            addCategoryUsingDropdown={() =>
-                              handleAddMediumCategory(
-                                AddCategoryHierarchyType.PULLDOWN,
-                                row.original,
-                              )
-                            }
-                          />
-                        </>
-                      )}
+                      {lastMediumIndexes.includes(rowIndex) &&
+                        (!isHiddenMediumCategory ||
+                          (isHiddenMediumCategory &&
+                            !isHiddenLargeCategory &&
+                            isHiddenList)) && (
+                          <>
+                            <OptionsBoxToAddCategory
+                              text={'中カテゴリーを追加'}
+                              customClassName="pt-[10px]"
+                              addCategoryUsingInput={() =>
+                                handleAddMediumCategory(
+                                  AddCategoryHierarchyType.INPUT,
+                                  row.original,
+                                )
+                              }
+                              addCategoryUsingDropdown={() =>
+                                handleAddMediumCategory(
+                                  AddCategoryHierarchyType.PULLDOWN,
+                                  row.original,
+                                )
+                              }
+                            />
+                          </>
+                        )}
                     </div>
                   </td>
                 )}
                 <td
-                  className="border-[1px] w-1/4 border-[#D2DBE1]"
-                  style={{ height: 'inherit' }}>
-                  <div className="p-3 flex flex-col !h-[100%]">
-                    <div className={`flex items-center mb-3 gap-3`}>
-                      {row.original.small.showBy ==
-                      AddCategoryHierarchyType.INPUT ? (
-                        <div className="flex flex-col !h-full w-full">
-                          <div className="mb-1 !h-full w-full">
+                  className={`${lastSmallIndexesInEachLarge.includes(rowIndex) && 'border-b-[1px]'} border-x-[1px] border-[#D2DBE1] w-1/4 !py-0 ${isHiddenLargeCategory && !isHiddenList && '!border-b-0'}`}
+                  style={{
+                    height:
+                      isHiddenLargeCategory && !isHiddenList
+                        ? '0px'
+                        : 'inherit',
+                  }}>
+                  <div
+                    className={`mx-[14px] pt-[14px] ${isHiddenSmallCategory && 'pb-[14px]'} 
+                      ${
+                        shouldShowSmallBorderBottom({
+                          row: row.original,
+                          rowIndex,
+                          isHiddenSmallCategory: isHiddenSmallCategory,
+                        })
+                          ? 'border-b-[1px] border-[#D2DBE1]'
+                          : ''
+                      }
+                      flex flex-col !h-[100%] ${isHiddenSmallCategory && !isHiddenList && '!p-0'} ${isHiddenLargeCategory && !isHiddenList && 'hidden'}`}>
+                    <div
+                      className={`flex items-center gap-[14px] w-full ${isHiddenList && 'h-full'}`}>
+                      {isHiddenSmallCategory ? (
+                        !isHiddenList ? (
+                          <>
+                            <div className="hidden w-full"></div>
+                          </>
+                        ) : (
+                          <p
+                            className={`text-sm flex-1 break-all font-medium text-black opacity-30`}>
+                            {row.original.small.label &&
+                            !isUUID(row.original.small.label)
+                              ? row.original.small.label
+                              : NO_OPTION_CATEGORY}
+                          </p>
+                        )
+                      ) : row.original.small.showBy ==
+                        AddCategoryHierarchyType.INPUT ? (
+                        <div className="flex flex-col w-[calc(100%_-_30px)]">
+                          <div className="w-full">
                             <input
                               key={JSON.stringify(row.original.small)}
                               type="text"
-                              className={`w-full !h-full !min-h-[46px] p-2 text-black rounded-[5px]`}
+                              className={`w-full text-sm !min-h-[34px] px-[10px] py-[6px] text-black rounded-[6px] ${
+                                row.original.small.isHidden &&
+                                isHiddenList &&
+                                'opacity-50'
+                              }`}
                               placeholder="新しいカテゴリーを入力"
                               defaultValue={
                                 !isUUID(row.original.small.label)
                                   ? row.original.small.label
                                   : ''
                               }
+                              disabled={
+                                row.original.small.isHidden && isHiddenList
+                              }
                               onBlur={(e) => {
-                                handleSetNewCategory({
+                                handleChangeCategoryByInput({
                                   name: e.target.value,
                                   uuid: String(row.original.small.value) || '',
                                   type: HierarchyType.SMALL,
@@ -2066,23 +2289,22 @@ const TableComponent = ({
                       ) : (
                         row.original.small.showBy ==
                           AddCategoryHierarchyType.PULLDOWN && (
-                          <div className="w-full h-full">
+                          <div className="w-[calc(100%_-_30px)]">
                             <TableDropdown
                               key={JSON.stringify(row.original.small)}
-                              options={[
-                                ...categoryDropdownOptions.filter(
-                                  (option) =>
-                                    !excludedSmalls.includes(option.value) && // Prevent selecting the same as other rows in the group
-                                    option.value !== row.original.large.value && // Prevent selecting the same as large
-                                    option.value !==
-                                      row.original.medium.value && // Prevent selecting the same as medium
-                                    option.value !== '',
-                                ),
-                              ]}
+                              options={getSmallDropdownOptions(
+                                row.original,
+                                categoryDropdownOptions,
+                                excludedSmalls,
+                              )}
+                              disabled={
+                                row.original.small.isHidden && isHiddenList
+                              }
                               minDropdownHeight={240}
-                              className="h-full !rounded-[5px]"
-                              valueClassName="!border-[#77858F]"
-                              labelClass="w-[160px]"
+                              className="h-full"
+                              valueClassName="!border-[#77858F] !rounded-[6px] !py-1 !pl-[10px]"
+                              labelOptionClass="!text-sm"
+                              labelClass="w-[180px] !text-sm"
                               selectedOption={
                                 row.original.small &&
                                 !isUUID(row.original.small.label)
@@ -2118,53 +2340,39 @@ const TableComponent = ({
                       )}
                       {row.original.small.showBy && (
                         <ImageRound
-                          name="Delete"
-                          src={'/icons/delete-gray.svg'}
-                          className="w-[15px] h-[17px] ml-[-5px] hover:cursor-pointer"
-                          onClick={async () => {
-                            const oldLargeOption = row.original.large;
-                            const oldMediumOption = row.original.medium;
-                            const oldSmallOption = row.original.small;
-                            const oldRowId = row.original.id;
-                            const oldRowSkill = row.original.skills;
-                            const oldRowColor = row.original.color;
-                            const matchingHierarchies =
-                              hierarchyList.statisticCategories
-                                .filter(
-                                  (item) =>
-                                    item.large.value == oldLargeOption.value &&
-                                    item.medium.value ==
-                                      oldMediumOption.value &&
-                                    item.small.value == oldSmallOption.value,
-                                )
-                                .filter(
-                                  (hierarchy) => !isUUID(String(hierarchy.id)),
-                                )
-                                .map((hierarchy) => String(hierarchy.id));
-                            const { data } =
-                              await checkDeleteHierarchyCategory(
-                                matchingHierarchies,
-                              );
-                            if (!data.hasActualDuration) {
-                              handleDeleteSmallHierarchyCategory(
-                                oldLargeOption,
-                                oldMediumOption,
-                                oldSmallOption,
-                                oldRowId,
-                                oldRowSkill,
-                                oldRowColor,
-                              );
+                          name="Hide"
+                          src={`/icons/${row.original.small.isHidden ? 'dark-close-eye' : 'gray-open-eye'}.svg`}
+                          className={`w-[16px] h-[13px] ${isHiddenSmallCategory && !isHiddenList && 'hidden'} ${isUUID(row.original.small.label) ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'}`}
+                          onClick={() => {
+                            if (
+                              isUUID(row.original.small.label) &&
+                              !isHiddenList
+                            )
+                              return;
+                            if (row.original.small.isHidden) {
+                              setPendingRestoreCategory({
+                                originalRow: row.original,
+                                type: StatisticCategoryType.SMALL,
+                              });
+                              setOpenConfirmRestoreModal({
+                                name: row.original.small.label,
+                                status: true,
+                              });
                             } else {
-                              setWarningDeleteCategoryModalOpen(true);
+                              setPendingArchiveCategory({
+                                originalRow: row.original,
+                                type: StatisticCategoryType.SMALL,
+                              });
+                              setOpenConfirmArchiveModal(true);
                             }
                           }}
                         />
                       )}
                     </div>
-
-                    {lastSmallIndexes.includes(rowIndex) && (
+                    {shouldShowAddSmallButton(row.original, rowIndex) && (
                       <OptionsBoxToAddCategory
                         text={'小カテゴリーを追加'}
+                        customClassName={`pt-[10px] pb-[14px]`}
                         addCategoryUsingInput={() =>
                           handleAddSmallCategory(
                             AddCategoryHierarchyType.INPUT,
@@ -2181,122 +2389,157 @@ const TableComponent = ({
                     )}
                   </div>
                 </td>
-                <td className="border-[1px] h-full border-[#D2DBE1] !w-1/4 max-w-[1/4]">
-                  <MultiSelect
-                    key={JSON.stringify(row.original.skills)}
-                    className="w-full"
-                    defaultValue={row.original.skills.map((skill) => {
-                      return {
-                        value: skill.value as number,
-                        label: skill.label as string,
-                      };
-                    })}
-                    options={dataOptionsSkill.filter((option) => option.value)}
-                    onChange={(selectedSkills) => {
-                      setSelectedHierarchiesToUpdate((prev) => {
-                        const updatedHierarchiesToUpdate = [...prev];
+                <td
+                  className={`align-top h-full ${lastSmallIndexesInEachLarge.includes(rowIndex) && 'border-b-[1px] border-[#D2DBE1]'} !w-1/4 max-w-[1/4] ${isHiddenLargeCategory && !isHiddenList && 'hidden'}`}
+                  style={{
+                    height:
+                      isHiddenLargeCategory && !isHiddenList
+                        ? '0px'
+                        : 'inherit',
+                  }}>
+                  {isHiddenSmallCategory ? (
+                    !isHiddenList ? (
+                      <div className="hidden"></div>
+                    ) : (
+                      <div
+                        className={`mx-[14px] ${!lastSmallIndexesInEachLarge.includes(rowIndex) && 'border-b-[1px] border-[#D2DBE1]'} flex items-center h-full`}>
+                        <div className="flex items-center overflow-x-auto gap-2 pb-1 pr-1">
+                          {row.original.skills.map((skill) => (
+                            <p
+                              key={skill.value}
+                              className="text-white leading-[1] text-nowrap bg-[#d6dadd] py-[7.5px] px-[10px] rounded-[20px] text-xs font-medium">
+                              {skill.label}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  ) : (
+                    <MultiSectionBox
+                      key={JSON.stringify(row.original.skills)}
+                      options={dataOptionsSkill.filter(
+                        (option) => option.value,
+                      )}
+                      onChange={(selectedSkills: OptionDropdownType[]) => {
+                        setSelectedHierarchiesToUpdate((prev) => {
+                          const updatedHierarchiesToUpdate = [...prev];
 
-                        const existingIndex =
-                          updatedHierarchiesToUpdate.findIndex(
-                            (item) =>
-                              item.organizationStatisticCategoryId ===
-                              row.original.id,
-                          );
+                          const existingIndex =
+                            updatedHierarchiesToUpdate.findIndex(
+                              (item) =>
+                                item.organizationStatisticCategoryId ===
+                                row.original.id,
+                            );
 
-                        const newEntry = {
-                          organizationStatisticCategoryId: row.original.id,
-                          organizationId: hierarchyList.id as number,
-                          largeStatisticCategory:
-                            row.original.large.label == '' ||
-                            isUUID(row.original.large.label as string)
-                              ? null
-                              : {
-                                  name: row.original.large.label as string,
-                                  uuid: row.original.large.value as string,
-                                },
-                          mediumStatisticCategory:
-                            row.original.medium.label == '' ||
-                            isUUID(row.original.medium.label as string)
-                              ? null
-                              : {
-                                  name: row.original.medium.label as string,
-                                  uuid: row.original.medium.value as string,
-                                },
-                          smallStatisticCategory:
-                            row.original.small.label == '' ||
-                            isUUID(row.original.small.label as string)
-                              ? null
-                              : {
-                                  name: row.original.small.label as string,
-                                  uuid: row.original.small.value as string,
-                                },
-                          color: row.original.color,
-                          skillIds: selectedSkills.map((skill) => skill.value),
+                          const newEntry = {
+                            organizationStatisticCategoryId: row.original.id,
+                            organizationId: hierarchyList.id as number,
+                            largeStatisticCategory:
+                              row.original.large.label == '' ||
+                              isUUID(row.original.large.label as string)
+                                ? null
+                                : {
+                                    name: row.original.large.label as string,
+                                    uuid: row.original.large.value as string,
+                                  },
+                            mediumStatisticCategory:
+                              row.original.medium.label == '' ||
+                              isUUID(row.original.medium.label as string)
+                                ? null
+                                : {
+                                    name: row.original.medium.label as string,
+                                    uuid: row.original.medium.value as string,
+                                  },
+                            smallStatisticCategory:
+                              row.original.small.label == '' ||
+                              isUUID(row.original.small.label as string)
+                                ? null
+                                : {
+                                    name: row.original.small.label as string,
+                                    uuid: row.original.small.value as string,
+                                  },
+                            color: row.original.color,
+                            skillIds: selectedSkills.map((skill) =>
+                              Number(skill.value),
+                            ),
+                            deletedType:
+                              row.original &&
+                              getDeletedTypeFromRow(row.original),
+                          };
+
+                          if (existingIndex !== -1) {
+                            // If it exists, replace it
+                            updatedHierarchiesToUpdate[existingIndex] =
+                              newEntry;
+                          } else {
+                            // Otherwise, add it
+                            updatedHierarchiesToUpdate.push(newEntry);
+                          }
+
+                          return updatedHierarchiesToUpdate;
+                        });
+                        setHierarchyList((prev) => {
+                          const updatedHierarchyList = prev.map((org) => ({
+                            ...org,
+                            statisticCategories: [...org.statisticCategories],
+                          }));
+
+                          const foundOrganizationHierarchyIndex =
+                            updatedHierarchyList.findIndex(
+                              (hierarchy) => hierarchy.id == hierarchyList.id,
+                            );
+
+                          if (foundOrganizationHierarchyIndex !== -1) {
+                            const updatedCategories = updatedHierarchyList[
+                              foundOrganizationHierarchyIndex
+                            ].statisticCategories.map((hierarchy) =>
+                              hierarchy.id === row.original.id
+                                ? {
+                                    ...hierarchy,
+                                    skills: selectedSkills.map((skill) => {
+                                      return {
+                                        label: skill.label,
+                                        value: skill.value,
+                                      };
+                                    }),
+                                  }
+                                : hierarchy,
+                            );
+
+                            const uniqueMap = new Map();
+                            const filteredCategories = updatedCategories.filter(
+                              (item) => {
+                                const key = `${item.large.value}|${item.medium.value}|${item.small?.value || ''}`;
+                                if (uniqueMap.has(key)) return false;
+                                uniqueMap.set(key, true);
+                                return true;
+                              },
+                            );
+
+                            updatedHierarchyList[
+                              foundOrganizationHierarchyIndex
+                            ].statisticCategories = filteredCategories;
+                          }
+
+                          return updatedHierarchyList;
+                        });
+                      }}
+                      value={row.original.skills.map((skill) => {
+                        return {
+                          label: skill.label,
+                          value: skill.value,
                         };
-
-                        if (existingIndex !== -1) {
-                          // If it exists, replace it
-                          updatedHierarchiesToUpdate[existingIndex] = newEntry;
-                        } else {
-                          // Otherwise, add it
-                          updatedHierarchiesToUpdate.push(newEntry);
-                        }
-
-                        return updatedHierarchiesToUpdate;
-                      });
-                      setHierarchyList((prev) => {
-                        const updatedHierarchyList = prev.map((org) => ({
-                          ...org,
-                          statisticCategories: [...org.statisticCategories],
-                        }));
-
-                        const foundOrganizationHierarchyIndex =
-                          updatedHierarchyList.findIndex(
-                            (hierarchy) => hierarchy.id == hierarchyList.id,
-                          );
-
-                        if (foundOrganizationHierarchyIndex !== -1) {
-                          const updatedCategories = updatedHierarchyList[
-                            foundOrganizationHierarchyIndex
-                          ].statisticCategories.map((hierarchy) =>
-                            hierarchy.id === row.original.id
-                              ? {
-                                  ...hierarchy,
-                                  skills: selectedSkills.map((skill) => {
-                                    return {
-                                      label: skill.label,
-                                      value: skill.value,
-                                    };
-                                  }),
-                                }
-                              : hierarchy,
-                          );
-
-                          const uniqueMap = new Map();
-                          const filteredCategories = updatedCategories.filter(
-                            (item) => {
-                              const key = `${item.large.value}|${item.medium.value}|${item.small?.value || ''}`;
-                              if (uniqueMap.has(key)) return false;
-                              uniqueMap.set(key, true);
-                              return true;
-                            },
-                          );
-
-                          updatedHierarchyList[
-                            foundOrganizationHierarchyIndex
-                          ].statisticCategories = filteredCategories;
-                        }
-
-                        return updatedHierarchyList;
-                      });
-                    }}
-                  />
+                      })}
+                      placeholder={'選択'}
+                      className="w-full shadow-none text-sm !rounded mt-1.5 md:mt-0"
+                    />
+                  )}
                 </td>
               </tr>
             );
           })}
           <tr>
-            <td className="p-3 w-1/4 border-[1px] border-[#D2DBE1]">
+            <td className="p-3 w-1/4 border-r-[1px] border-[#D2DBE1]">
               <OptionsBoxToAddCategory
                 text={'大カテゴリーを追加'}
                 addCategoryUsingInput={() =>
@@ -2307,20 +2550,91 @@ const TableComponent = ({
                 }
               />
             </td>
-            <td className="w-1/4 border-[1px] border-[#D2DBE1]"></td>
-            <td className="w-1/4 border-[1px] border-[#D2DBE1]"></td>
-            <td className="w-1/4 border-[1px] border-[#D2DBE1]"></td>
+            <td className="w-1/4 border-r-[1px] border-[#D2DBE1]"></td>
+            <td className="w-1/4 border-r-[1px] border-[#D2DBE1]"></td>
+            <td className="w-1/4"></td>
           </tr>
         </tbody>
       </Table>
 
-      {warningDeleteCategoryModalOpen && (
-        <WarningDeleteHierarchyCategoryModal
-          open={warningDeleteCategoryModalOpen}
+      {openConfirmArchiveModal && (
+        <ConfirmArchiveModal
+          open={openConfirmArchiveModal}
+          name="業務カテゴリー"
+          question="このカテゴリーを非表示にしますか？"
+          message="配下のカテゴリーがある場合、すべて見えなくなります。あとで復元することも可能です。"
+          onConfirm={() => {
+            if (!pendingArchiveCategory) return;
+
+            const { originalRow, type } = pendingArchiveCategory;
+            switch (type) {
+              case StatisticCategoryType.LARGE:
+                handleArchiveLargeHierarchyCategory(originalRow!);
+                break;
+              case StatisticCategoryType.MEDIUM:
+                handleArchiveMediumHierarchyCategory(originalRow!);
+                break;
+              case StatisticCategoryType.SMALL:
+                handleArchiveSmallHierarchyCategory(originalRow!);
+                break;
+            }
+
+            setOpenConfirmArchiveModal(false);
+            setPendingArchiveCategory(null);
+          }}
           onClose={() => {
-            setWarningDeleteCategoryModalOpen(false);
+            setOpenConfirmArchiveModal(false);
+            setPendingArchiveCategory(null);
           }}
         />
+      )}
+
+      {openConfirmRestoreModal.status ? (
+        <ConfirmArchiveModal
+          open={openConfirmRestoreModal.status}
+          name={openConfirmRestoreModal.name || NO_OPTION_CATEGORY}
+          question="この業務カテゴリーを復元しますか？"
+          onConfirm={() => {
+            if (!pendingRestoreCategory) return;
+
+            const { originalRow, type } = pendingRestoreCategory;
+            switch (type) {
+              case StatisticCategoryType.LARGE:
+                handleRestoreHierarchyCategory(
+                  originalRow!,
+                  StatisticCategoryType.LARGE,
+                );
+                break;
+              case StatisticCategoryType.MEDIUM:
+                handleRestoreHierarchyCategory(
+                  originalRow!,
+                  StatisticCategoryType.MEDIUM,
+                );
+                break;
+              case StatisticCategoryType.SMALL:
+                handleRestoreHierarchyCategory(
+                  originalRow!,
+                  StatisticCategoryType.SMALL,
+                );
+                break;
+            }
+
+            setOpenConfirmRestoreModal({
+              name: null,
+              status: false,
+            });
+            setPendingRestoreCategory(null);
+          }}
+          onClose={() => {
+            setOpenConfirmRestoreModal({
+              name: null,
+              status: false,
+            });
+            setPendingRestoreCategory(null);
+          }}
+        />
+      ) : (
+        <></>
       )}
 
       {warningChangeCategoryModalOpen && (

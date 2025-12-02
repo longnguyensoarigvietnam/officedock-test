@@ -83,16 +83,19 @@ const ListHierarchy = () => {
       large: {
         label: org.largeStatisticCategory?.name || '',
         value: org.largeStatisticCategory?.uuid || '',
+        isHidden: org.largeStatisticCategory?.isHidden || false,
         showBy: AddCategoryHierarchyType.PULLDOWN,
       },
       medium: {
         label: org.mediumStatisticCategory?.name || '',
         value: org.mediumStatisticCategory?.uuid || '',
+        isHidden: org.mediumStatisticCategory?.isHidden || false,
         showBy: AddCategoryHierarchyType.PULLDOWN,
       },
       small: {
         label: org.smallStatisticCategory?.name || '',
         value: org.smallStatisticCategory?.uuid || '',
+        isHidden: org.smallStatisticCategory?.isHidden || false,
         showBy: AddCategoryHierarchyType.PULLDOWN,
       },
       skills: org.skills.map((skill) => {
@@ -115,16 +118,19 @@ const ListHierarchy = () => {
         large: {
           label: org.largeStatisticCategory?.name || '',
           value: org.largeStatisticCategory?.uuid || '',
+          isHidden: org.largeStatisticCategory?.isHidden || false,
           showBy: AddCategoryHierarchyType.PULLDOWN,
         },
         medium: {
           label: org.mediumStatisticCategory?.name || '',
           value: org.mediumStatisticCategory?.uuid || '',
+          isHidden: org.mediumStatisticCategory?.isHidden || false,
           showBy: AddCategoryHierarchyType.PULLDOWN,
         },
         small: {
           label: org.smallStatisticCategory?.name || '',
           value: org.smallStatisticCategory?.uuid || '',
+          isHidden: org.smallStatisticCategory?.isHidden || false,
           showBy: AddCategoryHierarchyType.PULLDOWN,
         },
         skills: org.skills.map((skill) => {

@@ -603,6 +603,7 @@ export enum HierarchyType {
 export enum AddCategoryHierarchyType {
   INPUT = 'input',
   PULLDOWN = 'pulldown',
+  TEXT = 'text'
 }
 export enum LevelUpConditionBy {
   NUMBER_OF_TIMES = 'NUMBER_OF_TIMES',

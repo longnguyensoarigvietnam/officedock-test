@@ -4,6 +4,7 @@ import {
   ItemStartType,
   PermissionType,
   ReactionIconValue,
+  StatisticCategoryType,
   StatisticViewLabels,
   StatisticViewOptions,
   StatusTask,
@@ -581,3 +582,9 @@ export const CALENDAR_VIEW_OPTIONS = [
 ];
 
 export const HOURS_IN_DAY = 24;
+
+export const RANK = {
+  [StatisticCategoryType.LARGE]: 1,
+  [StatisticCategoryType.MEDIUM]: 2,
+  [StatisticCategoryType.SMALL]: 3,
+} as const;

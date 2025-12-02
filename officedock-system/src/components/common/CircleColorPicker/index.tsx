@@ -1,10 +1,11 @@
 import Circle from '@uiw/react-color-circle';
 import { useEffect, useRef } from 'react';
 
+import ImageRound from '../ImageRound';
+
 import { HIERARCHY_COLOR_LIST } from '@constants';
 
 import './styles/style.css';
-import ImageRound from '../ImageRound';
 
 interface CircleColorPickerProps {
   onChange: (newColor: string) => void;
