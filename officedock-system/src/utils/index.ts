@@ -2,6 +2,8 @@ import { jwtDecode } from 'jwt-decode';
 import moment from 'moment';
 import { format, isSameDay } from 'date-fns';
 import { AxiosError } from 'axios';
+import { validate as isUUID } from 'uuid';
+import { FieldErrors, Path, UseFormSetError } from 'react-hook-form';
 
 import {
   AllTeamStatisticOption,
@@ -12,6 +14,7 @@ import {
   PermissionsSystem,
   PermissionType,
   ScreenName,
+  StatisticCategoryType,
   StatisticChartType,
   StatisticViewOptions,
   StatusTask,
@@ -24,6 +27,7 @@ import {
   MAX_HEX_COLOR_VALUE,
   MENTION_ALL_MEMBERS,
   ONLY_PAYMENT_PERMISSIONS,
+  RANK,
   SKILL_MAP_LEVEL_COUNT,
   SKILL_MAP_STEP_COUNT,
   SKILL_MAP_STEPS,
@@ -71,6 +75,7 @@ import { ConditionByMap } from '@interfaces/skill-map';
 import { Candidate } from '@interfaces/mvp';
 import { AvatarItemUser } from '@interfaces/shop';
 import { EventParticipant } from '@interfaces/calendar';
+import { CalendarCategoryRow, OrganizationCategoryRow } from '@interfaces/hierarchy';
 
 import {
   convertTimeToDecimal,
@@ -82,7 +87,6 @@ import {
   getJapaneseWeekDay,
   sumDurationsChart,
 } from './date';
-import { FieldErrors, Path, UseFormSetError } from 'react-hook-form';
 
 export function hasPermissionInArray(
   requiredPermissions: PermissionsSystem[],
@@ -2757,3 +2761,127 @@ export const hasDelta = (delta: any) => {
     (delta.seconds ?? 0) !== 0
   );
 };
+
+export const getRestoreType = ({
+  row,
+  originalRow,
+  type,
+}: {
+  row: OrganizationCategoryRow;
+  originalRow: OrganizationCategoryRow;
+  type: StatisticCategoryType;
+}): StatisticCategoryType | null => {
+  switch (type) {
+    case StatisticCategoryType.LARGE:
+      if (originalRow.large.value === row.large.value) {
+        return StatisticCategoryType.MEDIUM;
+      }
+      return StatisticCategoryType.LARGE;
+
+    case StatisticCategoryType.MEDIUM:
+      if (
+        originalRow.large.value === row.large.value &&
+        originalRow.medium.value === row.medium.value
+      ) {
+        return StatisticCategoryType.SMALL;
+      } else if (originalRow.large.value === row.large.value) {
+        return StatisticCategoryType.MEDIUM;
+      }
+      return StatisticCategoryType.LARGE;
+
+    case StatisticCategoryType.SMALL:
+      if (
+        originalRow.large.value === row.large.value &&
+        originalRow.medium.value === row.medium.value &&
+        originalRow.small.value === row.small.value
+      ) {
+        return null;
+      } else if (
+        originalRow.large.value === row.large.value &&
+        originalRow.medium.value === row.medium.value
+      ) {
+        return StatisticCategoryType.SMALL;
+      } else if (originalRow.large.value === row.large.value) {
+        return StatisticCategoryType.MEDIUM;
+      }
+      return StatisticCategoryType.LARGE;
+
+    default:
+      return null;
+  }
+};
+
+export const getCalendarCategoryRestoreType = ({
+  row,
+  originalRow,
+  type,
+}: {
+  row: CalendarCategoryRow;
+  originalRow: CalendarCategoryRow;
+  type: StatisticCategoryType;
+}): StatisticCategoryType | null => {
+  switch (type) {
+    case StatisticCategoryType.LARGE:
+      if (originalRow.large.value === row.large.value) {
+        return StatisticCategoryType.MEDIUM;
+      }
+      return StatisticCategoryType.LARGE;
+
+    case StatisticCategoryType.MEDIUM:
+      if (
+        originalRow.large.value === row.large.value &&
+        originalRow.medium.value === row.medium.value
+      ) {
+        return null
+      } else if (originalRow.large.value === row.large.value) {
+        return StatisticCategoryType.MEDIUM;
+      }
+      return StatisticCategoryType.LARGE;
+
+    default:
+      return null;
+  }
+};
+
+export const getArchivedType = (
+  originalType: StatisticCategoryType,
+  updatedType: StatisticCategoryType,
+) => {
+  const originalRank = RANK[originalType];
+  const updatedRank = RANK[updatedType];
+
+  // Return the larger type
+  return originalRank >= updatedRank ? updatedType : originalType;
+};
+
+// Helper to create category field (large/medium/small)
+export const buildCategory = (field: { label: string; value: string }) => {
+  if (!field.label || isUUID(field.label)) return null;
+  return { name: field.label, uuid: field.value };
+};
+
+export function getDeletedTypeFromRow(
+  row: OrganizationCategoryRow,
+): StatisticCategoryType | null {
+  const largeHidden = row.large?.isHidden ?? false;
+  const mediumHidden = row.medium?.isHidden ?? false;
+  const smallHidden = row.small?.isHidden ?? false;
+
+  // Case 1: all hidden → deletedType = LARGE
+  if (largeHidden && mediumHidden && smallHidden) {
+    return StatisticCategoryType.LARGE;
+  }
+
+  // Case 2: large visible, medium & small hidden → deletedType = MEDIUM
+  if (!largeHidden && mediumHidden && smallHidden) {
+    return StatisticCategoryType.MEDIUM;
+  }
+
+  // Case 3: large visible, medium visible, small hidden → deletedType = SMALL
+  if (!largeHidden && !mediumHidden && smallHidden) {
+    return StatisticCategoryType.SMALL;
+  }
+
+  // Case 4: all visible → deletedType = null
+  return null;
+}

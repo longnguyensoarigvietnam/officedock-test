@@ -70,7 +70,12 @@ const Checkbox = ({
         className={`${checkboxOnRight ? '' : 'ml-3'} text-sm leading-6 flex ${descriptionInline ? 'flex-row' : 'flex-col'} ${boxLabelClass}`}>
         <label
           htmlFor={id}
-          className={`font-medium text-black hover:cursor-pointer ${classLabel}`}>
+          className={`font-medium text-black hover:cursor-pointer ${classLabel}`}
+          onClick={(e: React.MouseEvent<HTMLLabelElement>) => {
+            e.preventDefault(); // optional: prevent double toggling
+            setChecked((prev) => !prev);
+            onChange?.(!checked);
+          }}>
           {label}
         </label>
         <p

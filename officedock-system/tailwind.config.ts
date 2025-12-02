@@ -22,6 +22,7 @@ const config: Config = {
         warning: '#FEF3C7',
         danger: '#FCA5A5',
         error: '#E95062',
+        steel: '#77858F'
       },
       backgroundImage: {
         'custom-gradient': 'linear-gradient(180deg, #0068B6 0%, #0088C3 100%)',

@@ -1,14 +1,17 @@
-import ImageRound from '@components/common/ImageRound';
-import { Popover, PopoverButton } from '@headlessui/react';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Popover, PopoverButton } from '@headlessui/react';
+
+import ImageRound from '@components/common/ImageRound';
 
 export const OptionsBoxToAddCategory = ({
   text,
+  customClassName,
   addCategoryUsingInput,
   addCategoryUsingDropdown,
 }: {
   text: string;
+  customClassName?: string
   addCategoryUsingInput: (option: string) => void;
   addCategoryUsingDropdown: (option: string) => void;
 }) => {
@@ -39,7 +42,7 @@ export const OptionsBoxToAddCategory = ({
         setPosition({
           top: shouldShowAbove
             ? buttonRect.top - dropdownHeight - 10 + window.scrollY
-            : buttonRect.bottom + 10 + window.scrollY,
+            : buttonRect.bottom - 16 + window.scrollY,
           left: buttonRect.left + window.scrollX,
         });
 
@@ -75,7 +78,7 @@ export const OptionsBoxToAddCategory = ({
     return (
       <div
         ref={dropdownRef}
-        className="fixed bg-[#5B6770] text-white rounded-[6px] py-[5px] text-sm font-medium shadow-lg z-50 transition-opacity duration-200"
+        className={`fixed bg-[#5B6770] text-white rounded-[10px] p-[6px] text-sm font-medium shadow-lg z-50 transition-opacity duration-200`}
         style={{
           top: `${position.top}px`,
           left: `${position.left}px`,
@@ -105,10 +108,10 @@ export const OptionsBoxToAddCategory = ({
 
   return (
     <>
-      <Popover className="relative">
+      <Popover className={`relative ${customClassName}`}>
         <PopoverButton
           ref={buttonRef}
-          className="focus:outline-none flex items-center gap-2 h-[34px] bg-[#ECF0F2] w-full rounded-[6px] py-[4px] px-[10px]"
+          className="focus:outline-none flex items-center gap-2 h-[34px] bg-[#ECF0F2] w-full rounded-[8px] py-[4px] px-[10px]"
           onClick={handleToggle}>
           <ImageRound
             className="w-[17px] h-[17px] hover:cursor-pointer"

@@ -11,6 +11,8 @@ import { CalendarCategoryRow } from '@interfaces/hierarchy';
 import { NO_OPTION_CATEGORY } from '@constants';
 import { HierarchyType } from '@constants/enums';
 
+import useCalendarCategory from '@hooks/useCalendarCategory';
+
 interface HierarchyDetail {
   id: number | string;
   name: string;
@@ -22,20 +24,42 @@ const HierarchyTable = ({
 }: {
   hierarchyDetail: HierarchyDetail;
 }) => {
+  const {
+    checkIsHiddenCategory,
+    findLastUniqueMediumIndexes,
+    findLastUniqueLargeIndexes,
+  } = useCalendarCategory({ hierarchyDetail });
+
   const uniqueLargeCount = new Set(
-    hierarchyDetail.statisticCategories.map((item) => item.large.value),
+    hierarchyDetail.statisticCategories
+      .filter(
+        (hierarchy) =>
+          hierarchy.large.showBy &&
+          !checkIsHiddenCategory({
+            type: HierarchyType.LARGE,
+            originalRow: hierarchy,
+          }),
+      )
+      .map((item) => item.large.value),
   ).size;
   const uniqueMediumCount = new Set(
-    hierarchyDetail.statisticCategories.map(
-      (item) => `${item.large.value}-${item.medium.value}`,
-    ),
+    hierarchyDetail.statisticCategories
+      .filter(
+        (hierarchy) =>
+          hierarchy.medium.showBy &&
+          !checkIsHiddenCategory({
+            type: HierarchyType.MEDIUM,
+            originalRow: hierarchy,
+          }),
+      )
+      .map((item) => `${item.large.value}-${item.medium.value}`),
   ).size;
 
   const columns = [
     {
       accessorKey: HierarchyType.LARGE,
       header: () => (
-        <div className="flex justify-between px-5">
+        <div className="flex justify-between px-[18px]">
           <p>大カテゴリー</p>
           <p>{uniqueLargeCount}</p>
         </div>
@@ -44,7 +68,7 @@ const HierarchyTable = ({
     {
       accessorKey: HierarchyType.MEDIUM,
       header: () => (
-        <div className="flex justify-between px-5">
+        <div className="flex justify-between px-[14px]">
           <p>中カテゴリー</p>
           <p>{uniqueMediumCount}</p>
         </div>
@@ -63,12 +87,12 @@ const HierarchyTable = ({
     key: HierarchyType.LARGE | HierarchyType.MEDIUM,
   ): Record<number, number> => {
     const rowspanMap: Record<number, number> = {};
-    const countMap: Record<string, number> = {}; // Stores counts per (large, medium/small) group
+    const countMap: Record<string, number> = {}; // Stores counts per (large, medium) group
     let prevLargeValue: string | null = null;
     let prevKeyValue: string | null = null;
 
     data.forEach((row, index) => {
-      const groupKey = `${row.large.value}-${row[key].value}`; // Unique key per large-medium/small pair
+      const groupKey = `${row.large.value}-${row[key].value}`; // Unique key per large-medium pair
 
       if (
         index === 0 ||
@@ -99,69 +123,17 @@ const HierarchyTable = ({
     HierarchyType.MEDIUM,
   );
 
-  const findLastUniqueMediumIndexes = (
-    data: CalendarCategoryRow[],
-  ): number[] => {
-    const lastIndexes: number[] = [];
-    let currentLargeValue: number | string | null = null;
-    let mediumIndexes: Record<number | string, number> = {}; // Tracks first occurrence of each medium value
-    let lastMediumIndex: number | null = null;
-
-    for (let i = 0; i < data.length; i++) {
-      const { large, medium } = data[i];
-
-      // If the large category changes, reset tracking
-      if (large.value !== currentLargeValue) {
-        if (lastMediumIndex !== null) lastIndexes.push(lastMediumIndex); // Store last unique medium index of previous large group
-        currentLargeValue = large.value;
-        mediumIndexes = {}; // Reset for new large group
-        lastMediumIndex = null; // Reset for new group
-      }
-
-      // Store only the first occurrence of each medium
-      if (mediumIndexes[medium.value] === undefined) {
-        mediumIndexes[medium.value] = i;
-        lastMediumIndex = i; // Track last added medium index
-      }
-    }
-
-    // Push the last tracked index of the final large group
-    if (lastMediumIndex !== null) lastIndexes.push(lastMediumIndex);
-
-    return lastIndexes;
-  };
-
-  const findLastUniqueLargeIndexes = (
-    data: CalendarCategoryRow[],
-  ): number[] => {
-    const lastIndexes: number[] = [];
-    let lastLargeIndex: number | null = null;
-    let currentLargeValue: number | string | null = null;
-
-    for (let i = 0; i < data.length; i++) {
-      const { large } = data[i];
-
-      // If the large category changes, store the last large index
-      if (large.value !== currentLargeValue) {
-        if (lastLargeIndex !== null) lastIndexes.push(lastLargeIndex);
-        currentLargeValue = large.value;
-      }
-
-      lastLargeIndex = i; // Always update with the last index of the large group
-    }
-
-    // Push the last tracked index of the final large group
-    if (lastLargeIndex !== null) lastIndexes.push(lastLargeIndex);
-
-    return lastIndexes;
-  };
-
   const lastMediumIndexes = findLastUniqueMediumIndexes(
     hierarchyDetail.statisticCategories,
   );
 
   const lastLargeIndexes = findLastUniqueLargeIndexes(
     hierarchyDetail.statisticCategories,
+  );
+
+  const lastDisplayedMediumIndexes = findLastUniqueMediumIndexes(
+    hierarchyDetail.statisticCategories,
+    true,
   );
 
   return (
@@ -198,8 +170,21 @@ const HierarchyTable = ({
                 ? lastLargeIndexes[lastLargeIndexes.length - 2]
                 : null;
 
+            const isHiddenLargeCategory = checkIsHiddenCategory({
+              type: HierarchyType.LARGE,
+              originalRow: row.original,
+            });
+            const isHiddenMediumCategory = checkIsHiddenCategory({
+              type: HierarchyType.MEDIUM,
+              originalRow: row.original,
+            });
+
             return (
-              <tr key={row.id} className="h-[1px]">
+              <tr
+                key={row.id}
+                style={{
+                  height: isHiddenLargeCategory ? '0px' : '1px',
+                }}>
                 {largeRowspan[rowIndex] > 0 && (
                   <td
                     className={`${
@@ -207,31 +192,54 @@ const HierarchyTable = ({
                       secondLastLargeIndex !== null &&
                       secondLastLargeIndex + 1 !== rowIndex &&
                       'border-b-[1px]'
-                    } border-r-[1px] border-[#D2DBE1] w-1/2 max-w-1/2 break-all h-full`}
-                    style={{ height: 'inherit' }}
+                    } border-r-[1px] border-[#D2DBE1] w-1/2 max-w-1/2 break-all h-full !p-0 ${isHiddenLargeCategory && '!border-b-0'}`}
+                    style={{
+                      height: isHiddenLargeCategory ? '0px' : 'inherit',
+                    }}
                     rowSpan={largeRowspan[rowIndex]}>
-                    <div className="p-3 h-full flex items-center gap-3">
+                    <div
+                      className={`pr-[14px] pl-[18px] h-full flex items-center gap-[14px] ${isHiddenLargeCategory && 'hidden'}`}>
                       <div className="relative">
                         <div
-                          className={`w-[14px] h-[14px] rounded-full hover:cursor-pointer`}
+                          className={`w-[14px] h-[14px] rounded-full hover:cursor-pointer ${isHiddenLargeCategory && 'hidden'}`}
                           style={{ backgroundColor: `${row.original.color}` }}
                         />
                       </div>
-                      <p className="text-sm flex justify-left items-center font-medium py-4">
-                        {row.original.large.label || NO_OPTION_CATEGORY}
-                      </p>
+                      {isHiddenLargeCategory ? (
+                        <div className="hidden w-full"></div>
+                      ) : (
+                        <p className="text-sm flex justify-left items-center font-medium py-5">
+                          {row.original.large.label || NO_OPTION_CATEGORY}
+                        </p>
+                      )}
                     </div>
                   </td>
                 )}
                 {mediumRowspan[rowIndex] > 0 && (
                   <td
-                    className={`w-1/2 max-w-1/2 break-all px-3 ${lastMediumIndexes.includes(rowIndex) && table.getRowModel().rows.length - 1 != rowIndex && 'border-b-[1px] border-[#D2DBE1]'} h-full`}
-                    style={{ height: 'inherit' }}
+                    className={`w-1/2 max-w-1/2 break-all px-[14px] ${lastMediumIndexes.includes(rowIndex) && table.getRowModel().rows.length - 1 != rowIndex && 'border-b-[1px] border-[#D2DBE1]'} h-full !py-0 ${isHiddenLargeCategory && 'hidden'}`}
+                    style={{
+                      height: isHiddenLargeCategory ? '0px' : 'inherit',
+                    }}
                     rowSpan={mediumRowspan[rowIndex]}>
-                    <p
-                      className={`text-sm h-full flex justify-left items-center font-medium py-4 ${!lastMediumIndexes.includes(rowIndex) && 'border-b-[1px] border-[#D2DBE1]'} `}>
-                      {row.original.medium.label || NO_OPTION_CATEGORY}
-                    </p>
+                    {isHiddenMediumCategory ? (
+                      <>
+                        <div className="hidden w-full"></div>
+                      </>
+                    ) : (
+                      <div
+                        className={`flex items-center h-full flex-wrap w-full
+                          ${
+                            !lastLargeIndexes.includes(rowIndex) &&
+                            !lastDisplayedMediumIndexes.includes(rowIndex) &&
+                            'border-b-[1px] border-[#D2DBE1]'
+                          }  `}>
+                        <p
+                          className={`text-sm flex justify-left items-center font-medium py-5 leading-[1]`}>
+                        {row.original.medium.label || NO_OPTION_CATEGORY}
+                        </p>
+                      </div>
+                    )}
                   </td>
                 )}
               </tr>

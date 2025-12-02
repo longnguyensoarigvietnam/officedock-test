@@ -82,7 +82,7 @@ export const SkillMapDetailByUser = ({
       switch (step) {
         case 1:
           return (
-            <div className="flex justify-center pt-1 gap-1">
+            <div className="flex justify-center gap-1">
               {Array.from({ length: SKILL_MAP_LEVEL_COUNT }).map((_, i) => (
                 <ImageRound
                   key={i}
@@ -95,7 +95,7 @@ export const SkillMapDetailByUser = ({
           );
         case 2:
           return (
-            <div className="flex justify-center pt-1 gap-1">
+            <div className="flex justify-center gap-1">
               {Array.from({ length: SKILL_MAP_LEVEL_COUNT }).map((_, i) => (
                 <ImageRound
                   key={i}
@@ -110,7 +110,7 @@ export const SkillMapDetailByUser = ({
           );
         case 3:
           return (
-            <div className="flex justify-center pt-1 gap-1">
+            <div className="flex justify-center gap-1">
               {Array.from({ length: SKILL_MAP_LEVEL_COUNT }).map((_, i) => (
                 <ImageRound
                   key={i}
@@ -128,8 +128,8 @@ export const SkillMapDetailByUser = ({
 
     const renderLevelText = () => (
       <div className="flex gap-[2px] items-baseline">
-        <p className="text-[15px] font-medium">Lv.</p>
-        <p className="text-[26px] font-medium">{level}</p>
+        <p className="text-sm font-medium leading-[1]">Lv.</p>
+        <p className="text-[30px] font-medium leading-[1]">{level}</p>
       </div>
     );
 
@@ -212,7 +212,7 @@ export const SkillMapDetailByUser = ({
                   placement="top"
                   currentStep={1}
                   stepDefinition={skillMap.steps.step1}>
-                  <div className="w-[calc(33.33333%_+_16px)] rounded-l-[6px] bg-[#3DC1E2] relative clip-left  text-center flex items-center justify-center">
+                  <div className="w-[calc(33.33333%_+_25px)] rounded-l-[6px] bg-[#3DC1E2] relative clip-left  text-center flex items-center justify-center">
                     STEP 1
                   </div>
                 </StepInfoTooltip>
@@ -221,7 +221,7 @@ export const SkillMapDetailByUser = ({
                   placement="top"
                   currentStep={2}
                   stepDefinition={skillMap.steps.step2}>
-                  <div className="w-[calc(33.33333%_+_34px)] ml-[-8.5px] bg-primary relative clip-middle text-center flex items-center justify-center">
+                  <div className="w-[calc(33.33333%_+_40px)] ml-[-8.5px] bg-primary relative clip-middle text-center flex items-center justify-center">
                     STEP 2
                   </div>
                 </StepInfoTooltip>
@@ -230,7 +230,7 @@ export const SkillMapDetailByUser = ({
                   placement="top"
                   currentStep={3}
                   stepDefinition={skillMap.steps.step3}>
-                  <div className="w-[calc(33.33333%_+_16px)] rounded-r-[6px] ml-[-9px] bg-[#355AC9] relative clip-right text-center flex items-center justify-center">
+                  <div className="w-[calc(33.33333%_+_10px)] rounded-r-[6px] ml-[-9px] bg-[#355AC9] relative clip-right text-center flex items-center justify-center">
                     STEP 3
                   </div>
                 </StepInfoTooltip>
@@ -336,7 +336,7 @@ export const SkillMapDetailByUser = ({
                                 )}
 
                                 <div className="w-[calc(100%_-_72px)]">
-                                  <div className="flex justify-between items-start mb-4">
+                                  <div className="flex justify-between items-center mb-[21px]">
                                     <p
                                       className={`text-[16px] font-medium max-w-[calc(100%_-_20px)] line-clamp-1 break-all ${stepCompleted ? 'text-[#B3B3B3]' : 'text-black'}`}>
                                       {skill.skill?.name}
@@ -383,7 +383,7 @@ export const SkillMapDetailByUser = ({
 
                                 {/* Gray overlay if locked */}
                                 {isLocked && (
-                                  <div className="absolute inset-0 bg-[#203D5480] bg-opacity-50 rounded-[6px] pointer-events-none">
+                                  <div className="absolute inset-0 bg-[#203D5480] bg-opacity-50 rounded-[14px] pointer-events-none">
                                     <div className="text-white flex items-center justify-center h-full gap-2">
                                       <ImageRound
                                         name="Lock"

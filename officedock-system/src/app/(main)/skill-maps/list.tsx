@@ -19,6 +19,8 @@ import ActionsSkillMapModal, {
 } from '@components/modals/ActionsSkillMapModal';
 import { OrganizationSkillDetail } from './organization-skill-detail';
 import Dropdown from '@components/common/Dropdown';
+import ImageRound from '@components/common/ImageRound';
+import ConfirmHiddenModal from '@components/modals/ConfirmHiddenModal';
 
 import { apiRouters, pageRouters } from '@constants/routers';
 import {
@@ -61,8 +63,6 @@ import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 import { hasPermissionInArray } from '@utils';
 
 import api from '@base/api';
-import ImageRound from '@components/common/ImageRound';
-import ConfirmHiddenModal from '@components/modals/ConfirmHiddenModal';
 
 const ListSkillsMap = () => {
   const { setIsLoading } = useContext(LoadingContext);
@@ -622,8 +622,8 @@ const ListSkillsMap = () => {
         </div>
         <Dropdown
           options={organizationList}
-          className="!w-[220px] !h-[34px] !py-0 !border-[1px] !border-[#77858F]"
-          classNameOption="!w-[220px]"
+          className="!w-[220px] !h-[34px] !text-sm !py-0 !border-[1px] !border-[#77858F]"
+          classNameOption="!w-[220px] !text-sm"
           selectedOption={organizationList.find(
             (element) => element.value == selectedOrganizationOption.value,
           )}

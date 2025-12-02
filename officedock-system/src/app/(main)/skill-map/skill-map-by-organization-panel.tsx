@@ -140,7 +140,7 @@ export const SkillMapByOrganizationPanel = ({
         <ImageRound
           name={`Step ${step} treasure`}
           src={treasureIcons[step]}
-          className={`${!settingSkillAction ? 'w-[60px] h-[60px]' : 'w-[50px] h-[50px]'} cursor-pointer`}
+          className={`${!settingSkillAction ? 'w-[60px] h-[54px]' : 'w-[50px] h-[50px]'} cursor-pointer`}
         />
       );
     }
@@ -150,7 +150,7 @@ export const SkillMapByOrganizationPanel = ({
       switch (step) {
         case 1:
           return (
-            <div className="flex justify-center pt-1 gap-1">
+            <div className="flex justify-center gap-1">
               {Array.from({ length: SKILL_MAP_LEVEL_COUNT }).map((_, i) => (
                 <ImageRound
                   key={i}
@@ -163,7 +163,7 @@ export const SkillMapByOrganizationPanel = ({
           );
         case 2:
           return (
-            <div className="flex justify-center pt-1 gap-1">
+            <div className="flex justify-center gap-1">
               {Array.from({ length: SKILL_MAP_LEVEL_COUNT }).map((_, i) => (
                 <ImageRound
                   key={i}
@@ -178,7 +178,7 @@ export const SkillMapByOrganizationPanel = ({
           );
         case 3:
           return (
-            <div className="flex justify-center pt-1 gap-1">
+            <div className="flex justify-center gap-1">
               {Array.from({ length: SKILL_MAP_LEVEL_COUNT }).map((_, i) => (
                 <ImageRound
                   key={i}
@@ -197,11 +197,11 @@ export const SkillMapByOrganizationPanel = ({
     const renderLevelText = () => (
       <div className="flex gap-[2px] items-baseline">
         <p
-          className={`${settingSkillAction ? 'text-[15px]' : 'text-sm'} font-medium`}>
+          className={`${settingSkillAction ? 'text-[15px]' : 'text-sm'} font-medium leading-[1]`}>
           Lv.
         </p>
         <p
-          className={`${settingSkillAction ? 'text-[26px]' : 'text-[30px]'} font-medium`}>
+          className={`${settingSkillAction ? 'text-[26px]' : 'text-[30px]'} font-medium leading-[1]`}>
           {level}
         </p>
       </div>
@@ -377,7 +377,7 @@ export const SkillMapByOrganizationPanel = ({
             placement="top"
             currentStep={1}
             stepDefinition={skillMapDetail.steps.step1}>
-            <div className="w-[calc(33.33333%_+_16px)] rounded-l-[6px] bg-[#3DC1E2] relative clip-left  text-center flex items-center justify-center">
+            <div className="w-[calc(33.33333%_+_25px)] rounded-l-[6px] bg-[#3DC1E2] relative clip-left  text-center flex items-center justify-center">
               STEP 1
             </div>
           </StepInfoTooltip>
@@ -386,7 +386,7 @@ export const SkillMapByOrganizationPanel = ({
             placement="top"
             currentStep={2}
             stepDefinition={skillMapDetail.steps.step2}>
-            <div className="w-[calc(33.33333%_+_34px)] ml-[-8.5px] bg-primary relative clip-middle text-center flex items-center justify-center">
+            <div className="w-[calc(33.33333%_+_40px)] ml-[-8.5px] bg-primary relative clip-middle text-center flex items-center justify-center">
               STEP 2
             </div>
           </StepInfoTooltip>
@@ -395,7 +395,7 @@ export const SkillMapByOrganizationPanel = ({
             placement="top"
             currentStep={3}
             stepDefinition={skillMapDetail.steps.step3}>
-            <div className="w-[calc(33.33333%_+_16px)] rounded-r-[6px] ml-[-9px] bg-[#355AC9] relative clip-right text-center flex items-center justify-center">
+            <div className="w-[calc(33.33333%_+_10px)] rounded-r-[6px] ml-[-9px] bg-[#355AC9] relative clip-right text-center flex items-center justify-center">
               STEP 3
             </div>
           </StepInfoTooltip>
@@ -448,7 +448,7 @@ export const SkillMapByOrganizationPanel = ({
                           className={`${settingSkillAction ? 'px-5 h-[55px]' : 'px-5 h-[90px]'} bg-white w-full rounded-[14px]`}></div>
                       ) : (
                         <div
-                          className={`${settingSkillAction ? 'px-5 h-[55px]' : 'px-5 h-[90px]'} ${stepCompleted && '!pr-[5px]'} hover:cursor-pointer flex gap-3 bg-white items-center w-full rounded-[14px] relative`}
+                          className={`${settingSkillAction ? 'px-5 h-[55px]' : 'px-5 h-[90px]'} ${stepCompleted && '!pr-[15px]'} hover:cursor-pointer flex gap-3 bg-white items-center w-full rounded-[14px] relative`}
                           style={{
                             boxShadow:
                               showTwinklingStars && !skill.skill.deletedAt
@@ -567,7 +567,7 @@ export const SkillMapByOrganizationPanel = ({
 
                           <div className="w-[calc(100%_-_49px)]">
                             <div
-                              className={`flex justify-between items-center ${settingSkillAction ? 'mb-1' : 'mb-4'}`}>
+                              className={`flex justify-between items-center ${settingSkillAction ? 'mb-1' : 'mb-[21px]'}`}>
                               <p
                                 className={`font-medium ${settingSkillAction ? 'max-w-[calc(100%_-_5px)] text-[15px]' : 'max-w-[calc(100%_-_20px)] text-base'} line-clamp-1 break-all ${stepCompleted ? 'text-[#B3B3B3]' : 'text-black'}`}>
                                 {skill.skill?.name}
@@ -576,7 +576,7 @@ export const SkillMapByOrganizationPanel = ({
                                 <ImageRound
                                   name="Comment"
                                   src={'/icons/comment.svg'}
-                                  className="w-[16px] h-[14px] relative top-[-7px] cursor-pointer"
+                                  className="w-[16px] h-[14px] relative cursor-pointer"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setSelectedSkillMapToViewComment(skill.id);
@@ -611,7 +611,7 @@ export const SkillMapByOrganizationPanel = ({
 
                           {/* Gray overlay if locked */}
                           {isLocked && (
-                            <div className="absolute inset-0 bg-[#203D5480] bg-opacity-50 rounded-[6px] pointer-events-none">
+                            <div className="absolute inset-0 bg-[#203D5480] bg-opacity-50 rounded-[14px] pointer-events-none">
                               <div className="text-white flex items-center justify-center h-full gap-2">
                                 <ImageRound
                                   name="Lock"

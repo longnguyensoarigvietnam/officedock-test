@@ -4,6 +4,7 @@ export type TableProps = {
   children: ReactNode;
   className?: string;
   classCustom?: string;
+  tableClassName?: string;
 };
 
 export type TableHeaderProps = TableProps;
@@ -34,14 +35,14 @@ export const TableBody = ({ children, className }: TableBodyProps) => {
   );
 };
 
-export const Table = ({ children, className, classCustom }: TableProps) => {
+export const Table = ({ children, className, classCustom, tableClassName }: TableProps) => {
   return (
     <div className={`low-root w-full ${classCustom}`}>
       <div
         className={`overflow-x-auto min-w-full py-2 px-1 align-middle ${classCustom} `}>
         <div
           className={`overflow-hidden border border-gray-300 rounded-2xl ${className}`}>
-          <table className="min-w-full table-auto divide-y divide-gray-200 ">
+          <table className={`min-w-full table-auto divide-y divide-gray-200 ${tableClassName}`}>
             {children}
           </table>
         </div>

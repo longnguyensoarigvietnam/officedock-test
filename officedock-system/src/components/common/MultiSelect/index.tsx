@@ -1,6 +1,11 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import Select, { GroupBase, MultiValue, PropsValue } from 'react-select';
+import Select, {
+  GroupBase,
+  MultiValue,
+  PropsValue,
+  components,
+} from 'react-select';
 import makeAnimated from 'react-select/animated';
 
 import { NO_OPTIONS } from '@constants';
@@ -29,6 +34,24 @@ export type MultiSelectProps = {
     }>,
   ) => void;
 };
+
+const CustomRemoveIcon = (props: any) => (
+  <components.MultiValueRemove {...props}>
+    {/* Your custom icon here */}
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="white"
+      stroke="white"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"></line>
+      <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+  </components.MultiValueRemove>
+);
 
 const MultiSelect = ({
   closeMenuOnSelect = false,
@@ -76,6 +99,7 @@ const MultiSelect = ({
       overflow: 'hidden',
       textOverflow: 'ellipsis',
       whiteSpace: 'nowrap',
+      fontSize: '12px',
     }),
     multiValue: (base: any) => ({
       ...base,
@@ -83,13 +107,30 @@ const MultiSelect = ({
       overflow: 'hidden',
       textOverflow: 'ellipsis',
       whiteSpace: 'nowrap',
+      backgroundColor: '#77858F',
+      borderRadius: '20px',
+      color: 'white',
+      paddingLeft: '7px',
     }),
     multiValueLabel: (base: any) => ({
       ...base,
-      maxWidth: '100%',
+      maxWidth: '100px',
+      fontSize: '12px',
       overflow: 'hidden',
       textOverflow: 'ellipsis',
       whiteSpace: 'nowrap',
+      color: 'white',
+      fontWeight: '500'
+    }),
+    multiValueRemove: (base: any) => ({
+      ...base,
+      backgroundColor: 'transparent', // no background
+      color: 'white', // keep icon color white
+      ':hover': {
+        backgroundColor: 'transparent', // prevent hover background
+        color: 'white', // keep icon white on hover
+        cursor: 'pointer',
+      },
     }),
   };
 
@@ -134,6 +175,7 @@ const MultiSelect = ({
           ...animatedComponents,
           DropdownIndicator: () => null,
           IndicatorSeparator: () => null,
+          MultiValueRemove: CustomRemoveIcon,
         }}
         menuShouldScrollIntoView={false}
         menuIsOpen={menuIsOpen}

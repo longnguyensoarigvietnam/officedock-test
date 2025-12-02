@@ -5,7 +5,6 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { useMutation } from 'react-query';
 
 import { CircleColorPicker } from '@components/common/CircleColorPicker';
 import TableDropdown from '@components/common/Dropdown/TableDropdown';
@@ -13,10 +12,10 @@ import ImageRound from '@components/common/ImageRound';
 import { Table } from '@components/common/Table';
 import WarningChangeHierarchyCategoryModal from '@components/modals/WarningChangeHierarchyCategoryModal';
 import WarningDeleteHierarchyCategoryModal from '@components/modals/WarningDeleteHierarchyCategoryModal';
+import ConfirmArchiveModal from '@components/modals/ConfirmArchiveModal';
 import { OptionsBoxToAddCategory } from '@components/category/OptionsBoxToAddCategory';
 
-import { HIERARCHY_COLOR_LIST } from '@constants';
-import { apiRouters } from '@constants/routers';
+import { HIERARCHY_COLOR_LIST, NO_OPTION_CATEGORY } from '@constants';
 import {
   AddCategoryHierarchyType,
   HierarchyType,
@@ -24,9 +23,14 @@ import {
 } from '@constants/enums';
 
 import { OptionDropdownType } from '@interfaces/common';
-import { CalendarCategoryRow } from '@interfaces/hierarchy';
+import {
+  CalendarCategoryRow,
+  SelectedCalendarCategoryRow,
+} from '@interfaces/hierarchy';
 
-import api from '@base/api';
+import { buildCategory, getCalendarCategoryRestoreType } from '@utils';
+
+import useCalendarCategory from '@hooks/useCalendarCategory';
 
 interface HierarchyDetail {
   id: number | string;
@@ -34,34 +38,26 @@ interface HierarchyDetail {
   statisticCategories: CalendarCategoryRow[];
 }
 
+type CheckCalendarCategoryRowArgs = {
+  originalRow: CalendarCategoryRow;
+  type?: HierarchyType; // optional: HierarchyType.LARGE | MEDIUM
+};
+
 const TableComponent = ({
   hierarchyDetail,
   categoryList,
+  isHiddenList,
   setIsTyping,
   setHierarchyDetail,
-  setSelectedHierarchiesToDelete,
   setSelectedHierarchiesToUpdate,
 }: {
   hierarchyDetail: HierarchyDetail;
   categoryList: OptionDropdownType[];
+  isHiddenList: boolean;
   setIsTyping: Dispatch<SetStateAction<boolean>>;
   setHierarchyDetail: Dispatch<SetStateAction<HierarchyDetail>>;
-  setSelectedHierarchiesToDelete: Dispatch<SetStateAction<string[]>>;
   setSelectedHierarchiesToUpdate: Dispatch<
-    SetStateAction<
-      {
-        organizationStatisticCategoryId: string | number | null;
-        largeStatisticCategory: {
-          name: string;
-          uuid: string;
-        } | null;
-        mediumStatisticCategory: {
-          name: string;
-          uuid: string;
-        } | null;
-        color: string;
-      }[]
-    >
+    SetStateAction<SelectedCalendarCategoryRow[]>
   >;
 }) => {
   const [openColorBox, setOpenColorBox] = useState<{
@@ -84,6 +80,33 @@ const TableComponent = ({
     type: string;
   } | null>(null);
 
+  const [pendingArchiveCategory, setPendingArchiveCategory] = useState<{
+    originalRow?: CalendarCategoryRow;
+    type: string;
+  } | null>(null);
+  const [openConfirmArchiveModal, setOpenConfirmArchiveModal] =
+    useState<boolean>(false);
+
+  const [pendingRestoreCategory, setPendingRestoreCategory] = useState<{
+    originalRow?: CalendarCategoryRow;
+    type: string;
+  } | null>(null);
+  const [openConfirmRestoreModal, setOpenConfirmRestoreModal] = useState<{
+    status: boolean;
+    name: string | null;
+  }>({
+    status: false,
+    name: null,
+  });
+
+  const {
+    sameLarge,
+    sameMedium,
+    findLastUniqueMediumIndexes,
+    findAffectedRows,
+    getDeletedCalendarCategoryTypeFromRow,
+  } = useCalendarCategory({ hierarchyDetail });
+
   useEffect(() => {
     if (categoryList) {
       const categoryOptions = categoryList.filter(
@@ -93,38 +116,6 @@ const TableComponent = ({
       setCategoryDropdownOptions(categoryOptions);
     }
   }, [categoryList, hierarchyDetail.id]);
-
-  const findLastUniqueMediumIndexes = (
-    data: CalendarCategoryRow[],
-  ): number[] => {
-    const lastIndexes: number[] = [];
-    let currentLargeValue: number | string | null = null;
-    let mediumIndexes: Record<number | string, number> = {}; // Tracks first occurrence of each medium value
-    let lastMediumIndex: number | null = null;
-
-    for (let i = 0; i < data.length; i++) {
-      const { large, medium } = data[i];
-
-      // If the large category changes, reset tracking
-      if (large.value !== currentLargeValue) {
-        if (lastMediumIndex !== null) lastIndexes.push(lastMediumIndex); // Store last unique medium index of previous large group
-        currentLargeValue = large.value;
-        mediumIndexes = {}; // Reset for new large group
-        lastMediumIndex = null; // Reset for new group
-      }
-
-      // Store only the first occurrence of each medium
-      if (mediumIndexes[medium.value] === undefined) {
-        mediumIndexes[medium.value] = i;
-        lastMediumIndex = i; // Track last added medium index
-      }
-    }
-
-    // Push the last tracked index of the final large group
-    if (lastMediumIndex !== null) lastIndexes.push(lastMediumIndex);
-
-    return lastIndexes;
-  };
 
   const lastMediumIndexes = findLastUniqueMediumIndexes(
     hierarchyDetail.statisticCategories,
@@ -344,6 +335,9 @@ const TableComponent = ({
                   uuid: variables.rowInfo.medium.value as string,
                 },
           color: variables.rowInfo.color,
+          deletedType:
+            variables.rowInfo &&
+            getDeletedCalendarCategoryTypeFromRow(variables.rowInfo),
         };
       } else if (variables.type == HierarchyType.MEDIUM) {
         newEntry = {
@@ -364,6 +358,9 @@ const TableComponent = ({
                   uuid: variables.uuid as string,
                 },
           color: variables.rowInfo.color,
+          deletedType:
+            variables.rowInfo &&
+            getDeletedCalendarCategoryTypeFromRow(variables.rowInfo),
         };
       } else {
         newEntry = {
@@ -385,6 +382,9 @@ const TableComponent = ({
                   uuid: variables.rowInfo.medium.value as string,
                 },
           color: variables.rowInfo.color,
+          deletedType:
+            variables.rowInfo &&
+            getDeletedCalendarCategoryTypeFromRow(variables.rowInfo),
         };
       }
 
@@ -478,6 +478,7 @@ const TableComponent = ({
                     uuid: row.medium.value as string,
                   },
             color: row.color,
+            deletedType: row && getDeletedCalendarCategoryTypeFromRow(row),
           };
         });
       } else {
@@ -500,6 +501,8 @@ const TableComponent = ({
                     uuid: originalRow?.medium.value as string,
                   },
             color: originalRow?.color,
+            deletedType:
+              originalRow && getDeletedCalendarCategoryTypeFromRow(originalRow),
           },
         ];
       }
@@ -647,6 +650,7 @@ const TableComponent = ({
                   uuid: row.medium.value as string,
                 },
           color: row.color,
+          deletedType: row && getDeletedCalendarCategoryTypeFromRow(row),
         };
       });
 
@@ -746,250 +750,6 @@ const TableComponent = ({
     });
   };
 
-  const handleDeleteLargeHierarchyCategory = (
-    oldLargeValue: string | number,
-  ) => {
-    setSelectedHierarchiesToDelete((prev) => {
-      const currentHierarchiesToDelete = [...(prev || [])];
-
-      const matchingHierarchies = hierarchyDetail.statisticCategories
-        .filter((item) => item.large.value === oldLargeValue)
-        .map((hierarchy) => String(hierarchy.id)); // Convert IDs to strings
-
-      return [...currentHierarchiesToDelete, ...matchingHierarchies]; // Spread to avoid nested arrays
-    });
-    setSelectedHierarchiesToUpdate((prev) => {
-      const currentHierarchiesToUpdate = [...(prev || [])];
-
-      return currentHierarchiesToUpdate.filter(
-        (hierarchy) => hierarchy.largeStatisticCategory?.uuid != oldLargeValue,
-      );
-    });
-    setHierarchyDetail((prev) => {
-      let updatedHierarchyDetail = { ...prev };
-
-      updatedHierarchyDetail = {
-        ...updatedHierarchyDetail,
-        statisticCategories: [
-          ...updatedHierarchyDetail.statisticCategories.filter(
-            (hierarchy) => hierarchy.large.value != oldLargeValue,
-          ),
-        ],
-      };
-
-      return updatedHierarchyDetail;
-    });
-  };
-
-  const handleDeleteMediumHierarchyCategory = (
-    oldLargeValue: string | number,
-    oldMediumValue: string | number,
-  ) => {
-    const newUuid = uuidv4();
-    setSelectedHierarchiesToDelete((prev) => {
-      const matchedRowsWithLargeValue =
-        hierarchyDetail.statisticCategories.filter(
-          (item) => item.large.value == oldLargeValue,
-        );
-      const currentHierarchiesToDelete = [...(prev || [])];
-      if (matchedRowsWithLargeValue.length > 1) {
-        const matchingHierarchies = hierarchyDetail.statisticCategories
-          .filter(
-            (item) =>
-              item.large.value === oldLargeValue &&
-              item.medium.value === oldMediumValue,
-          )
-          .map((hierarchy) => String(hierarchy.id)); // Convert IDs to strings
-
-        return [...currentHierarchiesToDelete, ...matchingHierarchies]; // Spread to avoid nested arrays
-      } else {
-        return currentHierarchiesToDelete;
-      }
-    });
-    setSelectedHierarchiesToUpdate((prev) => {
-      const matchedRowsWithLargeValue =
-        hierarchyDetail.statisticCategories.filter(
-          (item) => item.large.value == oldLargeValue,
-        );
-      if (matchedRowsWithLargeValue.length > 1) {
-        const currentHierarchiesToUpdate = [...(prev || [])];
-
-        return currentHierarchiesToUpdate.filter(
-          (hierarchy) =>
-            !(
-              hierarchy.largeStatisticCategory?.uuid == oldLargeValue &&
-              hierarchy.mediumStatisticCategory?.uuid == oldMediumValue
-            ),
-        );
-      } else {
-        const updatedHierarchiesToUpdate = [...prev];
-        const statisticCategories = hierarchyDetail.statisticCategories;
-        const newMedium = {
-          label: newUuid,
-          value: newUuid,
-          showBy: AddCategoryHierarchyType.PULLDOWN,
-        };
-        const matchedRows = statisticCategories
-          .filter(
-            (item) =>
-              item.medium.value === oldMediumValue &&
-              item.large.value === oldLargeValue,
-          )
-          .map((item) => ({
-            ...item,
-            medium: newMedium,
-          }));
-
-        const updatedHierarchies = matchedRows.map((row) => {
-          return {
-            organizationStatisticCategoryId: row.id,
-            largeStatisticCategory:
-              row.large.label == '' || isUUID(row.large.label as string)
-                ? null
-                : {
-                    name: row.large.label as string,
-                    uuid: row.large.value as string,
-                  },
-            mediumStatisticCategory:
-              row.medium.label == '' || isUUID(row.medium.label as string)
-                ? null
-                : {
-                    name: row.medium.label as string,
-                    uuid: row.medium.value as string,
-                  },
-            color: row.color,
-          };
-        });
-
-        updatedHierarchies.forEach((updatedHierarchy) => {
-          const existingIndex = updatedHierarchiesToUpdate.findIndex(
-            (item) =>
-              item.organizationStatisticCategoryId ===
-              updatedHierarchy.organizationStatisticCategoryId,
-          );
-          if (existingIndex != -1) {
-            updatedHierarchiesToUpdate[existingIndex] = updatedHierarchy;
-          } else {
-            updatedHierarchiesToUpdate.push(updatedHierarchy);
-          }
-        });
-
-        return updatedHierarchiesToUpdate;
-      }
-    });
-    setHierarchyDetail((prev) => {
-      let updatedHierarchyDetail = { ...prev };
-
-      const statisticCategories = updatedHierarchyDetail.statisticCategories;
-
-      const matchedRowsWithLargeValue = statisticCategories.filter(
-        (item) => item.large.value == oldLargeValue,
-      );
-      if (matchedRowsWithLargeValue.length == 1) {
-        const newMedium = {
-          label: newUuid as string,
-          value: newUuid,
-          showBy: AddCategoryHierarchyType.PULLDOWN,
-        };
-
-        // Separate matching and non-matching rows
-        const matchedRows = statisticCategories
-          .filter(
-            (item) =>
-              item.medium.value == oldMediumValue &&
-              item.large.value == oldLargeValue,
-          )
-          .map((item) => ({
-            ...item,
-            medium: newMedium,
-          }));
-
-        const remainingRows = statisticCategories.filter(
-          (item) =>
-            !(
-              item.medium.value == oldMediumValue &&
-              item.large.value == oldLargeValue
-            ),
-        );
-
-        // Find the last index where newMedium.value already exists
-        let lastIndex = -1;
-        remainingRows.forEach((item, index) => {
-          if (
-            item.large.value == oldLargeValue &&
-            item.medium.value === newMedium.value
-          )
-            lastIndex = index;
-        });
-
-        // Maintain position if lastIndex is -1
-        const newStatisticCategories = [...remainingRows];
-        if (lastIndex !== -1) {
-          newStatisticCategories.splice(lastIndex + 1, 0, ...matchedRows);
-        } else {
-          // Instead of pushing, find the **original** position of row.original.medium.value
-          const originalIndex = statisticCategories.findIndex(
-            (item) =>
-              item.medium.value == oldMediumValue &&
-              item.large.value == oldLargeValue,
-          );
-
-          if (originalIndex !== -1) {
-            // Insert in the same position as original row
-            newStatisticCategories.splice(originalIndex, 0, ...matchedRows);
-          } else {
-            // If no match found, append to the end
-            newStatisticCategories.push(...matchedRows);
-          }
-        }
-
-        // Remove duplicates
-        const uniqueMap = new Map();
-        const filteredStatisticCategories = newStatisticCategories.filter(
-          (item) => {
-            const key = `${isUUID(item.large.label) ? '' : item.large.label}|${isUUID(item.medium.label) ? '' : item.medium.label}`;
-            if (uniqueMap.has(key)) return false;
-            uniqueMap.set(key, true);
-            return true;
-          },
-        );
-
-        // Update hierarchy list
-        updatedHierarchyDetail = {
-          ...updatedHierarchyDetail,
-          statisticCategories: filteredStatisticCategories,
-        };
-      } else {
-        updatedHierarchyDetail = {
-          ...updatedHierarchyDetail,
-          statisticCategories: [
-            ...updatedHierarchyDetail.statisticCategories.filter(
-              (hierarchy) =>
-                !(
-                  hierarchy.large.value == oldLargeValue &&
-                  hierarchy.medium.value == oldMediumValue
-                ),
-            ),
-          ],
-        };
-      }
-
-      return updatedHierarchyDetail;
-    });
-  };
-
-  // Check delete hierarchy category
-  const handleCheckDeleteHierarchyCategory = async (ids: string[]) => {
-    return await api.post(apiRouters.CHECK_ACTUAL_DURATION, {
-      ids,
-    });
-  };
-
-  const { mutateAsync: checkDeleteHierarchyCategory } = useMutation(
-    'postCheckDeleteHierarchyCategory',
-    handleCheckDeleteHierarchyCategory,
-  );
-
   const getExcludedMediums = (currentRow: CalendarCategoryRow) => {
     return hierarchyDetail.statisticCategories
       .filter(
@@ -999,6 +759,344 @@ const TableComponent = ({
       )
       .map((row) => row.medium.value)
       .filter((value) => value !== '');
+  };
+
+  const checkIsHiddenCategory = ({
+    type,
+    originalRow,
+  }: {
+    type: HierarchyType;
+    originalRow: CalendarCategoryRow;
+  }) => {
+    switch (type) {
+      case HierarchyType.LARGE:
+        return hierarchyDetail.statisticCategories.find(
+          (hierarchy) =>
+            hierarchy.id == originalRow.id && hierarchy.large?.isHidden,
+        )
+          ? true
+          : false;
+      case HierarchyType.MEDIUM:
+        return hierarchyDetail.statisticCategories.find(
+          (hierarchy) =>
+            hierarchy.id == originalRow.id && hierarchy.medium?.isHidden,
+        )
+          ? true
+          : false;
+    }
+  };
+
+  const checkHasHiddenCategoryInARow = ({
+    originalRow,
+    type,
+  }: CheckCalendarCategoryRowArgs) => {
+    let matchingRows: CalendarCategoryRow[] = [];
+    switch (type) {
+      case HierarchyType.LARGE: {
+        matchingRows = hierarchyDetail.statisticCategories.filter(
+          (row) => row.large.value === originalRow.large.value,
+        );
+        break;
+      }
+      case HierarchyType.MEDIUM: {
+        matchingRows = hierarchyDetail.statisticCategories.filter(
+          (row) =>
+            row.large.value === originalRow.large.value &&
+            row.medium.value === originalRow.medium.value,
+        );
+        break;
+      }
+    }
+    return matchingRows.some(
+      (row) => row.large.isHidden || row.medium.isHidden,
+    );
+  };
+
+  const handleRestoreHierarchyCategory = (
+    originalRow: CalendarCategoryRow,
+    type: StatisticCategoryType,
+  ) => {
+    const affectedRows = findAffectedRows(
+      hierarchyDetail.statisticCategories,
+      originalRow,
+      type,
+    );
+
+    setSelectedHierarchiesToUpdate((prev) => {
+      let next = prev.map((item) => ({ ...item })); // deep clone level-1
+
+      affectedRows.forEach((row) => {
+        const deletedType = getCalendarCategoryRestoreType({
+          row,
+          originalRow,
+          type,
+        });
+        const existingIndex = next.findIndex(
+          (i) => i.organizationStatisticCategoryId === row.id,
+        );
+
+        if (existingIndex !== -1) {
+          // produce a new array replacing the item
+          next = next.map((i, idx) =>
+            idx === existingIndex ? { ...i, deletedType } : i,
+          );
+        } else {
+          // append new item immutably
+          next = [
+            ...next,
+            {
+              organizationStatisticCategoryId: row.id,
+              largeStatisticCategory: buildCategory(
+                row.large as { label: string; value: string },
+              ),
+              mediumStatisticCategory: buildCategory(
+                row.medium as { label: string; value: string },
+              ),
+              color: row.color!,
+              deletedType,
+            },
+          ];
+        }
+      });
+
+      return next;
+    });
+
+    switch (type) {
+      case StatisticCategoryType.LARGE:
+        setHierarchyDetail((prev) => {
+          return {
+            ...prev,
+            statisticCategories: prev.statisticCategories.map((row) => {
+              const sameLarge = row.large.value === originalRow.large.value;
+
+              return {
+                ...row,
+
+                // Requirement: same large → unhide large
+                large: sameLarge
+                  ? { ...row.large, isHidden: false }
+                  : row.large,
+              };
+            }),
+          };
+        });
+        break;
+      case StatisticCategoryType.MEDIUM:
+        setHierarchyDetail((prev) => {
+          return {
+            ...prev,
+            statisticCategories: prev.statisticCategories.map((row) => {
+              const sameLarge = row.large.value === originalRow.large.value;
+              const sameMedium =
+                row.large.value === originalRow.large.value &&
+                row.medium.value === originalRow.medium.value;
+
+              return {
+                ...row,
+
+                // Requirement #1: same large → unhide large
+                large: sameLarge
+                  ? { ...row.large, isHidden: false }
+                  : row.large,
+
+                // Requirement #2: same large+medium → unhide medium
+                medium:
+                  sameLarge && sameMedium
+                    ? { ...row.medium, isHidden: false }
+                    : row.medium,
+              };
+            }),
+          };
+        });
+        break;
+    }
+  };
+
+  const updateHierarchyPayloadWhenArchive = ({
+    originalRow,
+    type,
+  }: {
+    originalRow: CalendarCategoryRow;
+    type: StatisticCategoryType;
+  }) => {
+    const matchingRowIds = hierarchyDetail.statisticCategories
+      .filter((row) => {
+        switch (type) {
+          case StatisticCategoryType.LARGE:
+            return sameLarge(row, originalRow);
+          case StatisticCategoryType.MEDIUM:
+            return sameMedium(row, originalRow);
+        }
+      })
+      .map((row) => row.id);
+
+    setSelectedHierarchiesToUpdate((prev) => {
+      const prevSelectedHierarchies = [...prev];
+
+      matchingRowIds.forEach((rowId) => {
+        const existingHierarchyIndex = prevSelectedHierarchies.findIndex(
+          (item) => item.organizationStatisticCategoryId == rowId,
+        );
+
+        if (existingHierarchyIndex != -1) {
+          prevSelectedHierarchies[existingHierarchyIndex] = {
+            ...prevSelectedHierarchies[existingHierarchyIndex],
+            deletedType: type,
+          };
+        } else {
+          const existingHierarchy = hierarchyDetail.statisticCategories.find(
+            (item) => item.id == rowId,
+          );
+
+          const newEntry = {
+            organizationStatisticCategoryId: rowId!,
+            organizationId: hierarchyDetail.id as number,
+            largeStatisticCategory: buildCategory(
+              existingHierarchy!.large as { label: string; value: string },
+            ),
+            mediumStatisticCategory: buildCategory(
+              existingHierarchy!.medium as { label: string; value: string },
+            ),
+            color: existingHierarchy?.color || '',
+            deletedType: type,
+          };
+
+          prevSelectedHierarchies.push(newEntry);
+        }
+      });
+      return prevSelectedHierarchies;
+    });
+  };
+
+  const handleArchiveLargeHierarchyCategory = (
+    originalRow: CalendarCategoryRow,
+  ) => {
+    updateHierarchyPayloadWhenArchive({
+      originalRow,
+      type: StatisticCategoryType.LARGE,
+    });
+    setHierarchyDetail((prev) => {
+      return {
+        ...prev,
+        statisticCategories: prev.statisticCategories.map((row) => {
+          if (row.large.value != originalRow.large.value) return row;
+          return {
+            ...row,
+            large: {
+              ...row.large,
+              isHidden: true,
+            },
+            medium: {
+              ...row.medium,
+              isHidden: true,
+            },
+          };
+        }),
+      };
+    });
+  };
+
+  const handleArchiveMediumHierarchyCategory = (
+    originalRow: CalendarCategoryRow,
+  ) => {
+    updateHierarchyPayloadWhenArchive({
+      originalRow,
+      type: StatisticCategoryType.MEDIUM,
+    });
+    setHierarchyDetail((prev) => {
+      return {
+        ...prev,
+        statisticCategories: prev.statisticCategories.map((row) => {
+          if (
+            !(
+              row.large.value == originalRow.large.value &&
+              row.medium.value == originalRow.medium.value
+            )
+          )
+            return row;
+          return {
+            ...row,
+            large: {
+              ...row.large,
+            },
+            medium: {
+              ...row.medium,
+              isHidden: true,
+            },
+          };
+        }),
+      };
+    });
+  };
+
+  const getHiddenLargeCategoryList = () => {
+    return hierarchyDetail.statisticCategories
+      .filter((row) => row.large.isHidden)
+      .map((row) => row.large.value);
+  };
+
+  const getDisabledLargeCategoryList = () => {
+    return hierarchyDetail.statisticCategories
+      .filter((row) =>
+        checkHasHiddenCategoryInARow({
+          originalRow: row,
+          type: HierarchyType.LARGE,
+        }),
+      )
+      .map((row) => row.large.value);
+  };
+
+  const getAllMediumsForLarge = (largeValue: string) => {
+    const mediumList = hierarchyDetail.statisticCategories
+      .filter((row) => row.large.value == largeValue)
+      .map((row) => row.medium.value);
+    return mediumList;
+  };
+
+  const getHiddenMediumsForLarge = (largeValue: string) => {
+    return hierarchyDetail.statisticCategories
+      .filter((row) => row.large.value == largeValue && row.medium.isHidden)
+      .map((row) => row.medium.value);
+  };
+
+  const getLargeDropdownOptions = (
+    row: CalendarCategoryRow,
+    categoryDropdownOptions: OptionDropdownType[],
+  ) => {
+    const largeValue = row.large.value as string;
+
+    const hiddenLarges = getHiddenLargeCategoryList();
+    const disabledLarges = getDisabledLargeCategoryList();
+    const mediumsForLarge = getAllMediumsForLarge(largeValue);
+
+    return categoryDropdownOptions.filter((option) => {
+      return (
+        option.value !== '' &&
+        !mediumsForLarge.includes(option.value) &&
+        !hiddenLarges.includes(option.value) &&
+        !disabledLarges.includes(option.value)
+      );
+    });
+  };
+
+  const getMediumDropdownOptions = (
+    row: CalendarCategoryRow,
+    categoryDropdownOptions: OptionDropdownType[],
+    excludedMediums: (string | number)[],
+  ) => {
+    const largeValue = row.large.value as string;
+
+    const hiddenMediumsForLarge = getHiddenMediumsForLarge(largeValue);
+
+    return categoryDropdownOptions.filter((option) => {
+      return (
+        option.value !== largeValue &&
+        option.value !== '' &&
+        !excludedMediums.includes(option.value) &&
+        !hiddenMediumsForLarge.includes(option.value)
+      );
+    });
   };
 
   return (
@@ -1012,10 +1110,10 @@ const TableComponent = ({
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
+              {headerGroup.headers.map((header, index) => (
                 <th
                   key={header.id}
-                  className="text-[#77858F] bg-[#F8FAFC] border-[1px] w-1/2 font-medium text-xs py-3">
+                  className={`text-[#77858F] bg-[#F8FAFC] ${headerGroup.headers.length - 1 != index && 'border-r-[1px] border-[#D2DBE1]'} w-1/2 font-medium text-xs py-3`}>
                   {flexRender(
                     header.column.columnDef.header,
                     header.getContext(),
@@ -1028,17 +1126,40 @@ const TableComponent = ({
         <tbody>
           {table.getRowModel().rows.map((row, rowIndex) => {
             const excludedMediums = getExcludedMediums(row.original);
+            const isHiddenLargeCategory = checkIsHiddenCategory({
+              type: HierarchyType.LARGE,
+              originalRow: row.original,
+            });
+            const isHiddenMediumCategory = checkIsHiddenCategory({
+              type: HierarchyType.MEDIUM,
+              originalRow: row.original,
+            });
+            const shouldMediumCategoryDisabled = checkHasHiddenCategoryInARow({
+              originalRow: row.original,
+              type: HierarchyType.MEDIUM,
+            });
             return (
-              <tr key={row.id} className="h-[1px]">
+              <tr
+                key={row.id}
+                style={{
+                  height:
+                    isHiddenLargeCategory && !isHiddenList ? '0px' : '1px',
+                }}>
                 {largeRowspan[rowIndex] > 0 && (
                   <td
-                    className="border-[1px] !w-1/2 border-[#D2DBE1] h-full"
-                    style={{ height: 'inherit' }}
+                    className={`border-b-[1px] border-r-[1px] !w-1/4 border-[#D2DBE1] h-full !p-0 ${isHiddenLargeCategory && !isHiddenList && '!border-b-0'}`}
+                    style={{
+                      height:
+                        isHiddenLargeCategory && !isHiddenList
+                          ? '0px'
+                          : 'inherit',
+                    }}
                     rowSpan={largeRowspan[rowIndex]}>
-                    <div className="p-3 h-full flex items-center gap-3">
+                    <div
+                      className={`p-[14px] pl-[18px] h-full flex items-center gap-[14px] ${isHiddenLargeCategory && !isHiddenList && 'hidden'}`}>
                       <div className="relative">
                         <div
-                          className={`w-[14px] h-[14px] rounded-full hover:cursor-pointer`}
+                          className={`w-[14px] h-[14px] rounded-full hover:cursor-pointer ${isHiddenLargeCategory && !isHiddenList && 'hidden'}`}
                           style={{ backgroundColor: `${row.original.color}` }}
                           onClick={() => {
                             setOpenColorBox({
@@ -1089,6 +1210,11 @@ const TableComponent = ({
                                                   .value as string,
                                               },
                                         color: row.color,
+                                        deletedType:
+                                          row &&
+                                          getDeletedCalendarCategoryTypeFromRow(
+                                            row,
+                                          ),
                                       };
                                     },
                                   );
@@ -1150,19 +1276,37 @@ const TableComponent = ({
                           </div>
                         )}
                       </div>
-                      {row.original.large.showBy ==
-                      AddCategoryHierarchyType.INPUT ? (
-                        <div className="flex flex-col !h-full w-full">
-                          <div className="mb-1 !h-full w-full">
+                      {isHiddenLargeCategory ? (
+                        !isHiddenList ? (
+                          <div className="hidden w-full"></div>
+                        ) : (
+                          <p className="text-sm ml-[-6px] flex-1 break-all font-medium text-black opacity-30">
+                            {row.original.large.label &&
+                            !isUUID(row.original.large.label)
+                              ? row.original.large.label
+                              : NO_OPTION_CATEGORY}
+                          </p>
+                        )
+                      ) : row.original.large.showBy ==
+                        AddCategoryHierarchyType.INPUT ? (
+                        <div className="flex flex-col !h-full w-[calc(100%_-_58px)]">
+                          <div className="!h-full">
                             <input
                               key={JSON.stringify(row.original.large)}
                               type="text"
-                              className={`w-full !h-full !min-h-[46px] p-2 text-black rounded-[6px]`}
+                              className={`w-full !h-full text-sm !min-h-[34px] px-[10px] py-[6px] text-black rounded-[6px] ${
+                                row.original.large.isHidden &&
+                                isHiddenList &&
+                                'opacity-50'
+                              }`}
                               placeholder="新しいカテゴリーを入力"
                               defaultValue={
                                 !isUUID(row.original.large.label)
                                   ? row.original.large.label
                                   : ''
+                              }
+                              disabled={
+                                row.original.large.isHidden && isHiddenList
                               }
                               onBlur={(e) => {
                                 handleSetNewCategory({
@@ -1181,71 +1325,76 @@ const TableComponent = ({
                       ) : (
                         row.original.large.showBy ==
                           AddCategoryHierarchyType.PULLDOWN && (
-                          <TableDropdown
-                            key={JSON.stringify(row.original.large)}
-                            options={[
-                              ...categoryDropdownOptions.filter(
-                                (option) =>
-                                  option.value !== row.original.medium.value && // Prevent selecting the same as medium
-                                  option.value !== '',
-                              ),
-                            ]}
-                            minDropdownHeight={240}
-                            className="h-full !rounded-[6px] w-full flex-grow"
-                            valueClassName="!border-[#77858F]"
-                            labelClass="w-[360px]"
-                            selectedOption={categoryDropdownOptions.find(
-                              (element) =>
-                                element.value === row.original.large.value,
-                            )}
-                            onPendingChange={(e) => {
-                              const oldLargeOption = row.original.large;
-                              if (e.value == oldLargeOption.value) return;
-                              if (
-                                row.original.large.label &&
-                                !isUUID(row.original.large.label) &&
-                                !isUUID(row.original.id as string)
-                              ) {
-                                setWarningChangeCategoryModalOpen(true);
-                                setPendingSelection({
-                                  originalRow: row.original,
-                                  newValue: e,
-                                  type: StatisticCategoryType.LARGE,
-                                });
-                              } else {
-                                handleChangeLargeCategoryByPulldown(
-                                  row.original,
-                                  e,
-                                );
+                          <div className="h-full w-[calc(100%_-_58px)]">
+                            <TableDropdown
+                              key={JSON.stringify(row.original.large)}
+                              options={getLargeDropdownOptions(
+                                row.original,
+                                categoryDropdownOptions,
+                              )}
+                              minDropdownHeight={240}
+                              className={`h-full w-full flex-grow`}
+                              valueClassName="!border-[#77858F] !rounded-[6px] !py-1 !pl-[10px]"
+                              labelOptionClass="!text-sm"
+                              labelClass="w-[360px] !text-sm"
+                              selectedOption={categoryDropdownOptions.find(
+                                (element) =>
+                                  element.value === row.original.large.value,
+                              )}
+                              disabled={
+                                row.original.large.isHidden && isHiddenList
                               }
-                            }}
-                          />
+                              onPendingChange={(e) => {
+                                const oldLargeOption = row.original.large;
+                                if (e.value == oldLargeOption.value) return;
+                                if (
+                                  row.original.large.label &&
+                                  !isUUID(row.original.large.label) &&
+                                  !isUUID(row.original.id as string)
+                                ) {
+                                  setWarningChangeCategoryModalOpen(true);
+                                  setPendingSelection({
+                                    originalRow: row.original,
+                                    newValue: e,
+                                    type: StatisticCategoryType.LARGE,
+                                  });
+                                } else {
+                                  handleChangeLargeCategoryByPulldown(
+                                    row.original,
+                                    e,
+                                  );
+                                }
+                              }}
+                            />
+                          </div>
                         )
                       )}
 
                       <ImageRound
-                        name="Delete"
-                        src={'/icons/delete-gray.svg'}
-                        className="w-[15px] h-[17px] ml-[-7px] hover:cursor-pointer"
-                        onClick={async () => {
-                          const oldLargeValue = row.original.large.value;
-                          const matchingHierarchies =
-                            hierarchyDetail.statisticCategories
-                              .filter(
-                                (item) => item.large.value === oldLargeValue,
-                              )
-                              .filter(
-                                (hierarchy) => !isUUID(String(hierarchy.id)),
-                              )
-                              .map((hierarchy) => String(hierarchy.id));
-                          const { data } =
-                            await checkDeleteHierarchyCategory(
-                              matchingHierarchies,
-                            );
-                          if (!data.hasActualDuration) {
-                            handleDeleteLargeHierarchyCategory(oldLargeValue);
+                        name="Hide"
+                        src={`/icons/${
+                          isHiddenLargeCategory
+                            ? 'dark-close-eye'
+                            : 'gray-open-eye'
+                        }.svg`}
+                        className={`w-[16px] h-[13px] ${isHiddenLargeCategory && !isHiddenList && 'hidden'} ${isUUID(row.original.large.label) ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'}`}
+                        onClick={() => {
+                          if (isUUID(row.original.large.label)) return;
+                          if (isHiddenLargeCategory) {
+                            setPendingRestoreCategory({
+                              originalRow: row.original,
+                              type: StatisticCategoryType.LARGE,
+                            });
+                            setOpenConfirmRestoreModal({
+                              name: row.original.large.label,
+                              status: true,
+                            });
                           } else {
-                            setWarningDeleteCategoryModalOpen(true);
+                            setPendingArchiveCategory({
+                              originalRow: row.original,
+                              type: StatisticCategoryType.LARGE,
+                            });
+                            setOpenConfirmArchiveModal(true);
                           }
                         }}
                       />
@@ -1254,25 +1403,52 @@ const TableComponent = ({
                 )}
                 {mediumRowspan[rowIndex] > 0 && (
                   <td
-                    className={`w-1/2 border-[#D2DBE1] ${lastMediumIndexes.includes(rowIndex) ? 'border-b-[1px] border-x-[1px]' : 'border-x-[1px]'}`}
-                    style={{ height: 'inherit' }}
+                    className={`${lastMediumIndexes.includes(rowIndex) && 'border-b-[1px]'} border-l-[1px] border-[#D2DBE1] w-1/2 !py-0 ${isHiddenLargeCategory && !isHiddenList && '!border-b-0'}`}
+                    style={{
+                      height:
+                        isHiddenLargeCategory && !isHiddenList
+                          ? '0px'
+                          : 'inherit',
+                    }}
                     rowSpan={mediumRowspan[rowIndex]}>
-                    <div className="p-3 flex flex-col !h-[100%]">
+                    <div
+                      className={`mx-[14px] pt-[14px] ${(isHiddenMediumCategory || shouldMediumCategoryDisabled) && 'pb-[14px]'} ${isHiddenMediumCategory && !lastMediumIndexes.includes(rowIndex) && isHiddenList && 'border-b-[1px] border-[#D2DBE1]'}
+                      flex flex-col !h-[100%] ${isHiddenMediumCategory && !isHiddenList && '!p-0'} ${isHiddenLargeCategory && !isHiddenList && 'hidden'}`}>
                       <div
-                        className={`flex items-center ${lastMediumIndexes.includes(rowIndex) ? 'h-[calc(100%_-_46px)] mb-3' : 'h-[calc(100%)]'} gap-3`}>
-                        {row.original.medium.showBy ==
-                        AddCategoryHierarchyType.INPUT ? (
-                          <div className="flex flex-col !h-full w-full">
-                            <div className="mb-1 !h-full w-full">
+                        className={`flex items-center ${lastMediumIndexes.includes(rowIndex) ? '' : ''} !h-full gap-[14px] `}>
+                        {isHiddenMediumCategory ? (
+                          !isHiddenList ? (
+                            <>
+                              <div className="hidden w-full"></div>
+                            </>
+                          ) : (
+                            <p className="text-sm flex-1 break-all font-medium text-black opacity-30">
+                              {row.original.medium.label &&
+                              !isUUID(row.original.medium.label)
+                                ? row.original.medium.label
+                                : NO_OPTION_CATEGORY}
+                            </p>
+                          )
+                        ) : row.original.medium.showBy ==
+                          AddCategoryHierarchyType.INPUT ? (
+                          <div className="flex flex-col !h-full w-[calc(100%_-_30px)]">
+                            <div className="!h-full w-full">
                               <input
                                 key={JSON.stringify(row.original.medium)}
                                 type="text"
-                                className={`w-full !h-full !min-h-[46px] p-2 text-black rounded-[6px]`}
+                                className={`w-full !h-full text-sm !min-h-[34px] px-[10px] py-[6px] text-black rounded-[6px] ${
+                                  row.original.medium.isHidden &&
+                                  isHiddenList &&
+                                  'opacity-50'
+                                }`}
                                 placeholder="新しいカテゴリーを入力"
                                 defaultValue={
                                   !isUUID(row.original.medium.label)
                                     ? row.original.medium.label
                                     : ''
+                                }
+                                disabled={
+                                  row.original.medium.isHidden && isHiddenList
                                 }
                                 onBlur={(e) => {
                                   handleSetNewCategory({
@@ -1292,23 +1468,26 @@ const TableComponent = ({
                         ) : (
                           row.original.medium.showBy ==
                             AddCategoryHierarchyType.PULLDOWN && (
-                            <div className={`w-full h-full`}>
+                            <div className={` w-[calc(100%_-_30px)] h-full`}>
                               <TableDropdown
                                 key={JSON.stringify(row.original.medium)}
-                                options={[
-                                  ...categoryDropdownOptions.filter(
-                                    (option) =>
-                                      !excludedMediums.includes(option.value), // Prevent selecting the same as other rows in the group
-                                  ),
-                                ]}
+                                options={getMediumDropdownOptions(
+                                  row.original,
+                                  categoryDropdownOptions,
+                                  excludedMediums,
+                                )}
                                 minDropdownHeight={240}
-                                className="h-full !rounded-[6px] w-full flex-grow"
-                                valueClassName="!border-[#77858F]"
-                                labelClass="w-[360px]"
+                                className="h-full w-full flex-grow"
+                                labelOptionClass="!text-sm"
+                                valueClassName="!border-[#77858F] !rounded-[6px] !py-1 !pl-[10px]"
+                                labelClass="w-[360px] !text-sm"
                                 selectedOption={categoryDropdownOptions.find(
                                   (element) =>
                                     element.value === row.original.medium.value,
                                 )}
+                                disabled={
+                                  row.original.medium.isHidden && isHiddenList
+                                }
                                 onPendingChange={(e) => {
                                   const oldMediumOption = row.original.medium;
                                   if (e.value == oldMediumOption.value) return;
@@ -1336,60 +1515,58 @@ const TableComponent = ({
                         )}
                         {row.original.medium.showBy && (
                           <ImageRound
-                            name="Delete"
-                            src={'/icons/delete-gray.svg'}
-                            className="w-[15px] h-[17px] hover:cursor-pointer"
-                            onClick={async () => {
-                              const oldLargeValue = row.original.large.value;
-                              const oldMediumValue = row.original.medium.value;
-                              const matchingHierarchies =
-                                hierarchyDetail.statisticCategories
-                                  .filter(
-                                    (item) =>
-                                      item.large.value === oldLargeValue &&
-                                      item.medium.value === oldMediumValue,
-                                  )
-                                  .filter(
-                                    (hierarchy) =>
-                                      !isUUID(String(hierarchy.id)),
-                                  )
-                                  .map((hierarchy) => String(hierarchy.id));
-                              const { data } =
-                                await checkDeleteHierarchyCategory(
-                                  matchingHierarchies,
-                                );
-                              if (!data.hasActualDuration) {
-                                handleDeleteMediumHierarchyCategory(
-                                  oldLargeValue,
-                                  oldMediumValue,
-                                );
+                            name="Hide"
+                            src={`/icons/${row.original.medium.isHidden ? 'dark-close-eye' : 'gray-open-eye'}.svg`}
+                            className={`w-[16px] h-[13px] ${isHiddenMediumCategory && !isHiddenList && 'hidden'}
+                              ${isUUID(row.original.medium.label) ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'}`}
+                            onClick={() => {
+                              if (
+                                isUUID(row.original.medium.label) &&
+                                !isHiddenList
+                              )
+                                return;
+                              if (row.original.medium.isHidden) {
+                                setPendingRestoreCategory({
+                                  originalRow: row.original,
+                                  type: StatisticCategoryType.MEDIUM,
+                                });
+                                setOpenConfirmRestoreModal({
+                                  name: row.original.medium.label,
+                                  status: true,
+                                });
                               } else {
-                                setWarningDeleteCategoryModalOpen(true);
+                                setPendingArchiveCategory({
+                                  originalRow: row.original,
+                                  type: StatisticCategoryType.MEDIUM,
+                                });
+                                setOpenConfirmArchiveModal(true);
                               }
                             }}
                           />
                         )}
                       </div>
 
-                      {lastMediumIndexes.includes(rowIndex) && (
-                        <>
-                          <OptionsBoxToAddCategory
-                            text={'中カテゴリーを追加'}
-                            addCategoryUsingInput={() =>
-                              handleAddMediumCategory(
-                                AddCategoryHierarchyType.INPUT,
-                                row.original,
-                              )
-                            }
-                            addCategoryUsingDropdown={() =>
-                              handleAddMediumCategory(
-                                AddCategoryHierarchyType.PULLDOWN,
-                                row.original,
-                              )
-                            }
-                          />
-                        </>
-                      )}
+                      {lastMediumIndexes.includes(rowIndex) &&
+                        !isHiddenLargeCategory && (
+                          <>
+                            <OptionsBoxToAddCategory
+                              text={'中カテゴリーを追加'}
+                              customClassName={`pt-[10px] pb-[14px]`}
+                              addCategoryUsingInput={() =>
+                                handleAddMediumCategory(
+                                  AddCategoryHierarchyType.INPUT,
+                                  row.original,
+                                )
+                              }
+                              addCategoryUsingDropdown={() =>
+                                handleAddMediumCategory(
+                                  AddCategoryHierarchyType.PULLDOWN,
+                                  row.original,
+                                )
+                              }
+                            />
+                          </>
+                        )}
                     </div>
                   </td>
                 )}
@@ -1397,7 +1574,7 @@ const TableComponent = ({
             );
           })}
           <tr>
-            <td className="p-3 w-1/2 border-[1px] border-[#D2DBE1]">
+            <td className="p-3 w-1/2 border-r-[1px] border-[#D2DBE1]">
               <OptionsBoxToAddCategory
                 text={'大カテゴリーを追加'}
                 addCategoryUsingInput={() =>
@@ -1408,7 +1585,7 @@ const TableComponent = ({
                 }
               />
             </td>
-            <td className="w-1/2 border-[1px] border-[#D2DBE1]"></td>
+            <td className="w-1/2"></td>
           </tr>
         </tbody>
       </Table>
@@ -1420,6 +1597,77 @@ const TableComponent = ({
             setWarningDeleteCategoryModalOpen(false);
           }}
         />
+      )}
+
+      {openConfirmArchiveModal && (
+        <ConfirmArchiveModal
+          open={openConfirmArchiveModal}
+          name="業務カテゴリー"
+          question="このカテゴリーを非表示にしますか？"
+          message="配下のカテゴリーがある場合、すべて見えなくなります。あとで復元することも可能です。"
+          onConfirm={() => {
+            if (!pendingArchiveCategory) return;
+
+            const { originalRow, type } = pendingArchiveCategory;
+            switch (type) {
+              case StatisticCategoryType.LARGE:
+                handleArchiveLargeHierarchyCategory(originalRow!);
+                break;
+              case StatisticCategoryType.MEDIUM:
+                handleArchiveMediumHierarchyCategory(originalRow!);
+                break;
+            }
+
+            setOpenConfirmArchiveModal(false);
+            setPendingArchiveCategory(null);
+          }}
+          onClose={() => {
+            setOpenConfirmArchiveModal(false);
+            setPendingArchiveCategory(null);
+          }}
+        />
+      )}
+
+      {openConfirmRestoreModal.status ? (
+        <ConfirmArchiveModal
+          open={openConfirmRestoreModal.status}
+          name={openConfirmRestoreModal.name || NO_OPTION_CATEGORY}
+          question="この業務カテゴリーを復元しますか？"
+          onConfirm={() => {
+            if (!pendingRestoreCategory) return;
+
+            const { originalRow, type } = pendingRestoreCategory;
+            switch (type) {
+              case StatisticCategoryType.LARGE:
+                handleRestoreHierarchyCategory(
+                  originalRow!,
+                  StatisticCategoryType.LARGE,
+                );
+                break;
+              case StatisticCategoryType.MEDIUM:
+                handleRestoreHierarchyCategory(
+                  originalRow!,
+                  StatisticCategoryType.MEDIUM,
+                );
+                break;
+            }
+
+            setOpenConfirmRestoreModal({
+              name: null,
+              status: false,
+            });
+            setPendingRestoreCategory(null);
+          }}
+          onClose={() => {
+            setOpenConfirmRestoreModal({
+              name: null,
+              status: false,
+            });
+            setPendingRestoreCategory(null);
+          }}
+        />
+      ) : (
+        <></>
       )}
 
       {warningChangeCategoryModalOpen && (
