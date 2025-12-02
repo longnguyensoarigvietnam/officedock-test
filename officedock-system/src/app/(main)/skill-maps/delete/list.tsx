@@ -245,6 +245,7 @@ const ListSkillsMapDelete = () => {
 
       <ConfirmRestoreModal
         open={openConfirmRestoreModal}
+        name={selectedSkillToRestore?.name || ''}
         type="このスキルマップを復元しますか？"
         onConfirm={handleConfirmRestoreSkill}
         onClose={() => setOpenConfirmRestoreModal(false)}
