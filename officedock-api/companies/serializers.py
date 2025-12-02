@@ -142,15 +142,17 @@ class CompanySerializer(serializers.ModelSerializer):
         read_only_fields = ["is_show_holidays_calendar"]
 
     def get_plan(self, instance):
-        cp = instance.company_plan
-        return {
-            "id": cp.plan.id,
-            "name": cp.plan.name,
-            "exchangeable_amount": cp.exchangeable_amount,
-            "limit_person": cp.limit_person,
-            "monthly_fee": cp.monthly_fee,
-            "stripe_price_id": cp.stripe_price_id,
-        }
+        if hasattr(instance, "company_plan"):
+            cp = instance.company_plan
+            return {
+                "id": cp.plan.id,
+                "name": cp.plan.name,
+                "exchangeable_amount": cp.exchangeable_amount,
+                "limit_person": cp.limit_person,
+                "monthly_fee": cp.monthly_fee,
+                "stripe_price_id": cp.stripe_price_id,
+            }
+        return {}
 
     def get_total_users(self, obj):
         return obj.users.count()
