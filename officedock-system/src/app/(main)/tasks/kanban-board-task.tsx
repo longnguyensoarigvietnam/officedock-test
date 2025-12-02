@@ -3242,7 +3242,7 @@ const KanbanBoardTask = () => {
                 width: expanded
                   ? isExtendCalendar
                     ? `calc(${Math.max(viewportWidth, 1280)}px - ${widthCalendar + 220}px)`
-                    : `calc(${Math.max(viewportWidth, 1280)}px - 650px)`
+                    : `calc(${Math.max(viewportWidth, 1280)}px - 680px)`
                   : isExtendCalendar
                     ? `calc(${Math.max(viewportWidth, 1280)}px - ${widthCalendar + 100}px)`
                     : `calc(${Math.max(viewportWidth, 1280)}px - 505px)`,

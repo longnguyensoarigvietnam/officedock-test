@@ -70,29 +70,84 @@ export const EventCard = ({
     isWeekView?: boolean;
     isWeekViewAllDaySection?: boolean;
   }) => {
-    if (participantList && participantList.length > 0) {
-      if (participantList.length == 1) {
+    // ============================================================
+    // FILTER: remove members with deletedAt < eventStart
+    // ============================================================
+    const filteredList =
+      participantList?.filter((p) => {
         const memberInfo = dashboardMemberList.find(
-          (member) => member.id == participantList[0].id,
+          (member) => member.id === p.id,
         );
+
+        // Cannot find member in dashboard → skip
+        if (!memberInfo) return false;
+
+        // No deletedAt → still show
+        if (!memberInfo.deletedAt) return true;
+
+        // If there is no eventStart (just in case) → just show
+        if (!eventContent.event.start) return true;
+
+        // deletedAt < eventStart → không show
         return (
-          <DynamicTooltip
-            content={`${participantList[0].fullName}`}
-            placement="top">
-            <div className={`relative`}>
-              <CustomUserAvatar
-                avatarUrl={memberInfo?.avatar || ''}
-                avatarColor={memberInfo?.avatarColor || ''}
-                size={avatarSize}
-                isCalendarScreen={true}
-              />
-            </div>
-          </DynamicTooltip>
+          new Date(memberInfo.deletedAt) >= new Date(eventContent.event.start)
         );
-      } else if (participantList.length === 2) {
-        return (
-          <div className="mr-1 flex items-center">
-            {participantList.map((participant, index) => {
+      }) || [];
+
+    // After filtering, if there is no one left, then stop.
+    if (!filteredList.length) return null;
+
+    // ============================================================
+    //  Use filteredList instead of participantList from here on
+    // ============================================================
+    if (filteredList.length === 1) {
+      const memberInfo = dashboardMemberList.find(
+        (member) => member.id == filteredList[0].id,
+      );
+      return (
+        <DynamicTooltip content={`${filteredList[0].fullName}`} placement="top">
+          <div className={`relative`}>
+            <CustomUserAvatar
+              avatarUrl={memberInfo?.avatar || ''}
+              avatarColor={memberInfo?.avatarColor || ''}
+              size={avatarSize}
+              isCalendarScreen={true}
+            />
+          </div>
+        </DynamicTooltip>
+      );
+    } else if (filteredList.length === 2) {
+      return (
+        <div className="mr-1 flex items-center">
+          {filteredList.map((participant, index) => {
+            const memberInfo = dashboardMemberList.find(
+              (member) => member.id === participant.id,
+            );
+
+            return (
+              <DynamicTooltip
+                content={`${participant.fullName}`}
+                placement="top"
+                key={participant.id}>
+                <div className={`relative ${index != 0 && 'ml-[-7px]'}`}>
+                  <CustomUserAvatar
+                    avatarUrl={memberInfo?.avatar || ''}
+                    avatarColor={memberInfo?.avatarColor || ''}
+                    size={avatarSize}
+                    isCalendarScreen={true}
+                  />
+                </div>
+              </DynamicTooltip>
+            );
+          })}
+        </div>
+      );
+    } else if (filteredList.length > 2) {
+      return (
+        <div className={`mr-1 flex items-center ${!isWeekView && 'gap-1'}`}>
+          {filteredList
+            .slice(0, isWeekView ? 5 : 1)
+            .map((participant, index) => {
               const memberInfo = dashboardMemberList.find(
                 (member) => member.id === participant.id,
               );
@@ -113,61 +168,39 @@ export const EventCard = ({
                 </DynamicTooltip>
               );
             })}
-          </div>
-        );
-      } else if (participantList.length > 2) {
-        return (
-          <div className={`mr-1 flex items-center ${!isWeekView && 'gap-1'}`}>
-            {participantList
-              .slice(0, isWeekView ? 5 : 1)
-              .map((participant, index) => {
-                const memberInfo = dashboardMemberList.find(
-                  (member) => member.id === participant.id,
-                );
 
-                return (
-                  <DynamicTooltip
-                    content={`${participant.fullName}`}
-                    placement="top"
-                    key={participant.id}>
-                    <div className={`relative ${index != 0 && 'ml-[-7px]'}`}>
-                      <CustomUserAvatar
-                        avatarUrl={memberInfo?.avatar || ''}
-                        avatarColor={memberInfo?.avatarColor || ''}
-                        size={avatarSize}
-                        isCalendarScreen={true}
-                      />
-                    </div>
-                  </DynamicTooltip>
-                );
-              })}
-            {isWeekView
-              ? participantList &&
-                participantList.length > 5 && (
-                  <DynamicTooltip
-                    content={`他に${participantList.length - 5}人の表示があります`}
-                    placement="top">
-                    <div
-                      className={`text-[#77858F] relative text-[11px] font-medium ml-[-12px] ${isWeekView && 'border-[1px] !ml-[-12px] border-white text-white rounded-full shrink-0 !w-[26px] !h-[26px] bg-[#77858F] flex items-center justify-center'}`}>
-                      +{participantList.length - 5}
-                    </div>
-                  </DynamicTooltip>
-                )
-              : participantList &&
-                participantList.length > 1 && (
-                  <DynamicTooltip
-                    content={`他に${participantList.length - 1}人の表示があります`}
-                    placement="top">
-                    <div
-                      className={`text-[#77858F] relative text-[11px] font-medium ${isWeekViewAllDaySection && 'border-[1px] !ml-[-12px] !text-[9px] text-white shrink-0 border-white rounded-full !w-[22.5px] !h-[22.5px] bg-[#77858F] flex items-center justify-center'} `}>
-                      +{participantList.length - 1}
-                    </div>
-                  </DynamicTooltip>
-                )}
-          </div>
-        );
-      }
+          {isWeekView
+            ? filteredList.length > 5 && (
+                <DynamicTooltip
+                  content={`他に${filteredList.length - 5}人の表示があります`}
+                  placement="top">
+                  <div
+                    className={`text-[#77858F] relative text-[11px] font-medium ml-[-12px] ${
+                      isWeekView &&
+                      'border-[1px] !ml-[-12px] border-white text-white rounded-full shrink-0 !w-[26px] !h-[26px] bg-[#77858F] flex items-center justify-center'
+                    }`}>
+                    +{filteredList.length - 5}
+                  </div>
+                </DynamicTooltip>
+              )
+            : filteredList.length > 1 && (
+                <DynamicTooltip
+                  content={`他に${filteredList.length - 1}人の表示があります`}
+                  placement="top">
+                  <div
+                    className={`text-[#77858F] relative text-[11px] font-medium ${
+                      isWeekViewAllDaySection &&
+                      'border-[1px] !ml-[-12px] !text-[9px] text-white shrink-0 border-white rounded-full !w-[22.5px] !h-[22.5px] bg-[#77858F] flex items-center justify-center'
+                    } `}>
+                    +{filteredList.length - 1}
+                  </div>
+                </DynamicTooltip>
+              )}
+        </div>
+      );
     }
+
+    return null;
   };
 
   // Show organization's avatar
@@ -560,11 +593,9 @@ export const EventCard = ({
 
       return (
         <div
-          className={`fc-daygrid-event shadow-lg ${eventContent.event.id == selectedEventInfo?.repeatScheduleId && 'selected-all-day-event'} ${eventContent.event.allDay && 'hover:cursor-pointer'}`}
-          >
+          className={`fc-daygrid-event shadow-lg ${eventContent.event.id == selectedEventInfo?.repeatScheduleId && 'selected-all-day-event'} ${eventContent.event.allDay && 'hover:cursor-pointer'}`}>
           <div
-            className={`text-black bg-white overflow-hidden !w-[calc(100%_-_0px)] py-0.5 !rounded-[8px] text-[12px] font-normal px-1`}
-            >
+            className={`text-black bg-white overflow-hidden !w-[calc(100%_-_0px)] py-0.5 !rounded-[8px] text-[12px] font-normal px-1`}>
             {checkShowUserAvatar(
               eventContent.event.extendedProps.participants,
             ) ? (
