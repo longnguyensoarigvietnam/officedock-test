@@ -402,7 +402,7 @@ const ActionsUserModal = ({
             dataUserDetail &&
             dataUserDetail.id != session.user.id && (
               <ImageRound
-                className="mt-1 w-[14px] h-[17px] hover:cursor-pointer"
+                className="mt-1 w-[14px] h-[17px] hover:cursor-pointer invisible"
                 src="/icons/delete-event.svg"
                 name="Delete icon"
                 onClick={handleDeleteUser}
@@ -771,7 +771,9 @@ const ActionsUserModal = ({
             </div>
             <div className="w-full flex flex-col gap-4 items-start">
               {fields.map((field, index) => (
-                <div className="flex items-center gap-2 relative w-full" key={field.id}>
+                <div
+                  className="flex items-center gap-2 relative w-full"
+                  key={field.id}>
                   <div className="w-full">
                     <Controller
                       control={control}
