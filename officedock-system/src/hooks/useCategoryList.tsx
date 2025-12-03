@@ -10,13 +10,16 @@ import { ServerStatusCode } from '@constants/enums';
 
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useSessionCache } from '@providers/SessionCacheProvider';
+
 import { BasePagination } from '@interfaces/common';
 import { ResponseError } from '@interfaces/response';
 import { Category } from '@interfaces/category';
+
 import api from '@base/api';
 
 interface FilterProps {
   name?: string;
+  isDeleted?: boolean;
 }
 
 interface PaginationProps {
@@ -40,7 +43,7 @@ const useCategoryList = (
 
     // TODO: Confirm with BE about how many and how to use param
     const apiUrl = pagination?.page
-      ? `${apiRouters.CATEGORY_LIST}?page=${pagination.page}&page_size=${pagination.pageSize || PAGINATION_PAGE_SIZE_DEFAULT}${filter?.name ? `&name=${filter.name}` : ''}`
+      ? `${apiRouters.CATEGORY_LIST}?page=${pagination.page}&page_size=${pagination.pageSize || PAGINATION_PAGE_SIZE_DEFAULT}${filter?.name ? `&name=${filter.name}` : ''}&is_deleted=${filter?.isDeleted || false}`
       : `${apiRouters.CATEGORY_LIST}`;
 
     const { data } = await api.get<BasePagination<Category[]>>(apiUrl);

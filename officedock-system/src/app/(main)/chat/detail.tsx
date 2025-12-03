@@ -2549,8 +2549,8 @@ const ChatDetail = ({
                                           className="p-[12px] hover:bg-[#7D8A94] leading-none rounded-[6px] hover:cursor-pointer">
                                           通知
                                         </div>
-                                        {chatRoomDetail?.type !=
-                                          ChatRoomType.PRIVATE && (
+                                        {chatRoomDetail?.type ==
+                                          ChatRoomType.GROUP && (
                                           <div
                                             onClick={() =>
                                               setShowConfirmLeaveGroup(true)
@@ -2559,7 +2559,7 @@ const ChatDetail = ({
                                             グループを退会
                                           </div>
                                         )}
-                                        <div className="p-[12px] hover:bg-[#7D8A94] leading-none rounded-[6px] hover:cursor-pointer">
+                                        <div className="p-[12px] hover:bg-[#7D8A94] leading-none rounded-[6px] hover:cursor-pointer hidden">
                                           {chatRoomDetail?.type !=
                                           ChatRoomType.PRIVATE
                                             ? 'グループ'

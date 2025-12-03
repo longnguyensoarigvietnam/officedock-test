@@ -202,6 +202,10 @@ export const pageRouters = {
     name: '集計カテゴリー作成',
     href: '/categories/create',
   },
+  CATEGORY_MANAGEMENT_HIDDEN: {
+    name: 'カテゴリー設定_非表示一覧',
+    href: '/categories/delete',
+  },
 
   // SKILL
   SKILLS_MANAGEMENT: {
@@ -518,6 +522,7 @@ export const apiRouters = {
   CATEGORY_VALIDATION: '/statistic-categories/validation-data/',
   CHECK_ACTUAL_DURATION:
     '/organization-category-hierarchies/check-actual-duration/',
+  CATEGORY_RESTORE: (id: string) => `/statistic-categories/${id}/restore/`,
 
   // TASK
   TASK_BOARD_LIST: '/tasks/board/',

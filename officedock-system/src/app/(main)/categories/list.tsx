@@ -15,11 +15,11 @@ import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
 import { Table, TableBody, TableHeader } from '@components/common/Table';
 import Pagination from '@components/common/Pagination';
-import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 import InputSearch from '@components/common/InputSearch';
 import Input from '@components/common/Input';
 import Dropdown from '@components/common/Dropdown';
 import WarningChangeHierarchyCategoryModal from '@components/modals/WarningChangeHierarchyCategoryModal';
+import ConfirmHiddenModal from '@components/modals/ConfirmHiddenModal';
 
 import { apiRouters } from '@constants/routers';
 import { NO_DATA_AVAILABLE, PAGE_SIZE_OPTIONS } from '@constants';
@@ -508,9 +508,9 @@ const ListCategory = () => {
                           PermissionsSystem.CATEGORY_DELETE,
                         ) ? (
                           <ImageRound
-                            name="Delete"
-                            src={'/icons/delete-gray.svg'}
-                            className={`w-[12px] h-[14px] delete-icon ${
+                            name="Hide"
+                            src={'/icons/eye.svg'}
+                            className={`w-[16px] h-[12px] delete-icon ${
                               selectedCategoryToUpdate.uuid != element.uuid &&
                               selectedCategoryToUpdate.status
                                 ? 'hover:cursor-not-allowed'
@@ -628,11 +628,12 @@ const ListCategory = () => {
         </div>
       </div>
       {openConfirmDeleteModal && (
-        <ConfirmDeleteModal
+        <ConfirmHiddenModal
           open={openConfirmDeleteModal}
           name={selectedCategoryToDelete?.name || ''}
           type="業務カテゴリー"
-          message="紐づいている階層からも削除されます。"
+          message="すでに登録したチームカテゴリーは、表示されたままです。"
+          message2="あとで「非表示一覧」から復元することも可能です。"
           onConfirm={handleConfirmDeleteCategory}
           onClose={() => {
             setOpenConfirmDeleteModal(false);
