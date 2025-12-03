@@ -428,10 +428,12 @@ const TableChart = ({
 
         if (organization) {
           // Get the list of Large Categories
-          largeCategories = organization.statisticCategories.map((stat) => ({
-            value: stat.LARGE?.id || '',
-            label: stat.LARGE?.name || '',
-          }));
+          largeCategories = organization.statisticCategories
+            .filter((hierarchy) => !hierarchy.LARGE.isHidden)
+            .map((stat) => ({
+              value: stat.LARGE?.id || '',
+              label: stat.LARGE?.name || '',
+            }));
 
           // Get a list of Medium Categories if there is a Large Item
           const largeCategory = largeItem
@@ -442,7 +444,9 @@ const TableChart = ({
 
           if (largeCategory) {
             mediumCategories =
-              largeCategory.MEDIUM?.map((medium) => ({
+              largeCategory.MEDIUM?.filter(
+                (hierarchy) => !hierarchy?.MEDIUM?.isHidden,
+              )?.map((medium) => ({
                 value: medium.MEDIUM?.id || '',
                 label: medium.MEDIUM?.name || '',
               })) || [];
@@ -455,7 +459,9 @@ const TableChart = ({
               : null;
 
             if (mediumCategory?.SMALL) {
-              smallCategories = mediumCategory.SMALL.map((small) => ({
+              smallCategories = mediumCategory.SMALL?.filter(
+                (category) => !category?.isHidden,
+              ).map((small) => ({
                 value: small.id || '',
                 label: small.name || '',
               }));
@@ -568,13 +574,16 @@ const TableChart = ({
                 showArrow={info.row.original.type === EventCalendarType.TASK}
                 className="statistic-custom border-none shadow-none w-[100%] h-[30px] !bg-[#EBF1F7] rounded-md"
                 defaultValue={
-                  (largeCategories &&
-                    largeCategories.find(
-                      (element) => element.value === largeItem?.value,
-                    )) || {
-                    value: NO_SETTING,
-                    label: NO_SETTING,
-                  }
+                  largeItem?.value
+                    ? (largeCategories &&
+                        largeCategories.find(
+                          (element) => element.value === largeItem?.value,
+                        )) ||
+                      largeItem
+                    : {
+                        value: NO_SETTING,
+                        label: NO_SETTING,
+                      }
                 }
                 placeholder=""
                 options={
@@ -648,13 +657,16 @@ const TableChart = ({
               <SingleSelect
                 className="statistic-custom border-none shadow-none w-[100%] h-[30px] !bg-[#EBF1F7] rounded-md"
                 defaultValue={
-                  (mediumCategories &&
-                    mediumCategories.find(
-                      (element) => element.value === mediumItem?.value,
-                    )) || {
-                    value: NO_SETTING,
-                    label: NO_SETTING,
-                  }
+                  mediumItem?.value
+                    ? (mediumCategories &&
+                        mediumCategories.find(
+                          (element) => element.value === mediumItem?.value,
+                        )) ||
+                      mediumItem
+                    : {
+                        value: NO_SETTING,
+                        label: NO_SETTING,
+                      }
                 }
                 showArrow={info.row.original.type === EventCalendarType.TASK}
                 placeholder=""
@@ -736,13 +748,16 @@ const TableChart = ({
               <SingleSelect
                 className="statistic-custom border-none shadow-none w-[100%] h-[30px] !bg-[#EBF1F7] rounded-md"
                 defaultValue={
-                  (smallCategories &&
-                    smallCategories.find(
-                      (element) => element.value === smallItem?.value,
-                    )) || {
-                    value: NO_SETTING,
-                    label: NO_SETTING,
-                  }
+                  smallItem?.value
+                    ? (smallCategories &&
+                        smallCategories.find(
+                          (element) => element.value === smallItem?.value,
+                        )) ||
+                      smallItem
+                    : {
+                        value: NO_SETTING,
+                        label: NO_SETTING,
+                      }
                 }
                 placeholder=""
                 showArrow={info.row.original.type === EventCalendarType.TASK}

@@ -105,7 +105,7 @@ const TableComponent = ({
     findLastUniqueMediumIndexes,
     findAffectedRows,
     getDeletedCalendarCategoryTypeFromRow,
-    checkIsHiddenCategory
+    checkIsHiddenCategory,
   } = useCalendarCategory({ hierarchyDetail });
 
   useEffect(() => {
@@ -1367,9 +1367,13 @@ const TableComponent = ({
                             ? 'dark-close-eye'
                             : 'gray-open-eye'
                         }.svg`}
-                        className={`w-[16px] h-[13px] ${isHiddenLargeCategory && !isHiddenList && 'hidden'} ${isUUID(row.original.large.label) ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'}`}
+                        className={`w-[16px] h-[13px] ${isHiddenLargeCategory && !isHiddenList && 'hidden'} ${isUUID(row.original.large.label) || !row.original.large.label ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'}`}
                         onClick={() => {
-                          if (isUUID(row.original.large.label)) return;
+                          if (
+                            isUUID(row.original.large.label) ||
+                            !row.original.large.label
+                          )
+                            return;
                           if (isHiddenLargeCategory) {
                             setPendingRestoreCategory({
                               originalRow: row.original,
@@ -1508,11 +1512,11 @@ const TableComponent = ({
                             name="Hide"
                             src={`/icons/${row.original.medium.isHidden ? 'dark-close-eye' : 'gray-open-eye'}.svg`}
                             className={`w-[16px] h-[13px] ${isHiddenMediumCategory && !isHiddenList && 'hidden'}
-                              ${isUUID(row.original.medium.label) ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'}`}
+                              ${isUUID(row.original.medium.label) || !row.original.medium.label ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'}`}
                             onClick={() => {
                               if (
-                                isUUID(row.original.medium.label) &&
-                                !isHiddenList
+                                isUUID(row.original.medium.label) ||
+                                !row.original.medium.label
                               )
                                 return;
                               if (row.original.medium.isHidden) {
