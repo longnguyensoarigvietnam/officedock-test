@@ -1957,3 +1957,16 @@ export const adjustHours = (
 
   return `${String(newHour).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 };
+
+// Check option filter
+export const isEqualOptions = (
+  a: OptionDropdownType[] = [],
+  b: OptionDropdownType[] = [],
+) => {
+  if (a.length !== b.length) return false;
+
+  return a.every((item, index) => {
+    const other = b[index];
+    return item.value === other.value && item.label === other.label;
+  });
+};

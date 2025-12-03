@@ -493,7 +493,7 @@ const ActionDetailDaily = ({
         <div
           ref={todoIconRef}
           onClick={handleToggleTodo}
-          className={`flex w-full  items-center rounded-full focus:outline-none
+          className={`flex w-full  items-center rounded-full focus:outline-none hover:cursor-pointer
                 ${isOpenTodo ? 'text-primary ' : ''} ${!todoList.length && 'hover:cursor-not-allowed'}
                 `}>
           <ImageRound
@@ -512,7 +512,7 @@ const ActionDetailDaily = ({
         <div
           ref={tagIconRef}
           onClick={handleToggleTag}
-          className={`flex w-full items-center rounded-full focus:outline-none
+          className={`flex w-full items-center rounded-full focus:outline-none hover:cursor-pointer
             ${isOpenTag ? 'text-primary ' : ''}
           `}>
           <ImageRound

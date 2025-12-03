@@ -21,7 +21,7 @@ export interface Organizations {
   uuid?: string;
   createdAt?: Date | string | null;
   updatedAt?: Date | string | null;
-  deletedAt?: Date | string | null
+  deletedAt?: Date | string | null;
   icon?: null | string;
   iconColor?: string;
 }
@@ -55,6 +55,7 @@ export type ConfigNode = {
   children: ConfigNode[];
   type?: string;
   is_hierarchy?: boolean;
+  deletedAt?: boolean;
 };
 export type NodeDataRequest = {
   uuid: string;

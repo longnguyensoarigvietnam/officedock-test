@@ -7,6 +7,7 @@ import MultiSelectUserDropdown from '@components/common/MultiSelectDropdown/Mult
 import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import Button from '@components/common/Button';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
+import { isEqualOptions } from '@utils/date';
 
 type ActionTaskFilterProp = {
   listMemberTeam: {
@@ -128,19 +129,42 @@ const ActionFilterStatisticTeam = ({
     };
   }, [handleClose]);
 
+  const isSameOrdering = (
+    prev: {
+      tag_ids: OptionDropdownType[];
+      user_ids: OptionDropdownType[];
+    } | null,
+    next: { tag_ids: OptionDropdownType[]; user_ids: OptionDropdownType[] },
+  ) => {
+    if (!prev) return false;
+
+    return (
+      isEqualOptions(prev.tag_ids, next.tag_ids) &&
+      isEqualOptions(prev.user_ids, next.user_ids)
+    );
+  };
+
   const handleSearch = () => {
-    setIsLoadingLarge(true);
-    setIsLoadingMedium(true);
-    setIsLoadingOrganization(true);
-    if (isCheckCompare) {
-      setIsLoadingLargeCompare(true);
-      setIsLoadingMediumCompare(true);
-      setIsLoadingOrganizationCompare(true);
-    }
-    setOrderingOptions({
+    const newOptions = {
       tag_ids: getValues('tagIds'),
       user_ids: getValues('userIds'),
-    });
+    };
+
+    if (!isSameOrdering(orderingOptions, newOptions)) {
+      setIsLoadingLarge(true);
+      setIsLoadingMedium(true);
+      setIsLoadingOrganization(true);
+      if (isCheckCompare) {
+        setIsLoadingLargeCompare(true);
+        setIsLoadingMediumCompare(true);
+        setIsLoadingOrganizationCompare(true);
+      }
+      setOrderingOptions({
+        tag_ids: getValues('tagIds'),
+        user_ids: getValues('userIds'),
+      });
+    }
+
     handleClose();
   };
 
@@ -241,7 +265,13 @@ const ActionFilterStatisticTeam = ({
           <Button
             onClick={handleSearch}
             className="h-9"
-            disabled={isHasLoading}>
+            disabled={
+              isHasLoading ||
+              (dataOptionsTagIds.length == 0 &&
+                getValues('userIds') &&
+                getValues('userIds').length == 0 &&
+                orderingOptions?.user_ids?.length == 0)
+            }>
             絞り込む
           </Button>
         </div>

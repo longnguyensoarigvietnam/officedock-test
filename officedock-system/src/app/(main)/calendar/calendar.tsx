@@ -275,9 +275,9 @@ const EventCalendar = () => {
 
   // Creation data
   const [dashboardMemberList, setDashboardMemberList] = useState<Profile[]>([]);
-  const [dataOptionsParticipants, setDataOptionsParticipants] = useState<
-    EventParticipant[]
-  >([]);
+
+  const [dataOptionsParticipantsSideBar, setDataOptionsParticipantsSideBar] =
+    useState<EventParticipant[]>([]);
   const [dataOptionsOrganizations, setDataOptionsOrganizations] = useState<
     {
       id: string | number;
@@ -287,6 +287,16 @@ const EventCalendar = () => {
       avatarUrl: string;
     }[]
   >([]);
+  const [dataOptionsOrganizationsSideBar, setDataOptionsOrganizationsSideBar] =
+    useState<
+      {
+        id: string | number;
+        fullName: string;
+        color: string;
+        userIds: number[];
+        avatarUrl: string;
+      }[]
+    >([]);
   useCreationDataCommon({
     options: {
       get_all_members: true,
@@ -294,7 +304,7 @@ const EventCalendar = () => {
     },
     onSuccess: (data) => {
       let eventMembers: EventParticipant[] = [];
-      let eventOrganizations: EventParticipant[] = [];
+      let eventOrganizationsSideBar: EventParticipant[] = [];
       if (data.allMembers) {
         eventMembers = data.allMembers?.map((member) => ({
           id: `${EventParticipantType.USER}-${member.id}`,
@@ -305,18 +315,22 @@ const EventCalendar = () => {
             : '',
           color: member?.avatarColor || '',
           avatarUrl: member?.avatar || '',
+          deletedAt: member?.deletedAt,
         }));
 
         setDashboardMemberList(data.allMembers);
       }
-
       if (data.organizationUsers) {
-        eventOrganizations = data.organizationUsers
+        eventOrganizationsSideBar = data.organizationUsers
           ? data.organizationUsers.map((org) => ({
               id: `${EventParticipantType.ORGANIZATION}-${org.id}`,
               fullName: org.name,
               type: EventParticipantType.ORGANIZATION,
-              userIds: org.users ? org.users.map((user) => user.id) : [],
+              userIds: org.users
+                ? org.users
+                    .filter((item) => !item.deletedAt)
+                    .map((user) => user.id)
+                : [],
               color: org.iconColor || '#228CDB',
               avatarUrl: org.icon || '',
             }))
@@ -330,11 +344,26 @@ const EventCalendar = () => {
             avatarUrl: org.icon || '',
           })),
         ]);
+        setDataOptionsOrganizationsSideBar([
+          ...data.organizationUsers.map((org) => ({
+            id: org.id || '',
+            fullName: org.name,
+            userIds: org.users
+              ? org.users
+                  .filter((item) => !item.deletedAt)
+                  .map((user) => user.id)
+              : [],
+            color: org.iconColor || '#228CDB',
+            avatarUrl: org.icon || '',
+          })),
+        ]);
       }
-      setDataOptionsParticipants([...eventOrganizations, ...eventMembers]);
+      setDataOptionsParticipantsSideBar([
+        ...eventOrganizationsSideBar,
+        ...eventMembers,
+      ]);
     },
   });
-
   // Check whether current screen is day or week view
   const isDayOrWeekView = () => {
     return (
@@ -2189,6 +2218,7 @@ const EventCalendar = () => {
     // Call the function after FullCalendar renders
     setTimeout(updateSlotLineColors, 100);
   }, [viewURL]);
+
   return (
     <Fragment>
       <div className="flex mb-3 overflow-y-hidden" ref={containerRef}>
@@ -2603,8 +2633,10 @@ const EventCalendar = () => {
           <CalendarSidebar
             calendarRef={calendarRef}
             keySearch={keySearch}
-            dataOptionsOrganizations={dataOptionsOrganizations}
-            dataOptionsParticipants={dataOptionsParticipants}
+            dataOptionsOrganizations={dataOptionsOrganizationsSideBar}
+            dataOptionsParticipants={dataOptionsParticipantsSideBar.filter(
+              (item) => !item.deletedAt,
+            )}
             dashboardMemberList={dashboardMemberList}
             getEventCalendarByUsers={getEventCalendarByUsers}
             handleFilterScheduleByUserIds={handleFilterScheduleByUserIds}

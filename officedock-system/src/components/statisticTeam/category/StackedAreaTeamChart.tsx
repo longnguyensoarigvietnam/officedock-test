@@ -97,6 +97,11 @@ const StackedAreaTeamChart = ({
   } = useContext(StatisticTeamStateContext);
   const { selectedOrganization: selectedOrganizationSideBar } =
     useContext(GlobalStateContext);
+  const { expanded } = useContext(GlobalStateContext);
+
+  useEffect(() => {
+    window.dispatchEvent(new Event('resize'));
+  }, [expanded]);
 
   const [selectedMembers, setSelectedMembers] = useState<number[]>([]);
   const [isTableDataRendered, setIsTableDataRendered] =

@@ -567,7 +567,9 @@ const TaskListTeamStatistic = ({
                     : totalDuration
                 }
                 selectedMember={selectedMember}
-                listOptionsOrganization={listOptionsOrganization}
+                listOptionsOrganization={listOptionsOrganization.filter(
+                  (item) => !item.isHidden,
+                )}
                 creationDataStatisticData={creationDataStatisticData}
                 setOrdering={(ord: string) => {
                   setOrdering(ord);

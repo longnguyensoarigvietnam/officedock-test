@@ -122,7 +122,7 @@ export interface ChildCategory {
   id: number | string;
   name: string;
   uuid: string;
-  isHidden?: boolean
+  isHidden?: boolean;
 }
 
 export interface NestedCategory {
@@ -234,6 +234,7 @@ export interface SkillMapInfo {
 }
 
 export interface SkillMapByOrganization {
+  id: number;
   organizationName: string;
   skillMaps: SkillMapByOrganizationInfo[][];
   steps: {
@@ -242,7 +243,6 @@ export interface SkillMapByOrganization {
     step3: string;
   };
   isDeleted: boolean;
-  id: number
 }
 
 export interface SkillMapByOrganizationInfo {

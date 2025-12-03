@@ -343,6 +343,7 @@ export interface CreationStatisticType {
     avatarColor: string;
     avatar: string;
   }[];
+  isDeleted?: boolean;
 }
 export interface DataResponseStatisticCreationType {
   organizations: CreationStatisticType[];

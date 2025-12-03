@@ -50,7 +50,7 @@ const GroupMember = ({ item, onClickMember }: DataGroupMemberProps) => {
           onClick={() => setIsExpandedGroup(!isExpandedGroup)}
           src="/icons/extend-calendar.svg"
           name="Extend box"
-          className={`!w-3.5 !h-3.5 min-w-2 ${isExpandedGroup ? '-rotate-90' : 'rotate-90'} `}
+          className={`!w-3.5 !h-3.5 min-w-2 cursor-pointer ${isExpandedGroup ? '-rotate-90' : 'rotate-90'} `}
         />
       </div>
       {isExpandedGroup && (

@@ -7,6 +7,7 @@ import ImageRound from '@components/common/ImageRound';
 import { NO_DATA_AVAILABLE } from '@constants';
 import { OptionDropdownType } from '@interfaces/common';
 import { StatisticStateContext } from '@providers/StatisticProvider';
+import { isEqualOptions } from '@utils/date';
 
 type Props = {
   open: boolean;
@@ -54,18 +55,38 @@ const FilterStatisticModal = ({ open, close }: Props) => {
   };
 
   const handleSearch = () => {
-    if (tagsOptions.length == 0) return;
-    setIsLoadingLarge(true);
-    setIsLoadingMedium(true);
-    setIsLoadingOrganization(true);
-    if (isCheckCompare) {
-      setIsLoadingLargeCompare(true);
-      setIsLoadingMediumCompare(true);
-      setIsLoadingOrganizationCompare(true);
-    }
-    setSelectedTags(selectedOption);
+    // If no available tag options, exit early
+    if (tagsOptions.length === 0) return;
+
+    setSelectedTags((prev) => {
+      const prevTags = prev || [];
+
+      // Check if selectedOption is actually different
+      const hasChanged = !isEqualOptions(prevTags, selectedOption);
+
+      // No change → skip loading and do not update state
+      if (!hasChanged) {
+        return prev;
+      }
+
+      // Change detected → trigger loading
+      setIsLoadingLarge(true);
+      setIsLoadingMedium(true);
+      setIsLoadingOrganization(true);
+
+      if (isCheckCompare) {
+        setIsLoadingLargeCompare(true);
+        setIsLoadingMediumCompare(true);
+        setIsLoadingOrganizationCompare(true);
+      }
+
+      // Update selected tags
+      return selectedOption;
+    });
+
     close();
   };
+
   return (
     <div className="w-full pt-[10px]  pb-5 bg-white rounded-[14px] shadow-common p-1 flex flex-col gap-1 text-sm">
       <div className="text-xs pl-5 pr-[10px] font-medium text-[#77858F] flex justify-between items-center">

@@ -112,6 +112,11 @@ const StackedAreaTeamTagChart = ({
   } = useContext(StatisticTeamTagsStateContext);
   const { selectedOrganization: selectedOrganizationSideBar } =
     useContext(GlobalStateContext);
+  const { expanded } = useContext(GlobalStateContext);
+
+  useEffect(() => {
+    window.dispatchEvent(new Event('resize'));
+  }, [expanded]);
 
   const getTotalDuration = () => {
     if (selectedOrganization?.value) {

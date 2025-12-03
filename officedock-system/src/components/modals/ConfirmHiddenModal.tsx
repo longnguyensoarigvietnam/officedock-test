@@ -8,6 +8,8 @@ export type ConfirmDeleteModalProps = {
   open: boolean;
   name?: string;
   type: string;
+  msgMain?: string;
+  classNameMain?: string;
   classNameMsg?: string;
   message?: string;
   message2?: string;
@@ -22,11 +24,13 @@ const ConfirmHiddenModal = memo(
     open,
     name,
     type,
+    msgMain,
     userColor,
     userAvatarUrl,
     message,
     message2,
     classNameMsg,
+    classNameMain,
     onConfirm,
     onClose,
   }: ConfirmDeleteModalProps) => {
@@ -37,7 +41,8 @@ const ConfirmHiddenModal = memo(
         isOutSideAction={false}
         onClose={onClose}>
         {name && (
-          <div className="flex items-center justify-center gap-[10px] mb-7">
+          <div
+            className={`flex items-center justify-center gap-[10px] mb-7 ${classNameMain}`}>
             {userColor && (
               <div className="w-[34px] h-[34px] min-w-[34px]">
                 <CustomUserAvatar
@@ -54,7 +59,9 @@ const ConfirmHiddenModal = memo(
           </div>
         )}
         <div className="text-center mb-10">
-          <p className="text-sm text-black leading-6 text-neutral-02">{`この${type}を非表示にしますか？`}</p>
+          <p className="text-sm text-black leading-6 text-neutral-02">
+            {msgMain ? msgMain : `この${type}を非表示にしますか？`}
+          </p>
           <p
             className={`text-[#77858F] font-normal text-[13px] mt-[10px] ${classNameMsg}`}>
             {message}
