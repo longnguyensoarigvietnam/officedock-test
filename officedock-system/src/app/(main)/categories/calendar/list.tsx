@@ -36,22 +36,23 @@ const ListHierarchy = () => {
   useCalendarCategoryHierarchyDetail({
     onSuccess: (data) => {
       const calendarCategoryHierarchy = data[0];
-      const statisticCategories =
-        calendarCategoryHierarchy.statisticCategories.map((org) => ({
-          id: org.id,
+      const statisticCategories = calendarCategoryHierarchy.statisticCategories
+        .filter((category) => !category.largeStatisticCategory.isHidden)
+        .map((category) => ({
+          id: category.id,
           large: {
-            label: org.largeStatisticCategory?.name || '',
-            value: org.largeStatisticCategory?.uuid || '',
-            isHidden: org.largeStatisticCategory?.isHidden || false,
+            label: category.largeStatisticCategory?.name || '',
+            value: category.largeStatisticCategory?.uuid || '',
+            isHidden: category.largeStatisticCategory?.isHidden || false,
             showBy: AddCategoryHierarchyType.PULLDOWN,
           },
           medium: {
-            label: org.mediumStatisticCategory?.name || '',
-            value: org.mediumStatisticCategory?.uuid || '',
-            isHidden: org.mediumStatisticCategory?.isHidden || false,
+            label: category.mediumStatisticCategory?.name || '',
+            value: category.mediumStatisticCategory?.uuid || '',
+            isHidden: category.mediumStatisticCategory?.isHidden || false,
             showBy: AddCategoryHierarchyType.PULLDOWN,
           },
-          color: org.color,
+          color: category.color,
         }));
       setHierarchyDetail({
         id: calendarCategoryHierarchy.id,

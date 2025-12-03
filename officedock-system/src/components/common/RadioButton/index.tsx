@@ -47,7 +47,8 @@ const RadioButton = ({
         className={`text-sm leading-6 flex`}>
         <label
           htmlFor={id}
-          className={`font-medium text-gray-900  ${classLabel}`}>
+          className={`font-medium text-gray-900 hover:cursor-pointer ${classLabel}`}
+          onClick={onChange}>
           {label}
         </label>
         <p

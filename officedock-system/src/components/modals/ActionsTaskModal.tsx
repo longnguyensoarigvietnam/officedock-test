@@ -562,7 +562,7 @@ const ActionsTaskModal = ({
       setDataOptionsCategoryLarge(() => {
         const largeCategories: OptionDropdownType[] = [];
         mainItem.statisticCategories.map((category) => {
-          if (category.LARGE) {
+          if (category.LARGE && !category.LARGE.isHidden) {
             largeCategories.push({
               label: category.LARGE.name,
               value: category.LARGE.id,
@@ -630,7 +630,8 @@ const ActionsTaskModal = ({
         if (
           !initialMediumCategory.find(
             (item) => item.value == mediumCategory.MEDIUM.id,
-          )
+          ) &&
+          !mediumCategory.MEDIUM.isHidden
         ) {
           initialMediumCategory.push({
             label: mediumCategory.MEDIUM.name,
@@ -668,7 +669,10 @@ const ActionsTaskModal = ({
       selectedMediumCategoryOption.SMALL &&
         selectedMediumCategoryOption.SMALL.map((smallCategory) => {
           if (
-            !initialSmallCategory.find((item) => item.value == smallCategory.id)
+            !initialSmallCategory.find(
+              (item) => item.value == smallCategory.id,
+            ) &&
+            !smallCategory.isHidden
           ) {
             initialSmallCategory.push({
               label: smallCategory.name,
@@ -1228,9 +1232,13 @@ const ActionsTaskModal = ({
                         isLoading={isFetchingCreationDataCommon}
                         disabled={isCheckActionPermission}
                         options={dataOptionsCategoryLarge}
-                        selectedOption={dataOptionsCategoryLarge.find(
-                          (element) => element.value === value?.value,
-                        )}
+                        selectedOption={
+                          value?.value
+                            ? dataOptionsCategoryLarge.find(
+                                (element) => element.value === value?.value,
+                              ) || value
+                            : undefined
+                        }
                         onChange={(e) => {
                           if (e.value != watch('categories.LARGE.value')) {
                             setValue('categories.MEDIUM', {
@@ -1267,9 +1275,13 @@ const ActionsTaskModal = ({
                             isLoading={isFetchingCreationDataCommon}
                             disabled={isCheckActionPermission}
                             options={dataOptionsCategoryMedium}
-                            selectedOption={dataOptionsCategoryMedium.find(
-                              (element) => element.value === value?.value,
-                            )}
+                            selectedOption={
+                              value?.value
+                                ? dataOptionsCategoryMedium.find(
+                                    (element) => element.value === value?.value,
+                                  ) || value
+                                : undefined
+                            }
                             onChange={(e) => {
                               if (e.value != watch('categories.MEDIUM.value')) {
                                 setValue('categories.SMALL', {
@@ -1302,9 +1314,13 @@ const ActionsTaskModal = ({
                           isLoading={isFetchingCreationDataCommon}
                           disabled={isCheckActionPermission}
                           options={dataOptionsCategorySmall}
-                          selectedOption={dataOptionsCategorySmall.find(
-                            (element) => element.value === value?.value,
-                          )}
+                          selectedOption={
+                            value?.value
+                              ? dataOptionsCategorySmall.find(
+                                  (element) => element.value === value?.value,
+                                ) || value
+                              : undefined
+                          }
                           placeholder="小カテゴリ"
                           onChange={(e) => {
                             setIsFormTouched(true);

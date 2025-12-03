@@ -806,7 +806,7 @@ const DailyReportBoard = () => {
 
   function getLargeCategories(data: LargeCategory[]): OptionDropdownType[] {
     const largeCategories: OptionDropdownType[] = data
-      .filter((category) => category.LARGE)
+      .filter((category) => category.LARGE && !category.LARGE.isHidden)
       .map((category) => ({
         label: category.LARGE.name,
         value: category.LARGE.id,
@@ -816,7 +816,7 @@ const DailyReportBoard = () => {
   }
   function getMediumCategories(data: MediumCategory[]): OptionDropdownType[] {
     const mediumCategories: OptionDropdownType[] = data
-      .filter((category) => category.MEDIUM)
+      .filter((category) => category.MEDIUM && !category.MEDIUM.isHidden)
       .map((category) => ({
         label: category.MEDIUM ? category.MEDIUM.name : '',
         value: category.MEDIUM ? category.MEDIUM.id : '',
@@ -825,10 +825,12 @@ const DailyReportBoard = () => {
     return mediumCategories;
   }
   function getSmallCategories(data: SmallCategory[]): OptionDropdownType[] {
-    const smallCategories: OptionDropdownType[] = data.map((category) => ({
-      label: category.name,
-      value: category.id,
-    }));
+    const smallCategories: OptionDropdownType[] = data
+      .filter((category) => !category.isHidden)
+      .map((category) => ({
+        label: category.name,
+        value: category.id,
+      }));
 
     return smallCategories;
   }
@@ -877,13 +879,21 @@ const DailyReportBoard = () => {
             <div className="flex justify-between h-full relative rounded-md gap-1">
               <SingleSelect
                 className="border-none shadow-none min-w-[159px] h-[30px] bg-[#EBF1F7] rounded-md"
-                defaultValue={optionData.find(
-                  (element) =>
-                    element.value ===
-                    (info.row.original.LARGE.id
-                      ? info.row.original.LARGE.id
-                      : NO_SETTING),
-                )}
+                defaultValue={
+                  info.row.original.LARGE.id
+                    ? optionData.find(
+                        (element) =>
+                          element.value ===
+                          (info.row.original.LARGE.id ?? NO_SETTING),
+                      ) || {
+                        label: info.row.original.LARGE.name,
+                        value: info.row.original.LARGE.id,
+                      }
+                    : {
+                        label: NO_SETTING,
+                        value: NO_SETTING,
+                      }
+                }
                 isDisabled={
                   !isPermissionAction ||
                   info.row.original.type !== EventCalendarType.TASK
@@ -1018,13 +1028,21 @@ const DailyReportBoard = () => {
               <div className="w-full">
                 <SingleSelect
                   className="border-none h-6 text-xs min-w-[159px]  rounded-md  !py-0  !pl-0 !shadow-none !text-left bg-[#EBF1F7]"
-                  defaultValue={optionMedium.find(
-                    (element) =>
-                      element.value ===
-                      (info.row.original.MEDIUM.id
-                        ? info.row.original.MEDIUM.id
-                        : NO_SETTING),
-                  )}
+                  defaultValue={
+                    info.row.original.MEDIUM.id
+                      ? optionMedium.find(
+                          (element) =>
+                            element.value ===
+                            (info.row.original.MEDIUM.id ?? NO_SETTING),
+                        ) || {
+                          label: info.row.original.MEDIUM.name,
+                          value: info.row.original.MEDIUM.id,
+                        }
+                      : {
+                          label: NO_SETTING,
+                          value: NO_SETTING,
+                        }
+                  }
                   showArrow
                   isDisabled={
                     !isPermissionAction ||
@@ -1183,13 +1201,21 @@ const DailyReportBoard = () => {
               defaultValue={
                 info.row.original.type !== EventCalendarType.TASK
                   ? undefined
-                  : optionSmall.find(
-                      (element) =>
-                        element.value ===
-                        (info.row.original.SMALL.id
-                          ? info.row.original.SMALL.id
-                          : NO_SETTING),
-                    )
+                  : info.row.original.SMALL.id
+                    ? optionSmall.find(
+                        (element) =>
+                          element.value ===
+                            (info.row.original.SMALL.id
+                              ? info.row.original.SMALL.id
+                              : NO_SETTING) || {
+                            label: info.row.original.SMALL.name,
+                            value: info.row.original.SMALL.id,
+                          },
+                      )
+                    : {
+                        label: NO_SETTING,
+                        value: NO_SETTING,
+                      }
               }
               isDisabled={
                 !isPermissionAction ||

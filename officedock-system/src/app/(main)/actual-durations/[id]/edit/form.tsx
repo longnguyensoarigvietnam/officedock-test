@@ -307,7 +307,7 @@ const EditActualDurationsForm = () => {
             },
           ];
           data.map((category) => {
-            if (category.LARGE) {
+            if (category.LARGE && !category.LARGE.isHidden) {
               largeCategories.push({
                 label: category.LARGE.name,
                 value: category.LARGE.id,
@@ -492,7 +492,8 @@ const EditActualDurationsForm = () => {
         if (
           !initialMediumCategory.find(
             (item) => item.value == mediumCategory.MEDIUM.id,
-          )
+          ) &&
+          !mediumCategory.MEDIUM.isHidden
         ) {
           initialMediumCategory.push({
             label: mediumCategory.MEDIUM.name,
@@ -535,7 +536,10 @@ const EditActualDurationsForm = () => {
       selectedMediumCategoryOption.SMALL &&
         selectedMediumCategoryOption.SMALL.map((smallCategory) => {
           if (
-            !initialSmallCategory.find((item) => item.value == smallCategory.id)
+            !initialSmallCategory.find(
+              (item) => item.value == smallCategory.id,
+            ) &&
+            !smallCategory.isHidden
           ) {
             initialSmallCategory.push({
               label: smallCategory.name,
@@ -786,10 +790,13 @@ const EditActualDurationsForm = () => {
                     classNameError="!text-sm"
                     options={removeDuplicateOptions(dataOptionsCategoryLarge)}
                     selectedOption={
-                      (dataOptionsCategoryLarge?.find(
-                        (element) =>
-                          element.value == (value as OptionDropdownType)?.value,
-                      ) as OptionDropdownType | undefined) || value
+                      (value as OptionDropdownType)?.value
+                        ? (dataOptionsCategoryLarge?.find(
+                            (element) =>
+                              element.value ==
+                              (value as OptionDropdownType)?.value,
+                          ) as OptionDropdownType | undefined) || value
+                        : undefined
                     }
                     onChange={(e) => {
                       if (e.value != watch('largeCategory.value')) {
@@ -813,10 +820,13 @@ const EditActualDurationsForm = () => {
                     classNameOption="!text-sm"
                     classNameError="!text-sm"
                     selectedOption={
-                      (dataOptionsCategoryMedium?.find(
-                        (element) =>
-                          element.value == (value as OptionDropdownType)?.value,
-                      ) as OptionDropdownType | undefined) || value
+                      (value as OptionDropdownType)?.value
+                        ? (dataOptionsCategoryMedium?.find(
+                            (element) =>
+                              element.value ==
+                              (value as OptionDropdownType)?.value,
+                          ) as OptionDropdownType | undefined) || value
+                        : undefined
                     }
                     options={removeDuplicateOptions(dataOptionsCategoryMedium)}
                     onChange={(e) => {
@@ -841,11 +851,13 @@ const EditActualDurationsForm = () => {
                       classNameOption="!text-sm"
                       classNameError="!text-sm"
                       selectedOption={
-                        (dataOptionsCategorySmall?.find(
-                          (element) =>
-                            element.value ==
-                            (value as OptionDropdownType)?.value,
-                        ) as OptionDropdownType | undefined) || value
+                        (value as OptionDropdownType)?.value
+                          ? (dataOptionsCategorySmall?.find(
+                              (element) =>
+                                element.value ==
+                                (value as OptionDropdownType)?.value,
+                            ) as OptionDropdownType | undefined) || value
+                          : undefined
                       }
                       options={removeDuplicateOptions(dataOptionsCategorySmall)}
                       placeholder="小カテゴリ"
