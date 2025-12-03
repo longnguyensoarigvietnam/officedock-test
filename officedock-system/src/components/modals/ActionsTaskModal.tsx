@@ -1177,9 +1177,13 @@ const ActionsTaskModal = ({
                       placeholder="選択してください"
                       disabled={isCheckActionPermission}
                       options={dataOptionsOrganizations}
-                      selectedOption={dataOptionsOrganizations.find(
-                        (element) => element.value === value?.value,
-                      )}
+                      selectedOption={
+                        value?.value
+                          ? dataOptionsOrganizations.find(
+                              (element) => element.value === value?.value,
+                            ) || value
+                          : undefined
+                      }
                       onChange={(e) => {
                         if (e.value != watch('organization.value')) {
                           setValue('categories.LARGE', {

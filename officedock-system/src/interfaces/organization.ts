@@ -19,8 +19,9 @@ export interface Organizations {
   };
   isMain?: boolean;
   uuid?: string;
-  createdAt?: Date | string;
-  updatedAt?: Date | string;
+  createdAt?: Date | string | null;
+  updatedAt?: Date | string | null;
+  deletedAt?: Date | string | null
   icon?: null | string;
   iconColor?: string;
 }

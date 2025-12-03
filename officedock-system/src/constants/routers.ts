@@ -95,6 +95,10 @@ export const pageRouters = {
     name: 'チーム管理',
     href: '/organizations/hierarchies/edit',
   },
+  ORGANIZATION_MANAGEMENT_HIDDEN: {
+    name: 'チーム管理',
+    href: '/organizations/delete',
+  },
   // TAG
   TAGS_MANAGEMENT: {
     name: '集計タグ管理',
@@ -483,6 +487,7 @@ export const apiRouters = {
   ORGANIZATION_HIERARCHY: '/organizations/hierarchy/',
   ORGANIZATION_DEFINE_STEPS: (id: number) =>
     `/organizations/${id}/define-steps/`,
+  ORGANIZATION_RESTORE: (uuid: string) => `/organizations/${uuid}/restore/`,
 
   // CREATE DATA
   ORGANIZATION_CREATION: '/creation-data/organization/',

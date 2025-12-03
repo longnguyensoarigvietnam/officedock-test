@@ -197,8 +197,8 @@ const ListCategory = () => {
                         ) ? (
                           <ImageRound
                             name="Hide"
-                            src={'/icons/eye.svg'}
-                            className={`w-[16px] h-[12px] delete-icon hover:cursor-pointer`}
+                            src={'/icons/dark-close-eye.svg'}
+                            className={`w-[16px] h-[13px] opacity-80 delete-icon hover:cursor-pointer`}
                             onClick={() => handleOpenRestoreCategoryModal(element)}
                           />
                         ) : (

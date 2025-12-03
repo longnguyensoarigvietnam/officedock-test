@@ -37,7 +37,7 @@ const ConfirmHiddenModal = memo(
         isOutSideAction={false}
         onClose={onClose}>
         {name && (
-          <div className="flex items-center justify-center gap-[5px] mb-7">
+          <div className="flex items-center justify-center gap-[10px] mb-7">
             {userColor && (
               <div className="w-[34px] h-[34px] min-w-[34px]">
                 <CustomUserAvatar
@@ -63,7 +63,7 @@ const ConfirmHiddenModal = memo(
             <p className="text-[#77858F] font-normal text-[13px]">{message2}</p>
           )}
         </div>
-        <div className="flex justify-center gap-3  items-center">
+        <div className="flex justify-center gap-[10px] items-center">
           <Button
             variant="outline"
             onClick={onClose}

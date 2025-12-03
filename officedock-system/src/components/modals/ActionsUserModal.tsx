@@ -715,11 +715,15 @@ const ActionsUserModal = ({
                         <div className="max-w-[441px] w-[441px]">
                           <Dropdown
                             options={unSelectedOrganizationOptions}
-                            selectedOption={originalOrganizationOptions.find(
-                              (element) =>
-                                element.value == value?.value &&
-                                value.type == OrganizationType.MAIN,
-                            )}
+                            selectedOption={
+                              value?.value
+                                ? originalOrganizationOptions.find(
+                                    (element) =>
+                                      element.value == value?.value &&
+                                      value.type == OrganizationType.MAIN,
+                                  ) || value
+                                : undefined
+                            }
                             onChange={(option: OptionDropdownType) => {
                               onChange({
                                 ...option,
@@ -783,11 +787,15 @@ const ActionsUserModal = ({
                           <div className="max-w-[441px] w-[441px]">
                             <Dropdown
                               options={unSelectedOrganizationOptions}
-                              selectedOption={originalOrganizationOptions.find(
-                                (element) =>
-                                  element.value == value?.value &&
-                                  value.type == OrganizationType.SUB,
-                              )}
+                              selectedOption={
+                                value?.value
+                                  ? originalOrganizationOptions.find(
+                                      (element) =>
+                                        element.value == value?.value &&
+                                        value.type == OrganizationType.SUB,
+                                    ) || value
+                                  : undefined
+                              }
                               onChange={(option: OptionDropdownType) => {
                                 onChange({
                                   ...option,

@@ -8,8 +8,6 @@ import {
   useState,
 } from 'react';
 import { useMutation } from 'react-query';
-import { useSessionCache } from '@providers/SessionCacheProvider';
-
 import { AxiosError } from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -21,9 +19,9 @@ import Pagination from '@components/common/Pagination';
 import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 import ErrorUploadFileValidationModal from '@components/modals/ErrorUploadFileValidationModal';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
-import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 import Dropdown from '@components/common/Dropdown';
 import InputSearch from '@components/common/InputSearch';
+import ConfirmHiddenModal from '@components/modals/ConfirmHiddenModal';
 
 import {
   ALLOWED_IMAGE_TYPES,
@@ -47,6 +45,7 @@ import { Organizations } from '@interfaces/organization';
 
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { hasPermissionInArray } from '@utils';
 
@@ -83,7 +82,6 @@ const ListOrganizations = () => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const { showToast } = useToast();
-
   const [dataOrganizations, setDataOrganizations] = useState<Organizations[]>(
     [],
   );
@@ -93,6 +91,7 @@ const ListOrganizations = () => {
   const [openConfirmDeleteModal, setOpenConfirmDeleteModal] = useState(false);
   const [openErrorUploadFileModal, setOpenErrorUploadFileModal] =
     useState(false);
+
   const [searchOrganizationName, setSearchOrganizationName] = useState('');
   const debouncedFilterByOrganizationName = useDebounceText(
     searchOrganizationName,
@@ -115,7 +114,7 @@ const ListOrganizations = () => {
 
   const { organizationList, refetchOrganizationList } = useOrganizationList(
     { page: debouncedParams.page, pageSize },
-    { name: debouncedParams.search },
+    { name: debouncedParams.search, isHidden: false },
   );
 
   useEffect(() => {
@@ -236,13 +235,13 @@ const ListOrganizations = () => {
 
   const handleConfirmDeleteOrganization = () => {
     if (selectedOrganizationToDelete) {
-      setIsLoading(true);
       deleteOrganization(String(selectedOrganizationToDelete.uuid));
       return;
     }
   };
 
   const postDeleteOrganization = async (uuid: string) => {
+    setIsLoading(true);
     const { data: response } = await api.delete(
       apiRouters.ORGANIZATION_DETAIL(`${uuid}`),
     );
@@ -281,7 +280,7 @@ const ListOrganizations = () => {
         organizationNameInputRef.current &&
         !organizationNameInputRef.current.contains(event.target) &&
         !event.target.closest('.toast-container') &&
-        !event.target.closest('.delete-icon') &&
+        !event.target.closest('.hide-icon') &&
         !event.target.closest('.edit-icon')
       ) {
         if (selectedOrganizationToUpdate.action == ActionsModal.EDIT) {
@@ -367,7 +366,7 @@ const ListOrganizations = () => {
 
   return (
     <Fragment>
-      <div className="flex justify-between">
+      <div className="flex justify-between mb-[30px]">
         <InputSearch
           placeholder="チームを検索"
           inputClassName="!w-[300px] !py-2 !rounded-[30px] text-sm !bg-[#FFF] border-none placeholder-[#77858F99]"
@@ -580,14 +579,19 @@ const ListOrganizations = () => {
                         <div className="w-3"></div>
                       )}
                       {session?.user.permissions &&
+                      !(
+                        selectedOrganizationToUpdate.action ==
+                          ActionsModal.CREATE &&
+                        selectedOrganizationToUpdate.uuid == element.uuid
+                      ) &&
                       hasPermissionInArray(
                         session?.user.permissions,
                         PermissionsSystem.ORGANIZATION_DELETE,
                       ) ? (
                         <ImageRound
-                          name="Delete"
-                          src={'/icons/delete-gray.svg'}
-                          className={`w-[12px] h-[14px] delete-icon ${
+                          name="Hide"
+                          src={'/icons/dark-close-eye.svg'}
+                          className={`w-[16px] h-[13px] hide-icon ${!element.deletedAt && 'opacity-30'} ${
                             selectedOrganizationToUpdate.uuid != element.uuid &&
                             selectedOrganizationToUpdate.status
                               ? 'hover:cursor-not-allowed'
@@ -614,7 +618,7 @@ const ListOrganizations = () => {
                                 return updatedOrganizations;
                               });
                             } else {
-                              handleOpenDeleteOrganizationModal(element);
+                              handleOpenDeleteOrganizationModal(element)
                             }
                             setSelectedOrganizationToUpdate({
                               uuid: '',
@@ -626,7 +630,7 @@ const ListOrganizations = () => {
                           }}
                         />
                       ) : (
-                        <div className="w-[13px]"></div>
+                        <div className="w-[16px]"></div>
                       )}
                     </div>
                   </td>
@@ -684,11 +688,14 @@ const ListOrganizations = () => {
       </div>
 
       {openConfirmDeleteModal && (
-        <ConfirmDeleteModal
+        <ConfirmHiddenModal
           open={openConfirmDeleteModal}
           name={selectedOrganizationToDelete?.name || ''}
           type="チーム"
-          message="紐づいている階層からも削除されます。"
+          message="ユーザーとの紐づきは、自動的に解除されません。"
+          message2="あとで「非表示一覧」から復元することも可能です。"
+          userColor={selectedOrganizationToDelete?.iconColor}
+          userAvatarUrl={selectedOrganizationToDelete?.icon || ''}
           onConfirm={handleConfirmDeleteOrganization}
           onClose={() => setOpenConfirmDeleteModal(false)}
         />
