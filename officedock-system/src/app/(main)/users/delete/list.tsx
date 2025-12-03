@@ -403,7 +403,7 @@ const ListUsersDelete = () => {
 
       <ConfirmRestoreModal
         open={openConfirmRestoreModal}
-        type="このユーザーを本当に復元しますか？"
+        message="このユーザーを本当に復元しますか？"
         name={selectedUserToRestore?.profile.fullName}
         userColor={selectedUserToRestore?.avatarColor}
         userAvatarUrl={selectedUserToRestore?.avatar}

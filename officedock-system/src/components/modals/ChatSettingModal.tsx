@@ -316,7 +316,7 @@ const ChatSettingModal = memo(
                     <div className="flex gap-[10px] items-center">
                       {renderAvatar(member.id)}
                       <p
-                        className={`truncate font-medium text-[15px] max-w-[210px] text-black`}>
+                        className={`truncate font-medium text-[15px] max-w-[330px] text-black`}>
                         <span className="font-normal text-sm text-black">
                           {member.fullName}
                         </span>
@@ -326,22 +326,25 @@ const ChatSettingModal = memo(
                       </p>
                     </div>
                     <div className="flex gap-5 items-center">
-                      <Controller
-                        control={control}
-                        name="role"
-                        render={({ field: { value } }) => (
-                          <TableDropdown
-                            options={roleOptions}
-                            labelClass="!text-xs !min-h-[15px] font-medium"
-                            labelOptionClass="!text-xs !min-h-[15px] font-medium"
-                            className="!w-[100px] !h-[25px] !rounded-[4px]"
-                            valueClassName="!border-[#77858F]"
-                            selectedOption={roleOptions.find(
-                              (element) => element.value === value?.value,
-                            )}
-                          />
-                        )}
-                      />
+                      <div className="hidden">
+                        <Controller
+                          control={control}
+                          name="role"
+                          render={({ field: { value } }) => (
+                            <TableDropdown
+                              options={roleOptions}
+                              labelClass="!text-xs !min-h-[15px] font-medium"
+                              labelOptionClass="!text-xs !min-h-[15px] font-medium"
+                              className="!w-[100px] !h-[25px] !rounded-[4px]"
+                              valueClassName="!border-[#77858F]"
+                              selectedOption={roleOptions.find(
+                                (element) => element.value === value?.value,
+                              )}
+                            />
+                          )}
+                        />
+                      </div>
+
                       {session?.user.id != member.id ? (
                         <DynamicTooltip
                           content={'このメンバーを退会させる'}
@@ -350,7 +353,7 @@ const ChatSettingModal = memo(
                             <ImageRound
                               className="w-[18px] h-[18px] hover:cursor-pointer"
                               src="/icons/close.svg"
-                              name="Close modal"
+                              name="Close"
                               onClick={() => openConfirmRemoveModal(member.id)}
                             />
                           </div>

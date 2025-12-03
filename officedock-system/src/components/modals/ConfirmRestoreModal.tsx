@@ -7,7 +7,6 @@ import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 export type ConfirmRestoreModalProps = {
   open: boolean;
   name?: string;
-  type: string;
   message?: string;
   userColor?: string;
   userAvatarUrl?: string | undefined;
@@ -19,7 +18,6 @@ const ConfirmRestoreModal = memo(
   ({
     open,
     name,
-    type,
     userColor,
     userAvatarUrl,
     message,
@@ -44,16 +42,13 @@ const ConfirmRestoreModal = memo(
                 />
               </div>
             )}
-            <p className="text-black font-medium break-all line-clamp-3 text-base text-center">
+            <p className="text-black font-medium break-all line-clamp-3 leading-[1] text-base text-center">
               {name}
             </p>
           </div>
         )}
         <div className="text-center mb-10">
-          <p className="text-sm text-black leading-6 text-neutral-02">{type}</p>
-          <p className="text-[#77858F] font-normal text-[13px] mt-[10px]">
-            {message}
-          </p>
+          <p className="text-sm text-black text-neutral-02 leading-[1]">{message}</p>
         </div>
         <div className="flex justify-center gap-3  items-center">
           <Button
