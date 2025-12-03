@@ -264,7 +264,7 @@ const HiddenListOrganizations = () => {
       {openConfirmRestoreModal && (
         <ConfirmRestoreModal
           open={openConfirmRestoreModal}
-          type="このチームを復元しますか？"
+          message="このチームを復元しますか？"
           name={selectedOrganizationToRestore?.name}
           userColor={selectedOrganizationToRestore?.iconColor}
           userAvatarUrl={selectedOrganizationToRestore?.icon || ''}

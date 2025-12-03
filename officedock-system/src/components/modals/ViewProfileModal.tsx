@@ -82,7 +82,7 @@ const ViewProfileModal = memo(
                   )}
                 </div>
 
-                <div className="flex gap-[10px] items-center pr-5 border-r-[1px] border-r-[#D2DBE1]">
+                <div className="flex gap-[10px] items-center ">
                   <p className="text-[#77858F] text-sm font-medium whitespace-nowrap">
                     名前
                   </p>
@@ -90,6 +90,8 @@ const ViewProfileModal = memo(
                     {authenticatedUser?.profile?.fullName || ''}
                   </p>
                 </div>
+                <div className="w-[1px] h-[16px] bg-[#D2DBE1]"></div>
+
                 <div className="flex gap-[10px] items-center">
                   <p className="text-[#77858F] text-sm font-medium">ID</p>
                   <p className="text-black text-[16px] font-medium">

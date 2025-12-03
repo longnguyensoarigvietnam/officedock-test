@@ -588,10 +588,14 @@ const ListUsers = () => {
             <div className=" flex items-center  gap-5">
               <p className="text-black text-[26px]">ユーザー管理</p>
               <span>{creationDataCommonData?.company?.name || ''}</span>
-              <span>
-                全メンバー{originalUserCount}人 /
-                {creationDataCommonData?.company?.plan?.limitPerson || 0}
-              </span>
+              <div className="flex items-center font-medium">
+                <span className="text-sm">
+                  全メンバー{originalUserCount}人 /
+                </span>
+                <span className="text-xs relative top-[2px]">
+                  {creationDataCommonData?.company?.plan?.limitPerson || 0}
+                </span>
+              </div>
             </div>
             <div className="flex gap-[10px] font-medium items-center">
               <p className="text-xs ">現在のプラン</p>
