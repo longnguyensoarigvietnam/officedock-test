@@ -33,6 +33,7 @@ export interface SmallCategory {
   id: number | string;
   name: string;
   uuid: string;
+  isHidden?: boolean;
 }
 
 export interface MediumCategory {
@@ -40,6 +41,7 @@ export interface MediumCategory {
     id: number | string;
     name: string;
     uuid: string;
+    isHidden?: boolean;
   } | null;
   SMALL: SmallCategory[];
 }
@@ -48,6 +50,7 @@ export interface LargeCategory {
     id: number | string;
     name: string;
     uuid: string;
+    isHidden?: boolean;
   };
   MEDIUM: MediumCategory[];
 }

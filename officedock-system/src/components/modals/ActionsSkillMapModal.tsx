@@ -329,7 +329,9 @@ const ActionsSkillMapModal = forwardRef<
 
               if (!selectedLarge) return [];
 
-              return selectedLarge.MEDIUM.map((medium) => ({
+              return selectedLarge.MEDIUM.filter(
+                (medium) => !medium.MEDIUM.isHidden,
+              ).map((medium) => ({
                 label: medium.MEDIUM.name,
                 value: medium.MEDIUM.id,
               }));
@@ -347,7 +349,9 @@ const ActionsSkillMapModal = forwardRef<
 
               return (
                 selectedMedium.SMALL &&
-                selectedMedium.SMALL.map((small) => ({
+                selectedMedium.SMALL.filter(
+                  (small) => !small.isHidden,
+                ).map((small) => ({
                   label: small.name,
                   value: small.id,
                 }))
@@ -423,7 +427,7 @@ const ActionsSkillMapModal = forwardRef<
             },
           ];
           data.map((category) => {
-            if (category.LARGE) {
+            if (category.LARGE && !category.LARGE.isHidden) {
               largeCategories.push({
                 label: category.LARGE.name,
                 value: category.LARGE.id,

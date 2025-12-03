@@ -144,7 +144,7 @@ const CategoryStepRaw = ({
         }
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stepKey]);
 
   // Validate show error duplicate row
@@ -189,7 +189,9 @@ const CategoryStepRaw = ({
 
   return (
     <div>
-      <p className="text-base text-black font-medium mb-[14px] leading-none">対応カテゴリー</p>
+      <p className="text-base text-black font-medium mb-[14px] leading-none">
+        対応カテゴリー
+      </p>
       <div className="flex gap-[10px] flex-col">
         {outerFields.map((field, index) => (
           <div key={field.id} className="flex gap-2 items-center h-[30px]">
@@ -239,9 +241,13 @@ const CategoryStepRaw = ({
                           classNameError="!text-xs !py-0"
                           options={optionsData}
                           disabled={isDisabledOption}
-                          selectedOption={optionsData.find(
-                            (element) => element.value === value?.value,
-                          )}
+                          selectedOption={
+                            value?.value
+                              ? optionsData.find(
+                                  (element) => element.value === value?.value,
+                                ) || value
+                              : undefined
+                          }
                           onChange={(e) => {
                             setIsFormTouched(true);
                             if (size === EventWorkCategory.LARGE) {

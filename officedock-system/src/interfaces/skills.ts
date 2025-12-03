@@ -122,6 +122,7 @@ export interface ChildCategory {
   id: number | string;
   name: string;
   uuid: string;
+  isHidden?: boolean
 }
 
 export interface NestedCategory {

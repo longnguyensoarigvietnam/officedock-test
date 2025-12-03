@@ -25,6 +25,7 @@ export interface OptionDropdownType {
   iconColor?: string;
   avatarUrl?: string;
   color?: string;
+  isHidden?: boolean;
 }
 
 export interface BasePagination<T> {

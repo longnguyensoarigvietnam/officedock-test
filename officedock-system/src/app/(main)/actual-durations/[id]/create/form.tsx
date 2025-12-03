@@ -892,7 +892,7 @@ const CreateActualDurationsForm = () => {
                           classNameTextData="!text-sm"
                           options={unSelectedTagIdsOptions}
                           selectedOption={
-                            value.value
+                            value?.value
                               ? dataOptionsTagIds.find(
                                   (element) => element.value == value?.value,
                                 ) || value

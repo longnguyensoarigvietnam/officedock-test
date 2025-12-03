@@ -267,7 +267,7 @@ const ActionsEventModal = ({
         setDataOptionsCategoryLarge(() => {
           const largeCategories: OptionDropdownType[] = [];
           calendarOrganizationCategories.map((category) => {
-            if (category.LARGE) {
+            if (category.LARGE && !category.LARGE.isHidden) {
               largeCategories.push({
                 label: category.LARGE.name,
                 value: category.LARGE.id,
@@ -625,7 +625,9 @@ const ActionsEventModal = ({
       setDataOptionsCategoryMedium([]);
     } else {
       setDataOptionsCategoryMedium(
-        selectedLargeCategory.MEDIUM.map((mediumCategory) => ({
+        selectedLargeCategory.MEDIUM.filter(
+          (mediumCategory) => !mediumCategory.MEDIUM.isHidden,
+        ).map((mediumCategory) => ({
           label: mediumCategory.MEDIUM.name,
           value: mediumCategory.MEDIUM.id,
         })),
@@ -2087,10 +2089,15 @@ const ActionsEventModal = ({
                       classNameTextData="!text-sm"
                       classNameOption="!text-sm"
                       options={[...dataOptionsCategoryLarge]}
-                      selectedOption={[...dataOptionsCategoryLarge].find(
-                        (element) =>
-                          element.value == (value as OptionDropdownType)?.value,
-                      )}
+                      selectedOption={
+                        (value as OptionDropdownType)?.value
+                          ? [...dataOptionsCategoryLarge].find(
+                              (element) =>
+                                element.value ==
+                                (value as OptionDropdownType)?.value,
+                            ) || value
+                          : undefined
+                      }
                       placeholder={'大カテゴリ'}
                       onChange={(e) => {
                         if (e.value != watch('largeCategory.value')) {
@@ -2118,11 +2125,15 @@ const ActionsEventModal = ({
                             classNameTextData="!text-sm"
                             classNameOption="!text-sm"
                             options={[...dataOptionsCategoryMedium]}
-                            selectedOption={[...dataOptionsCategoryMedium].find(
-                              (element) =>
-                                element.value ==
-                                (value as OptionDropdownType)?.value,
-                            )}
+                            selectedOption={
+                              (value as OptionDropdownType)?.value
+                                ? [...dataOptionsCategoryMedium].find(
+                                    (element) =>
+                                      element.value ==
+                                      (value as OptionDropdownType)?.value,
+                                  ) || value
+                                : undefined
+                            }
                             placeholder={'中カテゴリ'}
                             onChange={(e) => {
                               onChange(e);

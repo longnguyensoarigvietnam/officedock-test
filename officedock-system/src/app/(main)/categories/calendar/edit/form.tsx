@@ -105,6 +105,7 @@ const TableComponent = ({
     findLastUniqueMediumIndexes,
     findAffectedRows,
     getDeletedCalendarCategoryTypeFromRow,
+    checkIsHiddenCategory
   } = useCalendarCategory({ hierarchyDetail });
 
   useEffect(() => {
@@ -123,12 +124,26 @@ const TableComponent = ({
 
   const uniqueLargeCount = new Set(
     hierarchyDetail.statisticCategories
-      .filter((hierarchy) => hierarchy.large.showBy)
+      .filter(
+        (hierarchy) =>
+          hierarchy.large.showBy &&
+          !checkIsHiddenCategory({
+            type: HierarchyType.LARGE,
+            originalRow: hierarchy,
+          }),
+      )
       .map((item) => item.large.value),
   ).size;
   const uniqueMediumCount = new Set(
     hierarchyDetail.statisticCategories
-      .filter((hierarchy) => hierarchy.medium.showBy)
+      .filter(
+        (hierarchy) =>
+          hierarchy.medium.showBy &&
+          !checkIsHiddenCategory({
+            type: HierarchyType.MEDIUM,
+            originalRow: hierarchy,
+          }),
+      )
       .map((item) => `${item.large.value}-${item.medium.value}`),
   ).size;
 
@@ -759,31 +774,6 @@ const TableComponent = ({
       )
       .map((row) => row.medium.value)
       .filter((value) => value !== '');
-  };
-
-  const checkIsHiddenCategory = ({
-    type,
-    originalRow,
-  }: {
-    type: HierarchyType;
-    originalRow: CalendarCategoryRow;
-  }) => {
-    switch (type) {
-      case HierarchyType.LARGE:
-        return hierarchyDetail.statisticCategories.find(
-          (hierarchy) =>
-            hierarchy.id == originalRow.id && hierarchy.large?.isHidden,
-        )
-          ? true
-          : false;
-      case HierarchyType.MEDIUM:
-        return hierarchyDetail.statisticCategories.find(
-          (hierarchy) =>
-            hierarchy.id == originalRow.id && hierarchy.medium?.isHidden,
-        )
-          ? true
-          : false;
-    }
   };
 
   const checkHasHiddenCategoryInARow = ({
