@@ -163,6 +163,9 @@ _ERROR_MESSAGES = {
         "cannot_edit_schedule_task_archive": _(
             "Cannot edit schedule of task archived"
         ),
+        "cannot_archive_role": _(
+            "This role cannot be hidden because it is assigned to users."
+        ),
     },
     "ja": {
         "token_invalid": _("トークンは無効です。"),
@@ -272,6 +275,7 @@ _ERROR_MESSAGES = {
         "editable_range_1_to_10": _("修正可能な期間は1日間から10日間まで選択してください。"),
         "cannot_edit_schedule_task_archive": _("アーカイブ済みのタスクは、実施予定日時を修正できません。"),
         "update_over_total_users": _("ユーザー作成上限は{user_count}以上で入力してください。"),
+        "cannot_archive_role": _("このロールはユーザーに割り当てられているため、非表示にできません。"),
     },
 }
 

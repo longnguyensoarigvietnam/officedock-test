@@ -165,7 +165,9 @@ class RoleViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             )
 
         if instance.users.exists():
-            raise ValidationError({"detail": ERROR_MESSAGES["cannot_delete"]})
+            raise ValidationError(
+                {"detail": ERROR_MESSAGES["cannot_archive_role"]}
+            )
 
         instance.soft_delete()
 
