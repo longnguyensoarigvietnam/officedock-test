@@ -92,13 +92,14 @@ class CompanyViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         if custom_plan:
             if (
                 custom_plan.get("limit_person")
-                and custom_plan.get("limit_person") < company.users.count()
+                and custom_plan.get("limit_person")
+                < company.active_users.count()
             ):
                 raise ValidationError(
                     {
                         "detail": ERROR_MESSAGES[
                             "update_over_total_users"
-                        ].format(user_count=company.users.count())
+                        ].format(user_count=company.active_users.count())
                     }
                 )
             if company.status == CompanyStatus.CONTRACT_TERMINATED.value:
