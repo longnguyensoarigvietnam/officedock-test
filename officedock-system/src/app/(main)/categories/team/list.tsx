@@ -117,13 +117,13 @@ const ListHierarchy = () => {
           medium: {
             label: '',
             value: '',
-            isHidden: true,
+            isHidden: false,
             showBy: AddCategoryHierarchyType.PULLDOWN,
           },
           small: {
             label: '',
             value: '',
-            isHidden: true,
+            isHidden: false,
             showBy: AddCategoryHierarchyType.PULLDOWN,
           },
           skills: [],
@@ -176,7 +176,7 @@ const ListHierarchy = () => {
             small: {
               label: '',
               value: '',
-              isHidden: true,
+              isHidden: false,
               showBy: AddCategoryHierarchyType.PULLDOWN,
             },
             skills: [],

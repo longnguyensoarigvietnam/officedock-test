@@ -21,6 +21,7 @@ import api from '@base/api';
 interface FilterProps {
   name?: string;
   superiorName?: string;
+  isHidden?: boolean;
 }
 
 interface PaginationProps {
@@ -46,7 +47,7 @@ const useOrganizationList = (
 
     // TODO: Confirm with BE about how many and how to use param
     const apiUrl = pagination?.page
-      ? `${apiRouters.ORGANIZATION_LIST}?page=${pagination.page}${hasStatistic ? '&has_statistic_categories=true' : ''}&page_size=${pagination.pageSize || PAGINATION_PAGE_SIZE_DEFAULT}${ordering ? `&ordering=${ordering}` : ''}${filter?.name ? `&name=${filter.name}` : ''}${filter?.superiorName ? `&superior_name=${filter.superiorName}` : ''}`
+      ? `${apiRouters.ORGANIZATION_LIST}?page=${pagination.page}${hasStatistic ? '&has_statistic_categories=true' : ''}&page_size=${pagination.pageSize || PAGINATION_PAGE_SIZE_DEFAULT}${ordering ? `&ordering=${ordering}` : ''}${filter?.name ? `&name=${filter.name}` : ''}${filter?.isHidden ? '&is_hidden=true' : ''}${filter?.superiorName ? `&superior_name=${filter.superiorName}` : ''}`
       : `${apiRouters.ORGANIZATION_LIST}`;
 
     const { data } = await api.get<BasePagination<Organizations[]>>(apiUrl);

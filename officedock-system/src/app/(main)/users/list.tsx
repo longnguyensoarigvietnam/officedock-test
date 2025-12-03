@@ -4,6 +4,7 @@ import { useMutation } from 'react-query';
 import { signOut } from 'next-auth/react';
 import { AxiosError } from 'axios';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 
 import { Table, TableBody, TableHeader } from '@components/common/Table';
 import Button from '@components/common/Button';
@@ -12,6 +13,7 @@ import ImageRound from '@components/common/ImageRound';
 import ActionsUserModal from '@components/modals/ActionsUserModal';
 import Pagination from '@components/common/Pagination';
 import InputSearch from '@components/common/InputSearch';
+import ConfirmHiddenModal from '@components/modals/ConfirmHiddenModal';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 
 import { apiRouters, pageRouters } from '@constants/routers';
@@ -55,8 +57,6 @@ import {
 import { ResponseError } from '@interfaces/response';
 
 import api from '@base/api';
-import Link from 'next/link';
-import ConfirmHiddenModal from '@components/modals/ConfirmHiddenModal';
 
 const ListUsers = () => {
   const { data: session } = useSessionCache();

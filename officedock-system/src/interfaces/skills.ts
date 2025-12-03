@@ -241,6 +241,8 @@ export interface SkillMapByOrganization {
     step2: string;
     step3: string;
   };
+  isDeleted: boolean;
+  id: number
 }
 
 export interface SkillMapByOrganizationInfo {

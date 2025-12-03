@@ -1,19 +1,20 @@
 'use client';
 import { Suspense } from 'react';
 import { useRouter } from 'next/navigation';
+
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import MainLayout from '@components/layouts/MainLayout';
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
-import ListOrganizations from './list';
+import HiddenListOrganizations from './list';
 
 import { pageRouters } from '@constants/routers';
 import { PermissionsSystem } from '@constants/enums';
 
 import { hasPermissionInArray } from '@utils';
 
-const OrganizationPage = () => {
+const HiddenOrganizationPage = () => {
   const router = useRouter();
   const { data: session } = useSessionCache();
 
@@ -21,7 +22,7 @@ const OrganizationPage = () => {
     <MainLayout
       title={pageRouters.ORGANIZATION_MANAGEMENT.name}
       permission={PermissionsSystem.ORGANIZATION_VIEW}
-      className="px-10 py-[30px] !overflow-x-auto"
+      className="px-10 py-[30px] !bg-[#F3F3F3] !overflow-x-auto"
       showFooter={false}>
       <div className="flex items-center justify-between mb-[27px]">
         <div className="flex gap-5 items-center">
@@ -29,6 +30,16 @@ const OrganizationPage = () => {
             <p className="text-black font-medium text-[26px] leading-[1]">
               チーム管理
             </p>
+            <div className="flex items-center">
+              <ImageRound
+                name="Hide"
+                src={'/icons/dark-close-eye.svg'}
+                className="w-[16px] h-[13px] hover:cursor-pointer"
+              />
+              <p className="ml-1 text-[#77858F] font-medium text-xs">
+                非表示一覧
+              </p>
+            </div>
           </div>
           <div className="flex justify-center items-center gap-2 bg-white w-fit p-[6px] rounded-[20px]">
             <Button
@@ -55,15 +66,9 @@ const OrganizationPage = () => {
         <div
           className="flex items-center hover:cursor-pointer"
           onClick={() => {
-            router.push(pageRouters.ORGANIZATION_MANAGEMENT_HIDDEN.href);
+            router.push(pageRouters.ORGANIZATION_MANAGEMENT.href);
           }}>
-          <ImageRound
-            name="Hide"
-            src={'/icons/dark-close-eye.svg'}
-            className="w-[16px] h-[13px] hover:cursor-pointer"
-          />
-
-          <p className="ml-1 text-[#77858F] font-medium text-xs">非表示一覧</p>
+          <p className="ml-1 text-[#77858F] font-medium text-xs">表示中一覧</p>
           <div className="ml-[6px] flex justify-between p-[3px] rounded-full bg-white border-b">
             <ImageRound
               name="Filter extend icon"
@@ -75,11 +80,11 @@ const OrganizationPage = () => {
       </div>
       <div className="flex flex-col gap-6">
         <Suspense>
-          <ListOrganizations />
+          <HiddenListOrganizations />
         </Suspense>
       </div>
     </MainLayout>
   );
 };
 
-export default OrganizationPage;
+export default HiddenOrganizationPage;

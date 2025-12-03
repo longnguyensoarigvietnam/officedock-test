@@ -469,10 +469,15 @@ const TableChart = ({
               <SingleSelect
                 className="border-none shadow-none w-[100%] h-[30px] !bg-[#EBF1F7] rounded-md"
                 defaultValue={
-                  listOptionsOrganization &&
-                  listOptionsOrganization.find(
-                    (element) => element.value === rowData.organization,
-                  )
+                  rowData.organization
+                    ? (listOptionsOrganization &&
+                        listOptionsOrganization.find(
+                          (element) => element.value === rowData.organization,
+                        )) || {
+                        label: rowData.organizationName,
+                        value: rowData.organization,
+                      }
+                    : undefined
                 }
                 placeholder=""
                 showArrow={

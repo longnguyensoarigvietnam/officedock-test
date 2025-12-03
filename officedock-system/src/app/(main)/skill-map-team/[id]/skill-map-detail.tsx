@@ -237,13 +237,13 @@ export const SkillMapDetailByUser = ({
               </div>
 
               {normalizeSkillMaps(skillMap.skillMaps).map(
-                (skillMap: SkillMapByOrganizationInfo[], index) => {
+                (skillMapDetail: SkillMapByOrganizationInfo[], index) => {
                   return (
                     <div
                       key={index}
                       className="flex w-full mb-5 bg-[#E9EEF3] rounded-[20px] p-[10px]">
-                      {skillMap.map((skill, idx) => {
-                        const isLast = idx === skillMap.length - 1;
+                      {skillMapDetail.map((skill, idx) => {
+                        const isLast = idx === skillMapDetail.length - 1;
                         const isLocked = skill.isLocked;
                         const step = skill.skill.step
                           ? Number(getLastChar(skill.skill.step))
@@ -286,11 +286,12 @@ export const SkillMapDetailByUser = ({
                               <div
                                 className="px-5 h-[90px] flex gap-3 bg-white items-center w-full rounded-[14px] relative"
                                 style={{
-                                  boxShadow: showTwinklingStars
-                                    ? '0px 0px 20px 0px #36ACDE80'
-                                    : '0px 2px 8px 0px #0000001A',
+                                  boxShadow:
+                                    showTwinklingStars && !skillMap.isDeleted
+                                      ? '0px 0px 20px 0px #36ACDE80'
+                                      : '0px 2px 8px 0px #0000001A',
                                 }}>
-                                {showTwinklingStars && (
+                                {showTwinklingStars && !skillMap.isDeleted && (
                                   <>
                                     <div className="absolute -top-[20px] left-[20px] bg-primary rounded-[20px] w-[140px] h-[28px] flex items-center justify-center">
                                       <p className="text-white text-xs font-bold">
@@ -300,7 +301,7 @@ export const SkillMapDetailByUser = ({
                                     <div className="bg-primary absolute clip-diagonal-left h-3 w-3 top-[3px] left-[38px]"></div>
                                   </>
                                 )}
-                                {showTwinklingStars && (
+                                {showTwinklingStars && !skillMap.isDeleted && (
                                   <div>
                                     <TwinklingIcon
                                       className="absolute top-[-10px] left-[-10px]"
@@ -347,6 +348,7 @@ export const SkillMapDetailByUser = ({
                                         src={'/icons/comment.svg'}
                                         className="w-[16px] h-[14px] cursor-pointer"
                                         onClick={(e) => {
+                                          if (skillMap.isDeleted) return;
                                           e.stopPropagation();
                                           setSelectedSkillMapToViewComment(
                                             skill.id,
@@ -357,19 +359,17 @@ export const SkillMapDetailByUser = ({
                                       <div className="w-[16px]"></div>
                                     )}
                                   </div>
-                                  {skill.skill.deletedAt ? (
-                                    <div></div>
-                                  ) : (
-                                    <div>
-                                      <SkillMapProgressBar
-                                        value={progressPercent}
-                                        strokeColor={strokeColor}
-                                        trailColor={
-                                          stepCompleted ? '#D2DBE1' : '#EBF1F7'
-                                        }
-                                      />
-                                    </div>
-                                  )}
+
+                                  <div
+                                    className={`${skillMap.isDeleted && 'invisible'}`}>
+                                    <SkillMapProgressBar
+                                      value={progressPercent}
+                                      strokeColor={strokeColor}
+                                      trailColor={
+                                        stepCompleted ? '#D2DBE1' : '#EBF1F7'
+                                      }
+                                    />
+                                  </div>
                                 </div>
                                 <div className="w-[60px] flex justify-end">
                                   {' '}
@@ -402,9 +402,9 @@ export const SkillMapDetailByUser = ({
                             {!isLast && (
                               <div
                                 style={{
-                                  background: skillMap[idx + 1].isLocked
+                                  background: skillMapDetail[idx + 1].isLocked
                                     ? '#D2DBE1'
-                                    : !skillMap[idx + 1].id || !skill.id
+                                    : !skillMapDetail[idx + 1].id || !skill.id
                                       ? '#FFF'
                                       : idx === 0
                                         ? 'linear-gradient(90deg, #36ACDE 0%, #0068B6 100%)'
