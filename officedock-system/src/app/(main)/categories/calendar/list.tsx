@@ -36,30 +36,82 @@ const ListHierarchy = () => {
   useCalendarCategoryHierarchyDetail({
     onSuccess: (data) => {
       const calendarCategoryHierarchy = data[0];
-      const statisticCategories = calendarCategoryHierarchy.statisticCategories
-        .filter((category) => !category.largeStatisticCategory.isHidden)
-        .map((category) => ({
-          id: category.id,
-          large: {
-            label: category.largeStatisticCategory?.name || '',
-            value: category.largeStatisticCategory?.uuid || '',
-            isHidden: category.largeStatisticCategory?.isHidden || false,
-            showBy: AddCategoryHierarchyType.PULLDOWN,
-          },
-          medium: {
-            label: category.mediumStatisticCategory?.name || '',
-            value: category.mediumStatisticCategory?.uuid || '',
-            isHidden: category.mediumStatisticCategory?.isHidden || false,
-            showBy: AddCategoryHierarchyType.PULLDOWN,
-          },
-          color: category.color,
-        }));
+
+      // Step 1: filter out rows whose large is hidden
+      const rows = calendarCategoryHierarchy.statisticCategories.filter(
+        (category) => !category.largeStatisticCategory.isHidden,
+      );
+
+      // Step 2: group by large
+      const groupedByLarge = rows.reduce(
+        (acc, category) => {
+          const largeUuid = category.largeStatisticCategory.uuid;
+          if (!acc[largeUuid]) acc[largeUuid] = [];
+          acc[largeUuid].push(category);
+          return acc;
+        },
+        {} as Record<string, typeof rows>,
+      );
+
+      const finalList: any[] = [];
+
+      Object.values(groupedByLarge).forEach((group) => {
+        // Check if all medium are hidden
+        const allMediumHidden = group.every(
+          (item) => item.mediumStatisticCategory?.isHidden,
+        );
+
+        if (allMediumHidden) {
+          // Keep only one row, with empty medium
+          const base = group[0];
+          finalList.push({
+            id: base.id,
+            large: {
+              label: base.largeStatisticCategory?.name || '',
+              value: base.largeStatisticCategory?.uuid || '',
+              isHidden: false,
+              showBy: AddCategoryHierarchyType.PULLDOWN,
+            },
+            medium: {
+              label: '',
+              value: '',
+              isHidden: false,
+              showBy: AddCategoryHierarchyType.PULLDOWN,
+            },
+            color: base.color,
+          });
+        } else {
+          // Keep all rows but only those whose medium is NOT hidden
+          group
+            .filter((item) => !item.mediumStatisticCategory?.isHidden)
+            .forEach((item) => {
+              finalList.push({
+                id: item.id,
+                large: {
+                  label: item.largeStatisticCategory?.name || '',
+                  value: item.largeStatisticCategory?.uuid || '',
+                  isHidden: item.largeStatisticCategory?.isHidden || false,
+                  showBy: AddCategoryHierarchyType.PULLDOWN,
+                },
+                medium: {
+                  label: item.mediumStatisticCategory?.name || '',
+                  value: item.mediumStatisticCategory?.uuid || '',
+                  isHidden: item.mediumStatisticCategory?.isHidden || false,
+                  showBy: AddCategoryHierarchyType.PULLDOWN,
+                },
+                color: item.color,
+              });
+            });
+        }
+      });
+
       setHierarchyDetail({
         id: calendarCategoryHierarchy.id,
         name: 'カレンダー',
-        statisticCategories,
+        statisticCategories: finalList,
       });
     },
+
     onSettled: () => setIsLoading(false),
   });
 

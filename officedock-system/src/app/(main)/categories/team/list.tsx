@@ -78,34 +78,147 @@ const ListHierarchy = () => {
   });
 
   const mapStatisticCategories = (categories: StatisticCategory[]) => {
-    return categories.map((org) => ({
-      id: org.id,
-      large: {
-        label: org.largeStatisticCategory?.name || '',
-        value: org.largeStatisticCategory?.uuid || '',
-        isHidden: org.largeStatisticCategory?.isHidden || false,
-        showBy: AddCategoryHierarchyType.PULLDOWN,
+    // Step 1: remove rows where LARGE is hidden
+    const rows = categories.filter(
+      (row) => !row.largeStatisticCategory.isHidden,
+    );
+
+    // Group by LARGE (uuid)
+    const largeGroups = rows.reduce(
+      (acc, row) => {
+        const largeUuid = row.largeStatisticCategory.uuid;
+        if (!acc[largeUuid]) acc[largeUuid] = [];
+        acc[largeUuid].push(row);
+        return acc;
       },
-      medium: {
-        label: org.mediumStatisticCategory?.name || '',
-        value: org.mediumStatisticCategory?.uuid || '',
-        isHidden: org.mediumStatisticCategory?.isHidden || false,
-        showBy: AddCategoryHierarchyType.PULLDOWN,
-      },
-      small: {
-        label: org.smallStatisticCategory?.name || '',
-        value: org.smallStatisticCategory?.uuid || '',
-        isHidden: org.smallStatisticCategory?.isHidden || false,
-        showBy: AddCategoryHierarchyType.PULLDOWN,
-      },
-      skills: org.skills.map((skill) => {
-        return {
-          label: skill.name,
-          value: skill.id,
-        };
-      }),
-      color: org.color,
-    }));
+      {} as Record<string, typeof rows>,
+    );
+
+    const finalList: any[] = [];
+
+    Object.values(largeGroups).forEach((largeGroup) => {
+      // ===== MEDIUM LEVEL PROCESSING =====
+      const allMediumHidden = largeGroup.every(
+        (row) => row.mediumStatisticCategory?.isHidden,
+      );
+
+      if (allMediumHidden) {
+        // Keep ONE entry for the entire LARGE
+        const base = largeGroup[0];
+
+        finalList.push({
+          id: base.id,
+          large: {
+            label: base.largeStatisticCategory?.name || '',
+            value: base.largeStatisticCategory?.uuid || '',
+            isHidden: false,
+            showBy: AddCategoryHierarchyType.PULLDOWN,
+          },
+          medium: {
+            label: '',
+            value: '',
+            isHidden: true,
+            showBy: AddCategoryHierarchyType.PULLDOWN,
+          },
+          small: {
+            label: '',
+            value: '',
+            isHidden: true,
+            showBy: AddCategoryHierarchyType.PULLDOWN,
+          },
+          skills: [],
+          color: base.color,
+        });
+
+        return; // Skip small-level processing
+      }
+
+      // Otherwise filter only visible MEDIUM rows
+      const mediumVisibleRows = largeGroup.filter(
+        (row) => !row.mediumStatisticCategory?.isHidden,
+      );
+
+      // Group by both LARGE + MEDIUM
+      const mediumGroups = mediumVisibleRows.reduce(
+        (acc, row) => {
+          const key = `${row.largeStatisticCategory.uuid}-${row.mediumStatisticCategory.uuid}`;
+          if (!acc[key]) acc[key] = [];
+          acc[key].push(row);
+          return acc;
+        },
+        {} as Record<string, typeof mediumVisibleRows>,
+      );
+
+      Object.values(mediumGroups).forEach((mediumGroup) => {
+        // ===== SMALL LEVEL PROCESSING =====
+        const allSmallHidden = mediumGroup.every(
+          (row) => row.smallStatisticCategory?.isHidden,
+        );
+
+        if (allSmallHidden) {
+          // Keep only one row for this MEDIUM
+          const base = mediumGroup[0];
+
+          finalList.push({
+            id: base.id,
+            large: {
+              label: base.largeStatisticCategory?.name || '',
+              value: base.largeStatisticCategory?.uuid || '',
+              isHidden: false,
+              showBy: AddCategoryHierarchyType.PULLDOWN,
+            },
+            medium: {
+              label: base.mediumStatisticCategory?.name || '',
+              value: base.mediumStatisticCategory?.uuid || '',
+              isHidden: false,
+              showBy: AddCategoryHierarchyType.PULLDOWN,
+            },
+            small: {
+              label: '',
+              value: '',
+              isHidden: true,
+              showBy: AddCategoryHierarchyType.PULLDOWN,
+            },
+            skills: [],
+            color: base.color,
+          });
+        } else {
+          // Keep only visible SMALL
+          mediumGroup
+            .filter((row) => !row.smallStatisticCategory?.isHidden)
+            .forEach((row) => {
+              finalList.push({
+                id: row.id,
+                large: {
+                  label: row.largeStatisticCategory?.name || '',
+                  value: row.largeStatisticCategory?.uuid || '',
+                  isHidden: row.largeStatisticCategory?.isHidden || false,
+                  showBy: AddCategoryHierarchyType.PULLDOWN,
+                },
+                medium: {
+                  label: row.mediumStatisticCategory?.name || '',
+                  value: row.mediumStatisticCategory?.uuid || '',
+                  isHidden: row.mediumStatisticCategory?.isHidden || false,
+                  showBy: AddCategoryHierarchyType.PULLDOWN,
+                },
+                small: {
+                  label: row.smallStatisticCategory?.name || '',
+                  value: row.smallStatisticCategory?.uuid || '',
+                  isHidden: row.smallStatisticCategory?.isHidden || false,
+                  showBy: AddCategoryHierarchyType.PULLDOWN,
+                },
+                skills:
+                  row.skills?.map((skill) => ({
+                    label: skill.name,
+                    value: skill.id,
+                  })) ?? [],
+                color: row.color,
+              });
+            });
+        }
+      });
+    });
+    return finalList;
   };
 
   useOrganizationCategoryHierarchyDetail({
@@ -113,39 +226,11 @@ const ListHierarchy = () => {
     currentScreen: ScreenName.ALL,
     conditions: [Boolean(selectedOrganizationOption.value)],
     onSuccess: async (data) => {
-      const statisticCategories = data.statisticCategories.map((org) => ({
-        id: org.id,
-        large: {
-          label: org.largeStatisticCategory?.name || '',
-          value: org.largeStatisticCategory?.uuid || '',
-          isHidden: org.largeStatisticCategory?.isHidden || false,
-          showBy: AddCategoryHierarchyType.PULLDOWN,
-        },
-        medium: {
-          label: org.mediumStatisticCategory?.name || '',
-          value: org.mediumStatisticCategory?.uuid || '',
-          isHidden: org.mediumStatisticCategory?.isHidden || false,
-          showBy: AddCategoryHierarchyType.PULLDOWN,
-        },
-        small: {
-          label: org.smallStatisticCategory?.name || '',
-          value: org.smallStatisticCategory?.uuid || '',
-          isHidden: org.smallStatisticCategory?.isHidden || false,
-          showBy: AddCategoryHierarchyType.PULLDOWN,
-        },
-        skills: org.skills.map((skill) => {
-          return {
-            label: skill.name,
-            value: skill.id,
-          };
-        }),
-        color: org.color,
-      }));
       setHierarchyList([
         {
           id: data.id,
           name: data.name,
-          statisticCategories,
+          statisticCategories: mapStatisticCategories(data.statisticCategories),
         },
       ]);
     },
