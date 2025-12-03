@@ -204,6 +204,7 @@ const PieChart = ({
         text-overflow:ellipsis;
         line-height:1.3em;
         max-height:2.6em;
+         max-width:250px;
         word-break:break-word;
       ">${item.label}</strong>
               </div>
