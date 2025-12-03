@@ -510,7 +510,7 @@ class SubmitLevelViewSet(
         organization_id = request.query_params.get("organization_id")
         # FIXME: Check role permissions for get list organizations
         organizations = Organization.objects.filter(
-            company_id=user.company_id,
+            company_id=user.company_id, deleted_at__isnull=True
         ).order_by("-created_at")
         if organization_id:
             organizations = organizations.filter(id=organization_id)

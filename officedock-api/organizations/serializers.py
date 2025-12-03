@@ -53,6 +53,8 @@ class BaseOrganizationSerializer(serializers.ModelSerializer):
             representation["icon"] = get_signed_url(
                 instance.icon, AVATAR_GCS_EXPIRATION_SECONDS
             )
+        if instance.deleted_at:
+            representation["name"] = f"{instance.name}{KEYWORDS['deleted']}"
 
         return representation
 
@@ -252,7 +254,7 @@ class StatisticCategoryStructionSerializer(serializers.ModelSerializer):
         ]
 
 
-class OrganizationSerializer(BaseOrganizationSerializer):
+class OrganizationSerializer(serializers.ModelSerializer):
     """
     Serializer for the Organization.
     """
@@ -281,7 +283,19 @@ class OrganizationSerializer(BaseOrganizationSerializer):
             "icon",
             "icon_color",
             "type",
+            "deleted_at",
         ]
+
+    def to_representation(self, instance):
+        """Override file URL representation to ensure consistency"""
+        representation = super().to_representation(instance)
+
+        if instance.icon:
+            representation["icon"] = get_signed_url(
+                instance.icon, AVATAR_GCS_EXPIRATION_SECONDS
+            )
+
+        return representation
 
     def get_actions(self, obj):
         """
@@ -464,6 +478,14 @@ class OrganizationHierarchySerializer(serializers.ModelSerializer):
         Handle get parent uuid
         """
         return obj.superior.uuid if obj.superior else None
+
+    def to_representation(self, instance):
+        """Override representation"""
+        representation = super().to_representation(instance)
+        if instance.deleted_at:
+            representation["name"] = f"{instance.name}{KEYWORDS['deleted']}"
+
+        return representation
 
 
 class OrganizationDetailSerializer(OrganizationSerializer):

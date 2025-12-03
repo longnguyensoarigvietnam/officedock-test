@@ -9,7 +9,7 @@ from rest_framework.exceptions import ValidationError, NotFound
 from django.utils.timezone import now
 
 from base.apis import BaseAPIViewSet
-from base.messages import ERROR_MESSAGES
+from base.messages import ERROR_MESSAGES, KEYWORDS
 from base.permissions import ActionPermission
 from chat.models import ChatMessage
 from common.serializers import CreationDataUserWithMainOrganizationSerializer
@@ -24,6 +24,7 @@ from organizations.models import (
     UsersOrganizations,
 )
 from organizations.serializers import (
+    BaseOrganizationSerializer,
     StatisticCategorySerializer,
 )
 from skills.constants import (
@@ -287,7 +288,9 @@ class ManageSkillMapViewSet(
             .order_by("id")
         )
         organizations = (
-            Organization.objects.filter(company_id=user.company_id)
+            Organization.objects.filter(
+                company_id=user.company_id, deleted_at__isnull=True
+            )
             .prefetch_related(
                 Prefetch("users", queryset=user_qs),
                 Prefetch(
@@ -349,7 +352,23 @@ class SkillMapViewSet(
         prev_user = None
         next_user = None
         user = get_object_or_404(User, id=user_id) if user_id else request.user
-        organizations = user.organizations.all()
+        skill_org_ids = user.skill_maps.distinct().values_list(
+            "organization", flat=True
+        )
+        user_org_ids = user.organizations.values_list("id", flat=True)
+        org_ids = set(skill_org_ids).union(user_org_ids)
+        organizations = (
+            Organization.objects.filter(id__in=org_ids)
+            .annotate(
+                sort_key=Case(
+                    When(id__in=user_org_ids, then=0),  # user orgs first
+                    default=1,  # skill-only orgs last
+                    output_field=IntegerField(),
+                )
+            )
+            .order_by("-deleted_at", "sort_key")
+            .all()
+        )
         if organization_id:
             # Get the single organization
             organization = get_object_or_404(Organization, id=organization_id)
@@ -421,10 +440,21 @@ class SkillMapViewSet(
                         )
                     skill = Skill.objects.filter(parent_id=skill.id).first()
                 data_skill_maps.append(group_skill_map)
+            org_name = (
+                organization.name
+                if organization.id in user_org_ids
+                else f"{organization.name}{KEYWORDS['independent']}"
+            )
+            org_serializer = BaseOrganizationSerializer(organization).data
+            org_name = (
+                org_serializer["name"] if organization.deleted_at else org_name
+            )
             data["organizations"].append(
                 {
-                    "id": organization.id,
-                    "organization_name": organization.name,
+                    "id": org_serializer["id"],
+                    "organization_name": org_name,
+                    "is_deleted": bool(organization.deleted_at)
+                    or (organization.id not in user_org_ids),
                     "skill_maps": data_skill_maps,
                     "steps": {
                         "step_1": step.define_step_1 if step else None,
@@ -1118,7 +1148,7 @@ class SkillViewSet(
 
         user = request.user
         organizations = Organization.objects.filter(
-            company_id=user.company_id,
+            company_id=user.company_id, deleted_at__isnull=True
         ).order_by("-created_at")
 
         if organization_id:

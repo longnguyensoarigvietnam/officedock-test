@@ -28,7 +28,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
 from base.apis import BaseAPIViewSet
 from base.filters import FilterByPermission
-from base.messages import ERROR_MESSAGES
+from base.messages import ERROR_MESSAGES, KEYWORDS
 from base.paginations import BasePagination
 from calendars.constants import CalendarTypes, ScheduleCategoryTypes
 from calendars.models import Schedule
@@ -235,11 +235,15 @@ class StatisticViewSet(BaseAPIViewSet):
         ]
         org_values = Organization.all_objects.filter(
             id__in=org_of_task_ids
-        ).values_list("id", "name", "type")
+        ).values_list("id", "name", "type", "deleted_at")
 
         org_map = {
-            org_id: {"id": org_id, "name": name, "type": org_type}
-            for org_id, name, org_type in org_values
+            org_id: {
+                "id": org_id,
+                "name": f"{name}{KEYWORDS['deleted']}" if deleted_at else name,
+                "type": org_type,
+            }
+            for org_id, name, org_type, deleted_at in org_values
         }
         merged_duration = []
         for item in list(chain(tasks, events)):
@@ -1573,8 +1577,13 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
             "color": SUB_TEAM_COLOR,
             "users": [],
         }
+        main_org_name = (
+            main_organization.name
+            if main_organization.deleted_at == None
+            else f"{main_organization.name}{KEYWORDS['deleted']}"
+        )
         fake_data_mainteam = {
-            "organization_name": main_organization.name,
+            "organization_name": main_org_name,
             "organization_id": main_organization.id,
             "color": MAIN_TEAM_COLOR,
             "duration": DEFAULT_TIME,
@@ -1665,14 +1674,14 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
             team_names.append(team.get("organization_name"))
         # Append fake data to table under chart
         if len(team_names) < 3:
-            if main_organization.name not in team_names:
+            if main_org_name not in team_names:
                 teams.append(fake_data_mainteam)
             if SUB_TEAM not in team_names:
                 teams.append(fake_data_subteam)
             if CALENDAR not in team_names:
                 teams.append(fake_data_calendar)
 
-        priority_order = {main_organization.name: 0, SUB_TEAM: 1, CALENDAR: 2}
+        priority_order = {main_org_name: 0, SUB_TEAM: 1, CALENDAR: 2}
         # Sort based on priority_order
         teams.sort(
             key=lambda x: priority_order.get(x["organization_name"], 999)
@@ -1693,7 +1702,7 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
             if option == CALENDAR:
                 organization_map[calendar_org.id] = calendar_org.name
             elif option == MAIN_TEAM:
-                organization_map[main_organization.id] = main_organization.name
+                organization_map[main_organization.id] = main_org_name
             elif option == SUB_TEAM:
                 organization_map.update(
                     {

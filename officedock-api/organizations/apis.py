@@ -22,6 +22,7 @@ from base.apis import BaseAPIViewSet
 from base.filters import FilterByPermission
 from base.messages import ERROR_MESSAGES, KEYWORDS
 from base.permissions import ActionPermission
+from skills.utils import handle_continue_progress_lookback
 
 from common.filters import CustomOrderFilter
 from common.models import Category
@@ -324,7 +325,8 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         """
         Method to perform destruction of an instance.
         """
-
+        instance.soft_delete()
+        return self.response_deleted()
         # Checking if there are any users associated with the organization
         if (
             instance.users.count() > 0
@@ -375,7 +377,9 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         """
         Get list of member in organization
         """
-        queryset = self.filter_queryset(self.get_queryset())
+        queryset = self.filter_queryset(self.get_queryset()).filter(
+            deleted_at__isnull=True
+        )
         search = request.query_params.get("search")
 
         if search:
@@ -388,6 +392,49 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 queryset.distinct(), many=True, context={"search": search}
             ).data
         )
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("is_hidden", type=bool),
+        ]
+    )
+    def list(self, request):
+        """
+        Return list of roles
+        """
+        queryset = self.filter_queryset(self.get_queryset())
+
+        if request.query_params.get("is_hidden", "").lower() == "true":
+            queryset = queryset.filter(deleted_at__isnull=False)
+        else:
+            queryset = queryset.filter(deleted_at__isnull=True)
+
+        return self.response_pagination(
+            request, queryset.distinct(), OrganizationSerializer
+        )
+
+    @action(
+        detail=True, methods=["POST"], url_path="restore", serializer_class=None
+    )
+    def restore_organization(self, request, uuid=None):
+        """
+        Handle restore of deleted organization
+        """
+        organization = self.get_object()
+        skill_maps = organization.skill_maps.filter(
+            is_complete=False,
+            skill_map_skill_levels__start_lookback_at__isnull=False,
+            skill_map_skill_levels__next_submit_at__isnull=False,
+        )
+        if skill_maps.exists():
+            for skill_map in skill_maps.all():
+                for skill_level in skill_map.skill_map_skill_levels.all():
+                    handle_continue_progress_lookback(
+                        skill_map_skill_level=skill_level,
+                        deleted_at=organization.deleted_at,
+                    )
+        organization.restore()
+        return self.response_ok()
 
 
 @extend_schema(tags=["System > Organization"])
@@ -789,7 +836,16 @@ class OrganizationCategoryHierarchyViewSet(
         ],
     )
     def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
+        queryset = self.filter_queryset(self.get_queryset())
+
+        if request.query_params.get("is_hidden", "").lower() == "true":
+            queryset = queryset.filter(deleted_at__isnull=False)
+        else:
+            queryset = queryset.filter(deleted_at__isnull=True)
+
+        return self.response_ok(
+            OrganizationCategoryHierarchySerializer(queryset, many=True).data
+        )
 
     @action(
         methods=["POST"],
@@ -1132,7 +1188,11 @@ class TeamViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         """
 
         user = self.request.user
-        return super().get_queryset().filter(company_id=user.company_id)
+        return (
+            super()
+            .get_queryset()
+            .filter(company_id=user.company_id, deleted_at__isnull=True)
+        )
 
     def get_serializer_context(self):
         """

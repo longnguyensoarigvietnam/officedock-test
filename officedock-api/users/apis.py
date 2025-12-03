@@ -39,7 +39,7 @@ from plans.constants import (
     LIMIT_PERSON_PLAN_21_30,
 )
 from plans.models import Plan
-from submit_levels.models import SubmitLevelHistory
+from skills.utils import handle_continue_progress_lookback
 from users.constants import (
     RoleTypes,
     StepsRegisterTypes,
@@ -988,15 +988,15 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             if delete_organizations := list(
                 set(current_organization) - set(new_organization)
             ):
-                for delete_org in delete_organizations:
-                    skill_maps = user.skill_maps.filter(organization=delete_org)
-                    skills = skill_maps.values("skill")
-                    # Remove all submit level in organization of user
-                    SubmitLevelHistory.objects.filter(
-                        organization=delete_org, staff=user, skill__in=skills
-                    ).delete()
-                    # Remove all skill map in organization of user
-                    skill_maps.delete()
+                # for delete_org in delete_organizations:
+                #     skill_maps = user.skill_maps.filter(organization=delete_org)
+                #     skills = skill_maps.values("skill")
+                #     # Remove all submit level in organization of user
+                #     SubmitLevelHistory.objects.filter(
+                #         organization=delete_org, staff=user, skill__in=skills
+                #     ).delete()
+                #     # Remove all skill map in organization of user
+                #     skill_maps.delete()
 
                 # Remove team task index
                 TeamTaskIndex.objects.filter(
@@ -1080,6 +1080,18 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         Handle restore of deleted user
         """
         user = self.get_object()
+        skill_maps = user.skill_maps.filter(
+            is_complete=False,
+            skill_map_skill_levels__start_lookback_at__isnull=False,
+            skill_map_skill_levels__next_submit_at__isnull=False,
+        )
+        if skill_maps.exists():
+            for skill_map in skill_maps.all():
+                for skill_level in skill_map.skill_map_skill_levels.all():
+                    handle_continue_progress_lookback(
+                        skill_map_skill_level=skill_level,
+                        deleted_at=user.deleted_at,
+                    )
         user.restore()
         return self.response_ok()
 

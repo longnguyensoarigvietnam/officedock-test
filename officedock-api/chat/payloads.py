@@ -119,7 +119,9 @@ def build_chat_message_payload(full_messages, request_user=None):
     main_org_map = {
         uo["user_id"]: {
             "id": uo["organization_id"],
-            "name": uo["organization__name"],
+            "name": uo["organization__name"]
+            if uo["organization__deleted_at"] == None
+            else f"{uo['organization__name']}{KEYWORDS['deleted']}",
             "uuid": uo["organization__uuid"],
         }
         for uo in UsersOrganizations.objects.filter(
@@ -129,6 +131,7 @@ def build_chat_message_payload(full_messages, request_user=None):
             "organization_id",
             "organization__name",
             "organization__uuid",
+            "organization__deleted_at",
         )
     }
     user_serialized_map = {

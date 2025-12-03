@@ -66,7 +66,7 @@ class RolePermissionForCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Role
-        fields = ["id", "name", "permissions"]
+        fields = ["id", "name", "permissions", "deleted_at"]
         read_only_fields = ["id"]
 
     def validate_name(self, value):

@@ -450,7 +450,10 @@ class CronJobViewSet(BaseAPIViewSet):
 
         # --- 3. Check Skill Map Levels ---
         skill_map_levels = SkillMapSkillLevel.objects.filter(
-            skill_map__is_valid=True, popup=True, is_complete=False
+            skill_map__is_valid=True,
+            popup=True,
+            is_complete=False,
+            skill_map__organization__deleted_at__isnull=True,
         ).select_related("skill", "skill_map", "skill_map__staff")
         for skill_map_level in skill_map_levels:
             data = self._check_process_skill_map_level(skill_map_level)

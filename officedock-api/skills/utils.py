@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from dateutil.relativedelta import relativedelta
 from django.db.models import Min
+from django.utils import timezone
 from django.utils.timezone import now
 
 from roles.constants import SelectionResultOptions
@@ -125,3 +126,34 @@ def get_next_progression(current_step, current_level, skill=None):
                 levels[current_level_index].value,
                 has_next_step,
             )
+
+
+def handle_continue_progress_lookback(skill_map_skill_level, deleted_at):
+    """
+    Adjust lookback and next submit times when restoring a skill.
+    """
+    today = now()
+    # Ensure datetimes are comparable
+    if timezone.is_naive(today) != timezone.is_naive(deleted_at):
+        deleted_at = timezone.make_aware(
+            deleted_at, timezone.get_current_timezone()
+        )
+
+    date_change = today - deleted_at
+
+    # Prevent accidental negative shifts (shouldn't happen, but safe)
+    if date_change.total_seconds() < 0:
+        return
+
+    if skill_map_skill_level.start_lookback_at:
+        skill_map_skill_level.start_lookback_at += date_change
+
+    if skill_map_skill_level.next_submit_at:
+        skill_map_skill_level.next_submit_at += date_change
+
+    skill_map_skill_level.save(
+        update_fields=[
+            "start_lookback_at",
+            "next_submit_at",
+        ]
+    )

@@ -2,6 +2,9 @@ from copy import deepcopy
 
 from django.db.models import Count, Max
 
+from base.messages import KEYWORDS
+from common.constants import AVATAR_GCS_EXPIRATION_SECONDS
+from common.utils import get_signed_url
 from mvp_votes.models import MVPVoteCandidate
 from organizations.models import Organization, UsersOrganizations
 from organizations.serializers import BaseOrganizationSerializer
@@ -52,7 +55,9 @@ def build_list_mvp_vote_manage_payload(
     main_org_map = {
         uo["user_id"]: {
             "id": uo["organization_id"],
-            "name": uo["organization__name"],
+            "name": uo["organization__name"]
+            if uo["organization__deleted_at"] == None
+            else f"{uo['organization__name']}{KEYWORDS['deleted']}",
             "uuid": uo["organization__uuid"],
         }
         for uo in UsersOrganizations.objects.filter(
@@ -62,6 +67,7 @@ def build_list_mvp_vote_manage_payload(
             "organization_id",
             "organization__name",
             "organization__uuid",
+            "organization__deleted_at",
         )
     }
 
