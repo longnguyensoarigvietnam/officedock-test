@@ -168,6 +168,9 @@ class StatisticCategoryStructionSerializer(serializers.ModelSerializer):
         If the object has been deleted at the large category level,
         mark this category as hidden.
         """
+        if not obj.large_statistic_category_id:
+            return None
+
         is_hidden = obj.deleted_type == ScheduleCategoryTypes.LARGE.value
 
         data = BaseStatisticCategorySerializer(
@@ -182,6 +185,9 @@ class StatisticCategoryStructionSerializer(serializers.ModelSerializer):
         Mark hidden if the category is deleted at the medium or higher level
         (medium or large), since that implies this category is no longer visible.
         """
+        if not obj.medium_statistic_category_id:
+            return None
+
         is_hidden = obj.deleted_type in [
             ScheduleCategoryTypes.MEDIUM.value,
             ScheduleCategoryTypes.LARGE.value,
@@ -199,6 +205,9 @@ class StatisticCategoryStructionSerializer(serializers.ModelSerializer):
         Mark hidden if the category is deleted at the small level or above
         (small, medium, or large), meaning any parent-level deletion affects visibility.
         """
+        if not obj.small_statistic_category_id:
+            return None
+
         is_hidden = obj.deleted_type in [
             ScheduleCategoryTypes.SMALL.value,
             ScheduleCategoryTypes.MEDIUM.value,
