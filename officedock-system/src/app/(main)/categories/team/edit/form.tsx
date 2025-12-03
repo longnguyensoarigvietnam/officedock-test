@@ -1991,9 +1991,13 @@ const TableComponent = ({
                             ? 'dark-close-eye'
                             : 'gray-open-eye'
                         }.svg`}
-                        className={`w-[16px] h-[13px] ${isHiddenLargeCategory && !isHiddenList && 'hidden'} ${isUUID(row.original.large.label) ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'}`}
+                        className={`w-[16px] h-[13px] ${isHiddenLargeCategory && !isHiddenList && 'hidden'} ${isUUID(row.original.large.label) || !row.original.large.label ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'}`}
                         onClick={() => {
-                          if (isUUID(row.original.large.label)) return;
+                          if (
+                            isUUID(row.original.large.label) ||
+                            !row.original.large.label
+                          )
+                            return;
                           if (isHiddenLargeCategory) {
                             setPendingRestoreCategory({
                               originalRow: row.original,
@@ -2161,11 +2165,11 @@ const TableComponent = ({
                           <ImageRound
                             name="Hide"
                             src={`/icons/${row.original.medium.isHidden ? 'dark-close-eye' : 'gray-open-eye'}.svg`}
-                            className={`w-[16px] h-[13px] ${isHiddenMediumCategory && !isHiddenList && 'hidden'} ${isUUID(row.original.medium.label) ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'}`}
+                            className={`w-[16px] h-[13px] ${isHiddenMediumCategory && !isHiddenList && 'hidden'} ${isUUID(row.original.medium.label) || !row.original.medium.label ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'}`}
                             onClick={() => {
                               if (
-                                isUUID(row.original.medium.label) &&
-                                !isHiddenList
+                                isUUID(row.original.medium.label) ||
+                                !row.original.medium.label
                               )
                                 return;
                               if (row.original.medium.isHidden) {
@@ -2342,11 +2346,11 @@ const TableComponent = ({
                         <ImageRound
                           name="Hide"
                           src={`/icons/${row.original.small.isHidden ? 'dark-close-eye' : 'gray-open-eye'}.svg`}
-                          className={`w-[16px] h-[13px] ${isHiddenSmallCategory && !isHiddenList && 'hidden'} ${isUUID(row.original.small.label) ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'}`}
+                          className={`w-[16px] h-[13px] ${isHiddenSmallCategory && !isHiddenList && 'hidden'} ${isUUID(row.original.small.label) || !row.original.small.label ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'}`}
                           onClick={() => {
                             if (
-                              isUUID(row.original.small.label) &&
-                              !isHiddenList
+                              isUUID(row.original.small.label) ||
+                              !row.original.small.label
                             )
                               return;
                             if (row.original.small.isHidden) {
