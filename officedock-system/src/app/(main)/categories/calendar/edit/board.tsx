@@ -11,7 +11,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { useMutation } from 'react-query';
 import Link from 'next/link';
-import { validate as isUUID } from 'uuid';
+import { v4 as uuidv4, validate as isUUID } from 'uuid';
 
 import { AxiosError } from 'axios';
 
@@ -25,6 +25,7 @@ import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 import { OptionDropdownType } from '@interfaces/common';
 import {
+  CalendarCategory,
   CalendarCategoryRow,
   CalendarHierarchyCategoryUpdatePayload,
   SelectedCalendarCategoryRow,
@@ -93,30 +94,122 @@ const EditHierarchyBoard = () => {
     },
   });
 
+  // Helper function for mapping statistic categories
+  const mapStatisticCategories = (categories: CalendarCategory[]) => {
+    const result: any[] = [];
+
+    //
+    // Helper to map a row OR create a new hierarchy
+    //
+    const mapRow = (
+      row: CalendarCategory,
+      overrides = {},
+      isNewHierarchy: boolean,
+    ) => ({
+      id: isNewHierarchy ? uuidv4() : row.id,
+      large: {
+        label: row.largeStatisticCategory?.name || '',
+        value: row.largeStatisticCategory?.uuid || '',
+        isHidden: row.largeStatisticCategory?.isHidden || false,
+        showBy: AddCategoryHierarchyType.PULLDOWN,
+      },
+      medium: {
+        label: row.mediumStatisticCategory?.name || '',
+        value: row.mediumStatisticCategory?.uuid || '',
+        isHidden: row.mediumStatisticCategory?.isHidden || false,
+        showBy: AddCategoryHierarchyType.PULLDOWN,
+      },
+      color: row.color,
+      ...overrides,
+    });
+
+    //
+    // 1. Group by large
+    //
+    const largeGroups = categories.reduce(
+      (acc, row) => {
+        const key = row.largeStatisticCategory.uuid;
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(row);
+        return acc;
+      },
+      {} as Record<string, CalendarCategory[]>,
+    );
+
+    //
+    // 2. Process each large group
+    //
+    Object.values(largeGroups).forEach((largeGroup) => {
+      const base = largeGroup[0]; // representative row
+      const largeHidden = base.largeStatisticCategory?.isHidden;
+
+      // Check if all medium are hidden
+      const allMediumHidden = largeGroup.every(
+        (row) => row.mediumStatisticCategory?.isHidden,
+      );
+
+      //
+      // === RULE 1: Large is NOT hidden && All its medium are hidden ===
+      //
+      if (!largeHidden && allMediumHidden) {
+        // Push existing rows (do NOT remove them)
+        largeGroup.forEach((row) => {
+          result.push(mapRow(row, {}, false));
+        });
+
+        // Push the fallback special row BELOW the existing rows
+        result.push(
+          mapRow(
+            base,
+            {
+              medium: {
+                label: '',
+                value: '',
+                isHidden: false,
+                showBy: AddCategoryHierarchyType.PULLDOWN,
+              },
+            },
+            true,
+          ),
+        );
+
+        return; // skip normal medium grouping logic
+      }
+
+      //
+      // === DEFAULT: group by medium ===
+      //
+      const mediumGroups = largeGroup.reduce(
+        (acc, row) => {
+          const mediumUuid = row.mediumStatisticCategory?.uuid || '__none__';
+          const key = `${row.largeStatisticCategory.uuid}-${mediumUuid}`;
+
+          if (!acc[key]) acc[key] = [];
+          acc[key].push(row);
+
+          return acc;
+        },
+        {} as Record<string, CalendarCategory[]>,
+      );
+
+      // Push each medium group normally
+      Object.values(mediumGroups).forEach((mediumGroup) => {
+        mediumGroup.forEach((row) => result.push(mapRow(row, {}, false)));
+      });
+    });
+
+    return result;
+  };
+
   useCalendarCategoryHierarchyDetail({
     onSuccess: (data) => {
       const calendarCategoryHierarchy = data[0];
-      const statisticCategories =
-        calendarCategoryHierarchy.statisticCategories.map((org) => ({
-          id: org.id,
-          large: {
-            label: org.largeStatisticCategory?.name || '',
-            value: org.largeStatisticCategory?.uuid || '',
-            isHidden: org.largeStatisticCategory?.isHidden || false,
-            showBy: AddCategoryHierarchyType.PULLDOWN,
-          },
-          medium: {
-            label: org.mediumStatisticCategory?.name || '',
-            value: org.mediumStatisticCategory?.uuid || '',
-            isHidden: org.mediumStatisticCategory?.isHidden || false,
-            showBy: AddCategoryHierarchyType.PULLDOWN,
-          },
-          color: org.color,
-        }));
       setHierarchyDetail({
         id: calendarCategoryHierarchy.id,
         name: 'カレンダー',
-        statisticCategories,
+        statisticCategories: mapStatisticCategories(
+          calendarCategoryHierarchy.statisticCategories,
+        ),
       });
     },
     onSettled: () => setIsLoading(false),
@@ -135,9 +228,7 @@ const EditHierarchyBoard = () => {
         };
       },
     );
-    if (
-      tempSelectedHierarchiesToUpdate.length == 0
-    ) {
+    if (tempSelectedHierarchiesToUpdate.length == 0) {
       router.push(pageRouters.CALENDAR_CATEGORY_MANAGEMENT.href);
     } else {
       updateCalendarCategoryHierarchy({

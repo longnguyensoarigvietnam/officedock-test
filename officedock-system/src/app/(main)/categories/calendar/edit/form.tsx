@@ -1089,6 +1089,20 @@ const TableComponent = ({
     });
   };
 
+  const shouldHideCategoryArchiveIcon = (
+    isNoLabel: boolean,
+    isUUIDLabel: boolean,
+    isHiddenCategory: boolean,
+  ): boolean => {
+    // CASES for hidden:
+    if (isHiddenCategory && !isHiddenList) return true;
+    if (!isHiddenCategory && (isNoLabel || isUUIDLabel) && isHiddenList)
+      return true;
+    if ((isUUIDLabel || isNoLabel) && !isHiddenList) return true;
+
+    return false;
+  };
+
   return (
     <div
       className="w-full p-5 bg-[#F8FAFC] rounded-[30px]"
@@ -1367,11 +1381,20 @@ const TableComponent = ({
                             ? 'dark-close-eye'
                             : 'gray-open-eye'
                         }.svg`}
-                        className={`w-[16px] h-[13px] ${isHiddenLargeCategory && !isHiddenList && 'hidden'} ${isUUID(row.original.large.label) || !row.original.large.label ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'}`}
+                        className={`w-[16px] h-[13px] ${
+                          shouldHideCategoryArchiveIcon(
+                            Boolean(!row.original.large.label),
+                            isUUID(row.original.large.label),
+                            Boolean(isHiddenLargeCategory),
+                          ) && 'hidden'
+                        } hover:cursor-pointer`}
                         onClick={() => {
                           if (
-                            isUUID(row.original.large.label) ||
-                            !row.original.large.label
+                            shouldHideCategoryArchiveIcon(
+                              Boolean(!row.original.large.label),
+                              isUUID(row.original.large.label),
+                              Boolean(isHiddenLargeCategory),
+                            )
                           )
                             return;
                           if (isHiddenLargeCategory) {
@@ -1511,12 +1534,21 @@ const TableComponent = ({
                           <ImageRound
                             name="Hide"
                             src={`/icons/${row.original.medium.isHidden ? 'dark-close-eye' : 'gray-open-eye'}.svg`}
-                            className={`w-[16px] h-[13px] ${isHiddenMediumCategory && !isHiddenList && 'hidden'}
-                              ${isUUID(row.original.medium.label) || !row.original.medium.label ? 'hover:cursor-not-allowed' : 'hover:cursor-pointer'}`}
+                            className={`w-[16px] h-[13px] ${
+                              shouldHideCategoryArchiveIcon(
+                                Boolean(!row.original.medium.label),
+                                isUUID(row.original.medium.label),
+                                Boolean(isHiddenMediumCategory),
+                              ) && 'hidden'
+                            }
+                             hover:cursor-pointer`}
                             onClick={() => {
                               if (
-                                isUUID(row.original.medium.label) ||
-                                !row.original.medium.label
+                                shouldHideCategoryArchiveIcon(
+                                  Boolean(!row.original.medium.label),
+                                  isUUID(row.original.medium.label),
+                                  Boolean(isHiddenMediumCategory),
+                                )
                               )
                                 return;
                               if (row.original.medium.isHidden) {
