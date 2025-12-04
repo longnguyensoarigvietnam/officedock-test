@@ -664,7 +664,6 @@ def process_merge_card_per_tag(
                 output_field=CharField(),
             )
         )
-        .values("id", "name_display")
     )
     grouped_data = defaultdict(list)
     total_duration = timedelta(0)
