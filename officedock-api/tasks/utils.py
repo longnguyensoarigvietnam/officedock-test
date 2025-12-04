@@ -525,7 +525,7 @@ def get_total_hours_of_task(task, skill_map_level_created_at=None):
         filter_duration &= Q(created_at__gte=skill_map_level_created_at)
     durations = TaskDuration.objects.filter(filter_duration).all()
     total_duration = timedelta()
-    duration_ids = {}
+    duration_ids = []
     for duration in durations:
         total_duration += duration.paused_at - duration.started_at
         duration_ids.append(duration.id)

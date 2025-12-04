@@ -155,7 +155,7 @@ class CompanySerializer(serializers.ModelSerializer):
         return {}
 
     def get_total_users(self, obj):
-        return obj.users.count()
+        return obj.active_users.count()
 
     def validate(self, attrs):
         """
