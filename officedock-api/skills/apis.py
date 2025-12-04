@@ -51,7 +51,12 @@ from skills.serializers import (
     UpdateSkillMapDefaultSerializer,
 )
 from skills.filters import StatisticCategoryFilter
-from skills.utils import get_lookback_time, get_next_progression
+from skills.utils import (
+    get_lookback_time,
+    get_next_progression,
+    handle_continue_progress_lookback,
+    handle_pending_progress_skill,
+)
 from submit_levels.constants import SubmitLevelStatus
 from submit_levels.models import SubmitLevelHistory
 from roles.constants import Screens, Actions, SelectionResultOptions
@@ -206,10 +211,17 @@ class ManageSkillMapViewSet(
             elif skill_map:
                 # Update skill map and child of skill map
                 while skill_map:
-                    SkillMap.objects.filter(id=skill_map.id).update(
-                        is_valid=is_checked
-                    )
-
+                    skill_map.is_valid = is_checked
+                    skill_map.save(update_fields=["is_valid"])
+                    if not is_checked:
+                        # Handle pending skill map progress
+                        for smsl in skill_map.skill_map_skill_levels.filter(
+                            is_complete=False, deleted_at__isnull=True
+                        ).all():
+                            smsl.deleted_at = now()
+                            smsl.save(update_fields=["deleted_at"])
+                    else:
+                        handle_continue_progress_lookback(skill_map)
                     skill_map = SkillMap.objects.filter(
                         skill_parent=skill_map.skill
                     ).first()
@@ -668,14 +680,17 @@ class SkillMapViewSet(
                 "step_after_submit": step_after_submit,
                 "level_after_submit": level_after_submit,
                 "items": skill_map_skill_level.items,
-                "approver": BaseUserSerializer(submit_level.approver).data
-                if submit_level
-                else None,
+                "approver": (
+                    BaseUserSerializer(submit_level.approver).data
+                    if submit_level
+                    else None
+                ),
                 "approvers": BaseUserSerializer(users, many=True).data,
-                "is_applying": submit_level.status
-                == SubmitLevelStatus.APPLYING.value
-                if submit_level
-                else None,
+                "is_applying": (
+                    submit_level.status == SubmitLevelStatus.APPLYING.value
+                    if submit_level
+                    else None
+                ),
                 "submit_level": submit_level.id if submit_level else None,
             }
 
@@ -1094,6 +1109,7 @@ class SkillViewSet(
             skill = Skill.objects.filter(parent_id=skill.id).first()
 
         for item in skills_to_delete:
+            handle_pending_progress_skill(item)
             item.soft_delete()
 
     @action(
@@ -1117,6 +1133,13 @@ class SkillViewSet(
 
         for item in skills_to_delete:
             item.restore()
+
+        for item in skills_to_delete:
+            for skill_map in item.skill_maps.filter(
+                is_complete=False,
+                skill_map_skill_levels__deleted_at__isnull=False,
+            ).all():
+                handle_continue_progress_lookback(skill_map)
 
         return self.response_ok()
 

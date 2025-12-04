@@ -39,7 +39,10 @@ from plans.constants import (
     LIMIT_PERSON_PLAN_21_30,
 )
 from plans.models import Plan
-from skills.utils import handle_continue_progress_lookback
+from skills.utils import (
+    handle_continue_progress_lookback,
+    handle_pending_progress_skill,
+)
 from users.constants import (
     RoleTypes,
     StepsRegisterTypes,
@@ -1061,7 +1064,7 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         # if instance.avatar:
         #     # Remove old avatar
         #     instance.avatar.delete()
-
+        handle_pending_progress_skill(instance)
         # Log user create
         UserActivityLog.log_user_deletion(
             instance,
@@ -1080,18 +1083,7 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         Handle restore of deleted user
         """
         user = self.get_object()
-        skill_maps = user.skill_maps.filter(
-            is_complete=False,
-            skill_map_skill_levels__start_lookback_at__isnull=False,
-            skill_map_skill_levels__next_submit_at__isnull=False,
-        )
-        if skill_maps.exists():
-            for skill_map in skill_maps.all():
-                for skill_level in skill_map.skill_map_skill_levels.all():
-                    handle_continue_progress_lookback(
-                        skill_map_skill_level=skill_level,
-                        deleted_at=user.deleted_at,
-                    )
+
         company = user.company
         # Handle check max user
         company_user_count = company.active_users.count()
@@ -1125,6 +1117,13 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             if plan != current_plan.plan:
                 CompanyService().upgrade_plan(company, plan)
         user.restore()
+        skill_maps = user.skill_maps.filter(
+            is_complete=False,
+            skill_map_skill_levels__deleted_at__isnull=False,
+        )
+        if skill_maps.exists():
+            for skill_map in skill_maps.all():
+                handle_continue_progress_lookback(skill_map)
         return self.response_ok()
 
     @action(

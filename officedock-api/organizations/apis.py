@@ -22,7 +22,10 @@ from base.apis import BaseAPIViewSet
 from base.filters import FilterByPermission
 from base.messages import ERROR_MESSAGES, KEYWORDS
 from base.permissions import ActionPermission
-from skills.utils import handle_continue_progress_lookback
+from skills.utils import (
+    handle_continue_progress_lookback,
+    handle_pending_progress_skill,
+)
 
 from common.filters import CustomOrderFilter
 from common.models import Category
@@ -326,40 +329,8 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         Method to perform destruction of an instance.
         """
         instance.soft_delete()
+        handle_pending_progress_skill(instance)
         return self.response_deleted()
-        # Checking if there are any users associated with the organization
-        if (
-            instance.users.count() > 0
-            or instance.tasks.count() > 0
-            or instance.schedules.count() > 0
-        ):
-            raise ValidationError(
-                {
-                    "detail": ERROR_MESSAGES["cannot_delete_type"].format(
-                        type=KEYWORDS["organization"]
-                    )
-                }
-            )
-
-        # Handle remove hierarchy in children
-        descendant_ids = []
-
-        def _get_children(instance):
-            children = instance.organizations.all()
-            for child in children:
-                descendant_ids.append(child.id)
-                _get_children(child)
-
-        _get_children(instance)
-        Organization.objects.filter(id__in=descendant_ids).update(
-            superior=None, hierarchize_at=None
-        )
-
-        # Remove icon
-        if instance.icon:
-            instance.icon.delete()
-
-        return super().perform_destroy(instance)
 
     @extend_schema(
         parameters=[
@@ -421,19 +392,14 @@ class OrganizationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         Handle restore of deleted organization
         """
         organization = self.get_object()
+        organization.restore()
         skill_maps = organization.skill_maps.filter(
             is_complete=False,
-            skill_map_skill_levels__start_lookback_at__isnull=False,
-            skill_map_skill_levels__next_submit_at__isnull=False,
+            skill_map_skill_levels__deleted_at__isnull=False,
         )
-        if skill_maps.exists():
-            for skill_map in skill_maps.all():
-                for skill_level in skill_map.skill_map_skill_levels.all():
-                    handle_continue_progress_lookback(
-                        skill_map_skill_level=skill_level,
-                        deleted_at=organization.deleted_at,
-                    )
-        organization.restore()
+        for skill_map in skill_maps.all():
+            handle_continue_progress_lookback(skill_map)
+
         return self.response_ok()
 
 

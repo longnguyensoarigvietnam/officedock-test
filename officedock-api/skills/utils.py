@@ -5,6 +5,7 @@ from django.db.models import Min
 from django.utils import timezone
 from django.utils.timezone import now
 
+from organizations.models import UsersOrganizations
 from roles.constants import SelectionResultOptions
 from skills.constants import LookBackTypes, SkillStep, SkillLevel
 from skills.models import Skill
@@ -128,32 +129,63 @@ def get_next_progression(current_step, current_level, skill=None):
             )
 
 
-def handle_continue_progress_lookback(skill_map_skill_level, deleted_at):
+def handle_pending_progress_skill(obj):
+    """
+    Soft delete skill map skill level when pending progress
+    """
+    if not hasattr(obj, "skill_maps") or not obj.skill_maps.exists():
+        return
+    skill_maps = obj.skill_maps.filter(
+        is_complete=False,
+        skill_map_skill_levels__is_complete=False,
+        skill_map_skill_levels__deleted_at__isnull=True,
+    ).all()
+    for sm in skill_maps:
+        for smsl in sm.skill_map_skill_levels.filter(
+            is_complete=False, deleted_at__isnull=True
+        ).all():
+            smsl.deleted_at = now()
+            smsl.save(update_fields=["deleted_at"])
+
+
+def handle_continue_progress_lookback(skill_map):
     """
     Adjust lookback and next submit times when restoring a skill.
     """
-    today = now()
-    # Ensure datetimes are comparable
-    if timezone.is_naive(today) != timezone.is_naive(deleted_at):
-        deleted_at = timezone.make_aware(
-            deleted_at, timezone.get_current_timezone()
-        )
-
-    date_change = today - deleted_at
-
-    # Prevent accidental negative shifts (shouldn't happen, but safe)
-    if date_change.total_seconds() < 0:
-        return
-
-    if skill_map_skill_level.start_lookback_at:
-        skill_map_skill_level.start_lookback_at += date_change
-
-    if skill_map_skill_level.next_submit_at:
-        skill_map_skill_level.next_submit_at += date_change
-
-    skill_map_skill_level.save(
-        update_fields=[
-            "start_lookback_at",
-            "next_submit_at",
-        ]
+    is_pending_progress = (
+        skill_map.staff.deleted_at
+        or skill_map.skill.deleted_at
+        or skill_map.organization.deleted_at
+        or not UsersOrganizations.objects.filter(
+            user=skill_map.staff, organization=skill_map.organization
+        ).exists()
+        or not skill_map.is_valid
     )
+    if is_pending_progress:
+        return
+    today = now()
+    for skill_map_skill_level in skill_map.skill_map_skill_levels.filter(
+        deleted_at__isnull=False
+    ).all():
+        deleted_at = skill_map_skill_level.deleted_at
+        # Ensure datetimes are comparable
+        if timezone.is_naive(today) != timezone.is_naive(deleted_at):
+            deleted_at = timezone.make_aware(
+                deleted_at, timezone.get_current_timezone()
+            )
+
+        date_change = today - deleted_at
+
+        # Prevent accidental negative shifts (shouldn't happen, but safe)
+        if date_change.total_seconds() < 0:
+            return
+
+        if skill_map_skill_level.start_lookback_at:
+            skill_map_skill_level.start_lookback_at += date_change
+
+        if skill_map_skill_level.next_submit_at:
+            skill_map_skill_level.next_submit_at += date_change
+        skill_map_skill_level.deleted_at = None
+        skill_map_skill_level.save(
+            update_fields=["start_lookback_at", "next_submit_at", "deleted_at"]
+        )
