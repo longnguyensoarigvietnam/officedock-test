@@ -27,7 +27,7 @@ const TaskDailyCard = ({ event, isDownload }: Props) => {
             ? generateVerticalGradient(largeColor)
             : '#A7B9C2',
         }}
-        className={`h-full card-schedule item-schedule-shadow   text-white rounded-[14px]  flex justify-between overflow-hidden p-2 bg-white border`}>
+        className={`h-full card-schedule item-schedule-shadow  hover:cursor-pointer text-white rounded-[14px]  flex justify-between overflow-hidden p-2 bg-white border`}>
         <div className="flex flex-col gap-3 w-[80%]">
           <p
             className={`text-sm font-bold truncate block w-full ${isDownload ? '-translate-y-[50%] h-8' : ''} `}>

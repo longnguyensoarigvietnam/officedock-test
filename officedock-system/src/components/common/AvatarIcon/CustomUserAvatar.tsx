@@ -30,7 +30,7 @@ const CustomUserAvatar = memo(
             style={{ width: `${size}px`, height: `${size}px` }}>
             <Image
               src={getFileURL(avatarUrl)}
-              className={`hover:cursor-pointer object-cover object-center ${avatarClassName || ''}`}
+              className={` object-cover object-center ${avatarClassName || ''}`}
               fill
               alt="avatar"
               unoptimized

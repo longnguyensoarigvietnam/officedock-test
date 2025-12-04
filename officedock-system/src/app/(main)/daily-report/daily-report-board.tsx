@@ -1192,7 +1192,6 @@ const DailyReportBoard = () => {
         if (!isParent) return;
         const isHasChild =
           info.row.original.children && info.row.original.children?.length > 1;
-
         return (
           <div
             className={`daily-custom text-left custom-statistic mt-[12px] ${isHasChild && '!mt-[19px]  mb-[18px]'}`}>
@@ -1205,13 +1204,13 @@ const DailyReportBoard = () => {
                     ? optionSmall.find(
                         (element) =>
                           element.value ===
-                            (info.row.original.SMALL.id
-                              ? info.row.original.SMALL.id
-                              : NO_SETTING) || {
-                            label: info.row.original.SMALL.name,
-                            value: info.row.original.SMALL.id,
-                          },
-                      )
+                          (info.row.original.SMALL.id
+                            ? info.row.original.SMALL.id
+                            : NO_SETTING),
+                      ) || {
+                        label: info.row.original.SMALL.name,
+                        value: info.row.original.SMALL.id,
+                      }
                     : {
                         label: NO_SETTING,
                         value: NO_SETTING,

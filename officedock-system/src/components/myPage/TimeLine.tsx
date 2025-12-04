@@ -127,7 +127,7 @@ export const TimeLine = ({
                         <div className="relative overflow-hidden h-[30px] w-[30px]">
                           <Image
                             src={'/icons/blue-company.svg'}
-                            className={`hover:cursor-pointer object-cover object-center`}
+                            className={` object-cover object-center`}
                             fill
                             alt="Blue company"
                             unoptimized

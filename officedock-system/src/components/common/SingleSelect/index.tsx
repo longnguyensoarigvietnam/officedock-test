@@ -83,7 +83,9 @@ const SingleSelect = ({
   }, []);
 
   return (
-    <div ref={optionRef} className={`h-full w-full relative ${className}`}>
+    <div
+      ref={optionRef}
+      className={`h-full w-full hover:cursor-pointer relative ${className}`}>
       <Select
         ref={selectRef}
         closeMenuOnSelect={closeMenuOnSelect}
@@ -93,7 +95,7 @@ const SingleSelect = ({
         options={options}
         isDisabled={isDisabled}
         placeholder={placeholder}
-        className={`${className} border-[1px] rounded-md !disabled:bg-white`}
+        className={`${className} border-[1px] rounded-md hover:cursor-pointer !disabled:bg-white`}
         defaultValue={defaultValue}
         onChange={handleChange}
         styles={{
@@ -155,7 +157,7 @@ const SingleSelect = ({
       {showArrow && !isDisabled && (
         <div
           onClick={() => setMenuIsOpen(!menuIsOpen)}
-          className="absolute top-1/2 -translate-y-1/2 right-[6px]">
+          className="absolute top-1/2 -translate-y-1/2 right-[6px] cursor-pointer">
           <Image
             alt="Arrow dropdown icon"
             src={'/icons/arrow-down.svg'}
