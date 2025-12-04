@@ -1105,6 +1105,13 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         # Upgrade plan
         company_user_count += 1
+        # Store max user at in contract period
+        if company_user_count > company.max_user_in_contract_period:
+            company.max_user_in_contract_period = company_user_count
+            company.max_user_at = datetime.now()
+            company.save(
+                update_fields=["max_user_in_contract_period", "max_user_at"]
+            )
         if company_user_count > current_plan.limit_person:
             filter = Q()
             if company_user_count <= LIMIT_PERSON_PLAN_1_10:
