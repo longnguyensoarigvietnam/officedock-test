@@ -1347,7 +1347,7 @@ const ActionsTaskModal = ({
               <div className="flex gap-2 max-w-[518px]">
                 <div className="w-[454px]">
                   <MultiSelectDropdown
-                    className="!h-[34px]"
+                    className="!h-[34px] hover:cursor-pointer"
                     labelClass="!min-h-0 !text-sm"
                     valueClassName="!border-[1px] !text-sm !border-[#77858F] !py-0 flex items-center"
                     optionClassName="!border-[1px] !text-sm !border-[#77858F] z-[998]"
@@ -1623,7 +1623,7 @@ const ActionsTaskModal = ({
                           }}
                           src={`/icons/${isShowFieldRemind ? 'bell.svg' : 'bell-white.svg'}`}
                           name="Bell icon"
-                          className="h-4 w-4"
+                          className="h-4 w-4 hover:cursor-pointer"
                         />
                       </div>
                     </div>

@@ -387,3 +387,9 @@ input[type='checkbox']:focus {
   overflow-wrap: break-word; /* handles long words */
   word-break: break-word; /* fallback */
 }
+.css-czlyiw-control {
+  cursor: pointer;
+}
+.css-czlyiw-control:hover {
+  cursor: pointer;
+}

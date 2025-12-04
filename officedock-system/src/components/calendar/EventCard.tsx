@@ -530,7 +530,7 @@ export const EventCard = ({
     }
     return (
       <div
-        className={`overflow-hidden bg-white p-3 h-full ${eventContent.event.id == selectedEventInfo?.repeatScheduleId && 'selected-event'} ${isMySchedule && isCurrentTimeWithinEvent({ start: eventContent.event.start, end: eventContent.event.end }) && 'event-has-now-indicator'}`}>
+        className={`overflow-hidden hover:cursor-pointer bg-white p-3 h-full ${eventContent.event.id == selectedEventInfo?.repeatScheduleId && 'selected-event'} ${isMySchedule && isCurrentTimeWithinEvent({ start: eventContent.event.start, end: eventContent.event.end }) && 'event-has-now-indicator'}`}>
         <div className={`text-black font-medium text-[14px]`}>
           <p className="truncate max-w-[calc(100%)] font-semibold min-h-5">
             {eventContent.event.title != 'null' ? eventContent.event.title : ''}

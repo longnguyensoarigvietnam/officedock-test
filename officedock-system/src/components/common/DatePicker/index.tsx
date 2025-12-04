@@ -33,7 +33,14 @@ export type DatePickerProps = Omit<ReactDatePickerProps, 'onChange'> & {
 };
 
 const CustomInput = forwardRef<HTMLInputElement, any>((props, ref) => (
-  <input {...props} ref={ref} readOnly />
+  <input
+    style={{
+      cursor: 'pointer',
+    }}
+    {...props}
+    ref={ref}
+    readOnly
+  />
 ));
 
 const DatePicker = ({
@@ -110,7 +117,7 @@ const DatePicker = ({
         </label>
       )}
       <div
-        className={`relative single-date ${label ? 'mt-1' : ''}`}
+        className={`relative single-date hover:cursor-pointer ${label ? 'mt-1' : ''}`}
         onClick={() => {
           setIsOpen(true);
         }}>
