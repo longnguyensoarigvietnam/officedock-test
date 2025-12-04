@@ -64,7 +64,7 @@ export default function CandidateList({
                 size={30}
               />
               <div className="space-y-1 w-[96px]">
-                <p className="text-[#77858F] font-medium text-xs max-w-full break-all">
+                <p className="text-[#77858F] font-medium text-xs max-w-full break-all line-clamp-2">
                   {candidate?.mainOrganization?.name || ''}
                 </p>
                 <p className="text-black font-medium text-sm max-w-full break-all line-clamp-2">

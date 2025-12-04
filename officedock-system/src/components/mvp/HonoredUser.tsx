@@ -87,11 +87,11 @@ export const HonoredUser = ({
       </div>
       <div className={`text-white font-medium !leading-none`}>
         <p
-          className={`text-base w-[100px] max-w-[100px] truncate ${direction == HonoredUserInfoDirection.VERTICAL ? 'text-center mb-[6px]' : 'mb-[10px]'}`}>
+          className={`text-base w-[150px] max-w-[150px] truncate ${direction == HonoredUserInfoDirection.VERTICAL ? 'text-center mb-[6px]' : 'mb-[10px]'}`}>
           {userInfo?.mainOrganization?.name || ''}
         </p>
         <p
-          className={`text-[20px] w-[138px] max-w-[138px] truncate mb-[20px] ${direction == HonoredUserInfoDirection.VERTICAL ? 'text-center mb-[12px]' : 'mb-[10px]'}`}>
+          className={`text-[20px] w-[158px] max-w-[158px] truncate mb-[20px] ${direction == HonoredUserInfoDirection.VERTICAL ? 'text-center mb-[12px]' : 'mb-[10px]'}`}>
           {userInfo.fullName} <span className="text-xs">さん</span>
         </p>
         <div

@@ -181,7 +181,7 @@ const HierarchyTable = ({
       <p className="text-[#77858F] text-[16px] font-medium mb-4 max-w-[100%] break-all">
         {organizationName}
       </p>
-      <Table className="w-full h-full bg-white !rounded-[10px]">
+      <Table className="w-full h-full bg-white !rounded-[10px]" tableClassName="!w-full !table-fixed">
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
@@ -248,7 +248,7 @@ const HierarchyTable = ({
                       {isHiddenLargeCategory ? (
                         <div className="hidden w-full"></div>
                       ) : (
-                        <p className="text-sm flex justify-left items-center font-medium">
+                        <p className="text-sm max-w-full break-all font-medium">
                           {row.original.large.label || NO_OPTION_CATEGORY}
                         </p>
                       )}
@@ -285,7 +285,7 @@ const HierarchyTable = ({
                         <div
                           className={`flex items-center h-full gap-2 flex-wrap w-full py-5
                             `}>
-                          <p className="text-sm flex justify-left items-center font-medium">
+                          <p className="text-sm max-w-full break-all font-medium">
                             {row.original.medium.label || NO_OPTION_CATEGORY}
                           </p>
                         </div>
@@ -312,7 +312,7 @@ const HierarchyTable = ({
                           ) &&
                           'border-b-[1px] border-[#D2DBE1]'
                         }`}>
-                      <p className="text-sm flex justify-left items-center font-medium">
+                      <p className="text-sm max-w-full break-all font-medium">
                         {row.original.small.label || NO_OPTION_CATEGORY}
                       </p>
                     </div>

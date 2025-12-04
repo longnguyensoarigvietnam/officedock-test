@@ -4,7 +4,7 @@ import { useContext, useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation } from 'react-query';
 import Link from 'next/link';
-import { validate as isUUID } from 'uuid';
+import { v4 as uuidv4, validate as isUUID } from 'uuid';
 
 import { AxiosError } from 'axios';
 
@@ -27,10 +27,7 @@ import {
 } from '@interfaces/hierarchy';
 import { CreationDataSkill, Skill } from '@interfaces/skills';
 
-import {
-  AddCategoryHierarchyType,
-  PermissionsSystem,
-} from '@constants/enums';
+import { AddCategoryHierarchyType, PermissionsSystem } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
 import { ALL_TEAMS_OPTION } from '@constants';
 import {
@@ -173,9 +170,7 @@ const EditHierarchyForm = () => {
         };
       },
     );
-    if (
-      tempSelectedHierarchiesToUpdate.length == 0
-    ) {
+    if (tempSelectedHierarchiesToUpdate.length == 0) {
       router.push(pageRouters.TEAM_CATEGORY_MANAGEMENT.href);
     } else {
       updateOrganizationCategoryHierarchy({
@@ -222,75 +217,160 @@ const EditHierarchyForm = () => {
 
   // Helper function for mapping statistic categories
   const mapStatisticCategories = (categories: StatisticCategory[]) => {
-    return categories.map((org) => ({
-      id: org.id,
+    const result: any[] = [];
+
+    const mapRow = (
+      row: StatisticCategory,
+      overrides = {},
+      addNewHierarchy: boolean,
+    ) => ({
+      id: addNewHierarchy ? uuidv4() : row.id,
       large: {
-        label: org.largeStatisticCategory?.name || '',
-        value: org.largeStatisticCategory?.uuid || '',
-        isHidden: org.largeStatisticCategory?.isHidden || false,
+        label: row.largeStatisticCategory?.name || '',
+        value: row.largeStatisticCategory?.uuid || '',
+        isHidden: row.largeStatisticCategory?.isHidden || false,
         showBy: AddCategoryHierarchyType.PULLDOWN,
       },
       medium: {
-        label: org.mediumStatisticCategory?.name || '',
-        value: org.mediumStatisticCategory?.uuid || '',
-        isHidden: org.mediumStatisticCategory?.isHidden || false,
+        label: row.mediumStatisticCategory?.name || '',
+        value: row.mediumStatisticCategory?.uuid || '',
+        isHidden: row.mediumStatisticCategory?.isHidden || false,
         showBy: AddCategoryHierarchyType.PULLDOWN,
       },
       small: {
-        label: org.smallStatisticCategory?.name || '',
-        value: org.smallStatisticCategory?.uuid || '',
-        isHidden: org.smallStatisticCategory?.isHidden || false,
+        label: row.smallStatisticCategory?.name || '',
+        value: row.smallStatisticCategory?.uuid || '',
+        isHidden: row.smallStatisticCategory?.isHidden || false,
         showBy: AddCategoryHierarchyType.PULLDOWN,
       },
-      skills: org.skills.map((skill) => {
-        return {
-          label: skill.name,
-          value: skill.id,
-        };
-      }),
-      color: org.color,
-    }));
+      skills: row.skills.map((skill) => ({
+        label: skill.name,
+        value: skill.id,
+      })),
+      color: row.color,
+      ...overrides,
+    });
+
+    const largeGroups = categories.reduce(
+      (acc, row) => {
+        const largeUuid = row.largeStatisticCategory.uuid;
+        if (!acc[largeUuid]) acc[largeUuid] = [];
+        acc[largeUuid].push(row);
+        return acc;
+      },
+      {} as Record<string, StatisticCategory[]>,
+    );
+
+    Object.values(largeGroups).forEach((largeGroup) => {
+      const base = largeGroup[0];
+      const largeHidden = base.largeStatisticCategory?.isHidden;
+
+      const allMediumHidden = largeGroup.every(
+        (r) => r.mediumStatisticCategory?.isHidden,
+      );
+
+      const allSmallHidden = largeGroup.every(
+        (r) => r.smallStatisticCategory?.isHidden,
+      );
+
+      // ===== RULE 1 (Apply only if large is NOT hidden) =====
+      if (!largeHidden && allMediumHidden && allSmallHidden) {
+        // Continue to include the original hidden rows
+        largeGroup.forEach((row) => {
+          result.push(mapRow(row, {}, false));
+        });
+        // Then push the fallback special row BELOW normal rows
+        result.push(
+          mapRow(
+            base,
+            {
+              medium: {
+                label: '',
+                value: '',
+                isHidden: false,
+                showBy: AddCategoryHierarchyType.PULLDOWN,
+              },
+              small: {
+                label: '',
+                value: '',
+                isHidden: false,
+                showBy: AddCategoryHierarchyType.PULLDOWN,
+              },
+              skills: [],
+            },
+            true,
+          ),
+        );
+
+        return;
+      }
+
+      // Group by medium
+      const mediumGroups = largeGroup.reduce(
+        (acc, row) => {
+          const mediumUuid = row.mediumStatisticCategory?.uuid || '__none__';
+          const key = `${row.largeStatisticCategory.uuid}-${mediumUuid}`;
+          if (!acc[key]) acc[key] = [];
+          acc[key].push(row);
+          return acc;
+        },
+        {} as Record<string, StatisticCategory[]>,
+      );
+
+      Object.values(mediumGroups).forEach((mediumGroup) => {
+        const baseMedium = mediumGroup[0];
+        const mediumHidden = baseMedium.mediumStatisticCategory?.isHidden;
+
+        const allSmallHidden = mediumGroup.every(
+          (r) => r.smallStatisticCategory?.isHidden,
+        );
+
+        // ===== RULE 2 (Apply only if large + medium NOT hidden) =====
+        if (!largeHidden && !mediumHidden && allSmallHidden) {
+          mediumGroup.forEach((row) => {
+            result.push(mapRow(row, {}, false));
+          });
+
+          result.push(
+            mapRow(
+              baseMedium,
+              {
+                small: {
+                  label: '',
+                  value: '',
+                  isHidden: false,
+                  showBy: AddCategoryHierarchyType.PULLDOWN,
+                },
+                skills: [],
+              },
+              true,
+            ),
+          );
+
+          return;
+        }
+
+        // Otherwise add normal visible rows
+        mediumGroup.forEach((row) => {
+          result.push(mapRow(row, {}, false));
+        });
+      });
+    });
+
+    return result;
   };
+
   useOrganizationCategoryHierarchyDetail({
     organizationId: Number(selectedOrganizationOption.value),
     conditions: [Boolean(selectedOrganizationOption.value)],
     onSuccess: async (data) => {
-      const statisticCategories = data.statisticCategories.map((org) => ({
-        id: org.id,
-        large: {
-          label: org.largeStatisticCategory?.name || '',
-          value: org.largeStatisticCategory?.uuid || '',
-          isHidden: org.largeStatisticCategory?.isHidden || false,
-          showBy: AddCategoryHierarchyType.PULLDOWN,
-        },
-        medium: {
-          label: org.mediumStatisticCategory?.name || '',
-          value: org.mediumStatisticCategory?.uuid || '',
-          isHidden: org.mediumStatisticCategory?.isHidden || false,
-          showBy: AddCategoryHierarchyType.PULLDOWN,
-        },
-        small: {
-          label: org.smallStatisticCategory?.name || '',
-          value: org.smallStatisticCategory?.uuid || '',
-          isHidden: org.smallStatisticCategory?.isHidden || false,
-          showBy: AddCategoryHierarchyType.PULLDOWN,
-        },
-        skills: org.skills.map((skill) => {
-          return {
-            label: skill.name,
-            value: skill.id,
-          };
-        }),
-        color: org.color,
-      }));
-      const tempList = [
+      setHierarchyList([
         {
           id: data.id,
           name: data.name,
-          statisticCategories,
+          statisticCategories: mapStatisticCategories(data.statisticCategories),
         },
-      ];
-      setHierarchyList(tempList);
+      ]);
     },
     onSettled: () => {
       setIsLoading(false);
