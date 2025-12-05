@@ -73,7 +73,7 @@ class BaseStatisticCategorySerializer(serializers.ModelSerializer):
 
     def get_name(self, obj):
         is_hidden = self.context.get("is_hidden")
-        return get_deleted_name_skill(obj, is_hidden)
+        return get_deleted_name_skill(obj, is_hidden=is_hidden)
 
 
 class StatisticCategoryForHierarchySerializer(serializers.ModelSerializer):
