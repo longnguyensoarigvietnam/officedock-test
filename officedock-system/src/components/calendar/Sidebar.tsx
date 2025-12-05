@@ -215,7 +215,7 @@ export const CalendarSidebar = ({
                   return (
                     <div
                       key={member.id}
-                      className={`flex items-center gap-[14px] px-3 hover:bg-[#EBF1F7] ${
+                      className={`flex items-center gap-[14px] px-3 hover:cursor-pointer hover:bg-[#EBF1F7] ${
                         checkIsParticipantSelected(member) && 'bg-[#EBF1F7]'
                       }`}
                       style={{

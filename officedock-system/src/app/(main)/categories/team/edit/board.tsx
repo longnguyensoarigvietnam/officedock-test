@@ -1,6 +1,6 @@
 'use client';
 
-import { useContext, useEffect, useState, useTransition } from 'react';
+import { useContext, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation } from 'react-query';
 import Link from 'next/link';
@@ -81,7 +81,7 @@ const EditHierarchyForm = () => {
   const showErrorToast = useErrorToast();
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const [isHiddenList, setIsHiddenList] = useState<boolean>(false);
-  const [isPending, startTransition] = useTransition();
+  const [_isPending, startTransition] = useTransition();
 
   useCreationDataCommon({
     options: {
@@ -97,6 +97,7 @@ const EditHierarchyForm = () => {
             value: category.uuid,
             label: category.name,
             teamId: category.team,
+            deletedAt: category.deletedAt
           };
         });
         setCategoryList([...options]);
@@ -391,11 +392,6 @@ const EditHierarchyForm = () => {
     onSettled: () => setIsLoading(false),
   });
 
-  useEffect(() => {
-    setIsLoading(Boolean(isPending));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPending]);
-
   return (
     <div className="flex flex-col h-full">
       <div className="sticky z-[21] top-[0px] px-10 pt-8 pb-3 bg-[#E6F3FB]">
@@ -518,21 +514,24 @@ const EditHierarchyForm = () => {
               />
             ))}
           </div>
-        ) : (
+        ) : Boolean(selectedOrganizationOption.value != '') &&
+          hierarchyList[0] ? (
           <TableComponent
             hierarchyList={hierarchyList[0]}
-            organizationName={hierarchyList[0].name}
+            organizationName={hierarchyList[0]?.name}
             isHiddenList={isHiddenList}
             categoryList={categoryList}
             dataOptionsSkill={
               dataOptionsSkill.find(
-                (options) => options.organizationId == hierarchyList[0].id,
+                (options) => options.organizationId == hierarchyList[0]?.id,
               )?.skills || []
             }
             setIsTyping={setIsTyping}
             setHierarchyList={setHierarchyList}
             setSelectedHierarchiesToUpdate={setSelectedHierarchiesToUpdate}
           />
+        ) : (
+          <></>
         )}
       </div>
     </div>

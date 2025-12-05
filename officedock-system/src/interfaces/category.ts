@@ -22,4 +22,5 @@ export interface CreationDataStatisticCategory {
   name: string;
   uuid: string;
   team?: number | null;
+  deletedAt?: string | Date | null
 }

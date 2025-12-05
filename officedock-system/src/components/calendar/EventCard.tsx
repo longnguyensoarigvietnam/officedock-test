@@ -442,7 +442,7 @@ export const EventCard = ({
     }
     return (
       <div
-        className={`overflow-hidden bg-white p-3 h-full ${eventContent.event.id == selectedEventInfo?.repeatScheduleId && 'selected-event'} ${isMySchedule && isCurrentTimeWithinEvent({ start: eventContent.event.start, end: eventContent.event.end }) && 'event-has-now-indicator'}`}>
+        className={`overflow-hidden bg-white p-3 h-full hover:cursor-pointer ${eventContent.event.id == selectedEventInfo?.repeatScheduleId && 'selected-event'} ${isMySchedule && isCurrentTimeWithinEvent({ start: eventContent.event.start, end: eventContent.event.end }) && 'event-has-now-indicator'}`}>
         {checkShowUserAvatar(eventContent.event.extendedProps.participants) &&
           showEventAvatars({
             participantList: eventContent.event.extendedProps.participants,
@@ -593,7 +593,7 @@ export const EventCard = ({
 
       return (
         <div
-          className={`fc-daygrid-event shadow-lg ${eventContent.event.id == selectedEventInfo?.repeatScheduleId && 'selected-all-day-event'} ${eventContent.event.allDay && 'hover:cursor-pointer'}`}>
+          className={`fc-daygrid-event shadow-lg ${eventContent.event.id == selectedEventInfo?.repeatScheduleId && 'selected-all-day-event'} hover:cursor-pointer`}>
           <div
             className={`text-black bg-white overflow-hidden !w-[calc(100%_-_0px)] py-0.5 !rounded-[8px] text-[12px] font-normal px-1`}>
             {checkShowUserAvatar(

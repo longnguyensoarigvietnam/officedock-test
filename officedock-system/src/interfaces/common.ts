@@ -26,6 +26,7 @@ export interface OptionDropdownType {
   avatarUrl?: string;
   color?: string;
   isHidden?: boolean;
+  deletedAt?: string | Date | null
 }
 
 export interface BasePagination<T> {

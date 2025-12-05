@@ -206,7 +206,7 @@ const TimeDropdown = ({
               <div className={`relative h-full`}>
                 <ListboxButton
                   style={styleClass}
-                  className={`  w-full h-full cursor-default leading-5.5 !text-center rounded bg-white text-gray-900  text-base focus-visible:!outline-none focus-visible:!shadow-none ${disabled && 'opacity-55'}  ${className}`}>
+                  className={`  w-full h-full hover:cursor-pointer leading-5.5 !text-center rounded bg-white text-gray-900  text-base focus-visible:!outline-none focus-visible:!shadow-none ${disabled && 'opacity-55'}  ${className}`}>
                   <ImageRound
                     className={`${iconSrc ? 'w-[22px] h-fit' : 'h-[14px] w-[15px]'} hover:cursor-pointer absolute top-[2px]`}
                     src={`/icons/${iconSrc ? iconSrc : 'clock-time'}.svg`}

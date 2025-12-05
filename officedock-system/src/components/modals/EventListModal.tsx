@@ -331,7 +331,7 @@ export const EventListModal = ({
                 return (
                   <li
                     key={event.eventId}
-                    className={`text-xs bg-[#EBF1F7] text-[#444546] flex items-center !rounded-[8px] pl-[10px] h-[48px] ${event?.id && event?.id.includes('holiday') && 'hover:cursor-not-allowed'}`}
+                    className={`text-xs bg-[#EBF1F7] text-[#444546] flex items-center !rounded-[8px] pl-[10px] h-[48px] hover:cursor-pointer ${event?.id && event?.id.includes('holiday') && 'hover:cursor-not-allowed'}`}
                     onClick={() => {
                       if (event.id && !event?.id.includes('holiday')) {
                         setEventListModalInfo(null);
