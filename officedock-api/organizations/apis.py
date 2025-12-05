@@ -1026,6 +1026,14 @@ class OrganizationCategoryHierarchyViewSet(
                         )
                     )
 
+                # Remove duplicate record
+                self._remove_duplicate_records(
+                    organization=organization,
+                    large_statistic_category=large_statistic_category,
+                    medium_statistic_category=medium_statistic_category,
+                    small_statistic_category=small_statistic_category,
+                )
+
                 # Create new organization category skills
                 if organization_statistic_category and skills:
                     for skill in skills:
@@ -1043,6 +1051,36 @@ class OrganizationCategoryHierarchyViewSet(
                 ).update(deleted_type=item.get("type"))
 
         return self.response_created()
+
+    def _remove_duplicate_records(
+        self,
+        organization,
+        large_statistic_category,
+        medium_statistic_category,
+        small_statistic_category,
+    ):
+        """
+        Check and remove item duplicate (same large, medium and small category)
+        """
+        latest_id = (
+            OrganizationsStatisticCategories.objects.filter(
+                organization=organization,
+                large_statistic_category=large_statistic_category,
+                medium_statistic_category=medium_statistic_category,
+                small_statistic_category=small_statistic_category,
+            )
+            .order_by("-updated_at")
+            .values_list("id", flat=True)
+            .first()
+        )
+
+        if latest_id:
+            OrganizationsStatisticCategories.objects.filter(
+                organization=organization,
+                large_statistic_category=large_statistic_category,
+                medium_statistic_category=medium_statistic_category,
+                small_statistic_category=small_statistic_category,
+            ).exclude(id=latest_id).delete()
 
     def _get_statistic_category_instance(self, obj, company, org):
         """Get instance"""
