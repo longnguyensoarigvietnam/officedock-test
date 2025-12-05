@@ -15,6 +15,7 @@ from common.utils import (
     filter_include_deleted_skill,
     filter_include_deleted_user,
     get_deleted_name,
+    get_organization_name,
     get_user_name,
     transform_statistic_categories,
 )
@@ -305,7 +306,7 @@ def get_data_organization_team_statistic(user, company, organization):
     return organizations
 
 
-def get_data_organization_my_statistic(user, organizations, company):
+def get_data_organization_my_statistic(user, company):
     """
     Get data for filter my statistic
     """
@@ -315,12 +316,34 @@ def get_data_organization_my_statistic(user, organizations, company):
         .values_list("task__organization_id", flat=True)
         .distinct()
     )
-    organizations = organizations.filter(
-        Q(users=user) | Q(id__in=task_org_ids)
-    ).order_by("-deleted_at").distinct()
-    orgs = CreationDataOrganizationWithStructCategorySerializer(
-        organizations, many=True, context={"user": user}
-    ).data
+    user_org_ids = list(user.organizations.values_list("id", flat=True))
+    all_org_ids = set(user_org_ids + task_org_ids)
+
+    organizations = (
+        Organization.objects.filter(Q(id__in=all_org_ids))
+        .annotate(
+            assigned=Case(
+                When(id__in=user_org_ids, then=Value(1)),
+                default=Value(0),
+                output_field=IntegerField(),
+            )
+        )
+        .order_by(
+            F("deleted_at").asc(nulls_first=True), "-assigned", "created_at"
+        )
+        .distinct()
+    )
+
+    orgs = []
+    for org in organizations:
+        data = CreationDataOrganizationWithStructCategorySerializer(
+            org, context={"user": user}
+        ).data
+        data["name"] = get_organization_name(
+            org, hasattr(org, "assigned") and org.assigned == 0
+        )
+        data["is_deleted"] = bool(org.deleted_at) or not (org.assigned)
+        orgs.append(data)
     # Add calendar organization
     orgs.append(
         CreationDataOrganizationWithStructCategorySerializer(

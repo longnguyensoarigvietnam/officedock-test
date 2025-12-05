@@ -397,13 +397,19 @@ class SkillMapViewSet(
             organization = get_object_or_404(Organization, id=organization_id)
 
             # Combine, putting the organization required one first
-            organizations = organizations.annotate(
-                priority=Case(
-                    When(id=organization_id, then=Value(0)),
-                    default=Value(1),
-                    output_field=IntegerField(),
+            organizations = (
+                organizations.filter(
+                    deleted_at__isnull=True, id__in=user_org_ids
                 )
-            ).order_by("priority", "-deleted_at", "-assigned")
+                .annotate(
+                    priority=Case(
+                        When(id=organization_id, then=Value(0)),
+                        default=Value(1),
+                        output_field=IntegerField(),
+                    )
+                )
+                .order_by("priority", "-deleted_at", "-assigned")
+            )
 
             # Get all users in the organization (not deleted)
             users = list(

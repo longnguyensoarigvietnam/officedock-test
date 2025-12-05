@@ -481,7 +481,7 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
         """
         Custom sorting by index for list people in charge
         """
-        action = self.context.get("action")
+        self.context.get("action")
         task_schedule_from_date = self.context.get("task_schedule_from_date")
         task_schedule_end_date = self.context.get("task_schedule_end_date")
         representation = super().to_representation(instance)
@@ -502,8 +502,6 @@ class TaskSerializer(TaskDurationSerializer, TaskCommonSerializer):
                     & Q(plan_end_date__date__lte=task_schedule_end_date.date())
                 )
             ).all()
-        elif action and action == "retrieve":
-            task_schedules = instance.task_schedules.all()
         else:
             task_schedules = instance.task_schedules.filter(
                 plan_start_date__date__gte=now().date()
@@ -970,7 +968,6 @@ class TaskTeamdockSerializer(BaseUserSerializer):
         page_size = int(params.get("page_size", 5))
         ordering = params.get("ordering", None)
         statuses = list(TaskStatus.objects.order_by("id"))
-
         results = []
         all_tasks = obj.in_charge_tasks.filter(
             deleted_at__isnull=True,
