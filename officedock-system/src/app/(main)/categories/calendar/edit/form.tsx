@@ -112,7 +112,7 @@ const TableComponent = ({
     if (categoryList) {
       const categoryOptions = categoryList.filter(
         (category) =>
-          category.teamId == null || category.teamId == hierarchyDetail.id,
+          (category.teamId == null || category.teamId == hierarchyDetail.id) && !category.deletedAt,
       );
       setCategoryDropdownOptions(categoryOptions);
     }
@@ -338,17 +338,17 @@ const TableComponent = ({
             variables.name == ''
               ? null
               : {
-                  name: variables.name as string,
-                  uuid: variables.uuid as string,
-                },
+                name: variables.name as string,
+                uuid: variables.uuid as string,
+              },
           mediumStatisticCategory:
             variables.rowInfo.medium.label == '' ||
-            isUUID(variables.rowInfo.medium.label as string)
+              isUUID(variables.rowInfo.medium.label as string)
               ? null
               : {
-                  name: variables.rowInfo.medium.label as string,
-                  uuid: variables.rowInfo.medium.value as string,
-                },
+                name: variables.rowInfo.medium.label as string,
+                uuid: variables.rowInfo.medium.value as string,
+              },
           color: variables.rowInfo.color,
           deletedType:
             variables.rowInfo &&
@@ -359,19 +359,19 @@ const TableComponent = ({
           organizationStatisticCategoryId: variables.rowInfo.id,
           largeStatisticCategory:
             variables.rowInfo.large.label == '' ||
-            isUUID(variables.rowInfo.large.label as string)
+              isUUID(variables.rowInfo.large.label as string)
               ? null
               : {
-                  name: variables.rowInfo.large.label as string,
-                  uuid: variables.rowInfo.large.value as string,
-                },
+                name: variables.rowInfo.large.label as string,
+                uuid: variables.rowInfo.large.value as string,
+              },
           mediumStatisticCategory:
             variables.name == ''
               ? null
               : {
-                  name: variables.name as string,
-                  uuid: variables.uuid as string,
-                },
+                name: variables.name as string,
+                uuid: variables.uuid as string,
+              },
           color: variables.rowInfo.color,
           deletedType:
             variables.rowInfo &&
@@ -382,20 +382,20 @@ const TableComponent = ({
           organizationStatisticCategoryId: variables.rowInfo.id,
           largeStatisticCategory:
             variables.rowInfo.large.label == '' ||
-            isUUID(variables.rowInfo.large.label as string)
+              isUUID(variables.rowInfo.large.label as string)
               ? null
               : {
-                  name: variables.rowInfo.large.label as string,
-                  uuid: variables.rowInfo.large.value as string,
-                },
+                name: variables.rowInfo.large.label as string,
+                uuid: variables.rowInfo.large.value as string,
+              },
           mediumStatisticCategory:
             variables.rowInfo.medium.label == '' ||
-            isUUID(variables.rowInfo.medium.label as string)
+              isUUID(variables.rowInfo.medium.label as string)
               ? null
               : {
-                  name: variables.rowInfo.medium.label as string,
-                  uuid: variables.rowInfo.medium.value as string,
-                },
+                name: variables.rowInfo.medium.label as string,
+                uuid: variables.rowInfo.medium.value as string,
+              },
           color: variables.rowInfo.color,
           deletedType:
             variables.rowInfo &&
@@ -420,29 +420,29 @@ const TableComponent = ({
           updatedHierarchyDetail.statisticCategories.map((hierarchy) =>
             hierarchy.id == variables.rowInfo.id
               ? {
-                  ...hierarchy,
-                  large: {
-                    label: variables.name || variables.uuid,
-                    value: variables.uuid,
-                    showBy: AddCategoryHierarchyType.INPUT,
-                  },
-                }
+                ...hierarchy,
+                large: {
+                  label: variables.name || variables.uuid,
+                  value: variables.uuid,
+                  showBy: AddCategoryHierarchyType.INPUT,
+                },
+              }
               : hierarchy,
           );
       } else if (variables.type == HierarchyType.MEDIUM) {
         updatedHierarchyDetail.statisticCategories =
           updatedHierarchyDetail.statisticCategories.map((hierarchy) =>
             variables.rowInfo &&
-            hierarchy.id == variables.rowInfo.id &&
-            hierarchy.large.value === variables.rowInfo.large.value
+              hierarchy.id == variables.rowInfo.id &&
+              hierarchy.large.value === variables.rowInfo.large.value
               ? {
-                  ...hierarchy,
-                  medium: {
-                    label: variables.name || variables.uuid,
-                    value: variables.uuid,
-                    showBy: AddCategoryHierarchyType.INPUT,
-                  },
-                }
+                ...hierarchy,
+                medium: {
+                  label: variables.name || variables.uuid,
+                  value: variables.uuid,
+                  showBy: AddCategoryHierarchyType.INPUT,
+                },
+              }
               : hierarchy,
           );
       }
@@ -482,16 +482,16 @@ const TableComponent = ({
               row.large.label == '' || isUUID(row.large.label as string)
                 ? null
                 : {
-                    name: row.large.label as string,
-                    uuid: row.large.value as string,
-                  },
+                  name: row.large.label as string,
+                  uuid: row.large.value as string,
+                },
             mediumStatisticCategory:
               row.medium.label == '' || isUUID(row.medium.label as string)
                 ? null
                 : {
-                    name: row.medium.label as string,
-                    uuid: row.medium.value as string,
-                  },
+                  name: row.medium.label as string,
+                  uuid: row.medium.value as string,
+                },
             color: row.color,
             deletedType: row && getDeletedCalendarCategoryTypeFromRow(row),
           };
@@ -504,17 +504,17 @@ const TableComponent = ({
               newLarge.label == '' || isUUID(newLarge.label as string)
                 ? null
                 : {
-                    name: newLarge.label as string,
-                    uuid: newLarge.value as string,
-                  },
+                  name: newLarge.label as string,
+                  uuid: newLarge.value as string,
+                },
             mediumStatisticCategory:
               originalRow?.medium.label == '' ||
-              isUUID(originalRow?.medium.label as string)
+                isUUID(originalRow?.medium.label as string)
                 ? null
                 : {
-                    name: originalRow?.medium.label as string,
-                    uuid: originalRow?.medium.value as string,
-                  },
+                  name: originalRow?.medium.label as string,
+                  uuid: originalRow?.medium.value as string,
+                },
             color: originalRow?.color,
             deletedType:
               originalRow && getDeletedCalendarCategoryTypeFromRow(originalRow),
@@ -523,16 +523,14 @@ const TableComponent = ({
       }
 
       updatedHierarchies.forEach((updatedHierarchy) => {
-        const key = `${
-          updatedHierarchy.largeStatisticCategory?.uuid || ''
-        }|${updatedHierarchy.mediumStatisticCategory?.uuid || ''}`;
+        const key = `${updatedHierarchy.largeStatisticCategory?.uuid || ''
+          }|${updatedHierarchy.mediumStatisticCategory?.uuid || ''}`;
 
         const index = updatedHierarchiesToUpdate.findIndex(
           (item) =>
             item.organizationStatisticCategoryId ===
-              updatedHierarchy.organizationStatisticCategoryId ||
-            `${
-              item.largeStatisticCategory?.uuid || ''
+            updatedHierarchy.organizationStatisticCategoryId ||
+            `${item.largeStatisticCategory?.uuid || ''
             }|${item.mediumStatisticCategory?.uuid || ''}` === key,
         );
 
@@ -654,16 +652,16 @@ const TableComponent = ({
             row.large.label == '' || isUUID(row.large.label as string)
               ? null
               : {
-                  name: row.large.label as string,
-                  uuid: row.large.value as string,
-                },
+                name: row.large.label as string,
+                uuid: row.large.value as string,
+              },
           mediumStatisticCategory:
             row.medium.label == '' || isUUID(row.medium.label as string)
               ? null
               : {
-                  name: row.medium.label as string,
-                  uuid: row.medium.value as string,
-                },
+                name: row.medium.label as string,
+                uuid: row.medium.value as string,
+              },
           color: row.color,
           deletedType: row && getDeletedCalendarCategoryTypeFromRow(row),
         };
@@ -1026,17 +1024,6 @@ const TableComponent = ({
       .map((row) => row.large.value);
   };
 
-  const getDisabledLargeCategoryList = () => {
-    return hierarchyDetail.statisticCategories
-      .filter((row) =>
-        checkHasHiddenCategoryInARow({
-          originalRow: row,
-          type: HierarchyType.LARGE,
-        }),
-      )
-      .map((row) => row.large.value);
-  };
-
   const getAllMediumsForLarge = (largeValue: string) => {
     const mediumList = hierarchyDetail.statisticCategories
       .filter((row) => row.large.value == largeValue)
@@ -1057,15 +1044,13 @@ const TableComponent = ({
     const largeValue = row.large.value as string;
 
     const hiddenLarges = getHiddenLargeCategoryList();
-    const disabledLarges = getDisabledLargeCategoryList();
     const mediumsForLarge = getAllMediumsForLarge(largeValue);
 
     return categoryDropdownOptions.filter((option) => {
       return (
         option.value !== '' &&
         !mediumsForLarge.includes(option.value) &&
-        !hiddenLarges.includes(option.value) &&
-        !disabledLarges.includes(option.value)
+        !hiddenLarges.includes(option.value)
       );
     });
   };
@@ -1197,22 +1182,22 @@ const TableComponent = ({
                                         organizationStatisticCategoryId: row.id,
                                         largeStatisticCategory:
                                           row.large.label == '' ||
-                                          isUUID(row.large.label as string)
+                                            isUUID(row.large.label as string)
                                             ? null
                                             : {
-                                                name: row.large.label as string,
-                                                uuid: row.large.value as string,
-                                              },
+                                              name: row.large.label as string,
+                                              uuid: row.large.value as string,
+                                            },
                                         mediumStatisticCategory:
                                           row.medium.label == '' ||
-                                          isUUID(row.medium.label as string)
+                                            isUUID(row.medium.label as string)
                                             ? null
                                             : {
-                                                name: row.medium
-                                                  .label as string,
-                                                uuid: row.medium
-                                                  .value as string,
-                                              },
+                                              name: row.medium
+                                                .label as string,
+                                              uuid: row.medium
+                                                .value as string,
+                                            },
                                         color: row.color,
                                         deletedType:
                                           row &&
@@ -1252,11 +1237,11 @@ const TableComponent = ({
                                     updatedHierarchyDetail.statisticCategories.map(
                                       (hierarchy) =>
                                         hierarchy.large.value ===
-                                        row.original.large.value
+                                          row.original.large.value
                                           ? {
-                                              ...hierarchy,
-                                              color: newColor,
-                                            }
+                                            ...hierarchy,
+                                            color: newColor,
+                                          }
                                           : hierarchy,
                                     );
 
@@ -1286,7 +1271,7 @@ const TableComponent = ({
                         ) : (
                           <p className="text-sm ml-[-6px] flex-1 break-all font-medium text-black opacity-30">
                             {row.original.large.label &&
-                            !isUUID(row.original.large.label)
+                              !isUUID(row.original.large.label)
                               ? row.original.large.label
                               : NO_OPTION_CATEGORY}
                           </p>
@@ -1298,11 +1283,10 @@ const TableComponent = ({
                             <input
                               key={JSON.stringify(row.original.large)}
                               type="text"
-                              className={`w-full !h-full text-sm !min-h-[34px] px-[10px] py-[6px] text-black rounded-[6px] ${
-                                row.original.large.isHidden &&
+                              className={`w-full !h-full text-sm !min-h-[34px] px-[10px] py-[6px] text-black rounded-[6px] ${row.original.large.isHidden &&
                                 isHiddenList &&
                                 'opacity-50'
-                              }`}
+                                }`}
                               placeholder="新しいカテゴリーを入力"
                               defaultValue={
                                 !isUUID(row.original.large.label)
@@ -1328,7 +1312,7 @@ const TableComponent = ({
                         </div>
                       ) : (
                         row.original.large.showBy ==
-                          AddCategoryHierarchyType.PULLDOWN && (
+                        AddCategoryHierarchyType.PULLDOWN && (
                           <div className="h-full w-[calc(100%_-_58px)]">
                             <TableDropdown
                               key={JSON.stringify(row.original.large)}
@@ -1341,10 +1325,15 @@ const TableComponent = ({
                               valueClassName="!border-[#77858F] !rounded-[6px] !py-1 !pl-[10px]"
                               labelOptionClass="!text-sm"
                               labelClass="w-[360px] !text-sm"
-                              selectedOption={categoryDropdownOptions.find(
-                                (element) =>
-                                  element.value === row.original.large.value,
-                              )}
+                              selectedOption={
+                                row.original.large &&
+                                  !isUUID(row.original.large.label)
+                                  ? {
+                                    label: row.original.large.label,
+                                    value: row.original.large.value,
+                                  }
+                                  : undefined
+                              }
                               disabled={
                                 row.original.large.isHidden && isHiddenList
                               }
@@ -1376,18 +1365,16 @@ const TableComponent = ({
 
                       <ImageRound
                         name="Hide"
-                        src={`/icons/${
-                          isHiddenLargeCategory
-                            ? 'dark-close-eye'
-                            : 'gray-open-eye'
-                        }.svg`}
-                        className={`w-[16px] h-[13px] ${
-                          shouldHideCategoryArchiveIcon(
-                            Boolean(!row.original.large.label),
-                            isUUID(row.original.large.label),
-                            Boolean(isHiddenLargeCategory),
-                          ) && 'hidden'
-                        } hover:cursor-pointer`}
+                        src={`/icons/${isHiddenLargeCategory
+                          ? 'dark-close-eye'
+                          : 'gray-open-eye'
+                          }.svg`}
+                        className={`w-[16px] h-[13px] ${shouldHideCategoryArchiveIcon(
+                          Boolean(!row.original.large.label),
+                          isUUID(row.original.large.label),
+                          Boolean(isHiddenLargeCategory),
+                        ) && 'hidden'
+                          } hover:cursor-pointer`}
                         onClick={() => {
                           if (
                             shouldHideCategoryArchiveIcon(
@@ -1441,7 +1428,7 @@ const TableComponent = ({
                           ) : (
                             <p className="text-sm flex-1 break-all font-medium text-black opacity-30">
                               {row.original.medium.label &&
-                              !isUUID(row.original.medium.label)
+                                !isUUID(row.original.medium.label)
                                 ? row.original.medium.label
                                 : NO_OPTION_CATEGORY}
                             </p>
@@ -1453,11 +1440,10 @@ const TableComponent = ({
                               <input
                                 key={JSON.stringify(row.original.medium)}
                                 type="text"
-                                className={`w-full !h-full text-sm !min-h-[34px] px-[10px] py-[6px] text-black rounded-[6px] ${
-                                  row.original.medium.isHidden &&
+                                className={`w-full !h-full text-sm !min-h-[34px] px-[10px] py-[6px] text-black rounded-[6px] ${row.original.medium.isHidden &&
                                   isHiddenList &&
                                   'opacity-50'
-                                }`}
+                                  }`}
                                 placeholder="新しいカテゴリーを入力"
                                 defaultValue={
                                   !isUUID(row.original.medium.label)
@@ -1484,7 +1470,7 @@ const TableComponent = ({
                           </div>
                         ) : (
                           row.original.medium.showBy ==
-                            AddCategoryHierarchyType.PULLDOWN && (
+                          AddCategoryHierarchyType.PULLDOWN && (
                             <div className={` w-[calc(100%_-_30px)] h-full`}>
                               <TableDropdown
                                 key={JSON.stringify(row.original.medium)}
@@ -1498,10 +1484,15 @@ const TableComponent = ({
                                 labelOptionClass="!text-sm"
                                 valueClassName="!border-[#77858F] !rounded-[6px] !py-1 !pl-[10px]"
                                 labelClass="w-[360px] !text-sm"
-                                selectedOption={categoryDropdownOptions.find(
-                                  (element) =>
-                                    element.value === row.original.medium.value,
-                                )}
+                                selectedOption={
+                                  row.original.medium &&
+                                    !isUUID(row.original.medium.label)
+                                    ? {
+                                      label: row.original.medium.label,
+                                      value: row.original.medium.value,
+                                    }
+                                    : undefined
+                                }
                                 disabled={
                                   row.original.medium.isHidden && isHiddenList
                                 }
@@ -1534,13 +1525,12 @@ const TableComponent = ({
                           <ImageRound
                             name="Hide"
                             src={`/icons/${row.original.medium.isHidden ? 'dark-close-eye' : 'gray-open-eye'}.svg`}
-                            className={`w-[16px] h-[13px] ${
-                              shouldHideCategoryArchiveIcon(
-                                Boolean(!row.original.medium.label),
-                                isUUID(row.original.medium.label),
-                                Boolean(isHiddenMediumCategory),
-                              ) && 'hidden'
-                            }
+                            className={`w-[16px] h-[13px] ${shouldHideCategoryArchiveIcon(
+                              Boolean(!row.original.medium.label),
+                              isUUID(row.original.medium.label),
+                              Boolean(isHiddenMediumCategory),
+                            ) && 'hidden'
+                              }
                              hover:cursor-pointer`}
                             onClick={() => {
                               if (

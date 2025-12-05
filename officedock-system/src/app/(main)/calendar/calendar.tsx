@@ -2194,7 +2194,7 @@ const EventCalendar = () => {
       <div className="flex mb-3 overflow-y-hidden" ref={containerRef}>
         <div
           className={`${showSidebar ? 'w-[calc(100%_-_320px)] pr-5' : 'w-full'} pt-[18px]`}>
-          <div className="flex items-center justify-between mb-3 pl-10">
+          <div className="flex items-center justify-between mb-[18px] pl-10">
             <div className="flex items-center ml-[-20px]">
               <ImageRound
                 name="Chevron left"
@@ -2375,10 +2375,10 @@ const EventCalendar = () => {
                       }
                       className={`${
                         searchParams.get('view') == ViewOptions.WEEK
-                          ? 'pt-[20px]'
+                          ? 'pt-[20px] -mt-2'
                           : `${
                               authenticatedUser
-                                ? 'mt-[50px] pt-[10px]'
+                                ? 'mt-[60px] pt-[10px]'
                                 : 'mt-[-30px] pt-[20px]'
                             } pl-[15px]`
                       }`}

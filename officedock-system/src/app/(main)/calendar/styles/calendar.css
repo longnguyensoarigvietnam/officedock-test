@@ -52,6 +52,13 @@
   padding-left: 10px;
   display: flex;
   justify-content: start;
+  padding-bottom: 20px;
+  padding-top: 20px;
+}
+.calendar-custom.week th .fc-scrollgrid-sync-inner {
+  padding-bottom: 20px;
+  padding-top: 20px;
+  line-height: 100%;
 }
 .calendar-custom .fc-daygrid-day-number {
   font-size: 14px;

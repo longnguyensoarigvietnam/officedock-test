@@ -113,7 +113,7 @@ const TableComponent = ({
   useEffect(() => {
     if (categoryList) {
       const categoryOptions = categoryList.filter(
-        (category) => category.teamId == null,
+        (category) => category.teamId == null && category.deletedAt == null,
       );
       setCategoryDropdownOptions(categoryOptions);
     }

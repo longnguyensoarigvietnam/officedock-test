@@ -4,7 +4,6 @@ import {
   Dispatch,
   SetStateAction,
   useContext,
-  useEffect,
   useState,
   useTransition,
 } from 'react';
@@ -61,7 +60,7 @@ const EditHierarchyBoard = () => {
     useState<HierarchyDetail | null>(null);
   const [categoryList, setCategoryList] = useState<OptionDropdownType[]>([]);
   const [isHiddenList, setIsHiddenList] = useState<boolean>(false);
-  const [isPending, startTransition] = useTransition();
+  const [_isPending, startTransition] = useTransition();
 
   // Actions
   const [selectedHierarchiesToUpdate, setSelectedHierarchiesToUpdate] =
@@ -87,6 +86,7 @@ const EditHierarchyBoard = () => {
             value: category.uuid,
             label: category.name,
             teamId: category.team,
+            deletedAt: category.deletedAt
           };
         });
         setCategoryList([...options]);
@@ -277,11 +277,6 @@ const EditHierarchyBoard = () => {
       },
     },
   );
-
-  useEffect(() => {
-    setIsLoading(Boolean(isPending));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPending]);
 
   return (
     <div className="flex flex-col h-full">
