@@ -1192,7 +1192,7 @@ def get_deleted_name_skill(obj, hierarchy_deleted=False):
         return None
 
     value = getattr(obj, "name", "")
-    if obj.deleted_at or hierarchy_deleted:
+    if hierarchy_deleted:
         return f"{value}{KEYWORDS['deleted']}"
     return value
 
