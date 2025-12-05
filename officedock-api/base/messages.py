@@ -291,7 +291,7 @@ _KEYWORDS = {
         "skill": "Skill",
         "skill_map": "Skill map",
         "deleted": "(Deleted)",
-        "independent": "(Independent)",
+        "unassigned": "(Unassigned)",
     },
     "ja": {
         "term_of_use": "利用規約",
@@ -302,7 +302,7 @@ _KEYWORDS = {
         "skill": "スキル",
         "skill_map": "スキルマップ",
         "deleted": "(削除済)",
-        "independent": "(無所属)",
+        "unassigned": "(無所属)",
     },
 }
 

@@ -44,12 +44,12 @@ from common.utils import (
     split_id_from_string,
     check_task_overtime,
 )
-from tasks.models import TaskSchedule, TaskDuration, Task
+from tasks.models import TaskDuration, TaskSchedule
 from base.permissions import ActionPermission
 from roles.constants import Screens
 from common.serializers import CreationDataUserSerializer
 from tasks.constants import FrequencyMap, LIMIT_DAY
-from organizations.models import Organization
+from users.models import User
 
 
 @extend_schema(tags=["System > Schedule"])
@@ -1134,31 +1134,46 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
             params.get("is_cross_team_task", "").lower() == "true"
         )
 
+        # Query data tasks and schedules
+        plan_schedules = (
+            RepeatSchedule.objects.select_related("schedule")
+            .prefetch_related("schedule__participants")
+            .filter(
+                schedule__organization_id=calendar_org.id
+                if calendar_org
+                else None,
+                schedule__deleted_at__isnull=True,
+                company=company,
+            )
+        )
+
         if is_cross_team_task_param:
-            # Get all organization_ids that users in this organization belong to (cross-team)
-            org_ids = (
-                Organization.objects.filter(
-                    users__organizations__id=organization_id
-                )
+            # Get all user IDs in the organization
+            user_ids = (
+                User.active_objects.filter(organizations__id=organization_id)
                 .values_list("id", flat=True)
                 .distinct()
             )
-        else:
-            org_ids = [organization_id]
 
-        # Query data tasks and schedules
-        plan_schedules = RepeatSchedule.objects.select_related(
-            "schedule"
-        ).filter(
-            schedule__organization_id=calendar_org.id if calendar_org else None,
-            schedule__deleted_at__isnull=True,
-            company=company,
-        )
-        task_schedules = TaskSchedule.objects.select_related("task").filter(
-            task__organization_id__in=org_ids,
-            company=company,
-            task__deleted_at__isnull=True,
-        )
+            task_schedules = (
+                TaskSchedule.objects.select_related("task")
+                .prefetch_related("task__people_in_charge")
+                .filter(
+                    task__people_in_charge__in=user_ids,
+                    company=company,
+                    task__deleted_at__isnull=True,
+                )
+            )
+        else:
+            task_schedules = (
+                TaskSchedule.objects.select_related("task")
+                .prefetch_related("task__people_in_charge")
+                .filter(
+                    task__organization_id=organization_id,
+                    company=company,
+                    task__deleted_at__isnull=True,
+                )
+            )
 
         # Handle filter search
         if search:
@@ -1194,37 +1209,33 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
             if ids := split_id_from_string(user_ids):
                 plan_schedules = plan_schedules.filter(
                     schedule__participants__id__in=ids
-                ).distinct()
+                )
                 task_schedules = task_schedules.filter(
                     task__people_in_charge__id__in=ids
-                ).distinct()
+                )
 
         if tag_ids := request.query_params.get("tag_ids"):
             if ids := split_id_from_string(tag_ids):
-                plan_schedules = plan_schedules.filter(
-                    schedule__tags__in=ids
-                ).distinct()
-                task_schedules = task_schedules.filter(
-                    task__tags__in=ids
-                ).distinct()
+                plan_schedules = plan_schedules.filter(schedule__tags__in=ids)
+                task_schedules = task_schedules.filter(task__tags__in=ids)
 
         if category_ids := request.query_params.get("category_ids"):
             if ids := split_id_from_string(category_ids):
                 plan_schedules = plan_schedules.filter(
                     schedule__categories__large_statistic_category__in=ids
-                ).distinct()
+                )
                 task_schedules = task_schedules.filter(
                     task__categories__large_statistic_category__in=ids
-                ).distinct()
+                )
 
         if organization_ids := request.query_params.get("organization_ids"):
             if ids := split_id_from_string(organization_ids):
                 plan_schedules = plan_schedules.filter(
                     schedule__organization__in=ids
-                ).distinct()
+                )
                 task_schedules = task_schedules.filter(
                     task__organization__in=ids
-                ).distinct()
+                )
 
         def _serialize_task_schedule(task_schedule):
             """
@@ -1232,9 +1243,9 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
             """
             task = task_schedule.task
             is_cross_team_task = bool(
-                task.organization
+                task.organization_id
                 and organization_id
-                and int(task.organization.id) != int(organization_id)
+                and int(task.organization_id) != int(organization_id)
             )
 
             return {
@@ -1252,9 +1263,7 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
                 "event_type": task.type,
                 "categories": get_common_categories(
                     task.categories.first(), task
-                )
-                if task.categories.exists()
-                else [],
+                ),
             }
 
         def _serialize_plan_schedule(plan):
@@ -1277,13 +1286,15 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
                 "event_type": schedule.type,
                 "categories": get_common_categories(
                     schedule.categories.first(), schedule
-                )
-                if schedule.categories.exists()
-                else [],
+                ),
             }
 
-        results = [_serialize_task_schedule(ts) for ts in task_schedules]
-        results += [_serialize_plan_schedule(ps) for ps in plan_schedules]
+        results = [
+            _serialize_task_schedule(ts) for ts in task_schedules.distinct()
+        ]
+        results += [
+            _serialize_plan_schedule(ps) for ps in plan_schedules.distinct()
+        ]
 
         return self.response_ok(results)
 
@@ -1327,30 +1338,28 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
             params.get("is_cross_team_task", "").lower() == "true"
         )
 
+        # Base filter for schedule's organization if calendar_org exists
+        filters = Q()
+        if calendar_org:
+            filters |= Q(schedule__organization_id=calendar_org.id)
+
+        # Cross-team or single-team filter
         if is_cross_team_task_param:
-            # Get all organization_ids that users in this organization belong to (cross-team)
-            org_ids = (
-                Organization.objects.filter(
-                    users__organizations__id=organization_id
-                )
+            # Get all user IDs in the organization
+            user_ids = (
+                User.active_objects.filter(organizations__id=organization_id)
                 .values_list("id", flat=True)
                 .distinct()
             )
-        else:
-            org_ids = [organization_id]
 
+            filters |= Q(task__people_in_charge__in=user_ids)
+        else:
+            filters |= Q(task__organization_id=organization_id)
+
+        # Apply filter
         durations = TaskDuration.objects.select_related(
-            "task", "schedule"
-        ).filter(
-            Q(
-                task__organization_id__in=org_ids,
-            )
-            | Q(
-                schedule__organization_id=calendar_org.id
-                if calendar_org
-                else None,
-            )
-        )
+            "user", "task", "schedule"
+        ).filter(filters)
 
         # Handle filter search
         if search:
@@ -1375,70 +1384,78 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
                 durations = durations.filter(
                     Q(schedule__participants__id__in=ids)
                     | Q(task__people_in_charge__id__in=ids)
-                ).distinct()
+                )
 
         if tag_ids := request.query_params.get("tag_ids"):
             if ids := split_id_from_string(tag_ids):
                 durations = durations.filter(
                     Q(schedule__tags__id__in=ids) | Q(task__tags__id__in=ids)
-                ).distinct()
+                )
 
         if category_ids := request.query_params.get("category_ids"):
             if ids := split_id_from_string(category_ids):
                 durations = durations.filter(
                     Q(schedule__categories__large_statistic_category__in=ids)
                     | Q(task__categories__large_statistic_category__in=ids)
-                ).distinct()
+                )
 
         if organization_ids := request.query_params.get("organization_ids"):
             if ids := split_id_from_string(organization_ids):
                 durations = durations.filter(
                     Q(schedule__organization_id__in=ids)
                     | Q(task__organization_id__in=ids)
-                ).distinct()
+                )
 
         results = []
-        for duration in durations:
+        for duration in durations.distinct():
             # Detect model
             model = None
             is_cross_team_task = False
 
-            if duration.task:
+            if duration.task_id:
                 model = duration.task
                 is_cross_team_task = bool(
-                    model.organization
+                    model.organization_id
                     and organization_id
-                    and int(model.organization.id) != int(organization_id)
+                    and int(model.organization_id) != int(organization_id)
                 )
 
-            if duration.schedule:
+            if duration.schedule_id:
                 model = duration.schedule
 
-            if not model or not duration.user:
+            if not model or not duration.user_id:
                 continue
+
+            # Handle get data items
+            first_cate = model.categories.first()
+            categories = get_common_categories(first_cate, model)
+
+            # Determine type and IDs in a single if
+            if isinstance(model, Schedule):
+                calendar_type = CalendarTypes.SCHEDULE.value
+                task_id = None
+                schedule_id = model.id
+            else:
+                calendar_type = CalendarTypes.TASK.value
+                task_id = model.id
+                schedule_id = None
+
+            participants = CreationDataUserSerializer(
+                [duration.user], many=True
+            ).data
 
             item = {
                 "id": duration.id,
-                "task_id": model.id if isinstance(model, Task) else None,
-                "schedule_id": model.id
-                if isinstance(model, Schedule)
-                else None,
+                "task_id": task_id,
+                "schedule_id": schedule_id,
                 "title": model.title,
                 "start_date": duration.started_at,
-                "end_date": duration.paused_at,
-                "type": CalendarTypes.SCHEDULE.value
-                if isinstance(model, Schedule)
-                else CalendarTypes.TASK.value,
-                "participants": CreationDataUserSerializer(
-                    [duration.user], many=True
-                ).data,
-                "is_start": duration.paused_at is None
-                or not duration.paused_at,
+                "end_date": calendar_type,
+                "participants": participants,
+                "is_start": not duration.paused_at,
                 "is_cross_team_task": is_cross_team_task,
                 "event_type": model.type,
-                "categories": []
-                if not model.categories.exists()
-                else get_common_categories(model.categories.first(), model),
+                "categories": categories,
             }
             results.append(item)
 

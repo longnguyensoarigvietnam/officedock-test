@@ -9,11 +9,12 @@ from rest_framework.exceptions import ValidationError, NotFound
 from django.utils.timezone import now
 
 from base.apis import BaseAPIViewSet
-from base.messages import ERROR_MESSAGES, KEYWORDS
+from base.messages import ERROR_MESSAGES
 from base.permissions import ActionPermission
 from chat.models import ChatMessage
 from common.serializers import CreationDataUserWithMainOrganizationSerializer
 from common.utils import (
+    get_organization_name,
     get_user_organizations_with_descendants,
     split_id_from_string,
 )
@@ -24,7 +25,6 @@ from organizations.models import (
     UsersOrganizations,
 )
 from organizations.serializers import (
-    BaseOrganizationSerializer,
     StatisticCategorySerializer,
 )
 from skills.constants import (
@@ -359,45 +359,59 @@ class SkillMapViewSet(
         """
         Handle data and response list of skill map by user
         """
-        user_id = request.query_params.get("user_id", None)
-        organization_id = request.query_params.get("organization_id", None)
+        unassigned = 0
+        assigned = 1
         prev_user = None
         next_user = None
+        user_id = request.query_params.get("user_id")
+        organization_id = request.query_params.get("organization_id")
+
+        # Get the user object
         user = get_object_or_404(User, id=user_id) if user_id else request.user
-        skill_org_ids = user.skill_maps.distinct().values_list(
-            "organization", flat=True
+
+        # Get organizations related to user's skills
+        skill_org_ids = list(
+            SkillMap.objects.filter(staff=user).values_list(
+                "organization_id", flat=True
+            )
         )
-        user_org_ids = user.organizations.values_list("id", flat=True)
-        org_ids = set(skill_org_ids).union(user_org_ids)
+
+        # Get all organizations related to skill map
+        user_org_ids = list(user.organizations.values_list("id", flat=True))
         organizations = (
-            Organization.objects.filter(id__in=org_ids)
+            Organization.objects.filter(
+                id__in=set(skill_org_ids + user_org_ids)
+            )
             .annotate(
-                sort_key=Case(
-                    When(id__in=user_org_ids, then=0),  # user orgs first
-                    default=1,  # skill-only orgs last
+                assigned=Case(
+                    When(id__in=user_org_ids, then=Value(assigned)),
+                    default=Value(unassigned),
                     output_field=IntegerField(),
                 )
             )
-            .order_by("-deleted_at", "sort_key")
-            .all()
+            .order_by("-deleted_at", "-assigned")
         )
+
         if organization_id:
             # Get the single organization
             organization = get_object_or_404(Organization, id=organization_id)
 
             # Combine, putting the organization required one first
-            organizations = user.organizations.annotate(
+            organizations = organizations.annotate(
                 priority=Case(
                     When(id=organization_id, then=Value(0)),
                     default=Value(1),
                     output_field=IntegerField(),
                 )
-            ).order_by("priority")
+            ).order_by("priority", "-deleted_at", "-assigned")
+
+            # Get all users in the organization (not deleted)
             users = list(
-                organization.users.filter(deleted_at__isnull=True)
-                .all()
-                .order_by("created_at")
+                organization.users.filter(deleted_at__isnull=True).order_by(
+                    "created_at"
+                )
             )
+
             # Find the user's position in the list
             try:
                 index = users.index(user)  # Get index of the requesting user
@@ -409,9 +423,11 @@ class SkillMapViewSet(
                         )
                     }
                 )
+
             # Get previous and next users safely
             prev_user = users[index - 1].id if index > 0 else None
             next_user = users[index + 1].id if index < len(users) - 1 else None
+
         data = {
             "user": CreationDataUserWithMainOrganizationSerializer(user).data,
             "prev_user": prev_user,
@@ -452,21 +468,20 @@ class SkillMapViewSet(
                         )
                     skill = Skill.objects.filter(parent_id=skill.id).first()
                 data_skill_maps.append(group_skill_map)
-            org_name = (
-                organization.name
-                if organization.id in user_org_ids
-                else f"{organization.name}{KEYWORDS['independent']}"
-            )
-            org_serializer = BaseOrganizationSerializer(organization).data
-            org_name = (
-                org_serializer["name"] if organization.deleted_at else org_name
+
+            # Append data organizations
+            has_assigned = (
+                hasattr(organization, "assigned")
+                and organization.assigned == assigned
             )
             data["organizations"].append(
                 {
-                    "id": org_serializer["id"],
-                    "organization_name": org_name,
+                    "id": organization.id,
                     "is_deleted": bool(organization.deleted_at)
-                    or (organization.id not in user_org_ids),
+                    or not has_assigned,
+                    "organization_name": get_organization_name(
+                        organization, not has_assigned
+                    ),
                     "skill_maps": data_skill_maps,
                     "steps": {
                         "step_1": step.define_step_1 if step else None,
@@ -491,7 +506,29 @@ class SkillMapViewSet(
         user = request.user
         organization_id = request.query_params.get("organization_id", None)
 
-        organizations = user.organizations.all().order_by("-created_at")
+        # Get organizations related to user's skills
+        skill_org_ids = list(
+            SkillMap.objects.filter(staff=user).values_list(
+                "organization_id", flat=True
+            )
+        )
+
+        # Get all organizations related to skill map
+        unassigned = 0
+        assigned = 1
+        user_org_ids = list(user.organizations.values_list("id", flat=True))
+        organizations = (
+            Organization.objects.filter(id__in=(skill_org_ids + user_org_ids))
+            .annotate(
+                assigned=Case(
+                    When(id__in=user_org_ids, then=Value(assigned)),
+                    default=Value(unassigned),
+                    output_field=IntegerField(),
+                )
+            )
+            .order_by("-assigned")
+        )
+
         if organization_id:
             organizations = organizations.filter(id=organization_id)
 
@@ -515,10 +552,19 @@ class SkillMapViewSet(
                     )
                     skill = Skill.objects.filter(parent_id=skill.id).first()
                 data_skills.append(group_skill)
+
+            # Append data organizations
+            has_assigned = (
+                hasattr(organization, "assigned")
+                and organization.assigned == assigned
+            )
             data.append(
                 {
                     "id": organization.id,
-                    "organization_name": organization.name,
+                    "has_assigned": has_assigned,
+                    "organization_name": get_organization_name(
+                        organization, not has_assigned
+                    ),
                     "skill_maps": data_skills,
                     "steps": {
                         "step_1": step.define_step_1 if step else None,

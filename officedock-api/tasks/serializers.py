@@ -970,13 +970,9 @@ class TaskTeamdockSerializer(BaseUserSerializer):
         page_size = int(params.get("page_size", 5))
         ordering = params.get("ordering", None)
         statuses = list(TaskStatus.objects.order_by("id"))
-        user_org_ids = list(
-            obj.organizations.all().values_list("id", flat=True)
-        )
 
         results = []
         all_tasks = obj.in_charge_tasks.filter(
-            organization_id__in=user_org_ids,
             deleted_at__isnull=True,
         ).exclude(type=TaskTypes.MY_TEMPLATE.value)
         for status in statuses:

@@ -6,6 +6,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Q
 from django.utils.crypto import get_random_string
+from django.utils.timezone import now
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import status, viewsets, mixins
@@ -991,15 +992,15 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             if delete_organizations := list(
                 set(current_organization) - set(new_organization)
             ):
-                # for delete_org in delete_organizations:
-                #     skill_maps = user.skill_maps.filter(organization=delete_org)
-                #     skills = skill_maps.values("skill")
-                #     # Remove all submit level in organization of user
-                #     SubmitLevelHistory.objects.filter(
-                #         organization=delete_org, staff=user, skill__in=skills
-                #     ).delete()
-                #     # Remove all skill map in organization of user
-                #     skill_maps.delete()
+                for delete_org in delete_organizations:
+                    skill_maps = user.skill_maps.filter(organization=delete_org)
+                    # handle pending progress skill
+                    for sm in skill_maps:
+                        for smsl in sm.skill_map_skill_levels.filter(
+                            is_complete=False, deleted_at__isnull=True
+                        ).all():
+                            smsl.deleted_at = now()
+                            smsl.save(update_fields=["deleted_at"])
 
                 # Remove team task index
                 TeamTaskIndex.objects.filter(
@@ -1015,6 +1016,13 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                         "is_main": data_org.get("is_main", False),
                     },
                 )
+                skill_maps = user.skill_maps.filter(
+                    organization=data_org.get("organization"),
+                    skill_map_skill_levels__deleted_at__isnull=False,
+                    skill_map_skill_levels__is_complete=False,
+                )
+                for skill_map in skill_maps:
+                    handle_continue_progress_lookback(skill_map)
 
         if roles_data is not None:
             user.roles.clear()
