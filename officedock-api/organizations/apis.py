@@ -915,27 +915,35 @@ class OrganizationCategoryHierarchyViewSet(
 
         if data_to_create:
             for item in data_to_create:
+                input_large = item.pop("large_statistic_category", None)
+                input_medium = item.pop("medium_statistic_category", None)
+                input_small = item.pop("small_statistic_category", None)
+
+                if not input_large and not input_medium and not input_small:
+                    continue
+
                 organization = item.get("organization", None)
                 organization_statistic_category = item.pop(
                     "organization_statistic_category", None
                 )
+
                 large_statistic_category = (
                     self._get_statistic_category_instance(
-                        item.pop("large_statistic_category", None),
+                        input_large,
                         company,
                         organization,
                     )
                 )
                 medium_statistic_category = (
                     self._get_statistic_category_instance(
-                        item.pop("medium_statistic_category", None),
+                        input_medium,
                         company,
                         organization,
                     )
                 )
                 small_statistic_category = (
                     self._get_statistic_category_instance(
-                        item.pop("small_statistic_category", None),
+                        input_small,
                         company,
                         organization,
                     )
