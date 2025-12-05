@@ -469,6 +469,7 @@ class OrganizationHierarchySerializer(serializers.ModelSerializer):
             "icon_color",
             "children",
             "type",
+            "deleted_at",
         ]
 
     def get_children(self, obj):
@@ -525,6 +526,7 @@ class OrganizationDetailSerializer(OrganizationSerializer):
             "icon",
             "icon_color",
             "type",
+            "deleted_at",
         ]
 
     def get_statistic_categories(self, obj):
