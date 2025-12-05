@@ -14,6 +14,7 @@ from base.messages import ERROR_MESSAGES, KEYWORDS
 from common.constants import AVATAR_GCS_EXPIRATION_SECONDS
 from common.utils import (
     compare_categories,
+    get_deleted_name,
     get_deleted_name_skill,
     get_signed_url,
 )
@@ -73,6 +74,21 @@ class BaseStatisticCategorySerializer(serializers.ModelSerializer):
     def get_name(self, obj):
         is_hidden = self.context.get("is_hidden")
         return get_deleted_name_skill(obj, is_hidden)
+
+
+class StatisticCategoryForHierarchySerializer(serializers.ModelSerializer):
+    """
+    Serializer for statistic category
+    """
+
+    name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = StatisticCategory
+        fields = ["id", "name", "uuid", "team", "deleted_at"]
+
+    def get_name(self, obj):
+        return get_deleted_name(obj)
 
 
 class StatisticCategorySerializer(serializers.ModelSerializer):
@@ -683,7 +699,7 @@ class OrgStatisticCategoryHierarchySerializer(serializers.ModelSerializer):
         """
         is_hidden = obj.deleted_type == ScheduleCategoryTypes.LARGE.value
 
-        data = BaseStatisticCategorySerializer(
+        data = StatisticCategoryForHierarchySerializer(
             obj.large_statistic_category
         ).data
         data["is_hidden"] = is_hidden
@@ -700,7 +716,7 @@ class OrgStatisticCategoryHierarchySerializer(serializers.ModelSerializer):
             ScheduleCategoryTypes.LARGE.value,
         ]
 
-        data = BaseStatisticCategorySerializer(
+        data = StatisticCategoryForHierarchySerializer(
             obj.medium_statistic_category
         ).data
         data["is_hidden"] = is_hidden
@@ -718,7 +734,7 @@ class OrgStatisticCategoryHierarchySerializer(serializers.ModelSerializer):
             ScheduleCategoryTypes.LARGE.value,
         ]
 
-        data = BaseStatisticCategorySerializer(
+        data = StatisticCategoryForHierarchySerializer(
             obj.small_statistic_category
         ).data
         data["is_hidden"] = is_hidden
