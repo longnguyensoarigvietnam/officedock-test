@@ -36,13 +36,14 @@ from common.constants import BASE_DATE_FORMAT
 from common.models import Category
 from common.utils import (
     format_duration,
+    get_deleted_name_skill,
     time_str_to_timedelta,
     split_id_from_string,
     validate_company_organization,
     get_signed_url,
 )
 from organizations.constants import OrganizationTypes
-from organizations.models import Organization
+from organizations.models import Organization, OrganizationsStatisticCategories
 from skills.constants import DEFAULT_TIME
 from stat_data.constants import (
     ALL_TEAM,
@@ -234,6 +235,29 @@ class StatisticViewSet(BaseAPIViewSet):
             id__in=org_of_task_ids
         ).values_list("id", "name", "type", "deleted_at")
 
+        # Fetch organization-category metadata (e.g. color) in a single query
+        org_cats = OrganizationsStatisticCategories.objects.filter(
+            organization__in=org_of_task_ids
+        ).values(
+            "id",
+            "organization_id",
+            "large_statistic_category_id",
+            "medium_statistic_category_id",
+            "small_statistic_category_id",
+            "deleted_type",
+        )
+
+        # Map organization-category pairs to their metadata for fast lookup
+        org_cat_map = {
+            (
+                oc["organization_id"],
+                oc["large_statistic_category_id"],
+                oc["medium_statistic_category_id"],
+                oc["small_statistic_category_id"],
+            ): oc
+            for oc in org_cats
+        }
+
         org_map = {
             org_id: {
                 "id": org_id,
@@ -255,19 +279,46 @@ class StatisticViewSet(BaseAPIViewSet):
             category_formatted = []
             if item.prefetched_categories:
                 pref_cat = item.prefetched_categories[0]
+                large_category = getattr(
+                    pref_cat, "large_statistic_category", None
+                )
+                medium_category = getattr(
+                    pref_cat, "medium_statistic_category", None
+                )
+                small_category = getattr(
+                    pref_cat, "small_statistic_category", None
+                )
+                key = (
+                    item.organization_id,
+                    getattr(large_category, "id", None),
+                    getattr(medium_category, "id", None),
+                    getattr(small_category, "id", None),
+                )
+
+                deleted_type = None
+                if key in org_cat_map:
+                    deleted_type = org_cat_map[key]["deleted_type"]
+
                 for attr, type_value in category_types:
-                    category = getattr(pref_cat, attr)
-                    category_formatted.append(
-                        {
-                            "id": category.id if category else NONE_CATEGORY,
-                            "name": category.name
-                            if category
-                            else NONE_CATEGORY,
-                            "type": type_value,
-                        }
-                    )
+                    if cate_obj := getattr(pref_cat, attr):
+                        category_formatted.append(
+                            {
+                                "id": cate_obj.id,
+                                "name": get_deleted_name_skill(
+                                    cate_obj, deleted_type, type_value
+                                ),
+                                "type": type_value,
+                            }
+                        )
+                    else:
+                        category_formatted.append(
+                            {
+                                "id": NONE_CATEGORY,
+                                "name": NONE_CATEGORY,
+                                "type": type_value,
+                            }
+                        )
             else:
-                # Set null category
                 for attr, type_value in category_types:
                     category_formatted.append(
                         {
@@ -444,6 +495,13 @@ class StatisticViewSet(BaseAPIViewSet):
         if medium_category_id and calendar_org.id in organization_ids:
             return self.response_ok(data)
 
+        # Detemire type category
+        type_cat = TaskCategoryTypes.LARGE.value
+        if large_category_id:
+            type_cat = TaskCategoryTypes.MEDIUM.value
+        elif medium_category_id:
+            type_cat = TaskCategoryTypes.SMALL.value
+
         for index, (start, end) in enumerate(ranges):
             start_date_min = datetime.combine(start, time.min)
             end_date_max = datetime.combine(end, time.max)
@@ -477,12 +535,8 @@ class StatisticViewSet(BaseAPIViewSet):
                     durations=filter_duration_by_range,
                     large_category_id=large_category_id,
                     medium_category_id=medium_category_id,
+                    type_value=type_cat,
                 )
-                type_cat = TaskCategoryTypes.LARGE.value
-                if large_category_id:
-                    type_cat = TaskCategoryTypes.MEDIUM.value
-                elif medium_category_id:
-                    type_cat = TaskCategoryTypes.SMALL.value
                 range_data = process_categories(
                     category_list,
                     total_duration,
@@ -512,6 +566,7 @@ class StatisticViewSet(BaseAPIViewSet):
                 durations=durations,
                 large_category_id=large_category_id,
                 medium_category_id=medium_category_id,
+                type_value=type_cat,
             )
 
             data["data"] = process_categories(
@@ -575,7 +630,7 @@ class StatisticViewSet(BaseAPIViewSet):
                 return self.response_ok(data)
             total_duration = get_total_durations(durations)
             category_list = aggregate_durations(
-                durations=durations,
+                durations=durations, type_value=TaskCategoryTypes.LARGE.value
             )
 
             # Process large categories
@@ -598,6 +653,7 @@ class StatisticViewSet(BaseAPIViewSet):
                     category_list = aggregate_durations(
                         durations=durations,
                         large_category_id=large_category_id,
+                        type_value=TaskCategoryTypes.MEDIUM.value,
                     )
 
                     data["medium_total_duration"] = format_duration(duration)
@@ -623,6 +679,7 @@ class StatisticViewSet(BaseAPIViewSet):
                             durations=durations,
                             large_category_id=large_category_id,
                             medium_category_id=medium_category_id,
+                            type_value=TaskCategoryTypes.SMALL.value,
                         )
                         data["small_total_duration"] = format_duration(duration)
                         data["small_categories"] = process_categories(

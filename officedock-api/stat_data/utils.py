@@ -183,6 +183,7 @@ def aggregate_durations(
     durations=None,
     is_daily_report=False,
     user=None,
+    type_value=None,
 ):
     """
     Optimized version: aggregate durations by task/schedule and group by category
@@ -340,7 +341,7 @@ def aggregate_durations(
 
         index = 0
         category_color = None
-        is_large_cate_hierarchy_deleted = None
+        deleted_type = None
 
         org_cat_key = (
             organization.id,
@@ -353,14 +354,15 @@ def aggregate_durations(
         ):
             category_color = org_cat_map[org_cat_key]["color"]
             index = org_cat_map[org_cat_key]["id"]
-            is_large_cate_hierarchy_deleted = (
-                org_cat_map[org_cat_key]["deleted_type"]
-                == ScheduleCategoryTypes.LARGE.value
-            )
+
+        if org_cat_key in org_cat_map:
+            deleted_type = org_cat_map[org_cat_key]["deleted_type"]
 
         if category:
             category_name = get_deleted_name_skill(
-                category, is_large_cate_hierarchy_deleted
+                category,
+                deleted_type,
+                type_value or ScheduleCategoryTypes.LARGE.value,
             )
             category_id = category.id
         else:

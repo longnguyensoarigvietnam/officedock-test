@@ -532,11 +532,12 @@ def get_large_statistic_category_color(task):
         cate_obj = item.large_statistic_category
         deleted_type = item.deleted_type
 
-    is_large_cate = deleted_type == ScheduleCategoryTypes.LARGE.value
     return [
         {
             "id": None,
-            "name": get_deleted_name_skill(cate_obj, is_large_cate),
+            "name": get_deleted_name_skill(
+                cate_obj, deleted_type, ScheduleCategoryTypes.LARGE.value
+            ),
             "color": color,
             "type": ScheduleCategoryTypes.LARGE.value,
         }
@@ -579,29 +580,13 @@ def get_common_categories(category, obj=None):
         if cate_obj is None:
             continue
 
-        # Determine deleted text by delete level specific rules
-        deleted_text = ""
-        if deleted_type:
-            if deleted_type == ScheduleCategoryTypes.LARGE.value:
-                # All types show deleted
-                deleted_text = KEYWORDS["deleted"]
-            elif deleted_type == ScheduleCategoryTypes.MEDIUM.value:
-                # Medium & Small show deleted
-                if type_value in (
-                    ScheduleCategoryTypes.MEDIUM.value,
-                    ScheduleCategoryTypes.SMALL.value,
-                ):
-                    deleted_text = KEYWORDS["deleted"]
-            elif deleted_type == ScheduleCategoryTypes.SMALL.value:
-                # Only Small show deleted
-                if type_value == ScheduleCategoryTypes.SMALL.value:
-                    deleted_text = KEYWORDS["deleted"]
-
         is_large_cate = type_value == ScheduleCategoryTypes.LARGE.value
         results.append(
             {
                 "id": cate_obj.id,
-                "name": get_deleted_name_skill(cate_obj, deleted_text),
+                "name": get_deleted_name_skill(
+                    cate_obj, deleted_type, type_value
+                ),
                 "color": color if is_large_cate else None,
                 "type": type_value,
             }
@@ -648,30 +633,14 @@ def get_common_categories_with_none_category(
         ):
             continue
 
-        # Determine deleted text by delete level specific rules
-        deleted_text = ""
-        if deleted_type:
-            if deleted_type == ScheduleCategoryTypes.LARGE.value:
-                # All types show deleted
-                deleted_text = KEYWORDS["deleted"]
-            elif deleted_type == ScheduleCategoryTypes.MEDIUM.value:
-                # Medium & Small show deleted
-                if type_value in (
-                    ScheduleCategoryTypes.MEDIUM.value,
-                    ScheduleCategoryTypes.SMALL.value,
-                ):
-                    deleted_text = KEYWORDS["deleted"]
-            elif deleted_type == ScheduleCategoryTypes.SMALL.value:
-                # Only Small show deleted
-                if type_value == ScheduleCategoryTypes.SMALL.value:
-                    deleted_text = KEYWORDS["deleted"]
-
         is_large_cate = type_value == ScheduleCategoryTypes.LARGE.value
         if cate_obj := getattr(category, attr):
             formatted.append(
                 {
                     "id": cate_obj.id,
-                    "name": get_deleted_name_skill(cate_obj, deleted_text),
+                    "name": get_deleted_name_skill(
+                        cate_obj, deleted_type, type_value
+                    ),
                     "color": color if is_large_cate else None,
                     "type": type_value,
                 }
@@ -1184,16 +1153,29 @@ def get_deleted_name(obj, key="name"):
     return value if obj.deleted_at is None else f"{value}{KEYWORDS['deleted']}"
 
 
-def get_deleted_name_skill(obj, hierarchy_deleted=False):
+def get_deleted_name_skill(
+    obj, deleted_type=None, type_value=None, is_hidden=None
+):
     """
     Return deleted name of skill
     """
     if not obj:
         return None
 
+    LEVEL_ORDER = {
+        ScheduleCategoryTypes.LARGE.value: 3,
+        ScheduleCategoryTypes.MEDIUM.value: 2,
+        ScheduleCategoryTypes.SMALL.value: 1,
+    }
+
     value = getattr(obj, "name", "")
-    if hierarchy_deleted:
+
+    if deleted_type and type_value:
+        is_hidden = LEVEL_ORDER[type_value] <= LEVEL_ORDER[deleted_type]
+
+    if is_hidden:
         return f"{value}{KEYWORDS['deleted']}"
+
     return value
 
 
