@@ -270,7 +270,7 @@ const TableComponent = ({
       const sameGroupIndexes = updatedCategories
         .map((item, index) =>
           item.large.value === rowInfo.large.value &&
-          item.medium.value === rowInfo.medium.value
+            item.medium.value === rowInfo.medium.value
             ? index
             : -1,
         )
@@ -521,25 +521,25 @@ const TableComponent = ({
             variables.name == ''
               ? null
               : {
-                  name: variables.name as string,
-                  uuid: variables.uuid as string,
-                },
+                name: variables.name as string,
+                uuid: variables.uuid as string,
+              },
           mediumStatisticCategory:
             variables.rowInfo.medium.label == '' ||
-            isUUID(variables.rowInfo.medium.label as string)
+              isUUID(variables.rowInfo.medium.label as string)
               ? null
               : {
-                  name: variables.rowInfo.medium.label as string,
-                  uuid: variables.rowInfo.medium.value as string,
-                },
+                name: variables.rowInfo.medium.label as string,
+                uuid: variables.rowInfo.medium.value as string,
+              },
           smallStatisticCategory:
             variables.rowInfo.small.label == '' ||
-            isUUID(variables.rowInfo.small.label as string)
+              isUUID(variables.rowInfo.small.label as string)
               ? null
               : {
-                  name: variables.rowInfo.small.label as string,
-                  uuid: variables.rowInfo.small.value as string,
-                },
+                name: variables.rowInfo.small.label as string,
+                uuid: variables.rowInfo.small.value as string,
+              },
           color: variables.rowInfo.color,
           skillIds: variables.rowInfo.skills.map((skill: OptionDropdownType) =>
             Number(skill.value),
@@ -553,27 +553,27 @@ const TableComponent = ({
           organizationId: hierarchyList.id as number,
           largeStatisticCategory:
             variables.rowInfo.large.label == '' ||
-            isUUID(variables.rowInfo.large.label as string)
+              isUUID(variables.rowInfo.large.label as string)
               ? null
               : {
-                  name: variables.rowInfo.large.label as string,
-                  uuid: variables.rowInfo.large.value as string,
-                },
+                name: variables.rowInfo.large.label as string,
+                uuid: variables.rowInfo.large.value as string,
+              },
           mediumStatisticCategory:
             variables.name == ''
               ? null
               : {
-                  name: variables.name as string,
-                  uuid: variables.uuid as string,
-                },
+                name: variables.name as string,
+                uuid: variables.uuid as string,
+              },
           smallStatisticCategory:
             variables.rowInfo.small.label == '' ||
-            isUUID(variables.rowInfo.small.label as string)
+              isUUID(variables.rowInfo.small.label as string)
               ? null
               : {
-                  name: variables.rowInfo.small.label as string,
-                  uuid: variables.rowInfo.small.value as string,
-                },
+                name: variables.rowInfo.small.label as string,
+                uuid: variables.rowInfo.small.value as string,
+              },
           color: variables.rowInfo.color,
           skillIds: variables.rowInfo.skills.map((skill: OptionDropdownType) =>
             Number(skill.value),
@@ -587,27 +587,27 @@ const TableComponent = ({
           organizationId: hierarchyList.id as number,
           largeStatisticCategory:
             variables.rowInfo.large.label == '' ||
-            isUUID(variables.rowInfo.large.label as string)
+              isUUID(variables.rowInfo.large.label as string)
               ? null
               : {
-                  name: variables.rowInfo.large.label as string,
-                  uuid: variables.rowInfo.large.value as string,
-                },
+                name: variables.rowInfo.large.label as string,
+                uuid: variables.rowInfo.large.value as string,
+              },
           mediumStatisticCategory:
             variables.rowInfo.medium.label == '' ||
-            isUUID(variables.rowInfo.medium.label as string)
+              isUUID(variables.rowInfo.medium.label as string)
               ? null
               : {
-                  name: variables.rowInfo.medium.label as string,
-                  uuid: variables.rowInfo.medium.value as string,
-                },
+                name: variables.rowInfo.medium.label as string,
+                uuid: variables.rowInfo.medium.value as string,
+              },
           smallStatisticCategory:
             variables.name == ''
               ? null
               : {
-                  name: variables.name as string,
-                  uuid: variables.uuid as string,
-                },
+                name: variables.name as string,
+                uuid: variables.uuid as string,
+              },
           color: variables.rowInfo.color,
           skillIds: variables.rowInfo.skills.map((skill: OptionDropdownType) =>
             Number(skill.value),
@@ -734,23 +734,23 @@ const TableComponent = ({
               row.large.label == '' || isUUID(row.large.label as string)
                 ? null
                 : {
-                    name: row.large.label as string,
-                    uuid: row.large.value as string,
-                  },
+                  name: row.large.label as string,
+                  uuid: row.large.value as string,
+                },
             mediumStatisticCategory:
               row.medium.label == '' || isUUID(row.medium.label as string)
                 ? null
                 : {
-                    name: row.medium.label as string,
-                    uuid: row.medium.value as string,
-                  },
+                  name: row.medium.label as string,
+                  uuid: row.medium.value as string,
+                },
             smallStatisticCategory:
               row.small.label == '' || isUUID(row.small.label as string)
                 ? null
                 : {
-                    name: row.small.label as string,
-                    uuid: row.small.value as string,
-                  },
+                  name: row.small.label as string,
+                  uuid: row.small.value as string,
+                },
             color: row.color,
             skillIds: row.skills.map((skill) => Number(skill.value)),
             deletedType: row && getDeletedTypeFromRow(row),
@@ -765,25 +765,25 @@ const TableComponent = ({
               newLarge.label == '' || isUUID(newLarge.label as string)
                 ? null
                 : {
-                    name: newLarge.label as string,
-                    uuid: newLarge.value as string,
-                  },
+                  name: newLarge.label as string,
+                  uuid: newLarge.value as string,
+                },
             mediumStatisticCategory:
               originalRow?.medium.label == '' ||
-              isUUID(originalRow?.medium.label as string)
+                isUUID(originalRow?.medium.label as string)
                 ? null
                 : {
-                    name: originalRow?.medium.label as string,
-                    uuid: originalRow?.medium.value as string,
-                  },
+                  name: originalRow?.medium.label as string,
+                  uuid: originalRow?.medium.value as string,
+                },
             smallStatisticCategory:
               originalRow?.small.label == '' ||
-              isUUID(originalRow?.small.label as string)
+                isUUID(originalRow?.small.label as string)
                 ? null
                 : {
-                    name: originalRow?.small.label as string,
-                    uuid: originalRow?.small.value as string,
-                  },
+                  name: originalRow?.small.label as string,
+                  uuid: originalRow?.small.value as string,
+                },
             color: originalRow?.color,
             skillIds: originalRow?.skills.map((skill) => Number(skill.value)),
             deletedType: originalRow && getDeletedTypeFromRow(originalRow),
@@ -792,20 +792,16 @@ const TableComponent = ({
       }
 
       updatedHierarchies.forEach((updatedHierarchy) => {
-        const key = `${updatedHierarchy.organizationId}|${
-          updatedHierarchy.largeStatisticCategory?.uuid || ''
-        }|${updatedHierarchy.mediumStatisticCategory?.uuid || ''}|${
-          updatedHierarchy.smallStatisticCategory?.uuid || ''
-        }`;
+        const key = `${updatedHierarchy.organizationId}|${updatedHierarchy.largeStatisticCategory?.uuid || ''
+          }|${updatedHierarchy.mediumStatisticCategory?.uuid || ''}|${updatedHierarchy.smallStatisticCategory?.uuid || ''
+          }`;
 
         const index = updatedHierarchiesToUpdate.findIndex(
           (item) =>
             item.organizationStatisticCategoryId ===
-              updatedHierarchy.organizationStatisticCategoryId ||
-            `${item.organizationId}|${
-              item.largeStatisticCategory?.uuid || ''
-            }|${item.mediumStatisticCategory?.uuid || ''}|${
-              item.smallStatisticCategory?.uuid || ''
+            updatedHierarchy.organizationStatisticCategoryId ||
+            `${item.organizationId}|${item.largeStatisticCategory?.uuid || ''
+            }|${item.mediumStatisticCategory?.uuid || ''}|${item.smallStatisticCategory?.uuid || ''
             }` === key,
         );
 
@@ -952,23 +948,23 @@ const TableComponent = ({
             row.large.label == '' || isUUID(row.large.label as string)
               ? null
               : {
-                  name: row.large.label as string,
-                  uuid: row.large.value as string,
-                },
+                name: row.large.label as string,
+                uuid: row.large.value as string,
+              },
           mediumStatisticCategory:
             row.medium.label == '' || isUUID(row.medium.label as string)
               ? null
               : {
-                  name: row.medium.label as string,
-                  uuid: row.medium.value as string,
-                },
+                name: row.medium.label as string,
+                uuid: row.medium.value as string,
+              },
           smallStatisticCategory:
             row.small.label == '' || isUUID(row.small.label as string)
               ? null
               : {
-                  name: row.small.label as string,
-                  uuid: row.small.value as string,
-                },
+                name: row.small.label as string,
+                uuid: row.small.value as string,
+              },
           color: row.color,
           skillIds: row.skills.map((skill) => Number(skill.value)),
           deletedType: row && getDeletedTypeFromRow(row),
@@ -1053,20 +1049,20 @@ const TableComponent = ({
         organizationId: hierarchyList.id as number,
         largeStatisticCategory:
           originalRow?.large.label == '' ||
-          isUUID(originalRow?.large.label as string)
+            isUUID(originalRow?.large.label as string)
             ? null
             : {
-                name: originalRow?.large.label as string,
-                uuid: originalRow?.large.value as string,
-              },
+              name: originalRow?.large.label as string,
+              uuid: originalRow?.large.value as string,
+            },
         mediumStatisticCategory:
           originalRow?.medium.label == '' ||
-          isUUID(originalRow?.medium.label as string)
+            isUUID(originalRow?.medium.label as string)
             ? null
             : {
-                name: originalRow?.medium.label as string,
-                uuid: originalRow?.medium.value as string,
-              },
+              name: originalRow?.medium.label as string,
+              uuid: originalRow?.medium.value as string,
+            },
         smallStatisticCategory: {
           name: e.label as string,
           uuid: e.value as string,
@@ -1504,23 +1500,23 @@ const TableComponent = ({
             row.large.label == '' || isUUID(row.large.label as string)
               ? null
               : {
-                  name: row.large.label as string,
-                  uuid: row.large.value as string,
-                },
+                name: row.large.label as string,
+                uuid: row.large.value as string,
+              },
           mediumStatisticCategory:
             row.medium.label == '' || isUUID(row.medium.label as string)
               ? null
               : {
-                  name: row.medium.label as string,
-                  uuid: row.medium.value as string,
-                },
+                name: row.medium.label as string,
+                uuid: row.medium.value as string,
+              },
           smallStatisticCategory:
             row.small.label == '' || isUUID(row.small.label as string)
               ? null
               : {
-                  name: row.small.label as string,
-                  uuid: row.small.value as string,
-                },
+                name: row.small.label as string,
+                uuid: row.small.value as string,
+              },
           color: row.color,
           skillIds: row.skills.map((skill) => Number(skill.value)),
           deletedType: row && getDeletedTypeFromRow(row),
@@ -1754,7 +1750,7 @@ const TableComponent = ({
       return isHiddenSmallCategory
         ? !lastSmallIndexesInEachLarge.includes(rowIndex)
         : !lastSmallIndexesInEachLarge.includes(rowIndex) &&
-            (isLastSmallInEmptyMedium || lastSmallIndexes.includes(rowIndex));
+        (isLastSmallInEmptyMedium || lastSmallIndexes.includes(rowIndex));
     }
     return (
       !isHiddenSmallCategory &&
@@ -1826,7 +1822,7 @@ const TableComponent = ({
               {headerGroup.headers.map((header, index) => (
                 <th
                   key={header.id}
-                  className={`text-[#77858F] bg-[#F8FAFC] ${headerGroup.headers.length - 1 != index && 'border-r-[1px] border-[#D2DBE1]'} w-1/4 font-medium text-xs py-3`}>
+                  className={`text-[#77858F] bg-[#F8FAFC] ${headerGroup.headers.length - 1 != index && 'border-r-[1px]'} border-[#D2DBE1] w-1/4 font-medium text-xs py-3`}>
                   {flexRender(
                     header.column.columnDef.header,
                     header.getContext(),
@@ -1861,7 +1857,7 @@ const TableComponent = ({
                 }}>
                 {largeRowspan[rowIndex] > 0 && (
                   <td
-                    className={`border-b-[1px] border-r-[1px] !w-1/4 border-[#D2DBE1] h-full !p-0 ${isHiddenLargeCategory && !isHiddenList && '!border-b-0'}`}
+                    className={`!w-1/4 border-r-[1px] border-[#D2DBE1] h-full !p-0`}
                     style={{
                       height:
                         isHiddenLargeCategory && !isHiddenList
@@ -1870,7 +1866,8 @@ const TableComponent = ({
                     }}
                     rowSpan={largeRowspan[rowIndex]}>
                     <div
-                      className={`p-[14px] pl-[18px] h-full flex items-center gap-[14px] ${isHiddenLargeCategory && !isHiddenList && 'hidden'}`}>
+                      className={`p-[14px] pl-[18px] h-full flex items-center gap-[14px] ${isHiddenLargeCategory && !isHiddenList && 'hidden'}
+                        border-b-[1px] border-[#D2DBE1] ${isHiddenLargeCategory && !isHiddenList && '!border-b-0'}`}>
                       <div className="relative">
                         <div
                           className={`w-[14px] h-[14px] rounded-full hover:cursor-pointer ${isHiddenLargeCategory && !isHiddenList && 'hidden'}`}
@@ -1907,7 +1904,7 @@ const TableComponent = ({
                         ) : (
                           <p className="text-sm ml-[-6px] flex-1 break-all font-medium text-black opacity-30">
                             {row.original.large.label &&
-                            !isUUID(row.original.large.label)
+                              !isUUID(row.original.large.label)
                               ? row.original.large.label
                               : NO_OPTION_CATEGORY}
                           </p>
@@ -1919,11 +1916,10 @@ const TableComponent = ({
                             <input
                               key={JSON.stringify(row.original.large)}
                               type="text"
-                              className={`w-full !h-full text-sm !min-h-[34px] px-[10px] py-[6px] text-black rounded-[6px] ${
-                                row.original.large.isHidden &&
+                              className={`w-full !h-full text-sm !min-h-[34px] px-[10px] py-[6px] text-black rounded-[6px] ${row.original.large.isHidden &&
                                 isHiddenList &&
                                 'opacity-50'
-                              }`}
+                                }`}
                               placeholder="新しいカテゴリーを入力"
                               defaultValue={
                                 !isUUID(row.original.large.label)
@@ -1949,7 +1945,7 @@ const TableComponent = ({
                         </div>
                       ) : (
                         row.original.large.showBy ==
-                          AddCategoryHierarchyType.PULLDOWN && (
+                        AddCategoryHierarchyType.PULLDOWN && (
                           <div className="h-full w-[calc(100%_-_58px)]">
                             <TableDropdown
                               key={JSON.stringify(row.original.large)}
@@ -1967,11 +1963,11 @@ const TableComponent = ({
                               }
                               selectedOption={
                                 row.original.large &&
-                                !isUUID(row.original.large.label)
+                                  !isUUID(row.original.large.label)
                                   ? {
-                                      label: row.original.large.label,
-                                      value: row.original.large.value,
-                                    }
+                                    label: row.original.large.label,
+                                    value: row.original.large.value,
+                                  }
                                   : undefined
                               }
                               onPendingChange={(e) => {
@@ -2001,18 +1997,16 @@ const TableComponent = ({
                       )}
                       <ImageRound
                         name="Hide"
-                        src={`/icons/${
-                          isHiddenLargeCategory
-                            ? 'dark-close-eye'
-                            : 'gray-open-eye'
-                        }.svg`}
-                        className={`w-[16px] h-[13px] ${
-                          shouldHideCategoryArchiveIcon(
-                            Boolean(!row.original.large.label),
-                            isUUID(row.original.large.label),
-                            isHiddenLargeCategory,
-                          ) && 'hidden'
-                        } hover:cursor-pointer`}
+                        src={`/icons/${isHiddenLargeCategory
+                          ? 'dark-close-eye'
+                          : 'gray-open-eye'
+                          }.svg`}
+                        className={`w-[16px] h-[13px] ${shouldHideCategoryArchiveIcon(
+                          Boolean(!row.original.large.label),
+                          isUUID(row.original.large.label),
+                          isHiddenLargeCategory,
+                        ) && 'hidden'
+                          } hover:cursor-pointer`}
                         onClick={() => {
                           if (
                             shouldHideCategoryArchiveIcon(
@@ -2055,15 +2049,14 @@ const TableComponent = ({
                     rowSpan={mediumRowspan[rowIndex]}>
                     <div
                       className={`${isHiddenList && !lastMediumIndexes.includes(rowIndex) ? 'py-[14px] mx-[14px]' : 'p-[14px]'} flex flex-col !h-full ${isHiddenMediumCategory && !isHiddenList && '!p-0'}
-                       ${
-                         shouldShowMediumBorderBottom({
-                           rowIndex,
-                           isHiddenList,
-                           isHiddenMediumCategory,
-                         })
-                           ? 'border-b-[1px] border-[#D2DBE1]'
-                           : ''
-                       } ${isHiddenLargeCategory && isHiddenMediumCategory && !isHiddenList ? '!border-0' : ''}`}>
+                       ${shouldShowMediumBorderBottom({
+                        rowIndex,
+                        isHiddenList,
+                        isHiddenMediumCategory,
+                      })
+                          ? 'border-b-[1px] border-[#D2DBE1]'
+                          : ''
+                        } ${isHiddenLargeCategory && isHiddenMediumCategory && !isHiddenList ? '!border-0' : ''}`}>
                       <div className={`flex items-center !h-full gap-[14px]`}>
                         {isHiddenMediumCategory ? (
                           !isHiddenList ? (
@@ -2092,7 +2085,7 @@ const TableComponent = ({
                           ) : (
                             <p className="text-sm flex-1 break-all font-medium text-black opacity-30">
                               {row.original.medium.label &&
-                              !isUUID(row.original.medium.label)
+                                !isUUID(row.original.medium.label)
                                 ? row.original.medium.label
                                 : NO_OPTION_CATEGORY}
                             </p>
@@ -2104,11 +2097,10 @@ const TableComponent = ({
                               <input
                                 key={JSON.stringify(row.original.medium)}
                                 type="text"
-                                className={`w-full !h-full text-sm !min-h-[34px] px-[10px] py-[6px] text-black rounded-[6px] ${
-                                  row.original.medium.isHidden &&
+                                className={`w-full !h-full text-sm !min-h-[34px] px-[10px] py-[6px] text-black rounded-[6px] ${row.original.medium.isHidden &&
                                   isHiddenList &&
                                   'opacity-50'
-                                }`}
+                                  }`}
                                 placeholder="新しいカテゴリーを入力"
                                 defaultValue={
                                   !isUUID(row.original.medium.label)
@@ -2135,7 +2127,7 @@ const TableComponent = ({
                           </div>
                         ) : (
                           row.original.medium.showBy ==
-                            AddCategoryHierarchyType.PULLDOWN && (
+                          AddCategoryHierarchyType.PULLDOWN && (
                             <div className={` w-[calc(100%_-_30px)] h-full`}>
                               <TableDropdown
                                 key={JSON.stringify(row.original.medium)}
@@ -2150,11 +2142,11 @@ const TableComponent = ({
                                 labelClass="w-[180px] !text-sm"
                                 selectedOption={
                                   row.original.medium &&
-                                  !isUUID(row.original.medium.label)
+                                    !isUUID(row.original.medium.label)
                                     ? {
-                                        label: row.original.medium.label,
-                                        value: row.original.medium.value,
-                                      }
+                                      label: row.original.medium.label,
+                                      value: row.original.medium.value,
+                                    }
                                     : undefined
                                 }
                                 disabled={
@@ -2189,13 +2181,12 @@ const TableComponent = ({
                           <ImageRound
                             name="Hide"
                             src={`/icons/${row.original.medium.isHidden ? 'dark-close-eye' : 'gray-open-eye'}.svg`}
-                            className={`w-[16px] h-[13px] ${
-                              shouldHideCategoryArchiveIcon(
-                                Boolean(!row.original.medium.label),
-                                isUUID(row.original.medium.label),
-                                isHiddenMediumCategory,
-                              ) && 'hidden'
-                            } 
+                            className={`w-[16px] h-[13px] ${shouldHideCategoryArchiveIcon(
+                              Boolean(!row.original.medium.label),
+                              isUUID(row.original.medium.label),
+                              isHiddenMediumCategory,
+                            ) && 'hidden'
+                              } 
                              hover:cursor-pointer`}
                             onClick={() => {
                               if (
@@ -2254,294 +2245,294 @@ const TableComponent = ({
                   </td>
                 )}
                 <td
-                  className={`${lastSmallIndexesInEachLarge.includes(rowIndex) && 'border-b-[1px]'} border-x-[1px] border-[#D2DBE1] w-1/4 !py-0 ${isHiddenLargeCategory && !isHiddenList && '!border-b-0'}`}
+                  className={`h-full border-x-[1px] border-[#D2DBE1] w-1/4 !p-0`}
                   style={{
                     height:
                       isHiddenLargeCategory && !isHiddenList
                         ? '0px'
                         : 'inherit',
                   }}>
-                  <div
-                    className={`mx-[14px] pt-[14px] ${isHiddenSmallCategory && 'pb-[14px]'} 
-                      ${
-                        shouldShowSmallBorderBottom({
-                          row: row.original,
-                          rowIndex,
-                          isHiddenSmallCategory: isHiddenSmallCategory,
-                        })
+                  <div className={`${lastSmallIndexesInEachLarge.includes(rowIndex) && 'border-b-[1px] border-[#D2DBE1]'} h-full ${isHiddenLargeCategory && !isHiddenList && '!border-b-0'}`}>
+                    <div
+                      className={`mx-[14px] pt-[14px] ${isHiddenSmallCategory && 'pb-[14px]'} 
+                      ${shouldShowSmallBorderBottom({
+                        row: row.original,
+                        rowIndex,
+                        isHiddenSmallCategory: isHiddenSmallCategory,
+                      })
                           ? 'border-b-[1px] border-[#D2DBE1]'
                           : ''
-                      }
+                        }
                       flex flex-col !h-[100%] ${isHiddenSmallCategory && !isHiddenList && '!p-0'} ${isHiddenLargeCategory && !isHiddenList && 'hidden'}`}>
-                    <div
-                      className={`flex items-center gap-[14px] w-full ${isHiddenList && 'h-full'}`}>
-                      {isHiddenSmallCategory ? (
-                        !isHiddenList ? (
-                          <>
-                            <div className="hidden w-full"></div>
-                          </>
-                        ) : (
-                          <p
-                            className={`text-sm flex-1 break-all font-medium text-black opacity-30`}>
-                            {row.original.small.label &&
-                            !isUUID(row.original.small.label)
-                              ? row.original.small.label
-                              : NO_OPTION_CATEGORY}
-                          </p>
-                        )
-                      ) : row.original.small.showBy ==
-                        AddCategoryHierarchyType.INPUT ? (
-                        <div className="flex flex-col w-[calc(100%_-_30px)]">
-                          <div className="w-full">
-                            <input
-                              key={JSON.stringify(row.original.small)}
-                              type="text"
-                              className={`w-full text-sm !min-h-[34px] px-[10px] py-[6px] text-black rounded-[6px] ${
-                                row.original.small.isHidden &&
-                                isHiddenList &&
-                                'opacity-50'
-                              }`}
-                              placeholder="新しいカテゴリーを入力"
-                              defaultValue={
+                      <div
+                        className={`flex items-center gap-[14px] w-full ${isHiddenList && 'h-full'}`}>
+                        {isHiddenSmallCategory ? (
+                          !isHiddenList ? (
+                            <>
+                              <div className="hidden w-full"></div>
+                            </>
+                          ) : (
+                            <p
+                              className={`text-sm flex-1 break-all font-medium text-black opacity-30`}>
+                              {row.original.small.label &&
                                 !isUUID(row.original.small.label)
-                                  ? row.original.small.label
-                                  : ''
-                              }
-                              disabled={
-                                row.original.small.isHidden && isHiddenList
-                              }
-                              onBlur={(e) => {
-                                handleChangeCategoryByInput({
-                                  name: e.target.value,
-                                  uuid: String(row.original.small.value) || '',
-                                  type: HierarchyType.SMALL,
-                                  rowInfo: row.original,
-                                });
-                              }}
-                              onChange={() => {
-                                setIsTyping(true);
-                              }}
-                            />
+                                ? row.original.small.label
+                                : NO_OPTION_CATEGORY}
+                            </p>
+                          )
+                        ) : row.original.small.showBy ==
+                          AddCategoryHierarchyType.INPUT ? (
+                          <div className="flex flex-col w-[calc(100%_-_30px)]">
+                            <div className="w-full">
+                              <input
+                                key={JSON.stringify(row.original.small)}
+                                type="text"
+                                className={`w-full text-sm !min-h-[34px] px-[10px] py-[6px] text-black rounded-[6px] ${row.original.small.isHidden &&
+                                  isHiddenList &&
+                                  'opacity-50'
+                                  }`}
+                                placeholder="新しいカテゴリーを入力"
+                                defaultValue={
+                                  !isUUID(row.original.small.label)
+                                    ? row.original.small.label
+                                    : ''
+                                }
+                                disabled={
+                                  row.original.small.isHidden && isHiddenList
+                                }
+                                onBlur={(e) => {
+                                  handleChangeCategoryByInput({
+                                    name: e.target.value,
+                                    uuid: String(row.original.small.value) || '',
+                                    type: HierarchyType.SMALL,
+                                    rowInfo: row.original,
+                                  });
+                                }}
+                                onChange={() => {
+                                  setIsTyping(true);
+                                }}
+                              />
+                            </div>
                           </div>
-                        </div>
-                      ) : (
-                        row.original.small.showBy ==
+                        ) : (
+                          row.original.small.showBy ==
                           AddCategoryHierarchyType.PULLDOWN && (
-                          <div className="w-[calc(100%_-_30px)]">
-                            <TableDropdown
-                              key={JSON.stringify(row.original.small)}
-                              options={getSmallDropdownOptions(
-                                row.original,
-                                categoryDropdownOptions,
-                                excludedSmalls,
-                              )}
-                              disabled={
-                                row.original.small.isHidden && isHiddenList
-                              }
-                              minDropdownHeight={240}
-                              className="h-full"
-                              valueClassName="!border-[#77858F] !rounded-[6px] !py-1 !pl-[10px]"
-                              labelOptionClass="!text-sm"
-                              labelClass="w-[180px] !text-sm"
-                              selectedOption={
-                                row.original.small &&
-                                !isUUID(row.original.small.label)
-                                  ? {
+                            <div className="w-[calc(100%_-_30px)]">
+                              <TableDropdown
+                                key={JSON.stringify(row.original.small)}
+                                options={getSmallDropdownOptions(
+                                  row.original,
+                                  categoryDropdownOptions,
+                                  excludedSmalls,
+                                )}
+                                disabled={
+                                  row.original.small.isHidden && isHiddenList
+                                }
+                                minDropdownHeight={240}
+                                className="h-full"
+                                valueClassName="!border-[#77858F] !rounded-[6px] !py-1 !pl-[10px]"
+                                labelOptionClass="!text-sm"
+                                labelClass="w-[180px] !text-sm"
+                                selectedOption={
+                                  row.original.small &&
+                                    !isUUID(row.original.small.label)
+                                    ? {
                                       label: row.original.small.label,
                                       value: row.original.small.value,
                                     }
-                                  : undefined
-                              }
-                              onPendingChange={(e) => {
-                                if (e.value == row.original.small.value) return;
-                                if (
-                                  row.original.small.label &&
-                                  !isUUID(row.original.small.label) &&
-                                  !isUUID(row.original.id as string)
-                                ) {
-                                  setWarningChangeCategoryModalOpen(true);
-                                  setPendingSelection({
-                                    originalRow: row.original,
-                                    newValue: e,
-                                    type: StatisticCategoryType.SMALL,
-                                  });
-                                } else {
-                                  handleChangeSmallCategoryByPulldown(
-                                    row.original,
-                                    e,
-                                  );
+                                    : undefined
                                 }
-                              }}
-                            />
-                          </div>
-                        )
-                      )}
-                      {row.original.small.showBy && (
-                        <ImageRound
-                          name="Hide"
-                          src={`/icons/${row.original.small.isHidden ? 'dark-close-eye' : 'gray-open-eye'}.svg`}
-                          className={`w-[16px] h-[13px] ${
-                            shouldHideCategoryArchiveIcon(
+                                onPendingChange={(e) => {
+                                  if (e.value == row.original.small.value) return;
+                                  if (
+                                    row.original.small.label &&
+                                    !isUUID(row.original.small.label) &&
+                                    !isUUID(row.original.id as string)
+                                  ) {
+                                    setWarningChangeCategoryModalOpen(true);
+                                    setPendingSelection({
+                                      originalRow: row.original,
+                                      newValue: e,
+                                      type: StatisticCategoryType.SMALL,
+                                    });
+                                  } else {
+                                    handleChangeSmallCategoryByPulldown(
+                                      row.original,
+                                      e,
+                                    );
+                                  }
+                                }}
+                              />
+                            </div>
+                          )
+                        )}
+                        {row.original.small.showBy && (
+                          <ImageRound
+                            name="Hide"
+                            src={`/icons/${row.original.small.isHidden ? 'dark-close-eye' : 'gray-open-eye'}.svg`}
+                            className={`w-[16px] h-[13px] ${shouldHideCategoryArchiveIcon(
                               Boolean(!row.original.small.label),
                               isUUID(row.original.small.label),
                               isHiddenSmallCategory,
                             ) && 'hidden'
-                          } hover:cursor-pointer`}
-                          onClick={() => {
-                            if (
-                              shouldHideCategoryArchiveIcon(
-                                Boolean(!row.original.small.label),
-                                isUUID(row.original.small.label),
-                                isHiddenSmallCategory,
+                              } hover:cursor-pointer`}
+                            onClick={() => {
+                              if (
+                                shouldHideCategoryArchiveIcon(
+                                  Boolean(!row.original.small.label),
+                                  isUUID(row.original.small.label),
+                                  isHiddenSmallCategory,
+                                )
                               )
+                                return;
+                              if (row.original.small.isHidden) {
+                                setPendingRestoreCategory({
+                                  originalRow: row.original,
+                                  type: StatisticCategoryType.SMALL,
+                                });
+                                setOpenConfirmRestoreModal({
+                                  name: row.original.small.label,
+                                  status: true,
+                                });
+                              } else {
+                                setPendingArchiveCategory({
+                                  originalRow: row.original,
+                                  type: StatisticCategoryType.SMALL,
+                                });
+                                setOpenConfirmArchiveModal(true);
+                              }
+                            }}
+                          />
+                        )}
+                      </div>
+                      {shouldShowAddSmallButton(row.original, rowIndex) && (
+                        <OptionsBoxToAddCategory
+                          text={'小カテゴリーを追加'}
+                          customClassName={`pt-[10px] pb-[14px]`}
+                          addCategoryUsingInput={() =>
+                            handleAddSmallCategory(
+                              AddCategoryHierarchyType.INPUT,
+                              row.original,
                             )
-                              return;
-                            if (row.original.small.isHidden) {
-                              setPendingRestoreCategory({
-                                originalRow: row.original,
-                                type: StatisticCategoryType.SMALL,
-                              });
-                              setOpenConfirmRestoreModal({
-                                name: row.original.small.label,
-                                status: true,
-                              });
-                            } else {
-                              setPendingArchiveCategory({
-                                originalRow: row.original,
-                                type: StatisticCategoryType.SMALL,
-                              });
-                              setOpenConfirmArchiveModal(true);
-                            }
-                          }}
+                          }
+                          addCategoryUsingDropdown={() =>
+                            handleAddSmallCategory(
+                              AddCategoryHierarchyType.PULLDOWN,
+                              row.original,
+                            )
+                          }
                         />
                       )}
                     </div>
-                    {shouldShowAddSmallButton(row.original, rowIndex) && (
-                      <OptionsBoxToAddCategory
-                        text={'小カテゴリーを追加'}
-                        customClassName={`pt-[10px] pb-[14px]`}
-                        addCategoryUsingInput={() =>
-                          handleAddSmallCategory(
-                            AddCategoryHierarchyType.INPUT,
-                            row.original,
-                          )
-                        }
-                        addCategoryUsingDropdown={() =>
-                          handleAddSmallCategory(
-                            AddCategoryHierarchyType.PULLDOWN,
-                            row.original,
-                          )
-                        }
-                      />
-                    )}
                   </div>
                 </td>
                 <td
-                  className={`align-top h-full ${lastSmallIndexesInEachLarge.includes(rowIndex) && 'border-b-[1px] border-[#D2DBE1]'} !w-1/4 max-w-[1/4] ${isHiddenLargeCategory && !isHiddenList && 'hidden'}`}
+                  className={`align-top h-full !w-1/4 max-w-[1/4] !p-0 ${isHiddenLargeCategory && !isHiddenList && 'hidden'}`}
                   style={{
                     height:
                       isHiddenLargeCategory && !isHiddenList
                         ? '0px'
                         : 'inherit',
                   }}>
-                  {isHiddenSmallCategory ? (
-                    !isHiddenList ? (
-                      <div className="hidden"></div>
-                    ) : (
-                      <div
-                        className={`mx-[14px] ${!lastSmallIndexesInEachLarge.includes(rowIndex) && 'border-b-[1px] border-[#D2DBE1]'} flex items-center h-full`}>
-                        <div className="flex items-center overflow-x-auto gap-2 pb-1 pr-1">
-                          {row.original.skills.map((skill) => (
-                            <p
-                              key={skill.value}
-                              className="text-white leading-[1] text-nowrap bg-[#d6dadd] py-[7.5px] px-[10px] rounded-[20px] text-xs font-medium">
-                              {skill.label}
-                            </p>
-                          ))}
+                  <div className={`${lastSmallIndexesInEachLarge.includes(rowIndex) && 'border-b-[1px] border-[#D2DBE1]'} h-full`}>
+                    {isHiddenSmallCategory ? (
+                      !isHiddenList ? (
+                        <div className="hidden"></div>
+                      ) : (
+                        <div
+                          className={`mx-[14px] ${!lastSmallIndexesInEachLarge.includes(rowIndex) && 'border-b-[1px] border-[#D2DBE1]'} flex items-center h-full`}>
+                          <div className="flex items-center overflow-x-auto gap-2 pb-1 pr-1">
+                            {row.original.skills.map((skill) => (
+                              <p
+                                key={skill.value}
+                                className="text-white leading-[1] text-nowrap bg-[#d6dadd] py-[7.5px] px-[10px] rounded-[20px] text-xs font-medium">
+                                {skill.label}
+                              </p>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )
-                  ) : (
-                    <MultiSectionBox
-                      key={JSON.stringify(row.original.skills)}
-                      options={dataOptionsSkill.filter(
-                        (option) => option.value,
-                      )}
-                      onChange={(selectedSkills: OptionDropdownType[]) => {
-                        setSelectedHierarchiesToUpdate((prev) => {
-                          const updatedHierarchiesToUpdate = [...prev];
+                      )
+                    ) : (
+                      <MultiSectionBox
+                        key={JSON.stringify(row.original.skills)}
+                        options={dataOptionsSkill.filter(
+                          (option) => option.value,
+                        )}
+                        onChange={(selectedSkills: OptionDropdownType[]) => {
+                          setSelectedHierarchiesToUpdate((prev) => {
+                            const updatedHierarchiesToUpdate = [...prev];
 
-                          const existingIndex =
-                            updatedHierarchiesToUpdate.findIndex(
-                              (item) =>
-                                item.organizationStatisticCategoryId ===
-                                row.original.id,
-                            );
+                            const existingIndex =
+                              updatedHierarchiesToUpdate.findIndex(
+                                (item) =>
+                                  item.organizationStatisticCategoryId ===
+                                  row.original.id,
+                              );
 
-                          const newEntry = {
-                            organizationStatisticCategoryId: row.original.id,
-                            organizationId: hierarchyList.id as number,
-                            largeStatisticCategory:
-                              row.original.large.label == '' ||
-                              isUUID(row.original.large.label as string)
-                                ? null
-                                : {
+                            const newEntry = {
+                              organizationStatisticCategoryId: row.original.id,
+                              organizationId: hierarchyList.id as number,
+                              largeStatisticCategory:
+                                row.original.large.label == '' ||
+                                  isUUID(row.original.large.label as string)
+                                  ? null
+                                  : {
                                     name: row.original.large.label as string,
                                     uuid: row.original.large.value as string,
                                   },
-                            mediumStatisticCategory:
-                              row.original.medium.label == '' ||
-                              isUUID(row.original.medium.label as string)
-                                ? null
-                                : {
+                              mediumStatisticCategory:
+                                row.original.medium.label == '' ||
+                                  isUUID(row.original.medium.label as string)
+                                  ? null
+                                  : {
                                     name: row.original.medium.label as string,
                                     uuid: row.original.medium.value as string,
                                   },
-                            smallStatisticCategory:
-                              row.original.small.label == '' ||
-                              isUUID(row.original.small.label as string)
-                                ? null
-                                : {
+                              smallStatisticCategory:
+                                row.original.small.label == '' ||
+                                  isUUID(row.original.small.label as string)
+                                  ? null
+                                  : {
                                     name: row.original.small.label as string,
                                     uuid: row.original.small.value as string,
                                   },
-                            color: row.original.color,
-                            skillIds: selectedSkills.map((skill) =>
-                              Number(skill.value),
-                            ),
-                            deletedType:
-                              row.original &&
-                              getDeletedTypeFromRow(row.original),
-                          };
+                              color: row.original.color,
+                              skillIds: selectedSkills.map((skill) =>
+                                Number(skill.value),
+                              ),
+                              deletedType:
+                                row.original &&
+                                getDeletedTypeFromRow(row.original),
+                            };
 
-                          if (existingIndex !== -1) {
-                            // If it exists, replace it
-                            updatedHierarchiesToUpdate[existingIndex] =
-                              newEntry;
-                          } else {
-                            // Otherwise, add it
-                            updatedHierarchiesToUpdate.push(newEntry);
-                          }
+                            if (existingIndex !== -1) {
+                              // If it exists, replace it
+                              updatedHierarchiesToUpdate[existingIndex] =
+                                newEntry;
+                            } else {
+                              // Otherwise, add it
+                              updatedHierarchiesToUpdate.push(newEntry);
+                            }
 
-                          return updatedHierarchiesToUpdate;
-                        });
-                        setHierarchyList((prev) => {
-                          const updatedHierarchyList = prev.map((org) => ({
-                            ...org,
-                            statisticCategories: [...org.statisticCategories],
-                          }));
+                            return updatedHierarchiesToUpdate;
+                          });
+                          setHierarchyList((prev) => {
+                            const updatedHierarchyList = prev.map((org) => ({
+                              ...org,
+                              statisticCategories: [...org.statisticCategories],
+                            }));
 
-                          const foundOrganizationHierarchyIndex =
-                            updatedHierarchyList.findIndex(
-                              (hierarchy) => hierarchy.id == hierarchyList.id,
-                            );
+                            const foundOrganizationHierarchyIndex =
+                              updatedHierarchyList.findIndex(
+                                (hierarchy) => hierarchy.id == hierarchyList.id,
+                              );
 
-                          if (foundOrganizationHierarchyIndex !== -1) {
-                            const updatedCategories = updatedHierarchyList[
-                              foundOrganizationHierarchyIndex
-                            ].statisticCategories.map((hierarchy) =>
-                              hierarchy.id === row.original.id
-                                ? {
+                            if (foundOrganizationHierarchyIndex !== -1) {
+                              const updatedCategories = updatedHierarchyList[
+                                foundOrganizationHierarchyIndex
+                              ].statisticCategories.map((hierarchy) =>
+                                hierarchy.id === row.original.id
+                                  ? {
                                     ...hierarchy,
                                     skills: selectedSkills.map((skill) => {
                                       return {
@@ -2550,37 +2541,38 @@ const TableComponent = ({
                                       };
                                     }),
                                   }
-                                : hierarchy,
-                            );
+                                  : hierarchy,
+                              );
 
-                            const uniqueMap = new Map();
-                            const filteredCategories = updatedCategories.filter(
-                              (item) => {
-                                const key = `${item.large.value}|${item.medium.value}|${item.small?.value || ''}`;
-                                if (uniqueMap.has(key)) return false;
-                                uniqueMap.set(key, true);
-                                return true;
-                              },
-                            );
+                              const uniqueMap = new Map();
+                              const filteredCategories = updatedCategories.filter(
+                                (item) => {
+                                  const key = `${item.large.value}|${item.medium.value}|${item.small?.value || ''}`;
+                                  if (uniqueMap.has(key)) return false;
+                                  uniqueMap.set(key, true);
+                                  return true;
+                                },
+                              );
 
-                            updatedHierarchyList[
-                              foundOrganizationHierarchyIndex
-                            ].statisticCategories = filteredCategories;
-                          }
+                              updatedHierarchyList[
+                                foundOrganizationHierarchyIndex
+                              ].statisticCategories = filteredCategories;
+                            }
 
-                          return updatedHierarchyList;
-                        });
-                      }}
-                      value={row.original.skills.map((skill) => {
-                        return {
-                          label: skill.label,
-                          value: skill.value,
-                        };
-                      })}
-                      placeholder={'選択'}
-                      className="w-full shadow-none text-sm !rounded mt-1.5 md:mt-0"
-                    />
-                  )}
+                            return updatedHierarchyList;
+                          });
+                        }}
+                        value={row.original.skills.map((skill) => {
+                          return {
+                            label: skill.label,
+                            value: skill.value,
+                          };
+                        })}
+                        placeholder={'選択'}
+                        className="w-full shadow-none text-sm !rounded mt-1.5 md:mt-0"
+                      />
+                    )}
+                  </div>
                 </td>
               </tr>
             );
