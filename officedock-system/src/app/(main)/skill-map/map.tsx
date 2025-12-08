@@ -105,7 +105,7 @@ const SkillMap = () => {
           skillMapByOrganizations.map((skillMap, index) => (
             <SkillMapByOrganizationPanel
               key={index}
-              isMyOrg={skillMap.hasAssigned}
+              isMyOrg={skillMap.isDeleted}
               skillMapDetail={skillMap}
               userId={skillMapInfo?.user.id || 0}
             />
