@@ -33,6 +33,7 @@ import { getLastChar } from '@utils';
 import api from '@base/api';
 
 interface SkillMapByOrganizationPanelProps {
+  isMyOrg?: boolean;
   skillMapDetail: SkillMapByOrganization;
   userId: number;
   settingSkillAction?: ActionsModal;
@@ -46,6 +47,7 @@ interface SkillMapByOrganizationPanelProps {
 export const SkillMapByOrganizationPanel = ({
   skillMapDetail,
   userId,
+  isMyOrg = true,
   isMyPage = false,
   settingSkillAction,
   onOpenConfirmSettingSkillInfo,
@@ -420,7 +422,7 @@ export const SkillMapByOrganizationPanel = ({
                   const hasComment = skill.isHaveComment;
                   const progressPercent = skill?.progressPercent || 0;
                   const showTwinklingStars =
-                    skill?.progressPercent == 100 && !stepCompleted;
+                    skill?.progressPercent == 100 && !stepCompleted && isMyOrg;
                   let strokeColor = '';
                   switch (step) {
                     case 1:
@@ -462,7 +464,8 @@ export const SkillMapByOrganizationPanel = ({
                               isLocked ||
                               !skill.id ||
                               skillMapDetail.isDeleted ||
-                              (skill.skill.deletedAt && !isMyPage)
+                              (skill.skill.deletedAt && !isMyPage) ||
+                              !isMyOrg
                             )
                               return;
 
@@ -596,7 +599,7 @@ export const SkillMapByOrganizationPanel = ({
                             </div>
 
                             <div
-                              className={`${(skillMapDetail.isDeleted || (skill.skill.deletedAt && !isMyPage)) && 'invisible'}`}>
+                              className={`${(skillMapDetail.isDeleted || (skill.skill.deletedAt && !isMyPage) || !isMyOrg) && 'invisible'}`}>
                               <SkillMapProgressBar
                                 value={progressPercent}
                                 strokeColor={strokeColor}

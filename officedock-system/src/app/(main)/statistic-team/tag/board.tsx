@@ -154,6 +154,7 @@ const StatisticTeamTagBoard = () => {
             value: org.id || '',
             label: org.name,
             type: org.type,
+            isHidden: org.isDeleted,
           })),
         ]);
       }

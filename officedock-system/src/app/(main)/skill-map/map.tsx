@@ -45,7 +45,6 @@ const SkillMap = () => {
       setSkillMapByOrganizations(data.organizations);
     },
   });
-
   // Get submit level detail
   useSubmitLevelDetail({
     submitLevelId: Number(selectedSubmitLevel),
@@ -78,14 +77,16 @@ const SkillMap = () => {
             className={`w-[90px] !p-0 text-xs h-[28px] !font-bold text-white border-none !rounded-[20px]`}>
             スキルマップ
           </Button>
-          <Link href={`${pageRouters.SKILL_MAP_SKILL.href}?tabId=${tabId || 0}`}>
+          <Link
+            href={`${pageRouters.SKILL_MAP_SKILL.href}?tabId=${tabId || 0}`}>
             <Button
               variant="secondary"
               className={`w-[90px] !p-0 text-xs h-[28px] !font-bold !text-[#77858F] !bg-[#EBF1F7] border-none !rounded-[20px]`}>
               マイスキル
             </Button>
           </Link>
-          <Link href={`${pageRouters.SKILL_LIST_MANAGEMENT.href}?tabId=${tabId || 0}`}>
+          <Link
+            href={`${pageRouters.SKILL_LIST_MANAGEMENT.href}?tabId=${tabId || 0}`}>
             <Button
               variant="secondary"
               className={`w-[90px] !p-0 text-xs h-[28px] !font-bold !text-[#77858F] !bg-[#EBF1F7] border-none !rounded-[20px]`}>
@@ -97,13 +98,14 @@ const SkillMap = () => {
 
       <div className="px-10">
         {/* Banner */}
-        <SkillMapBanner skillMapInfo={skillMapInfo}/>
+        <SkillMapBanner skillMapInfo={skillMapInfo} />
 
         {/* Skill map by organizations */}
         {skillMapByOrganizations.length > 0 &&
           skillMapByOrganizations.map((skillMap, index) => (
             <SkillMapByOrganizationPanel
               key={index}
+              isMyOrg={skillMap.hasAssigned}
               skillMapDetail={skillMap}
               userId={skillMapInfo?.user.id || 0}
             />

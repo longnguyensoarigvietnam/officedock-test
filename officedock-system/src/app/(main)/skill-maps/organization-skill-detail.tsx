@@ -44,6 +44,7 @@ import { hasPermissionInArray } from '@utils';
 import api from '@base/api';
 
 interface OrganizationSkillDetailProps {
+  isMyOrg?: boolean;
   orgSkillDetail: OrganizationSkill;
   handleOpenDeleteSkillModal: (skill: SkillDataDeleteType) => void;
   setOpenSkillMapActionsModal: React.Dispatch<React.SetStateAction<boolean>>;

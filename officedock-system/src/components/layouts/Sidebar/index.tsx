@@ -44,6 +44,7 @@ import { TaskContext } from '@providers/TaskProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { WebSocketMessageData } from '@interfaces/chat';
 import { hasFullPaymentPermissions, showBackgroundColorByTime } from '@utils';
+import HelpIconPortal from '@components/helpMenu';
 
 type Props = {
   className?: string;
@@ -108,6 +109,7 @@ const Sidebar = ({ className }: Props) => {
   );
   const [pendingNavigationType, setPendingNavigationType] =
     useState<PendingNavigationType | null>(null);
+  const [showHelpMenu, setShowHelpMenu] = useState(false);
 
   const MENU_ITEMS = SYSTEM_PERMISSIONS_MENU.filter((menu) => {
     if (menu.requiredPermission === PermissionsSystem.VIEW_ALL) {
@@ -405,7 +407,7 @@ const Sidebar = ({ className }: Props) => {
         full
         className="h-full [&_.tab-button]:!text-xs [&_.tab-button]:!font-bold [&_.tab-button]:!py-[unset] [&_.tab-button]:!px-[unset] [&_.tab-button>span]:py-2">
         <TabPanel key={0} className={'h-full relative'}>
-          <nav className="flex flex-col  w-full mb-5  justify-between  h-full max-h-[calc(100%_-_150px)]">
+          <nav className="flex flex-col  w-full mb-5  justify-between  h-full max-h-[calc(100%_-_230px)]">
             <ul role="list" className="flex flex-col gap-y-6 list-none">
               <li className="flex-1">
                 <ul role="list" className="list-none pl-2">
@@ -574,7 +576,7 @@ const Sidebar = ({ className }: Props) => {
           </nav>
         </TabPanel>
         <TabPanel key={1} className={'h-full relative'}>
-          <nav className="flex flex-col  w-full mb-5 justify-between  h-full  max-h-[calc(100%_-_150px)]">
+          <nav className="flex flex-col  w-full mb-5 justify-between  h-full  max-h-[calc(100%_-_230px)]">
             <ul role="list" className="flex flex-col gap-y-6 list-none">
               <li className="flex-1">
                 <ul role="list" className="list-none pl-2">
@@ -790,17 +792,28 @@ const Sidebar = ({ className }: Props) => {
             )}
           </nav>
         </TabPanel>
+        {/* HELP MENU */}
         <div
-          className="absolute bottom-5 right-5"
+          className="absolute bottom-[52px] left-[13px] cursor-pointer"
+          onClick={() => setShowHelpMenu((prev) => !prev)}>
+          <ImageRound
+            src="/icons/help.svg"
+            name="Help page"
+            className={`!w-fit !h-fit`}
+          />
+        </div>
+        {showHelpMenu && <HelpIconPortal />}
+        <div
+          className="absolute bottom-5 left-5"
           onClick={() => setExpanded((prevExpanded) => !prevExpanded)}>
           <DynamicTooltip
             content={expanded ? 'メニューバーを縮小' : 'メニューバーを拡大'}
             placement="right">
-            <div className="shadow-lg bg-white rounded-full w-[35px] h-[35px] flex items-center justify-center p-[8px] hover:cursor-pointer">
+            <div className="shadow-lg bg-white rounded-full w-[30px] h-[30px] flex items-center justify-center p-[8px] hover:cursor-pointer">
               <ImageRound
                 src="/icons/extend-calendar.svg"
                 name="Extend calendar"
-                className={`!w-3.5 !h-3.5 min-w-2 ${expanded ? 'rotate-180' : ''}`}
+                className={`!w-fit !h-fit ${expanded ? 'rotate-180' : ''}`}
               />
             </div>
           </DynamicTooltip>

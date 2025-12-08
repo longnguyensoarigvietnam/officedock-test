@@ -8,6 +8,7 @@ import ImageRound from '@components/common/ImageRound';
 import { OptionDropdownType } from '@interfaces/common';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 import { NO_DATA_AVAILABLE } from '@constants';
+import { isEqualOptions } from '@utils/date';
 
 type Props = {
   open: boolean;
@@ -76,22 +77,40 @@ const FilterDataUserTeam = ({ open, close }: Props) => {
     setSelectedOption([]);
   };
   const handleSearch = () => {
-    setIsLoadingLarge(true);
-    setIsLoadingMedium(true);
-    setIsLoadingSmall(true);
-    setIsLoadingOrganization(true);
-    if (isCheckCompare) {
-      setIsLoadingLargeCompare(true);
-      setIsLoadingMediumCompare(true);
-      setIsLoadingSmallCompare(true);
-      setIsLoadingOrganizationCompare(true);
-    }
-    setOrderingOptions((prev) => ({
-      tag_ids: prev?.tag_ids || [],
-      user_ids: selectedOption,
-    }));
+    setOrderingOptions((prev) => {
+      const prevUserIds = prev?.user_ids || [];
+
+      // Check if there is any change
+      const hasChanged = !isEqualOptions(prevUserIds, selectedOption);
+
+      if (!hasChanged) {
+        //  No change → no loading, keep the same
+        return prev;
+      }
+
+      // Changes → new loading enabled
+      setIsLoadingLarge(true);
+      setIsLoadingMedium(true);
+      setIsLoadingSmall(true);
+      setIsLoadingOrganization(true);
+
+      if (isCheckCompare) {
+        setIsLoadingLargeCompare(true);
+        setIsLoadingMediumCompare(true);
+        setIsLoadingSmallCompare(true);
+        setIsLoadingOrganizationCompare(true);
+      }
+
+      // Và return state mới
+      return {
+        tag_ids: prev?.tag_ids || [],
+        user_ids: selectedOption,
+      };
+    });
+
     close();
   };
+
   return (
     <div className="w-full pt-[10px]  pb-5 bg-white rounded-[14px] shadow-common p-1 flex flex-col gap-1 text-sm">
       <div className="text-xs pl-5 pr-[10px] font-medium text-[#77858F] flex justify-between items-center">

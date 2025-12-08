@@ -108,7 +108,6 @@ export const CalendarSidebar = ({
 
     const userIds = selectedScheduleUserIds?.split(',').filter(Boolean) ?? [];
     const orgIds = selectedScheduleOrgIds?.split(',').filter(Boolean) ?? [];
-
     return member.type === EventParticipantType.USER
       ? userIds.includes(memberId)
       : orgIds.includes(memberId);

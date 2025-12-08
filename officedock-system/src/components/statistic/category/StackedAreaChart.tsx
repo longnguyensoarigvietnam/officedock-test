@@ -48,6 +48,7 @@ import {
 } from '@utils/date';
 
 import FilterStatistic from './filter/FilterStatistic';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 type Props = {
   startDate: Date;
@@ -89,6 +90,11 @@ const StackedAreaChart = ({
     selectedSmall,
     setLineChartViewBy,
   } = useContext(StatisticStateContext);
+  const { expanded } = useContext(GlobalStateContext);
+
+  useEffect(() => {
+    window.dispatchEvent(new Event('resize'));
+  }, [expanded]);
 
   const [isExtendData, setIsExtendData] = useState(true);
   // Sorting

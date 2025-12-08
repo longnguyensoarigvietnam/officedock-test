@@ -393,3 +393,6 @@ input[type='checkbox']:focus {
 .css-czlyiw-control:hover {
   cursor: pointer;
 }
+.css-1dimb5e-singleValue {
+  padding-right: 8px;
+}

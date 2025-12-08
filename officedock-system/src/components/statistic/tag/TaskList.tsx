@@ -527,7 +527,9 @@ const TaskListStatisticTags = ({
                     ? totalDurationCompare
                     : totalDuration
                 }
-                listOptionsOrganization={listOptionsOrganization}
+                listOptionsOrganization={listOptionsOrganization.filter(
+                  (item) => !item.isHidden,
+                )}
                 creationDataStatisticData={creationDataStatisticData}
                 setOrdering={(ord: string) => {
                   setOrdering(ord);

@@ -7,6 +7,7 @@ import Checkbox from '@components/common/Checkbox';
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 import { OptionDropdownType } from '@interfaces/common';
 import { NO_DATA_AVAILABLE } from '@constants';
+import { isEqualOptions } from '@utils/date';
 
 type Props = {
   open: boolean;
@@ -58,22 +59,40 @@ const FilterDataTeamModal = ({ open, close }: Props) => {
   };
 
   const handleSearch = () => {
-    setIsLoadingLarge(true);
-    setIsLoadingMedium(true);
-    setIsLoadingSmall(true);
-    setIsLoadingOrganization(true);
-    if (isCheckCompare) {
-      setIsLoadingLargeCompare(true);
-      setIsLoadingMediumCompare(true);
-      setIsLoadingSmallCompare(true);
-      setIsLoadingOrganizationCompare(true);
-    }
-    setOrderingOptions((prev) => ({
-      tag_ids: selectedOption || [],
-      user_ids: prev?.user_ids || [],
-    }));
+    setOrderingOptions((prev) => {
+      const prevTagIds = prev?.tag_ids || [];
+
+      // Check if tag_ids has actually changed
+      const hasChanged = !isEqualOptions(prevTagIds, selectedOption);
+
+      // No change → return previous state and skip all loading updates
+      if (!hasChanged) {
+        return prev;
+      }
+
+      // Change detected → trigger loading states
+      setIsLoadingLarge(true);
+      setIsLoadingMedium(true);
+      setIsLoadingSmall(true);
+      setIsLoadingOrganization(true);
+
+      if (isCheckCompare) {
+        setIsLoadingLargeCompare(true);
+        setIsLoadingMediumCompare(true);
+        setIsLoadingSmallCompare(true);
+        setIsLoadingOrganizationCompare(true);
+      }
+
+      // Update only the changed values
+      return {
+        tag_ids: selectedOption || [],
+        user_ids: prev?.user_ids || [],
+      };
+    });
+
     close();
   };
+
   return (
     <div className="w-full pt-[10px]  pb-5 bg-white rounded-[14px] shadow-common p-1 flex flex-col gap-1 text-sm">
       <div className="text-xs pl-5 pr-[10px] font-medium text-[#77858F] flex justify-between items-center">

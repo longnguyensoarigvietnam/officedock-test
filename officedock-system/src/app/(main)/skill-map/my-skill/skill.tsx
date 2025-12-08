@@ -186,7 +186,9 @@ const MySkill = () => {
                               </div>
                             </div>
                             <div
-                              className={`min-w-[290px] ${lastValidSkill.skill.deletedAt && 'invisible'} text-xs max-w-[290px] flex-shrink-0 break-words border-r px-5 border-[#D2DBE1]`}>
+                              className={`min-w-[290px] ${
+                                item.isDeleted && 'invisible'
+                              } ${lastValidSkill.skill.deletedAt && 'invisible'} text-xs max-w-[290px] flex-shrink-0 break-words border-r px-5 border-[#D2DBE1]`}>
                               <p>対応タスクを始めてから</p>
                               <div className="flex gap-[2px] items-end mt-[4px]">
                                 {lastValidSkill.level.measureCount !== null && (
@@ -231,7 +233,8 @@ const MySkill = () => {
                                   </>
                                 )}
                               </div>
-                              <div className={`w-full mt-[10px] ${item.isDeleted && 'invisible'}`}>
+                              <div
+                                className={`w-full mt-[10px] ${item.isDeleted && 'invisible'}`}>
                                 <SkillMapProgressBar
                                   value={lastValidSkill.progressPercent || 0}
                                   strokeColor={

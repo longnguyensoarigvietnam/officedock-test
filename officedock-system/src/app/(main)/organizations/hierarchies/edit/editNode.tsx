@@ -11,6 +11,7 @@ import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
 import Dropdown from '@components/common/Dropdown';
 import TableDropdown from '@components/common/Dropdown/TableDropdown';
+import ConfirmHiddenModal from '@components/modals/ConfirmHiddenModal';
 
 import {
   ERROR_UPDATE_MESSAGE,
@@ -40,6 +41,13 @@ export default function EditNode() {
   const [listProject, setListProject] = useState<ConfigNode[]>([]);
   const [defaultRoot, setDefaultRoot] = useState<ConfigNode[]>([]);
 
+  // Delete
+  const [openConfirmDeleteModal, setOpenConfirmDeleteModal] = useState(false);
+  const [orgUuidDelete, setOrgUuidDelete] = useState<{
+    uuid: string;
+    name: string;
+  } | null>(null);
+
   useDetailHierarchiesOrganization({
     onSuccess: (data) => {
       const dataTree = data.organizationHierarchies || [];
@@ -65,10 +73,12 @@ export default function EditNode() {
       has_children: false,
       onSuccess: (data) => {
         const list =
-          data.organizationNotHierarchies?.map((item) => ({
-            label: item.name || '',
-            value: item.uuid,
-          })) || [];
+          data.organizationNotHierarchies
+            ?.filter((org) => !org.deletedAt)
+            .map((item) => ({
+              label: item.name || '',
+              value: item.uuid,
+            })) || [];
         setOptionsTreeNode(list);
       },
     });
@@ -140,7 +150,7 @@ export default function EditNode() {
     if (!targetNode || !targetNode.parent) return;
 
     // 1) Collect all deleted nodes (including the root node and all descendants)
-    const nodesToRestore: { label: string; value: string }[] = [];
+    const nodesToRestore: OptionDropdownType[] = [];
     targetNode.walk((n: any) => {
       const m = n.model;
       // Only take nodes with valid values (not the placeholder 'treeNode') and not the root
@@ -150,6 +160,7 @@ export default function EditNode() {
           nodesToRestore.push({
             label: m.name || '',
             value: m.uuid,
+            isHidden: m.deletedAt,
           });
         }
       }
@@ -171,12 +182,19 @@ export default function EditNode() {
       setOptionsTreeNode((prev) => {
         const next = [...prev];
         nodesToRestore.forEach((item) => {
+          if (item.isHidden) return;
           const exists = next.some((opt) => opt.value === item.value);
           if (!exists) next.push(item);
         });
         return next;
       });
     }
+  };
+
+  const handleConfirmDelete = () => {
+    if (orgUuidDelete) deleteSiblingNode(orgUuidDelete?.uuid);
+    setOpenConfirmDeleteModal(false);
+    setOrgUuidDelete(null);
   };
 
   // Handle add node sibling
@@ -233,7 +251,11 @@ export default function EditNode() {
         (opt) => opt.value === newSelected.value,
       );
 
-      if (!alreadyExists && newSelected.value !== 'treeNode') {
+      if (
+        !alreadyExists &&
+        newSelected.value !== 'treeNode' &&
+        !newSelected.isHidden
+      ) {
         filtered.push(newSelected);
       }
 
@@ -391,6 +413,7 @@ export default function EditNode() {
         deletedProject.uuid !== 'treeNode'
       ) {
         setOptionsTreeNode((prevOptions) => {
+          if (deletedProject.deletedAt) return prevOptions;
           const exists = prevOptions.some(
             (opt) => opt.value === deletedProject.uuid,
           );
@@ -417,9 +440,9 @@ export default function EditNode() {
     name: string | null;
     value: string;
   }) => {
-    const newList = listProject.map((item) =>
-      item.uuid === uuid ? { ...item, name, value, uuid: value } : item,
-    );
+    const newList = listProject.map((item) => {
+      return item.uuid === uuid ? { ...item, name, value, uuid: value } : item;
+    });
     setListProject(newList);
   };
 
@@ -443,7 +466,6 @@ export default function EditNode() {
     const parent = targetNode.parent;
     const siblings = parent.model.children;
 
-    // Kiểm tra xem nó có phải là phần tử cuối cùng trong danh sách con của cha không
     const lastChild = siblings[siblings.length - 1];
 
     return lastChild.uuid === targetUuid;
@@ -460,6 +482,7 @@ export default function EditNode() {
             selectedOption={{
               label: item.name || '',
               value: item.uuid,
+              isHidden: item.deletedAt,
             }}
             className="!h-[34px] !py-0 !pr-0"
             valueClassName="!pr-4 !py-0 !text-sm !font-normal  !rounded-md !min-h-0 border border-[#77858F]"
@@ -472,6 +495,7 @@ export default function EditNode() {
                     item.value && item.value === 'treeNode'
                       ? item.value
                       : item.uuid,
+                  isHidden: item.deletedAt,
                 },
                 oldSelected: e,
               });
@@ -524,7 +548,13 @@ export default function EditNode() {
         )}
         {/* Delete sibling   */}
         <div
-          onClick={() => deleteSiblingNode(item.uuid)}
+          onClick={() => {
+            setOrgUuidDelete({
+              uuid: item.uuid,
+              name: item.name || '',
+            });
+            setOpenConfirmDeleteModal(true);
+          }}
           className="absolute bottom-[4px] right-[-32px] transform z-[30]  w-6 h-6 rounded-full ">
           <Button
             sz="sm"
@@ -532,7 +562,7 @@ export default function EditNode() {
             className="w-6 h-6  text-xs !py-0 !px-0 border-none !rounded-full !bg-[#ECF0F2] hover:opacity-70"
             type="button">
             <ImageRound
-              src="/icons/delete-node.svg"
+              src="/icons/delete-org.svg"
               name="Delete organization"
               className="!h-fit !w-fit"
             />
@@ -640,6 +670,7 @@ export default function EditNode() {
                                 item.value && item.value === 'treeNode'
                                   ? item.value
                                   : item.uuid,
+                              isHidden: item.deletedAt,
                             },
                             oldSelected: e,
                           });
@@ -660,7 +691,7 @@ export default function EditNode() {
                         className="w-6 h-6  text-xs !py-0 !px-0 border-none !rounded-full !bg-[#ECF0F2] hover:opacity-70"
                         type="button">
                         <ImageRound
-                          src="/icons/delete-node.svg"
+                          src="/icons/delete-org.svg"
                           name="Delete organization"
                           className="!h-fit !w-fit"
                         />
@@ -709,6 +740,21 @@ export default function EditNode() {
           </div>
         </div>
       </div>
+      {openConfirmDeleteModal && (
+        <ConfirmHiddenModal
+          open={openConfirmDeleteModal}
+          name={orgUuidDelete?.name}
+          type="チーム"
+          msgMain="このテンプレートを非表示にしますか？"
+          message="このチームに紐づくチームも階層から解除されます"
+          classNameMsg="mt-[2px] text-sm !text-[#000000]"
+          classNameMain="!mb-5"
+          onConfirm={handleConfirmDelete}
+          onClose={() => {
+            setOpenConfirmDeleteModal(false);
+          }}
+        />
+      )}
     </>
   );
 }

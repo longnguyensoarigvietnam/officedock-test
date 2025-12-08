@@ -57,6 +57,7 @@ import {
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 
 import FilterTag from './filter/FilterTag';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 ChartJS.register(
   CategoryScale,
@@ -115,6 +116,11 @@ const StackedAreaChart = ({
     lineChartViewBy,
     setLineChartViewBy,
   } = useContext(StatisticTagStateContext);
+  const { expanded } = useContext(GlobalStateContext);
+
+  useEffect(() => {
+    window.dispatchEvent(new Event('resize'));
+  }, [expanded]);
 
   const [isExtendData, setIsExtendData] = useState(true);
   const [tableData, setTableData] = useState<
@@ -497,6 +503,11 @@ const StackedAreaChart = ({
       toolbar: {
         show: false, // ❌ Turn off the zoom tool bar
       },
+      animations: {
+        enabled: false,
+        dynamicAnimation: { enabled: false },
+      },
+      redrawOnWindowResize: true,
     },
     grid: {
       padding: {
@@ -1042,12 +1053,13 @@ const StackedAreaChart = ({
               className={`!h-[380px] w-[calc(100%_-_60px)] mx-auto`}
             />
           ) : (
-            <div className="relative">
+            <div className="relative w-full min-w-0 ">
               <Chart
                 options={options as any}
                 series={dataChart}
                 type="area"
                 height={380}
+                width={'100%'}
               />
               <div className="flex flex-wrap gap-x-[30px] gap-y-3 justify-end px-[30px]">
                 {dataChart.map((s, index) => (
