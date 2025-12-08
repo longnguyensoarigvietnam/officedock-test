@@ -928,7 +928,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
         )
         total_duration = get_total_durations(durations)
         category_list = aggregate_durations(
-            durations=durations,
+            durations=durations, type_value=TaskCategoryTypes.LARGE.value
         )
         if not durations.exists() or category_list is None:
             return self.response_ok(data)
@@ -956,7 +956,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
                 organization_id=organization_id,
             )
             # Process small categories if medium_category_id is provided
-            if medium_category_id and calendar_org not in organizations:
+            if medium_category_id and calendar_org not in [organization]:
                 data = self._handle_get_statistic_category(
                     durations,
                     data,
@@ -997,6 +997,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
             durations=durations,
             large_category_id=large_category_id,
             medium_category_id=medium_category_id,
+            type_value=task_category_type,
         )
         data[type_total_duration] = format_duration(total_duration)
         data[type_category] = process_categories(
