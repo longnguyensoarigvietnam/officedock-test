@@ -21,7 +21,7 @@ const CalendarSkeleton: React.FC<CalendarSkeletonProps> = ({
               (_, resourceIndex) => (
                 <div
                   key={resourceIndex}
-                  className="flex-1 h-full border-t mt-[2px] border-gray-300 bg-[#E6F3FB] bg-[linear-gradient(100deg,_#ffffff00_40%,_#ffffff80_50%,_#ffffff00_60%)] bg-[length:200%_100%] animate-[loadingShimmer_1s_ease-in-out_infinite]"
+                  className="flex-1 h-full border-t mt-[2px] border-[#CBDCE7] bg-[#E6F3FB] bg-[linear-gradient(100deg,_#ffffff00_40%,_#ffffff80_50%,_#ffffff00_60%)] bg-[length:200%_100%] animate-[loadingShimmer_1s_ease-in-out_infinite]"
                   style={{ backgroundPositionX: '180%' }}></div>
               ),
             )}

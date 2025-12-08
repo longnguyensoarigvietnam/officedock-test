@@ -101,7 +101,6 @@ const TableComponent = ({
 
   const {
     checkIsHiddenCategory,
-    checkHasHiddenCategoryInARow,
     sameLarge,
     sameMedium,
     sameSmall,
@@ -659,17 +658,48 @@ const TableComponent = ({
       const statisticCategories = org.statisticCategories;
 
       const matchedRows = statisticCategories
-        .filter((item) => item.large.value === originalLargeValue)
+        .filter((item) => item.large.value == originalLargeValue)
         .map((item) => ({ ...item, large: newLarge }));
 
       const remainingRows = statisticCategories.filter(
-        (item) => item.large.value !== originalLargeValue,
+        (item) => item.large.value != originalLargeValue,
       );
 
-      // Find last index of newLarge.value in remaining rows
-      const lastIndex = remainingRows.reduce((acc, item, idx) => {
-        return item.large.value === newLarge.value ? idx : acc;
-      }, -1);
+      // Find last index of newLarge in remaining rows
+      const template = matchedRows[0];
+
+      const lastIndex = (() => {
+        let exactMatch = -1;
+        let mediumMatch = -1;
+        let largeOnlyMatch = -1;
+
+        remainingRows.forEach((item, idx) => {
+          const sameLarge = item.large.value === newLarge.value;
+          const sameMedium = item.medium?.value === template.medium?.value;
+          const sameSmall = item.small?.value === template.small?.value;
+
+          if (!sameLarge) return;
+
+          // Level 1: exact large + medium + small
+          if (sameMedium && sameSmall) {
+            exactMatch = idx;
+            return;
+          }
+
+          // Level 2: large + medium
+          if (sameMedium) {
+            mediumMatch = idx;
+            return;
+          }
+
+          // Level 3: large only
+          largeOnlyMatch = idx;
+        });
+
+        if (exactMatch !== -1) return exactMatch;
+        if (mediumMatch !== -1) return mediumMatch;
+        return largeOnlyMatch; // may be -1 (correct)
+      })();
 
       const newStatisticCategories = [...remainingRows];
 
@@ -1605,32 +1635,9 @@ const TableComponent = ({
       .map((row) => row.small.value);
   };
 
-  const getDisabledMediumValuesForLarge = (largeValue: string) => {
-    return hierarchyList.statisticCategories
-      .filter((row) => row.large.value === largeValue)
-      .filter((row) =>
-        checkHasHiddenCategoryInARow({
-          originalRow: row,
-          type: HierarchyType.MEDIUM,
-        }),
-      )
-      .map((row) => row.medium.value);
-  };
-
   const getHiddenLargeCategoryList = () => {
     return hierarchyList.statisticCategories
       .filter((row) => row.large.isHidden)
-      .map((row) => row.large.value);
-  };
-
-  const getDisabledLargeCategoryList = () => {
-    return hierarchyList.statisticCategories
-      .filter((row) =>
-        checkHasHiddenCategoryInARow({
-          originalRow: row,
-          type: HierarchyType.LARGE,
-        }),
-      )
       .map((row) => row.large.value);
   };
 
@@ -1643,7 +1650,6 @@ const TableComponent = ({
 
     const hiddenMediums = getHiddenMediumsForLarge(largeValue);
     const hiddenSmalls = getHiddenSmallsForMedium(largeValue, mediumValue);
-    const disabledMediums = getDisabledMediumValuesForLarge(largeValue);
     const allSmallForMedium = getAllSmallsForMedium(largeValue, mediumValue);
 
     return categoryDropdownOptions.filter((option) => {
@@ -1652,8 +1658,7 @@ const TableComponent = ({
         option.value !== '' &&
         !allSmallForMedium.includes(option.value) &&
         !hiddenMediums.includes(option.value) &&
-        !hiddenSmalls.includes(option.value) &&
-        !disabledMediums.includes(option.value)
+        !hiddenSmalls.includes(option.value)
       );
     });
   };
@@ -1689,15 +1694,13 @@ const TableComponent = ({
     const largeValue = row.large.value as string;
 
     const hiddenLarges = getHiddenLargeCategoryList();
-    const disabledLarges = getDisabledLargeCategoryList();
     const mediumsAndSmallForLarge = getAllMediumsAndSmallsForLarge(largeValue);
 
     return categoryDropdownOptions.filter((option) => {
       return (
         option.value !== '' &&
         !mediumsAndSmallForLarge.includes(option.value) &&
-        !hiddenLarges.includes(option.value) &&
-        !disabledLarges.includes(option.value)
+        !hiddenLarges.includes(option.value)
       );
     });
   };

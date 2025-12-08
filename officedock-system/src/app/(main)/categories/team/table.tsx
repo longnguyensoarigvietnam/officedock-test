@@ -71,7 +71,7 @@ const HierarchyTable = ({
     {
       accessorKey: HierarchyType.LARGE,
       header: () => (
-        <div className="flex justify-between pl-[18px] pr-[14px]">
+        <div className="flex justify-between pl-[18px] pr-[14px] leading-[1]">
           <p>大カテゴリー</p>
           <p>{uniqueLargeCount}</p>
         </div>
@@ -80,7 +80,7 @@ const HierarchyTable = ({
     {
       accessorKey: HierarchyType.MEDIUM,
       header: () => (
-        <div className="flex justify-between px-[14px]">
+        <div className="flex justify-between px-[14px] leading-[1]">
           <p>中カテゴリー</p>
           <p>{uniqueMediumCount}</p>
         </div>
@@ -89,7 +89,7 @@ const HierarchyTable = ({
     {
       accessorKey: HierarchyType.SMALL,
       header: () => (
-        <div className="flex justify-between px-[14px]">
+        <div className="flex justify-between px-[14px] leading-[1]">
           <p>小カテゴリー</p>
           <p>{uniqueSmallCount}</p>
         </div>
@@ -98,7 +98,7 @@ const HierarchyTable = ({
     {
       accessorKey: 'skills',
       header: () => (
-        <p className="font-medium text-xs text-[#77858F] text-left px-[14px]">
+        <p className="font-medium text-xs text-[#77858F] text-left px-[14px] leading-[1]">
           スキルの紐付け
         </p>
       ),
@@ -176,19 +176,19 @@ const HierarchyTable = ({
 
   return (
     <div
-      className="w-full p-5 bg-[#F8FAFC] rounded-[30px]"
+      className="w-full p-[30px] bg-[#F8FAFC] rounded-[30px]"
       style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
-      <p className="text-[#77858F] text-[16px] font-medium mb-4 max-w-[100%] break-all">
+      <p className="text-[#77858F] text-[16px] font-medium mb-[30px] max-w-[100%] break-all">
         {organizationName}
       </p>
-      <Table className="w-full h-full bg-white !rounded-[10px]" tableClassName="!w-full !table-fixed">
+      <Table className="w-full h-full bg-white !rounded-[10px]" classCustom="!py-0" tableClassName="!w-full !table-fixed">
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header, index) => (
                 <th
                   key={header.id}
-                  className={`text-[#77858F] bg-[#F8FAFC] ${headerGroup.headers.length - 1 != index && 'border-r-[1px] border-[#D2DBE1]'} w-1/4 font-medium text-xs py-3`}>
+                  className={`text-[#77858F] bg-[#F8FAFC] ${headerGroup.headers.length - 1 != index && 'border-r-[1px] !border-[#D2DBE1]'} w-1/4 font-medium text-xs py-[15px]`}>
                   {flexRender(
                     header.column.columnDef.header,
                     header.getContext(),
@@ -233,7 +233,7 @@ const HierarchyTable = ({
                     }}
                     rowSpan={largeRowspan[rowIndex]}>
                     <div
-                      className={`pr-[14px] pl-[18px] py-5 h-full flex items-center gap-[14px] ${isHiddenLargeCategory && 'hidden'} 
+                      className={`pr-[14px] pl-[18px] py-5 h-full flex items-center gap-[8px] ${isHiddenLargeCategory && 'hidden'} 
                       ${lastIndex !== rowIndex &&
                         secondLastLargeIndex !== null &&
                         secondLastLargeIndex + 1 !== rowIndex &&
@@ -326,7 +326,7 @@ const HierarchyTable = ({
                       <div className="hidden w-full"></div>
                     ) : (
                       <div
-                        className={`flex items-center h-full gap-2 flex-wrap py-4 
+                        className={`flex items-center h-full gap-2 flex-wrap py-[13px]
                         ${!lastLargeIndexes.includes(rowIndex) &&
                           !lastDisplayedSmallIndexesInEachLarge.includes(
                             rowIndex,
@@ -338,8 +338,8 @@ const HierarchyTable = ({
                             return (
                               <div
                                 key={skill.value}
-                                className="flex items-center justify-center bg-[#77858F] !h-fit min-w-[35px] px-[10px] !py-[5px] rounded-[20px]">
-                                <p className="text-white text-xs font-medium">
+                                className="flex items-center justify-center bg-[#77858F] !h-fit min-w-[35px] px-[10px] !py-[7.5px] rounded-[20px]">
+                                <p className="text-white text-xs font-medium leading-[1]">
                                   {skill.label}
                                 </p>
                               </div>

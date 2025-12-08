@@ -1218,6 +1218,7 @@ const LineChartByTeamTagsCompare = ({
           font: {
             size: 14,
             weight: 500,
+            family: 'Noto Sans JP, sans-serif',
           },
           padding: 15,
           callback: function (this: { chart: any }, index: number) {
@@ -1244,6 +1245,7 @@ const LineChartByTeamTagsCompare = ({
           font: {
             size: 14,
             weight: 500,
+            family: 'Noto Sans JP, sans-serif',
           },
           padding: 15,
           stepSize: 10,

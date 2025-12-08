@@ -396,22 +396,22 @@ const EditHierarchyForm = () => {
     <div className="flex flex-col h-full">
       <div className="sticky z-[21] top-[0px] px-10 pt-8 pb-3 bg-[#E6F3FB]">
         <div className="flex justify-between mb-5">
-          <div className="flex gap-4 items-center">
+          <div className="flex gap-5 items-center">
             <p className="text-black font-medium text-[26px] leading-[1]">
               業務カテゴリー設定
             </p>
-            <div className="flex gap-2 bg-white w-fit p-[6px] rounded-[20px]">
+            <div className="flex gap-[6px] bg-white w-fit p-[6px] rounded-[20px]">
               <Link href={pageRouters.CATEGORY_MANAGEMENT.href}>
                 <Button
                   variant="outline"
-                  className={`w-[128px] !p-0 text-xs h-[28px] !font-bold !text-[#77858F] !bg-[#EBF1F7] border-none !rounded-[20px]`}>
+                  className={`w-[140px] !p-0 text-xs h-[28px] !font-bold !text-[#77858F] !bg-[#EBF1F7] border-none !rounded-[20px]`}>
                   社内共通カテゴリー
                 </Button>
               </Link>
 
               <Button
                 variant="primary"
-                className={`w-[128px] !p-0 text-xs h-[28px] !font-bold text-white border-none !rounded-[20px]`}>
+                className={`w-[140px] !p-0 text-xs h-[28px] !font-bold text-white border-none !rounded-[20px]`}>
                 チームカテゴリー
               </Button>
 
@@ -471,7 +471,7 @@ const EditHierarchyForm = () => {
             />
           </div>
 
-          <div className="flex justify-center gap-3 items-center">
+          <div className="flex justify-center gap-[10px] items-center">
             <Link href={pageRouters.TEAM_CATEGORY_MANAGEMENT.href}>
               <Button
                 variant="outline"

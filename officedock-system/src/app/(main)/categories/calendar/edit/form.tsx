@@ -467,13 +467,12 @@ const TableComponent = ({
       };
 
       const matchedRows = statisticCategories
-        .filter((item) => item.large.value === originalRow?.large.value)
+        .filter((item) => item.large.value == originalRow?.large.value)
         .map((item) => ({
           ...item,
           large: newLarge,
         }));
       let updatedHierarchies = [];
-
       if (matchedRows.length) {
         updatedHierarchies = matchedRows.map((row) => {
           return {
@@ -523,15 +522,10 @@ const TableComponent = ({
       }
 
       updatedHierarchies.forEach((updatedHierarchy) => {
-        const key = `${updatedHierarchy.largeStatisticCategory?.uuid || ''
-          }|${updatedHierarchy.mediumStatisticCategory?.uuid || ''}`;
-
         const index = updatedHierarchiesToUpdate.findIndex(
           (item) =>
             item.organizationStatisticCategoryId ===
-            updatedHierarchy.organizationStatisticCategoryId ||
-            `${item.largeStatisticCategory?.uuid || ''
-            }|${item.mediumStatisticCategory?.uuid || ''}` === key,
+            updatedHierarchy.organizationStatisticCategoryId
         );
 
         if (index !== -1) {
