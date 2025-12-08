@@ -217,7 +217,7 @@ const ProgressBarStatistic = ({
                         onClick={() => {
                           handleClickTooltip(id as number, organizationId);
                         }}
-                        className="bg-white flex items-center  justify-center gap-2 text-[12px] text-[#77858F] h-[34px] rounded-md">
+                        className="bg-white flex items-center justify-center gap-2 text-[12px] text-[#77858F] h-[34px] rounded-md hover:cursor-pointer">
                         <span>タスクを見る</span>
                         <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
                           <ImageRound
@@ -301,7 +301,7 @@ const ProgressBarStatistic = ({
                               onClick={() => {
                                 handleClickTooltip(item.id, organizationId);
                               }}
-                              className="bg-white flex items-center  justify-center gap-2 text-[12px] text-[#77858F] h-[34px] rounded-md">
+                              className="bg-white flex items-center justify-center gap-2 text-[12px] text-[#77858F] h-[34px] rounded-md hover:cursor-pointer">
                               <span>タスクを見る</span>
                               <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
                                 <ImageRound

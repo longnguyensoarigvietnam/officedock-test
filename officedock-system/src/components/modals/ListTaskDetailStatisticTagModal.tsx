@@ -88,8 +88,8 @@ const ListTaskDetailStatisticTagModal = ({
         detailCategory && detailCategory.type === EventWorkCategory.MEDIUM
           ? null
           : detailCategory &&
-              detailCategory.type !== EventWorkCategory.ALL &&
-              detailCategory.type !== EventWorkCategory.LARGE
+            detailCategory.type !== EventWorkCategory.ALL &&
+            detailCategory.type !== EventWorkCategory.LARGE
             ? (selectedSmall?.value as number)
             : null,
       page: 1,
@@ -138,7 +138,7 @@ const ListTaskDetailStatisticTagModal = ({
         chatContainer &&
         hastMore &&
         chatContainer.clientHeight + Math.abs(chatContainer.scrollTop) ===
-          chatContainer.scrollHeight
+        chatContainer.scrollHeight
       ) {
         setIsFetching(true);
         refetchStatisticCategoryList();
@@ -317,11 +317,11 @@ const ListTaskDetailStatisticTagModal = ({
           タスク数 {count}
         </div>
         <div>
-          <div className="bg-white flex items-center  justify-center gap-2 text-sm text-[#77858F]  font-medium  h-[20px] rounded-md">
+          <div className="bg-white flex items-center  justify-center gap-2 text-sm text-[#77858F]  font-medium  h-[20px] rounded-md hover:cursor-pointer"
+            onClick={handleScroll}>
             <span className="text-xs">タスク一覧へ</span>
             <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
               <ImageRound
-                onClick={handleScroll}
                 className=" h-[8px] w-fit cursor-pointer relative left-[0.5px]"
                 src="/icons/right-statistic.svg"
                 name="right"

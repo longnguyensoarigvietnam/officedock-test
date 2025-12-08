@@ -122,11 +122,11 @@ const FilterDataUserTeam = ({ open, close }: Props) => {
               <>
                 <div
                   key={option.value}
-                  className={`relative hover:cursor-pointer flex items-start justify-between  select-none hover:bg-[#f8fafc] py-2 pl-2 pr-3 border-b-[1px] border-gray-100`}>
+                  className={`relative hover:cursor-pointer flex items-start justify-between  select-none hover:bg-[#f8fafc] py-2 pl-2 pr-3 border-b-[1px] border-gray-100`}
+                  onClick={() => handleChangeUser(option)}>
                   <div className="max-w-[80%] flex items-center gap-2">
                     <div className="w-5">
                       <Checkbox
-                        onChange={() => handleChangeUser(option)}
                         classLabel={`break-words max-w-[300px] line-clamp-3 !text-sm `}
                         disable={isHasLoading}
                         isChecked={

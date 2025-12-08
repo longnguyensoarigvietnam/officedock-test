@@ -90,8 +90,8 @@ const ListTaskDetailStatisticModal = ({
         detailCategory && detailCategory.type === EventWorkCategory.MEDIUM
           ? (detailCategory.id as number)
           : detailCategory &&
-              detailCategory.type !== EventWorkCategory.ALL &&
-              detailCategory.type !== EventWorkCategory.LARGE
+            detailCategory.type !== EventWorkCategory.ALL &&
+            detailCategory.type !== EventWorkCategory.LARGE
             ? (selectedSmall?.value as number)
             : null,
       page: 1,
@@ -136,7 +136,7 @@ const ListTaskDetailStatisticModal = ({
         chatContainer &&
         hastMore &&
         chatContainer.clientHeight + Math.abs(chatContainer.scrollTop) >=
-          chatContainer.scrollHeight - 10
+        chatContainer.scrollHeight - 10
       ) {
         setIsFetching(true);
         refetchStatisticCategoryList();
@@ -315,11 +315,11 @@ const ListTaskDetailStatisticModal = ({
         </div>
         {selectedOrganization?.label !== ALL_TEAM_STATISTIC && (
           <div className={`${isDisable && 'hidden'}`}>
-            <div className="bg-white flex items-center  justify-center gap-2 text-sm text-[#77858F]  font-medium  h-[20px] rounded-md">
+            <div className="bg-white flex items-center  justify-center gap-2 text-sm text-[#77858F]  font-medium  h-[20px] rounded-md hover:cursor-pointer"
+              onClick={handleScroll}>
               <span className="text-xs">タスク一覧へ</span>
               <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
                 <ImageRound
-                  onClick={handleScroll}
                   className=" h-[8px] w-fit cursor-pointer relative left-[0.5px]"
                   src="/icons/right-statistic.svg"
                   name="right"
