@@ -75,7 +75,9 @@ def get_list_durations_by_users(
         if large_id == NONE_CATEGORY and durations:
             return get_duration_of_none_category(durations)
         else:
-            filter_tasks &= Q(task__categories__large_statistic_category_id=large_id)
+            filter_tasks &= Q(
+                task__categories__large_statistic_category_id=large_id
+            )
             filter_events &= Q(
                 schedule__categories__large_statistic_category_id=large_id
             )
@@ -83,15 +85,21 @@ def get_list_durations_by_users(
         if medium_id == NONE_CATEGORY and durations:
             return get_duration_of_none_category(durations, large_id)
         else:
-            filter_tasks &= Q(task__categories__medium_statistic_category_id=medium_id)
+            filter_tasks &= Q(
+                task__categories__medium_statistic_category_id=medium_id
+            )
             filter_events &= Q(
                 schedule__categories__medium_statistic_category_id=medium_id
             )
     if small_id:
-        if (medium_id == NONE_CATEGORY and durations) or (small_id == NONE_CATEGORY):
+        if (medium_id == NONE_CATEGORY and durations) or (
+            small_id == NONE_CATEGORY
+        ):
             return get_duration_of_none_category(durations, large_id, medium_id)
         else:
-            filter_tasks &= Q(task__categories__small_statistic_category_id=small_id)
+            filter_tasks &= Q(
+                task__categories__small_statistic_category_id=small_id
+            )
             filter_events &= Q(
                 schedule__categories__small_statistic_category_id=small_id
             )
@@ -174,6 +182,7 @@ def aggregate_durations(
     medium_category_id=None,
     durations=None,
     is_daily_report=False,
+    user=None,
 ):
     """
     Optimized version: aggregate durations by task/schedule and group by category
@@ -250,11 +259,19 @@ def aggregate_durations(
         schedules_map[s.id] = s
         all_org_ids.add(s.organization_id)
 
+    # Check which organization not having input user
+    unassigned_orgs = set()
+    if user:
+        user_org_ids = set(user.organizations.values_list("id", flat=True))
+        unassigned_orgs = all_org_ids - user_org_ids
+
     # Collect all large category IDs from the first category of each task/schedule
     all_category_ids = set()
     for t in chain(tasks, schedules):
         if t.prefetched_categories:
-            all_category_ids.add(t.prefetched_categories[0].large_statistic_category_id)
+            all_category_ids.add(
+                t.prefetched_categories[0].large_statistic_category_id
+            )
 
     # Fetch organization-category metadata (e.g. color) in a single query
     org_cats = (
@@ -290,7 +307,9 @@ def aggregate_durations(
         task = tasks_map[task_id]
         combined.append((task, duration))
         first_categories[task.id] = (
-            task.prefetched_categories[0] if task.prefetched_categories else None
+            task.prefetched_categories[0]
+            if task.prefetched_categories
+            else None
         )
     for schedule_id, duration in schedule_duration_map.items():
         schedule = schedules_map[schedule_id]
@@ -349,19 +368,23 @@ def aggregate_durations(
             category_id = NONE_CATEGORY
             category_color = CategoryColors.GRAY.value
 
-        key = (category_name, organization.id) if not is_daily_report else category_id
-
+        key = (
+            (category_name, organization.id)
+            if not is_daily_report
+            else category_id
+        )
+        org_name = organization.name
+        if organization.deleted_at:
+            org_name = f"{organization.name}{KEYWORDS['deleted']}"
+        elif user and organization.id in unassigned_orgs:
+            org_name = f"{organization.name}{KEYWORDS['unassigned']}"
         if key in category_dict:
             category_dict[key]["duration"] += duration
         else:
             category_dict[key] = {
                 "category_id": category_id,
                 "organization_id": organization.id,
-                "organization_name": (
-                    organization.name
-                    if organization.deleted_at == None
-                    else f"{organization.name}{KEYWORDS['deleted']}"
-                ),
+                "organization_name": org_name,
                 "category_name": category_name,
                 "category_color": category_color,
                 "duration": duration,
@@ -385,6 +408,7 @@ def process_categories(
     is_with_tasks=False,
     is_with_users=False,
     durations=None,
+    organization=None,
 ):
     """Processes category durations, calculates percentages, and returns structured data."""
     categories_data = []
@@ -428,15 +452,21 @@ def process_categories(
                 if filter_key == "large_id":
                     null_filter = Q(
                         task__categories__large_statistic_category__isnull=True
-                    ) & Q(schedule__categories__large_statistic_category__isnull=True)
+                    ) & Q(
+                        schedule__categories__large_statistic_category__isnull=True
+                    )
                 elif filter_key == "medium_id":
                     null_filter = Q(
                         task__categories__medium_statistic_category__isnull=True
-                    ) & Q(schedule__categories__medium_statistic_category__isnull=True)
+                    ) & Q(
+                        schedule__categories__medium_statistic_category__isnull=True
+                    )
                 elif filter_key == "small_id":
                     null_filter = Q(
                         task__categories__small_statistic_category__isnull=True
-                    ) & Q(schedule__categories__small_statistic_category__isnull=True)
+                    ) & Q(
+                        schedule__categories__small_statistic_category__isnull=True
+                    )
 
                 filtered_durations = durations.filter(base_filter & null_filter)
             if is_with_tasks:
@@ -447,6 +477,7 @@ def process_categories(
                 data["users"] = process_users(
                     time_str_to_timedelta(category_duration),
                     filtered_durations,
+                    organization,
                 )
         # Calculate the percentage of the total duration
         data["percent"] = percentage_calculation_of_duration(
@@ -502,12 +533,15 @@ def get_list_basic_task_or_event_of_durations(durations):
     return data
 
 
-def process_users(total_duration, durations):
+def process_users(total_duration, durations, organization=None):
     """Processes users durations, calculates percentages, and returns structured data."""
     user_data = []
 
     if not durations:
         return []
+    users_in_org = []
+    if organization:
+        users_in_org = organization.users.values_list("id", flat=True)
 
     # Group by user ID
     user_durations = defaultdict(timedelta)
@@ -550,12 +584,22 @@ def process_users(total_duration, durations):
         },
         **{
             sch.id: {"id": sch.id, "title": sch.title}
-            for sch in Schedule.objects.filter(id__in=schedule_ids).only("id", "title")
+            for sch in Schedule.objects.filter(id__in=schedule_ids).only(
+                "id", "title"
+            )
         },
     }
     sorted_users = list(user_durations.items())
     for uid, duration in sorted_users:
         serialized_user = user_serialized_map.get(uid)
+        # Add unassigned tag behind user name
+        if (
+            users_in_org
+            and uid not in users_in_org
+            and serialized_user["deleted_at"] is None
+        ):
+            serialized_user["full_name"] += KEYWORDS["unassigned"]
+
         combined_ids = list(user_tasks[uid]) + list(user_schedules[uid])
         tasks = [
             combined_task_map[tid]
@@ -586,6 +630,7 @@ def process_tags(
     is_with_tasks=False,
     is_with_users=None,
     durations=None,
+    organization=None,
 ):
     """Processes category durations, calculates percentages, and returns structured data."""
     tags_data = []
@@ -608,11 +653,12 @@ def process_tags(
                 organizations=[tag["organization_id"]],
             )
             if is_with_tasks:
-                data["tasks"] = get_list_basic_task_or_event_of_durations(filtered)
+                data["tasks"] = get_list_basic_task_or_event_of_durations(
+                    filtered
+                )
             elif is_with_users:
                 data["users"] = process_users(
-                    time_str_to_timedelta(tag_duration),
-                    filtered,
+                    time_str_to_timedelta(tag_duration), filtered, organization
                 )
 
         # Calculate the percentage of the total duration
@@ -630,7 +676,11 @@ def process_tags(
 
 
 def process_merge_card_per_tag(
-    tag_ids, durations=None, organization_ids_param=None, organization_ids=None
+    tag_ids,
+    durations=None,
+    organization_ids_param=None,
+    organization_ids=None,
+    user=None,
 ):
     """
     Handle process category per user.
@@ -652,31 +702,31 @@ def process_merge_card_per_tag(
             output_field=CharField(),
         )
     )
-    organizations = (
-        Organization.all_objects.filter(id__in=organization_ids)
-        .annotate(
-            name_display=Case(
-                When(
-                    deleted_at__isnull=False,
-                    then=Concat(F("name"), Value(KEYWORDS["deleted"])),
-                ),
-                default=F("name"),
-                output_field=CharField(),
-            )
-        )
-    )
+    organizations = Organization.all_objects.filter(
+        id__in=organization_ids
+    ).all()
+    # Check which organization not having input user
+    unassigned_orgs = set()
+    if user:
+        user_org_ids = set(user.organizations.values_list("id", flat=True))
+        unassigned_orgs = organization_ids - user_org_ids
+
     grouped_data = defaultdict(list)
     total_duration = timedelta(0)
 
-    for d in durations.select_related("user", "task", "schedule").prefetch_related(
-        "task__tags", "schedule__tags"
-    ):
+    for d in durations.select_related(
+        "user", "task", "schedule"
+    ).prefetch_related("task__tags", "schedule__tags"):
         related_tags = set()
 
         if d.task_id and d.task and hasattr(d.task, "prefetched_tags"):
             related_tags.update([tag.id for tag in d.task.prefetched_tags])
 
-        if d.schedule_id and d.schedule and hasattr(d.schedule, "prefetched_tags"):
+        if (
+            d.schedule_id
+            and d.schedule
+            and hasattr(d.schedule, "prefetched_tags")
+        ):
             related_tags.update([tag.id for tag in d.schedule.prefetched_tags])
 
         # Check tag have in tag_ids
@@ -692,7 +742,9 @@ def process_merge_card_per_tag(
         org_id = (
             d.task.organization_id
             if d.task_id
-            else d.schedule.organization_id if d.schedule_id else None
+            else d.schedule.organization_id
+            if d.schedule_id
+            else None
         )
         if org_id is None or org_id not in organization_ids:
             continue
@@ -701,7 +753,14 @@ def process_merge_card_per_tag(
             grouped_data[(tag_id, org_id)].append(duration)
             total_duration += duration
     tag_map = {tag.id: tag.name_display for tag in tags}
-    org_map = {org.id: org.name_display for org in organizations}
+    org_map = {}
+    for organization in organizations:
+        org_name = organization.name
+        if organization.deleted_at:
+            org_name = f"{organization.name}{KEYWORDS['deleted']}"
+        elif user and organization.id in unassigned_orgs:
+            org_name = f"{organization.name}{KEYWORDS['unassigned']}"
+        org_map[organization.id] = org_name
     tag_totals = {}
 
     for (tag_id, org_id), durations_list in grouped_data.items():
@@ -738,9 +797,13 @@ def split_ranges(from_date, end_date, option):
     elif option == FilterTime.WEEK.value:
         # If the start date is not Monday, get the first Sunday
         if current_start.weekday() != 0:  # 0 = Monday, 6 = Sunday
-            first_sunday = current_start + timedelta(days=(6 - current_start.weekday()))
+            first_sunday = current_start + timedelta(
+                days=(6 - current_start.weekday())
+            )
             ranges.append((current_start, min(first_sunday, end_date)))
-            current_start = first_sunday + timedelta(days=1)  # Move to next Monday
+            current_start = first_sunday + timedelta(
+                days=1
+            )  # Move to next Monday
 
         # Generate full Monday-Sunday weeks
         while current_start <= end_date:
@@ -750,9 +813,9 @@ def split_ranges(from_date, end_date, option):
 
     elif option == FilterTime.MONTH.value:
         while current_start <= end_date:
-            next_month = (current_start.replace(day=28) + timedelta(days=4)).replace(
-                day=1
-            )
+            next_month = (
+                current_start.replace(day=28) + timedelta(days=4)
+            ).replace(day=1)
             month_end = next_month - timedelta(days=1)
             ranges.append((current_start, min(month_end, end_date)))
             current_start = next_month
@@ -787,7 +850,9 @@ def build_category_filters(
 
     # Medium Category Filtering
     if medium_category_id and medium_category_id != NONE_CATEGORY:
-        filters &= Q(categories__medium_statistic_category_id=medium_category_id)
+        filters &= Q(
+            categories__medium_statistic_category_id=medium_category_id
+        )
     elif medium_category_id == NONE_CATEGORY:
         filters &= Q(categories__medium_statistic_category__isnull=True)
 
@@ -835,7 +900,8 @@ def get_total_durations(durations, is_tag_page=False, tag_ids=[]):
         total_duration = durations.aggregate(
             total=Sum(
                 ExpressionWrapper(
-                    (F("effective_paused") - F("started_at")) * F("related_tag_count"),
+                    (F("effective_paused") - F("started_at"))
+                    * F("related_tag_count"),
                     output_field=DurationField(),
                 )
             )
@@ -918,7 +984,11 @@ def percentage_calculation_of_duration(total_sec, duration_sec):
     if not total_sec or not duration_sec:
         return 0
     percent_per_total_duration = (duration_sec / total_sec) * 100
-    return round(percent_per_total_duration) if percent_per_total_duration > 1 else 0
+    return (
+        round(percent_per_total_duration)
+        if percent_per_total_duration > 1
+        else 0
+    )
 
 
 def process_team_categories(
@@ -1106,7 +1176,9 @@ def normalize_percentages(items, percent_field="percent", id_field="id"):
     if not active_items:
         return items
 
-    sorted_items = sorted(active_items, key=lambda x: x[percent_field], reverse=True)
+    sorted_items = sorted(
+        active_items, key=lambda x: x[percent_field], reverse=True
+    )
 
     # Step 2: Floor and collect remainders
     percent_map = {}  # id -> floored percent

@@ -263,10 +263,8 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
                 user, company, organization
             )
         if "get_organization_for_my_statistic" in request.query_params:
-            if not organizations:
-                organizations = get_all_organizations(company, organizations)
             response_data["my_statistics"] = get_data_organization_my_statistic(
-                user, organizations, company
+                user, company
             )
         if "get_user_setting" in request.query_params:
             response_data["user_setting"] = get_user_setting(user)

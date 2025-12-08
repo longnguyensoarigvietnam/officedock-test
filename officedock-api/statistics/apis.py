@@ -830,32 +830,30 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
         if not organization_id:
             raise NotFound()
 
-        organizations = [
-            Organization.all_objects.filter(id=organization_id).first()
-        ]
-        if not organizations[0]:
+        organization = Organization.all_objects.filter(
+            id=organization_id
+        ).first()
+        if not organization:
             raise NotFound(ERROR_MESSAGES["organization_not_exists"])
         if user_ids_param:
             users = User.objects.filter(
                 id__in=split_id_from_string(user_ids_param)
             )
         else:
-            orgs = (
-                organizations
+            org = (
+                organization
                 if not organization_get_members_id
-                else [
-                    get_object_or_404(
-                        Organization, id=organization_get_members_id
-                    )
-                ]
+                else get_object_or_404(
+                    Organization, id=organization_get_members_id
+                )
             )
             task_user_ids = list(
                 PeopleInChargeTasks.objects.filter(
-                    task__organization__in=orgs
+                    task__organization=org
                 ).values_list("user_id", flat=True)
             )
             users = User.objects.filter(
-                Q(id__in=task_user_ids) | Q(organizations__in=orgs)
+                Q(id__in=task_user_ids) | Q(organizations=org)
             ).distinct()
 
         start_of_day = datetime.combine(from_date, time.min)
@@ -868,7 +866,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
             start_of_day,
             end_of_day,
             users,
-            organizations=organizations,
+            organizations=[organization],
             tags=tag_ids,
         )
         total_duration = get_total_durations(durations)
@@ -885,6 +883,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
             TaskCategoryTypes.LARGE.value,
             durations=durations,
             is_with_users=True,
+            organization=organization,
         )
         # Process medium categories if large_category_id is provided
         if large_category_id:
@@ -1048,6 +1047,7 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
             total_duration,
             is_with_users=True,
             durations=durations,
+            organization=organization,
         )
 
         if large_category_id:
@@ -1224,11 +1224,19 @@ class OrganizationStatisticViewSet(BaseAPIViewSet):
             medium_id=medium_category_id,
             small_id=small_category_id,
         )
-
-        user_serialized_map = {
-            user.id: BaseUserProfileSerializer(user).data
-            for user in users.select_related("profile")
-        }
+        users_in_org = organization.users.values_list("id", flat=True)
+        user_serialized_map = {}
+        for user in users.select_related("profile"):
+            user_serialized_map[user.id] = BaseUserProfileSerializer(user).data
+            # Add unassigned tag behind user name
+            if (
+                users_in_org
+                and user.id not in users_in_org
+                and not user.deleted_at
+            ):
+                user_serialized_map[user.id]["full_name"] += KEYWORDS[
+                    "unassigned"
+                ]
         total_duration_by_range = {}
         for index, (start, end) in enumerate(ranges):
             start_date_min = datetime.combine(start, time.min)
@@ -1406,7 +1414,9 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
         Returns a list of statistic all team.
         """
         user = request.user
-        main_organization_id = request.query_params.get("main_organization_id")
+        main_organization_id = request.query_params.get(
+            "main_organization_id", None
+        )
         main_organization = (
             get_object_or_404(Organization, id=main_organization_id)
             if main_organization_id
@@ -1457,6 +1467,7 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                     tag_ids,
                     durations=durations,
                     organization_ids=organization_ids,
+                    user=user if not main_organization_id else None,
                 )
                 if tag_list:
                     data["large_categories"] = process_team_tags(
@@ -1470,6 +1481,7 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                 total_duration = get_total_durations(durations)
                 category_list = aggregate_durations(
                     durations=durations,
+                    user=user if not main_organization_id else None,
                 )
                 # Process large categories
                 if category_list:
@@ -1548,16 +1560,27 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
         end_of_day = datetime.combine(end_date, time.max)
         calendar_org = user.company.get_calendar_organization()
         user_list = None
+        users_in_org = None
         if not user_ids:
             users = [user]
         else:
+            users_in_org = main_organization.users.values_list("id", flat=True)
             users = User.objects.filter(
                 id__in=split_id_from_string(user_ids)
             ).all()
             if users:
-                user_list = BaseUserProfileSerializer(
-                    users.select_related("profile"), many=True
-                ).data
+                user_list = []
+                for user in users.select_related("profile"):
+                    data = BaseUserProfileSerializer(user).data
+                    # Add unassigned tag behind user name
+                    if (
+                        users_in_org
+                        and user.id not in users_in_org
+                        and user.deleted_at is None
+                    ):
+                        data["full_name"] += KEYWORDS["unassigned"]
+
+                    user_list.append(data)
 
         # Get all org ids include team not assigned
         organization_ids = get_all_organization_id(users)
@@ -1667,6 +1690,8 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                 if user_ids and option:
                     for subteam in all_subteams:
                         for user in user_list:
+                            if users_in_org and user["id"] not in users_in_org:
+                                continue
                             team["users"].append(
                                 self.build_user_duration_object(
                                     user,
