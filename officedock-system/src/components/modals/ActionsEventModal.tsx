@@ -1916,39 +1916,6 @@ const ActionsEventModal = ({
                           </div>
                         )}
                     </div>
-
-                    <div className="w-12">
-                      {!isDisabled &&
-                        watch('repeatType') &&
-                        (watch('repeatType') as OptionDropdownType)?.label !=
-                          TaskRepetitiveType.ONCE && (
-                          <Button
-                            sz="sm"
-                            variant="outline"
-                            className="w-12 h-[34px] hover:opacity-70 !border-none !px-0 !rounded-md text-[13px] !bg-[#EBF1F7]"
-                            type="button"
-                            name="Remove TagId"
-                            onClick={() => {
-                              setValue('repeatType', undefined, {
-                                shouldDirty: true,
-                              });
-                              setValue('repeatInterval', undefined, {
-                                shouldDirty: true,
-                              });
-                              setValue('weekDay', undefined, {
-                                shouldDirty: true,
-                              });
-                              setValue('monthDay', undefined, {
-                                shouldDirty: true,
-                              });
-                              setValue('month', undefined, {
-                                shouldDirty: true,
-                              });
-                            }}>
-                            削除
-                          </Button>
-                        )}
-                    </div>
                   </div>
                 </div>
               </div>
