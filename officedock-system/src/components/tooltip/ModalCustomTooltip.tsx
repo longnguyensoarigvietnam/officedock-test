@@ -135,7 +135,7 @@ const ModalCustomTooltip = ({
                               String(item.organizationId),
                             )
                           }
-                          className="flex items-center justify-center gap-2 bg-white text-[#77858F] text-xs font-normal h-[34px] rounded-md no-underline ">
+                          className="flex items-center justify-center gap-2 bg-white text-[#77858F] text-xs font-normal h-[34px] rounded-md no-underline hover:cursor-pointer ">
                           <span>タスクを見る</span>
                           <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full text-[#77858F]">
                             <ImageRound
@@ -214,7 +214,7 @@ const ModalCustomTooltip = ({
                     handleClickTooltip &&
                       handleClickTooltip(id as number, organizationId);
                   }}
-                  className="flex items-center justify-center gap-2 bg-white text-[#77858F] text-xs font-normal h-[34px] rounded-md no-underline ">
+                  className="flex items-center justify-center gap-2 bg-white text-[#77858F] text-xs font-normal h-[34px] rounded-md no-underline hover:cursor-pointer ">
                   <span>タスクを見る</span>
                   <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full text-[#77858F]">
                     <ImageRound

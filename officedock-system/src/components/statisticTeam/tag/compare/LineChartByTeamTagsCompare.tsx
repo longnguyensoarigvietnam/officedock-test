@@ -560,7 +560,7 @@ const LineChartByTeamTagsCompare = ({
           id: 0,
           fullName: EVERYONE_OPTION_LABEL,
           avatarUrl: '',
-          color: '#0065B6',
+          color: '#228CDB',
         },
         ...allLabelUser.map((user) => {
           return {
