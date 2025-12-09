@@ -337,15 +337,20 @@ const TaskListStatisticTeamTags = ({
                 ? listMemberTeam.map((member) => (
                     <div
                       key={member.id}
+                      onClick={() => {
+                        setCurrentPage(1);
+                        setSelectedMember(member.id);
+                      }}
                       className="flex items-center gap-2 cursor-pointer">
                       <div className="w-4">
                         <Checkbox
                           isChecked={selectedMember === member.id}
+                          disable={selectedMember == member.id}
                           onChange={() => {
                             setCurrentPage(1);
                             setSelectedMember(member.id);
                           }}
-                          classSize="!rounded-full"
+                          classSize="!rounded-full !opacity-100"
                         />
                       </div>
                       <div className="relative top-[2px]">
@@ -363,15 +368,20 @@ const TaskListStatisticTeamTags = ({
                 : orderingOptions?.user_ids.map((member) => (
                     <div
                       key={member.value}
+                      onClick={() => {
+                        setCurrentPage(1);
+                        setSelectedMember(member.value as number);
+                      }}
                       className="flex items-center gap-2 cursor-pointer">
                       <div className="w-4">
                         <Checkbox
                           isChecked={selectedMember === member.value}
+                          disable={selectedMember == member.value}
                           onChange={() => {
                             setCurrentPage(1);
                             setSelectedMember(member.value as number);
                           }}
-                          classSize="!rounded-full"
+                          classSize="!rounded-full !opacity-100"
                         />
                       </div>
                       <div className="relative top-[2px]">

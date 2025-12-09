@@ -15,6 +15,7 @@ import '../styles/task-list-statistic.css';
 import { Table, TableBody } from '@components/common/Table';
 import ImageRound from '@components/common/ImageRound';
 import SingleSelect from '@components/common/SingleSelect';
+import TagListInfo from '@components/custom/TagListInfo';
 
 import {
   EventCalendarType,
@@ -38,7 +39,6 @@ import {
 import api from '@base/api';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { StatisticStateContext } from '@providers/StatisticProvider';
-import TagListInfo from '@components/custom/TagListInfo';
 
 interface TableChartProps {
   pageSize: number;
@@ -318,7 +318,7 @@ const TableChart = ({
 
         return (
           <div
-            className="flex gap-1 items-center justify-center"
+            className="flex gap-1 items-center justify-center cursor-pointer"
             onClick={() => {
               if (ordering === OrderingDataType.TOTAL_DURATION) {
                 setOrdering('');
@@ -932,7 +932,7 @@ const TableChart = ({
                     minWidth: header.getSize(),
                     maxWidth: header.getSize(),
                   }}
-                  className={`py-[12px] !px-0 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
+                  className={`py-[12px] !px-0  ${index !== 0 ? 'border-l' : ''}`}
                   onClick={header.column.getToggleSortingHandler()}>
                   {flexRender(
                     header.column.columnDef.header,

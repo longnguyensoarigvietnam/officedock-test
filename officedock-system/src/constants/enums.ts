@@ -133,6 +133,7 @@ export enum MessageType {
   ADD_MEMBER_TASK = 'ADD_MEMBER_TASK',
   SUBMIT_LEVEL_SKILL = 'SUBMIT_LEVEL_SKILL',
   CREATE_SUBMIT_LEVEL_SKILL = 'CREATE_SUBMIT_LEVEL_SKILL',
+  UNASSIGNED_MEMBER_TO_TASK = 'UNASSIGNED_MEMBER_TO_TASK',
 }
 export enum SocketActions {
   MESSAGE = 'MESSAGE',
@@ -603,7 +604,7 @@ export enum HierarchyType {
 export enum AddCategoryHierarchyType {
   INPUT = 'input',
   PULLDOWN = 'pulldown',
-  TEXT = 'text'
+  TEXT = 'text',
 }
 export enum LevelUpConditionBy {
   NUMBER_OF_TIMES = 'NUMBER_OF_TIMES',

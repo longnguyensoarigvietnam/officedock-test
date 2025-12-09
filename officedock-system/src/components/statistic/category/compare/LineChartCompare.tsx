@@ -902,7 +902,7 @@ const LineChartCompare = ({
               <ImageRound
                 name="Check task"
                 src={'/icons/check-task.svg'}
-                className="w-[10px] h-2"
+                className="w-[10px] h-2 cursor-default"
               />
             </div>{' '}
             <p className="text-[#77858F] font-medium text-xs text-left">
@@ -921,7 +921,7 @@ const LineChartCompare = ({
               <ImageRound
                 name="Check task"
                 src={'/icons/check-task.svg'}
-                className="w-[10px] h-2"
+                className="w-[10px] h-2 cursor-default"
               />
             </div>
             <div className="flex flex-col items-start gap-2 w-[calc(100%_-20px)]">
