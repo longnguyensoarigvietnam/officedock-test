@@ -560,11 +560,22 @@ def get_common_categories(category, obj=None):
     deleted_type = None
 
     if obj:
+        filters = Q(organization_id=obj.organization_id)
+        if category.large_statistic_category:
+            filters &= Q(
+                large_statistic_category=category.large_statistic_category
+            )
+        if category.medium_statistic_category:
+            filters &= Q(
+                medium_statistic_category=category.medium_statistic_category
+            )
+        if category.small_statistic_category:
+            filters &= Q(
+                small_statistic_category=category.small_statistic_category
+            )
+
         org_cate = OrganizationsStatisticCategories.objects.filter(
-            organization_id=obj.organization_id,
-            large_statistic_category=category.large_statistic_category,
-            medium_statistic_category=category.medium_statistic_category,
-            small_statistic_category=category.small_statistic_category,
+            filters
         ).first()
         if org_cate:
             color = org_cate.color
@@ -614,11 +625,23 @@ def get_common_categories_with_none_category(
 
     if obj:
         organization_type = obj.organization.type
+
+        filters = Q(organization_id=obj.organization_id)
+        if category.large_statistic_category:
+            filters &= Q(
+                large_statistic_category=category.large_statistic_category
+            )
+        if category.medium_statistic_category:
+            filters &= Q(
+                medium_statistic_category=category.medium_statistic_category
+            )
+        if category.small_statistic_category:
+            filters &= Q(
+                small_statistic_category=category.small_statistic_category
+            )
+
         org_cate = OrganizationsStatisticCategories.objects.filter(
-            organization_id=obj.organization_id,
-            large_statistic_category=category.large_statistic_category,
-            medium_statistic_category=category.medium_statistic_category,
-            small_statistic_category=category.small_statistic_category,
+            filters
         ).first()
         if org_cate:
             color = org_cate.color

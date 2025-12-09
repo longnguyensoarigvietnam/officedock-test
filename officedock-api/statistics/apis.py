@@ -40,7 +40,6 @@ from common.utils import (
     time_str_to_timedelta,
     split_id_from_string,
     validate_company_organization,
-    get_signed_url,
 )
 from organizations.constants import OrganizationTypes
 from organizations.models import Organization, OrganizationsStatisticCategories
@@ -1909,7 +1908,7 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
         data = {
             "id": user["id"],
             "full_name": f"{org_name} {user['full_name']}",
-            "avatar": get_signed_url(user["avatar"], 3600),
+            "avatar": user["avatar"],
             "avatar_color": user["avatar_color"],
             "total_duration": format_duration(user_duration),
             "percent": percent,
