@@ -1,6 +1,6 @@
 'use client';
 import { Fragment, useContext, useEffect, useState } from 'react';
-import { useMutation } from 'react-query';
+import { useMutation, useQueryClient } from 'react-query';
 import { AxiosError } from 'axios';
 
 import { Table, TableBody, TableHeader } from '@components/common/Table';
@@ -38,6 +38,7 @@ import api from '@base/api';
 
 const HiddenListOrganizations = () => {
   const { data: session } = useSessionCache();
+  const queryClient = useQueryClient();
 
   const { setIsLoading } = useContext(LoadingContext);
   const showErrorToast = useErrorToast();
@@ -129,6 +130,9 @@ const HiddenListOrganizations = () => {
         refetchOrganizationList();
       }
       setOpenConfirmRestoreModal(false);
+      queryClient.invalidateQueries({
+        predicate: (query) => query.queryKey[0] === 'getTeamList',
+      });
     },
     onError: (error: AxiosError<any>) => {
       showErrorToast(error, ERROR_RESTORE_MESSAGE);

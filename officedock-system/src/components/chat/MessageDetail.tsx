@@ -1238,6 +1238,15 @@ export const MessageDetail = ({
                                           </span>
                                           があなたのタスクカードを削除しました。
                                         </p>
+                                      ) : messageDetail.type ==
+                                        MessageType.UNASSIGNED_MEMBER_TO_TASK ? (
+                                        <p className="w-full">
+                                          <span className="text-[#228CDB] w-fit">
+                                            {' '}
+                                            {messageDetail.sender.fullName}
+                                          </span>
+                                          があなたのタスクカードを担当者未定に移動しました。
+                                        </p>
                                       ) : (
                                         TASK_DELETED
                                       )}

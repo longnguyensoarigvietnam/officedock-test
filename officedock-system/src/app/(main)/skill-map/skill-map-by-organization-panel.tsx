@@ -466,8 +466,9 @@ export const SkillMapByOrganizationPanel = ({
                               skillMapDetail.isDeleted ||
                               (skill.skill.deletedAt && !isMyPage) ||
                               !isMyOrg
-                            )
+                            ) {
                               return;
+                            }
 
                             if (settingSkillAction === ActionsModal.CREATE) {
                               onOpenConfirmSettingSkillInfo &&

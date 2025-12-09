@@ -576,7 +576,7 @@ const LineChart = ({
               <ImageRound
                 name="Check task"
                 src={'/icons/check-task.svg'}
-                className="w-[10px] h-2"
+                className="w-[10px] h-2 cursor-default"
               />
             </div>{' '}
             <p className="text-[#77858F] font-medium text-xs text-left">
@@ -595,7 +595,7 @@ const LineChart = ({
               <ImageRound
                 name="Check task"
                 src={'/icons/check-task.svg'}
-                className="w-[10px] h-2"
+                className="w-[10px] h-2 cursor-default"
               />
             </div>{' '}
             <p className="break-words max-w-[calc(100%_-_20px)]">{value}</p>{' '}

@@ -317,7 +317,7 @@ const TableChart = ({
 
         return (
           <div
-            className="flex gap-1 items-center justify-center"
+            className="flex gap-1 items-center justify-center cursor-pointer"
             onClick={() => {
               if (ordering === OrderingDataType.TOTAL_DURATION) {
                 setOrdering('');
@@ -905,7 +905,7 @@ const TableChart = ({
                     minWidth: header.getSize(),
                     maxWidth: header.getSize(),
                   }}
-                  className={`py-[12px] !px-0 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
+                  className={`py-[12px] !px-0 ${index !== 0 ? 'border-l' : ''}`}
                   onClick={header.column.getToggleSortingHandler()}>
                   {flexRender(
                     header.column.columnDef.header,

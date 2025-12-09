@@ -7,7 +7,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { useMutation } from 'react-query';
+import { useMutation, useQueryClient } from 'react-query';
 import { AxiosError } from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -57,6 +57,7 @@ import api from '@base/api';
 
 const ListOrganizations = () => {
   const { data: session } = useSessionCache();
+  const queryClient = useQueryClient();
 
   const { setIsLoading } = useContext(LoadingContext);
   const showErrorToast = useErrorToast();
@@ -263,6 +264,9 @@ const ListOrganizations = () => {
         refetchOrganizationList();
       }
       setOpenConfirmDeleteModal(false);
+      queryClient.invalidateQueries({
+        predicate: (query) => query.queryKey[0] === 'getTeamList',
+      });
     },
     onError: (error: AxiosError<any>) => {
       showErrorToast(error, ERROR_DELETE_MESSAGE);
@@ -618,7 +622,7 @@ const ListOrganizations = () => {
                                 return updatedOrganizations;
                               });
                             } else {
-                              handleOpenDeleteOrganizationModal(element)
+                              handleOpenDeleteOrganizationModal(element);
                             }
                             setSelectedOrganizationToUpdate({
                               uuid: '',

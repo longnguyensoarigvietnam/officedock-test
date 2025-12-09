@@ -202,6 +202,35 @@ const Sidebar = ({ className }: Props) => {
           ),
         })),
       ]);
+      if (selectedOrganization) {
+        let changeOrganization = {
+          label: '',
+          value: '',
+        };
+        const mainOrganization = teamList?.find(
+          (organization) => organization.isMain,
+        );
+        if (mainOrganization) {
+          changeOrganization = {
+            label: mainOrganization.name,
+            value: String(mainOrganization.id),
+          };
+        } else {
+          if (teamList?.length && teamList?.length > 0) {
+            changeOrganization = {
+              label: teamList[0].name,
+              value: String(teamList[0].id),
+            };
+          }
+        }
+        setSelectedOrganization({
+          label: changeOrganization.label,
+          value: changeOrganization.value,
+          imgComponent: organizationList.find(
+            (org) => org.value == changeOrganization.value,
+          )?.imgComponent,
+        });
+      }
     },
   });
 
