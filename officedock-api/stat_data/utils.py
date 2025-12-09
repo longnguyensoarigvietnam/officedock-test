@@ -33,7 +33,7 @@ from common.constants import (
 from common.models import Category
 from common.utils import (
     format_duration,
-    get_deleted_name_skill,
+    get_deleted_statistic_category_name,
     time_str_to_timedelta,
 )
 from organizations.constants import CategoryColors
@@ -359,7 +359,7 @@ def aggregate_durations(
             deleted_type = org_cat_map[org_cat_key]["deleted_type"]
 
         if category:
-            category_name = get_deleted_name_skill(
+            category_name = get_deleted_statistic_category_name(
                 category,
                 deleted_type,
                 type_value or ScheduleCategoryTypes.LARGE.value,

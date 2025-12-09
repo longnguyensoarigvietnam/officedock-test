@@ -36,7 +36,7 @@ from common.constants import BASE_DATE_FORMAT
 from common.models import Category
 from common.utils import (
     format_duration,
-    get_deleted_name_skill,
+    get_deleted_statistic_category_name,
     time_str_to_timedelta,
     split_id_from_string,
     validate_company_organization,
@@ -303,7 +303,7 @@ class StatisticViewSet(BaseAPIViewSet):
                         category_formatted.append(
                             {
                                 "id": cate_obj.id,
-                                "name": get_deleted_name_skill(
+                                "name": get_deleted_statistic_category_name(
                                     cate_obj, deleted_type, type_value
                                 ),
                                 "type": type_value,

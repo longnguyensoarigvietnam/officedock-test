@@ -535,7 +535,7 @@ def get_large_statistic_category_color(task):
     return [
         {
             "id": None,
-            "name": get_deleted_name_skill(
+            "name": get_deleted_statistic_category_name(
                 cate_obj, deleted_type, ScheduleCategoryTypes.LARGE.value
             ),
             "color": color,
@@ -592,14 +592,16 @@ def get_common_categories(category, obj=None):
             continue
 
         is_large_cate = type_value == ScheduleCategoryTypes.LARGE.value
+        is_hidden = get_is_statistic_category_hidden(deleted_type, type_value)
         results.append(
             {
                 "id": cate_obj.id,
-                "name": get_deleted_name_skill(
-                    cate_obj, deleted_type, type_value
+                "name": get_deleted_statistic_category_name(
+                    cate_obj, is_hidden=is_hidden
                 ),
                 "color": color if is_large_cate else None,
                 "type": type_value,
+                "is_hidden": is_hidden,
             }
         )
 
@@ -657,15 +659,17 @@ def get_common_categories_with_none_category(
             continue
 
         is_large_cate = type_value == ScheduleCategoryTypes.LARGE.value
+        is_hidden = get_is_statistic_category_hidden(deleted_type, type_value)
         if cate_obj := getattr(category, attr):
             formatted.append(
                 {
                     "id": cate_obj.id,
-                    "name": get_deleted_name_skill(
-                        cate_obj, deleted_type, type_value
+                    "name": get_deleted_statistic_category_name(
+                        cate_obj, is_hidden=is_hidden
                     ),
                     "color": color if is_large_cate else None,
                     "type": type_value,
+                    "is_hidden": is_hidden,
                 }
             )
         else:
@@ -675,6 +679,7 @@ def get_common_categories_with_none_category(
                     "name": NONE_CATEGORY,
                     "color": color if is_large_cate else None,
                     "type": type_value,
+                    "is_hidden": is_hidden,
                 }
             )
     return formatted
@@ -1176,7 +1181,26 @@ def get_deleted_name(obj, key="name"):
     return value if obj.deleted_at is None else f"{value}{KEYWORDS['deleted']}"
 
 
-def get_deleted_name_skill(
+def get_is_statistic_category_hidden(deleted_type=None, type_value=None):
+    """
+    Return deleted name of skill
+    """
+
+    LEVEL_ORDER = {
+        ScheduleCategoryTypes.LARGE.value: 3,
+        ScheduleCategoryTypes.MEDIUM.value: 2,
+        ScheduleCategoryTypes.SMALL.value: 1,
+    }
+
+    is_hidden = False
+
+    if deleted_type and type_value:
+        is_hidden = LEVEL_ORDER[type_value] <= LEVEL_ORDER[deleted_type]
+
+    return is_hidden
+
+
+def get_deleted_statistic_category_name(
     obj, deleted_type=None, type_value=None, is_hidden=None
 ):
     """

@@ -15,7 +15,7 @@ from common.constants import AVATAR_GCS_EXPIRATION_SECONDS
 from common.utils import (
     compare_categories,
     get_deleted_name,
-    get_deleted_name_skill,
+    get_deleted_statistic_category_name,
     get_signed_url,
 )
 from roles.constants import Actions, Screens
@@ -73,7 +73,7 @@ class BaseStatisticCategorySerializer(serializers.ModelSerializer):
 
     def get_name(self, obj):
         is_hidden = self.context.get("is_hidden")
-        return get_deleted_name_skill(obj, is_hidden=is_hidden)
+        return get_deleted_statistic_category_name(obj, is_hidden=is_hidden)
 
 
 class StatisticCategoryForHierarchySerializer(serializers.ModelSerializer):
