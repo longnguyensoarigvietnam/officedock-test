@@ -218,6 +218,23 @@ class ScheduleSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id"]
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+
+        if recurring := instance.recurring:
+            fields = [
+                "start_date",
+                "end_date",
+                "repeat_type",
+                "repeat_interval",
+                "week_day",
+                "month_day",
+                "month",
+            ]
+            for field in fields:
+                representation[field] = recurring.get(field)
+        return representation
+
     def get_categories(self, obj):
         """Handle retrieving categories of a Task."""
         return get_common_categories(obj.categories.first(), obj)
