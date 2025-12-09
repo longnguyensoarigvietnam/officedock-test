@@ -25,9 +25,21 @@ const HiddenCategoryPage = () => {
       showFooter={false}>
       <div className="flex justify-between mb-5">
         <div className="flex gap-5 items-center">
-          <p className="text-black font-medium text-[26px] leading-[1]">
-            業務カテゴリー設定
-          </p>
+          <div className="flex items-center gap-[10px]">
+            <p className="text-black font-medium text-[26px] leading-[1]">
+              業務カテゴリー設定
+            </p>
+            <div className="flex items-center">
+              <ImageRound
+                name="Hide"
+                src={'/icons/dark-close-eye.svg'}
+                className="w-[16px] h-[13px] hover:cursor-pointer"
+              />
+              <p className="ml-1 text-[#77858F] font-medium text-xs">
+                非表示一覧
+              </p>
+            </div>
+          </div>
           <div className="flex gap-[6px] bg-white w-fit p-[6px] rounded-[20px]">
             <Button
               variant="primary"
