@@ -16,6 +16,7 @@ export type SwitchProps = {
   customTranslate?: string;
   sizeClassName?: string;
   toggleClassName?: string;
+  labelClassName?: string
   onChange?: (status: boolean) => void;
 };
 const Switch = ({
@@ -30,6 +31,7 @@ const Switch = ({
   customTranslate,
   sizeClassName,
   toggleClassName,
+  labelClassName,
   onChange,
 }: SwitchProps) => {
   const [enabled, setEnabled] = useState(enable);
@@ -63,7 +65,7 @@ const Switch = ({
             pointer-events-none inline-block h-[18px] mt-[2px] w-[18px] transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${toggleClassName}`}
           />
         </SwitchUI>
-        <div className={`switch-label flex gap-1 hover:cursor-pointer`}>
+        <div className={`switch-label flex gap-1 hover:cursor-pointer ${labelClassName}`}>
           <Label htmlFor={id} className="font-medium">
             {label}
           </Label>

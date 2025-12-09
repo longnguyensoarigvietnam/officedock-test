@@ -201,9 +201,9 @@ const CategoryStepRaw = ({
                 control={control}
                 name={
                   `${stepKey}.rawCategories.${index}.${size}` as
-                    | `step1.rawCategories.${number}.${SizeKey}`
-                    | `step2.rawCategories.${number}.${SizeKey}`
-                    | `step3.rawCategories.${number}.${SizeKey}`
+                  | `step1.rawCategories.${number}.${SizeKey}`
+                  | `step2.rawCategories.${number}.${SizeKey}`
+                  | `step3.rawCategories.${number}.${SizeKey}`
                 }
                 render={({ field: { value, onChange }, fieldState }) => {
                   let optionsData: OptionDropdownType[] = [];
@@ -244,8 +244,8 @@ const CategoryStepRaw = ({
                           selectedOption={
                             value?.value
                               ? optionsData.find(
-                                  (element) => element.value === value?.value,
-                                ) || value
+                                (element) => element.value === value?.value,
+                              ) || value
                               : undefined
                           }
                           onChange={(e) => {
@@ -293,6 +293,7 @@ const CategoryStepRaw = ({
                                       initialMediumCategory.push({
                                         label: mediumCategory.MEDIUM.name,
                                         value: mediumCategory.MEDIUM.id,
+                                        isHidden: mediumCategory.MEDIUM.isHidden
                                       });
                                     }
                                   },
@@ -303,8 +304,8 @@ const CategoryStepRaw = ({
                                 [stepKey]: prev[stepKey].map((item, i) =>
                                   i === index
                                     ? initialMediumCategory.filter(
-                                        (item) => item.value !== '',
-                                      )
+                                      (item) => item.value !== '' && !item.isHidden,
+                                    )
                                     : item,
                                 ),
                               }));
@@ -331,9 +332,9 @@ const CategoryStepRaw = ({
                               const selectedMediumCategoryOption =
                                 selectedLargeCategoryOption
                                   ? selectedLargeCategoryOption?.MEDIUM.find(
-                                      (category) =>
-                                        category.MEDIUM.id == e.value,
-                                    )
+                                    (category) =>
+                                      category.MEDIUM.id == e.value,
+                                  )
                                   : null;
 
                               const initialSmallCategory: OptionDropdownType[] =
@@ -356,6 +357,7 @@ const CategoryStepRaw = ({
                                         initialSmallCategory.push({
                                           label: smallCategory.name,
                                           value: smallCategory.id,
+                                          isHidden: smallCategory.isHidden
                                         });
                                       }
                                     },
@@ -367,8 +369,8 @@ const CategoryStepRaw = ({
                                 [stepKey]: prev[stepKey].map((item, i) =>
                                   i === index
                                     ? initialSmallCategory.filter(
-                                        (item) => item.value !== '',
-                                      )
+                                      (item) => item.value !== '' && !item.isHidden,
+                                    )
                                     : item,
                                 ),
                               }));
