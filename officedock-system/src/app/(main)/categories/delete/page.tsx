@@ -24,14 +24,14 @@ const HiddenCategoryPage = () => {
       className="px-10 py-[30px] !overflow-x-auto !bg-[#F3F3F3]"
       showFooter={false}>
       <div className="flex justify-between mb-5">
-        <div className="flex gap-4 items-center">
+        <div className="flex gap-5 items-center">
           <p className="text-black font-medium text-[26px] leading-[1]">
             業務カテゴリー設定
           </p>
-          <div className="flex gap-2 bg-white w-fit p-[6px] rounded-[20px]">
+          <div className="flex gap-[6px] bg-white w-fit p-[6px] rounded-[20px]">
             <Button
               variant="primary"
-              className={`w-[128px] !p-0 text-xs h-[28px] !font-bold text-white border-none !rounded-[20px]`}>
+              className={`w-[140px] !p-0 text-xs h-[28px] !font-bold text-white border-none !rounded-[20px]`}>
               社内共通カテゴリー
             </Button>
             {session?.user.permissions &&
@@ -42,7 +42,7 @@ const HiddenCategoryPage = () => {
                 <Link href={pageRouters.TEAM_CATEGORY_MANAGEMENT.href}>
                   <Button
                     variant="outline"
-                    className={`w-[128px] !p-0 text-xs h-[28px] !font-bold !text-[#77858F] !bg-[#EBF1F7] border-none !rounded-[20px]`}>
+                    className={`w-[140px] !p-0 text-xs h-[28px] !font-bold !text-[#77858F] !bg-[#EBF1F7] border-none !rounded-[20px]`}>
                     チームカテゴリー
                   </Button>
                 </Link>

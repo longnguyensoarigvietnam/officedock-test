@@ -254,6 +254,10 @@
   border-left: none !important;
   border: 1.5px solid #E6F3FB;
 }
+.calendar-custom.month .fc-theme-standard td {
+  border-left: none !important;
+  border: 0px solid #E6F3FB;
+}
 .calendar-custom .fc-theme-standard td:last-child,
 .calendar-custom .fc-theme-standard th:last-child {
   border-right: none !important;

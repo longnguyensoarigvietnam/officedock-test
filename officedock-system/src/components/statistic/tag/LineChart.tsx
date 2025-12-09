@@ -288,6 +288,7 @@ const LineChart = ({
           font: {
             size: 14,
             weight: 500,
+            family: 'Noto Sans JP, sans-serif',
           },
           padding: 15,
           callback: function (this: { chart: any }, index: number) {
@@ -334,6 +335,7 @@ const LineChart = ({
           font: {
             size: 14,
             weight: 500,
+            family: 'Noto Sans JP, sans-serif',
           },
           padding: 15,
           stepSize: 10,
@@ -403,7 +405,7 @@ const LineChart = ({
           if (
             index === normalizeDataObject.durations.length - 1 &&
             String(normalizeDataObject.durations.at(-1)?.endDate) !=
-              String(normalizeDataObject.durations.at(-1)?.startDate)
+            String(normalizeDataObject.durations.at(-1)?.startDate)
           ) {
             const endDate = normalizeDataObject.durations.at(-1)?.endDate;
             if (endDate) {
@@ -427,7 +429,7 @@ const LineChart = ({
               if (
                 index === normalizeDataObject.durations.length - 1 &&
                 String(normalizeDataObject.durations.at(-1)?.endDate) !=
-                  String(normalizeDataObject.durations.at(-1)?.startDate)
+                String(normalizeDataObject.durations.at(-1)?.startDate)
               ) {
                 existing.data[index + 1] = {
                   x: durationDetail.endDate,
@@ -551,7 +553,7 @@ const LineChart = ({
           if (
             index === normalizeDataObject.durations.length - 1 &&
             String(normalizeDataObject.durations.at(-1)?.endDate) !=
-              String(normalizeDataObject.durations.at(-1)?.startDate)
+            String(normalizeDataObject.durations.at(-1)?.startDate)
           ) {
             const endDate = normalizeDataObject.durations.at(-1)?.endDate;
             if (endDate) {
@@ -578,7 +580,7 @@ const LineChart = ({
               if (
                 index === normalizeDataObject.durations.length - 1 &&
                 String(normalizeDataObject.durations.at(-1)?.endDate) !=
-                  String(normalizeDataObject.durations.at(-1)?.startDate)
+                String(normalizeDataObject.durations.at(-1)?.startDate)
               ) {
                 existing.data[index + 1] = {
                   x: durationDetail.endDate,
@@ -853,9 +855,8 @@ const LineChart = ({
         <ImageRound
           src="/icons/extend-calendar.svg"
           name="Extend calendar"
-          className={`!w-[14px] !h-[14px] hover:cursor-pointer ${
-            isExtendData ? '-rotate-90' : 'rotate-90'
-          }`}
+          className={`!w-[14px] !h-[14px] hover:cursor-pointer ${isExtendData ? '-rotate-90' : 'rotate-90'
+            }`}
           onClick={() => {
             setIsExtendData(!isExtendData);
           }}
@@ -1043,8 +1044,8 @@ const LineChart = ({
           </div>
           {(isFetchingStatisticTaskDurationsListTag &&
             selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
-          (isFetchingStatisticAllTeamTaskDurationsList &&
-            selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
+            (isFetchingStatisticAllTeamTaskDurationsList &&
+              selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
             <RowSkeleton
               numberOfRows={1}
               className={`!h-[395px] w-[calc(100%_-_60px)] mx-auto`}
@@ -1059,10 +1060,10 @@ const LineChart = ({
                   labels: lineChartData?.labels.length
                     ? lineChartData?.labels
                     : getStatisticMilestones(
-                        `${formatDateToYMD(startDate)}`,
-                        `${formatDateToYMD(endDate || '')}`,
-                        lineChartViewBy?.value as StatisticViewOptions,
-                      ),
+                      `${formatDateToYMD(startDate)}`,
+                      `${formatDateToYMD(endDate || '')}`,
+                      lineChartViewBy?.value as StatisticViewOptions,
+                    ),
                 }}
                 options={options}
               />
@@ -1076,8 +1077,8 @@ const LineChart = ({
           <div className="px-[30px]">
             {(!isFetchingStatisticTaskDurationsListTag &&
               selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
-            (!isFetchingStatisticAllTeamTaskDurationsList &&
-              selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
+              (!isFetchingStatisticAllTeamTaskDurationsList &&
+                selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
               <div className="flex gap-8 items-center justify-end flex-wrap">
                 {standardLabelsInfo.map((label, index) => {
                   return (
@@ -1098,8 +1099,8 @@ const LineChart = ({
 
             {(isFetchingStatisticTaskDurationsListTag &&
               selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
-            (isFetchingStatisticAllTeamTaskDurationsList &&
-              selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
+              (isFetchingStatisticAllTeamTaskDurationsList &&
+                selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
               <StatisticLineChartTableSkeleton />
             ) : (
               <Table

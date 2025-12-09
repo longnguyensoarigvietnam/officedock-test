@@ -2405,7 +2405,7 @@ const EventCalendar = () => {
                       }
                       className={`${
                         searchParams.get('view') == ViewOptions.WEEK
-                          ? 'pt-[20px] -mt-2'
+                          ? 'pt-[20px] -mt-3'
                           : `${
                               authenticatedUser
                                 ? 'mt-[60px] pt-[10px]'
