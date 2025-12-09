@@ -538,7 +538,7 @@ class TaskViewSet(
             "sender": user,
             "company": user.company,
             "task": task,
-            "type": ChatMessageTypes.CREATION_TASK.value,
+            "type": task_action or ChatMessageTypes.CREATION_TASK.value,
             "organization": task.organization,
         }
         current_people = [
@@ -1270,7 +1270,7 @@ class TaskViewSet(
                         request.user,
                         task,
                         task.people_in_charge,
-                        ChatMessageTypes.REMOVE_TASK.value,
+                        ChatMessageTypes.UNASSIGNED_MEMBER_TO_TASK.value,
                     )
                 task.people_in_charge.clear()
                 # Delete index for task if change people in charge
