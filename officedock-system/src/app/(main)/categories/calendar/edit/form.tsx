@@ -151,7 +151,7 @@ const TableComponent = ({
     {
       accessorKey: HierarchyType.LARGE,
       header: () => (
-        <div className="flex justify-between px-5">
+        <div className="flex justify-between pl-[18px] pr-[14px]">
           <p>大カテゴリー</p>
           <p>{uniqueLargeCount}</p>
         </div>
@@ -160,7 +160,7 @@ const TableComponent = ({
     {
       accessorKey: HierarchyType.MEDIUM,
       header: () => (
-        <div className="flex justify-between px-5">
+        <div className="flex justify-between px-[14px]">
           <p>中カテゴリー</p>
           <p>{uniqueMediumCount}</p>
         </div>
@@ -1084,12 +1084,12 @@ const TableComponent = ({
 
   return (
     <div
-      className="w-full p-5 bg-[#F8FAFC] rounded-[30px]"
+      className="w-full p-[30px] bg-[#F8FAFC] rounded-[30px]"
       style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
-      <p className="text-[#77858F] text-[16px] font-medium my-2 max-w-[100%] break-all">
+      <p className="text-[#77858F] text-[16px] font-medium mb-[30px] max-w-[100%] break-all">
         {hierarchyDetail.name}
       </p>
-      <Table className="w-full h-full bg-white !rounded-[10px]">
+      <Table className="w-full h-full bg-white !rounded-[10px]" classCustom='!py-0'>
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>

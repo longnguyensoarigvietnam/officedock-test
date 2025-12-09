@@ -71,6 +71,7 @@ import {
 } from '@interfaces/calendar';
 import { OptionDropdownType } from '@interfaces/common';
 import { Profile } from '@interfaces/user';
+import { CalendarCategoryInfo } from '@interfaces/hierarchy';
 
 import { useToast } from '@providers/ToastProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
@@ -323,17 +324,17 @@ const EventCalendar = () => {
       if (data.organizationUsers) {
         eventOrganizationsSideBar = data.organizationUsers
           ? data.organizationUsers.map((org) => ({
-              id: `${EventParticipantType.ORGANIZATION}-${org.id}`,
-              fullName: org.name,
-              type: EventParticipantType.ORGANIZATION,
-              userIds: org.users
-                ? org.users
-                    .filter((item) => !item.deletedAt)
-                    .map((user) => user.id)
-                : [],
-              color: org.iconColor || '#228CDB',
-              avatarUrl: org.icon || '',
-            }))
+            id: `${EventParticipantType.ORGANIZATION}-${org.id}`,
+            fullName: org.name,
+            type: EventParticipantType.ORGANIZATION,
+            userIds: org.users
+              ? org.users
+                .filter((item) => !item.deletedAt)
+                .map((user) => user.id)
+              : [],
+            color: org.iconColor || '#228CDB',
+            avatarUrl: org.icon || '',
+          }))
           : [];
         setDataOptionsOrganizations([
           ...data.organizationUsers.map((org) => ({
@@ -350,8 +351,8 @@ const EventCalendar = () => {
             fullName: org.name,
             userIds: org.users
               ? org.users
-                  .filter((item) => !item.deletedAt)
-                  .map((user) => user.id)
+                .filter((item) => !item.deletedAt)
+                .map((user) => user.id)
               : [],
             color: org.iconColor || '#228CDB',
             avatarUrl: org.icon || '',
@@ -716,13 +717,13 @@ const EventCalendar = () => {
       const isMySchedule =
         eventContent.event.extendedProps?.participants.length > 0
           ? eventContent.event.extendedProps?.participants.find(
-              (participant: {
-                id: number;
-                fullName: string;
-                avatarColor: string;
-                avatar: string | null;
-              }) => participant.id == session?.user.id,
-            )
+            (participant: {
+              id: number;
+              fullName: string;
+              avatarColor: string;
+              avatar: string | null;
+            }) => participant.id == session?.user.id,
+          )
           : false;
       const timeText = eventContent.timeText?.replace(' - ', '~') || '';
 
@@ -1071,15 +1072,15 @@ const EventCalendar = () => {
   ) => {
     let updatedUserIds: number[] = selectedScheduleUserIds
       ? selectedScheduleUserIds
-          .split(',')
-          .filter(Boolean)
-          .map((id) => Number(id))
+        .split(',')
+        .filter(Boolean)
+        .map((id) => Number(id))
       : [];
     let updatedOrgIds: number[] = selectedScheduleOrgIds
       ? selectedScheduleOrgIds
-          .split(',')
-          .filter(Boolean)
-          .map((id) => Number(id))
+        .split(',')
+        .filter(Boolean)
+        .map((id) => Number(id))
       : [];
     const isUser = member.type === EventParticipantType.USER;
     const isOrganization = member.type === EventParticipantType.ORGANIZATION;
@@ -1319,6 +1320,12 @@ const EventCalendar = () => {
           ...data,
           startDate: data.repeatSchedules.planStartDate,
           endDate: data.repeatSchedules.planEndDate,
+          categories:
+            actionType === ActionsEvent.COPY
+              ? Array.isArray(data?.categories)
+                ? data.categories.filter((category: CalendarCategoryInfo) => !category.isHidden)
+                : []
+              : data?.categories ?? []
         });
       },
       onError: (error: AxiosError) => {
@@ -1330,7 +1337,7 @@ const EventCalendar = () => {
           handleRemoveEventParam();
         }
       },
-      onSettled: () => {},
+      onSettled: () => { },
     },
   );
 
@@ -1673,16 +1680,16 @@ const EventCalendar = () => {
                 }) => {
                   const dataEndDate =
                     schedule.planStartDate &&
-                    schedule.planEndDate &&
-                    ((new Date(schedule.planStartDate).toDateString() !==
-                      new Date(schedule.planEndDate).toDateString() &&
-                      data.isAllDay) ||
-                      isMidnight(new Date(schedule.planEndDate)))
+                      schedule.planEndDate &&
+                      ((new Date(schedule.planStartDate).toDateString() !==
+                        new Date(schedule.planEndDate).toDateString() &&
+                        data.isAllDay) ||
+                        isMidnight(new Date(schedule.planEndDate)))
                       ? (() => {
-                          const newDate = new Date(schedule.planEndDate);
-                          newDate.setDate(newDate.getDate() + 1);
-                          return newDate; // return Date object
-                        })()
+                        const newDate = new Date(schedule.planEndDate);
+                        newDate.setDate(newDate.getDate() + 1);
+                        return newDate; // return Date object
+                      })()
                       : schedule.planEndDate;
                   return {
                     id: `${schedule.id}`,
@@ -1696,6 +1703,8 @@ const EventCalendar = () => {
                     location: data.location,
                     participants: data.participants,
                     selectOrganizations: data?.selectOrganizations || [],
+                    eventStart: schedule.planStartDate,
+                    eventEnd: dataEndDate,
                     resourceIds: [
                       ...(data.participants
                         ?.filter(
@@ -1709,6 +1718,7 @@ const EventCalendar = () => {
                         ? [Number(session?.user.id)]
                         : []),
                     ],
+                    repeatType: data.repeatType
                   };
                 },
               );
@@ -2235,11 +2245,10 @@ const EventCalendar = () => {
               <div className="ml-4 flex items-baseline font-normal gap-[6px]">
                 {searchParams.get('view') != ViewOptions.DAY && (
                   <p
-                    className={`${
-                      searchParams.get('view') == ViewOptions.YEAR
-                        ? 'text-[20px]'
-                        : 'text-[14px]'
-                    } text-[#5B6770] font-medium`}>
+                    className={`${searchParams.get('view') == ViewOptions.YEAR
+                      ? 'text-[20px]'
+                      : 'text-[14px]'
+                      } text-[#5B6770] font-medium`}>
                     {displayYear}年
                   </p>
                 )}
@@ -2398,23 +2407,21 @@ const EventCalendar = () => {
               <>
                 {(searchParams.get('view') == ViewOptions.WEEK ||
                   searchParams.get('view') == ViewOptions.DAY) && (
-                  <div className="absolute top-0 left-0 z-[15] w-full overflow-hidden">
-                    <CalendarSkeleton
-                      numberOfResources={
-                        searchParams.get('view') == ViewOptions.WEEK ? 7 : 2
-                      }
-                      className={`${
-                        searchParams.get('view') == ViewOptions.WEEK
+                    <div className="absolute top-0 left-0 z-[15] w-full overflow-hidden">
+                      <CalendarSkeleton
+                        numberOfResources={
+                          searchParams.get('view') == ViewOptions.WEEK ? 7 : 2
+                        }
+                        className={`${searchParams.get('view') == ViewOptions.WEEK
                           ? 'pt-[20px] -mt-3'
-                          : `${
-                              authenticatedUser
-                                ? 'mt-[60px] pt-[10px]'
-                                : 'mt-[-30px] pt-[20px]'
-                            } pl-[15px]`
-                      }`}
-                    />
-                  </div>
-                )}
+                          : `${authenticatedUser
+                            ? 'mt-[60px] pt-[10px]'
+                            : 'mt-[-30px] pt-[20px]'
+                          } pl-[15px]`
+                          }`}
+                      />
+                    </div>
+                  )}
               </>
             )}
             <FullCalendar
@@ -2603,7 +2610,7 @@ const EventCalendar = () => {
             />
             {watch('calendarView') &&
               watch('calendarView').value !=
-                CalendarViewOptions.VIEW_BY_MONTH &&
+              CalendarViewOptions.VIEW_BY_MONTH &&
               watch('calendarView').value != CalendarViewOptions.VIEW_BY_YEAR &&
               !isEventRendering && (
                 <div
@@ -2973,7 +2980,7 @@ const EventCalendar = () => {
               status: false,
               info: null,
             });
-            if (String(data.repeatType) != TaskRepetitiveValue.ONCE) {
+            if (data.repeatType && String(data.repeatType) != TaskRepetitiveValue.ONCE) {
               setEventActionType(EventActionType.THIS_EVENT);
               setOpenEventActionTypeModal({
                 status: true,

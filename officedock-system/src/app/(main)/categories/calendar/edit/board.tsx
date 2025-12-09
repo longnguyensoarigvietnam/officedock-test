@@ -282,7 +282,7 @@ const EditHierarchyBoard = () => {
     <div className="flex flex-col h-full">
       <div className="sticky z-[21] top-[0px] px-10 pt-8 pb-3 bg-[#E6F3FB]">
         <div className="flex justify-between mb-5">
-          <div className="flex gap-5 items-center">
+          <div className="flex gap-4 items-center">
             <p className="text-black font-medium text-[26px] leading-[1]">
               業務カテゴリー設定
             </p>
@@ -329,6 +329,8 @@ const EditHierarchyBoard = () => {
             <Switch
               sizeClassName="!w-[48px] !h-[28px]"
               toggleClassName="!w-5 !h-5 !ml-[2px]"
+              className="!gap-0"
+              labelClassName="!gap-0"
               enableColor="#228CDB"
               disableColor="#CDD7DC"
               enable={isHiddenList}
@@ -339,7 +341,7 @@ const EditHierarchyBoard = () => {
           </div>
         </div>
 
-        <div className="flex justify-end gap-[10px] items-center">
+        <div className="flex justify-end gap-3 items-center">
           <Link href={pageRouters.CALENDAR_CATEGORY_MANAGEMENT.href}>
             <Button
               variant="outline"

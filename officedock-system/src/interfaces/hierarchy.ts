@@ -183,3 +183,10 @@ export interface CalendarHierarchyCategoryUpdatePayload {
     type: StatisticCategoryType | null;
   }[];
 }
+export interface CalendarCategoryInfo {
+  id: number,
+  color: string | null,
+  isHidden: boolean,
+  name: string,
+  type: StatisticCategoryType
+}

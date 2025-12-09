@@ -443,6 +443,8 @@ const EditHierarchyForm = () => {
             <Switch
               sizeClassName="!w-[48px] !h-[28px]"
               toggleClassName="!w-5 !h-5 !ml-[2px]"
+              className="!gap-0"
+              labelClassName="!gap-0"
               enableColor="#228CDB"
               disableColor="#CDD7DC"
               enable={isHiddenList}
