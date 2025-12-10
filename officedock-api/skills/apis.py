@@ -1,5 +1,5 @@
 from django.db import transaction
-from django.db.models import Q, Case, Prefetch, When, Value, IntegerField
+from django.db.models import F, Q, Case, Prefetch, When, Value, IntegerField
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, OpenApiParameter
@@ -389,7 +389,11 @@ class SkillMapViewSet(
                     output_field=IntegerField(),
                 )
             )
-            .order_by("-deleted_at", "-assigned")
+            .order_by(
+                F("deleted_at").asc(nulls_first=True),
+                "-assigned",
+                "-created_at",
+            )
         )
 
         if organization_id:
@@ -408,7 +412,12 @@ class SkillMapViewSet(
                         output_field=IntegerField(),
                     )
                 )
-                .order_by("priority", "-deleted_at", "-assigned")
+                .order_by(
+                    "priority",
+                    F("deleted_at").asc(nulls_first=True),
+                    "-assigned",
+                    "-created_at",
+                )
             )
 
             # Get all users in the organization (not deleted)
@@ -532,7 +541,11 @@ class SkillMapViewSet(
                     output_field=IntegerField(),
                 )
             )
-            .order_by("-assigned")
+            .order_by(
+                F("deleted_at").asc(nulls_first=True),
+                "-assigned",
+                "-created_at",
+            )
         )
 
         if organization_id:

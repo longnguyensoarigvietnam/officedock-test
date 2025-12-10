@@ -2,9 +2,6 @@
 
 from django.db import migrations, models
 from shop_items.constants import ItemDefaultEnums, ItemTypes
-from shop_items.management.commands.seed_data_shop_items import (
-    seed_shop_items_data,
-)
 
 
 def generate_unique_key(apps, schema_editor):
@@ -46,5 +43,4 @@ class Migration(migrations.Migration):
             name="key",
             field=models.CharField(max_length=255, null=False, unique=True),
         ),
-        migrations.RunPython(seed_shop_items_data, migrations.RunPython.noop),
     ]
