@@ -595,6 +595,12 @@ class TaskViewSet(
                 user=user,
                 message_data=message_data,
             )
+        elif task_action == ChatMessageTypes.ASSIGNED_MEMBER_TO_TASK.value:
+            self._send_chat_message(
+                participants=list(set(people_in_charges)),
+                user=user,
+                message_data=message_data,
+            )
         else:
             self._send_chat_message(
                 participants=current_people,
@@ -1278,11 +1284,17 @@ class TaskViewSet(
             elif people_in_charge:
                 # Handle send to chat when in teamdock
                 if current_screen == Screens.TEAMDOCK.value:
+                    # Check case assign member to task
+                    chat_msg_type = ChatMessageTypes.EDIT_TASK.value
+                    if not task.people_in_charge.exists():
+                        chat_msg_type = (
+                            ChatMessageTypes.ASSIGNED_MEMBER_TO_TASK.value
+                        )
                     self._send_to_chat(
                         request.user,
                         task,
                         [people_in_charge],
-                        ChatMessageTypes.EDIT_TASK.value,
+                        chat_msg_type,
                     )
 
                 task.people_in_charge.set(
