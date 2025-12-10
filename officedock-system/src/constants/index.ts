@@ -541,12 +541,30 @@ export const SYSTEM_TWEET_NAME = 'OFFICE DOCK';
 export const VOTING_BONUS_POINT = 200;
 
 export const REMAINING_ORGANIZATIONS_ID = 'remaining';
-export const listAvatar = [
+export const DEFAULT_AVATAR_ITEM = [
   { name: 'body', type: ItemAvatarType.BODY, url: '' },
-  { name: 'head-full', type: 'head', url: '' },
   { name: 'hat', type: ItemAvatarType.HAT, url: '' },
+  { name: 'demo-item', type: ItemAvatarType.ITEM, url: '' },
   { name: 'shoes', type: ItemAvatarType.SHOES, url: '' },
 ];
+export const DEFAULT_THUMB_ITEM = [
+  {
+    name: 'body',
+    type: ItemAvatarType.BODY,
+    url: '/images/users/thumb/thumb-body.png',
+  },
+  {
+    name: 'hat',
+    type: ItemAvatarType.HAT,
+    url: '/images/users/thumb/thumb-hat.png',
+  },
+  {
+    name: 'shoes',
+    type: ItemAvatarType.SHOES,
+    url: '/images/users/thumb/thumb-shoes.png',
+  },
+];
+
 export const JAPANESE_TIME_ZONE = 'Asia/Tokyo';
 
 export const STATISTIC_MAX_PERCENTAGE = 100;

@@ -21,6 +21,7 @@ export interface ShopItem {
   isAllOwned: boolean;
   itemType: string;
   items: ItemUser[];
+  thumb?: string;
 }
 export interface AvatarItemUser {
   name: string;

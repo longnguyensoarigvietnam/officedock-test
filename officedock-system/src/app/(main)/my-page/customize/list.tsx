@@ -23,6 +23,7 @@ import api from '@base/api';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 import BackToPage from '@components/custom/BackToPage';
+import { getDefaultThumbByType } from '@utils';
 
 const CustomizeItemPage = () => {
   const router = useRouter();
@@ -235,7 +236,10 @@ const CustomizeItemPage = () => {
                       listItemCustomize.map((item, index) => (
                         <ItemPreviewCustomize
                           key={`${index}${activeTab}`}
-                          group={item}
+                          group={{
+                            ...item,
+                            thumb: getDefaultThumbByType(item.itemType) || '',
+                          }}
                           handleWearDataItem={handleWearDataItem}
                         />
                       ))}
