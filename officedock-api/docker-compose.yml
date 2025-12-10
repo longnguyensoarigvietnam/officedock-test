@@ -34,7 +34,7 @@ services:
       - office_dock_network_default
 
   db:
-    image: postgres:12
+    image: postgres:15
     container_name: db
     ports:
       - "5432:5432"
