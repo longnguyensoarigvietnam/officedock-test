@@ -1,5 +1,5 @@
 import datetime
-from django.contrib.auth.base_user import get_random_string
+from django.utils.crypto import get_random_string
 from datetime import timezone
 from django.db.models import Q
 from django.utils.timezone import now
