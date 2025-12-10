@@ -2299,7 +2299,7 @@ const DailyReportDetailBoard = () => {
               boxShadow: '0px 4px 10px 0px #0000000D',
             }}
             className="w-[262px] flex-shrink-0 px-5 bg-[#F8FAFC] h-[calc(100vh_-_260px)] rounded-[30px] daily-custom  overflow-y-auto">
-            <p className=" pt-[30px] mb-2">スケジュール実績</p>
+            <p className=" pt-[30px] mb-2 text-[#77858F]">スケジュール実績</p>
             <FullCalendar
               ref={calendarRef}
               plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}

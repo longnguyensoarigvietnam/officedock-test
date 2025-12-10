@@ -311,7 +311,7 @@ const ChatSettingModal = memo(
               .map((member) => {
                 return (
                   <div
-                    className={`flex items-center justify-between gap-2 py-2 px-5 hover:cursor-pointer hover:bg-[#EBF1F7]`}
+                    className={`flex items-center justify-between gap-2 py-2 px-5  hover:bg-[#EBF1F7]`}
                     key={member.id}>
                     <div className="flex gap-[10px] items-center">
                       {renderAvatar(member.id)}

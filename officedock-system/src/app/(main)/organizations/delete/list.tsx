@@ -202,7 +202,7 @@ const HiddenListOrganizations = () => {
                         <ImageRound
                           name="Hide"
                           src={'/icons/dark-close-eye.svg'}
-                          className={`w-[16px] h-[13px] hide-icon`}
+                          className={`w-[16px] h-[13px] cursor-pointer hide-icon`}
                           onClick={() =>
                             handleOpenRestoreOrganizationModal(element)
                           }

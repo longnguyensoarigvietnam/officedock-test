@@ -511,7 +511,7 @@ const BookmarkList = ({
               <ImageRound
                 name="Save"
                 src={`/icons/save-white.svg`}
-                className="w-[14px] h-[18px] hover:cursor-pointer"
+                className="w-[14px] h-[18px]"
               />
             </div>
             <p
@@ -542,7 +542,7 @@ const BookmarkList = ({
                 <>
                   <div>
                     <ImageRound
-                      className="w-[26px] h-[26px] hover:cursor-pointer"
+                      className="w-[26px] h-[26px]"
                       src="/icons/setting-chat.svg"
                       border="full"
                       name="Setting icon"

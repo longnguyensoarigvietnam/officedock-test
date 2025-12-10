@@ -256,7 +256,7 @@ export const MessageDetailBookmark = ({
               <div
                 key={`${index}-${i}-task`}
                 id={taskId}
-                className="flex mb-2 items-center w-full rounded-[6px] min-h-[42px] border border-[#D2DBE1] bg-white px-4 gap-3 hover:cursor-pointer">
+                className="flex mb-2 items-center w-full rounded-[6px] min-h-[42px] border border-[#D2DBE1] bg-white px-4 gap-3 ">
                 <ImageRound
                   className="w-[14px] h-[14px]"
                   name="Task icon"
@@ -560,7 +560,7 @@ export const MessageDetailBookmark = ({
                     <ImageRound
                       name="Save"
                       src={`/icons/save-active.svg`}
-                      className="w-[10px] h-[12px] relative top-[2px] hover:cursor-pointer"
+                      className="w-[10px] h-[12px] relative top-[2px] "
                     />
                   )}
                 </div>
@@ -580,7 +580,7 @@ export const MessageDetailBookmark = ({
                   <div className="flex flex-col">
                     {messageDetail.deletedAt ? (
                       <p
-                        className={`font-normal text-sm hover:cursor-pointer -ml-1 p-1 rounded-[5px] text-gray-600 italic bg-[#f0f1f1] w-[220px]`}>
+                        className={`font-normal text-sm  -ml-1 p-1 rounded-[5px] text-gray-600 italic bg-[#f0f1f1] w-[220px]`}>
                         {MESSAGE_DELETED}
                       </p>
                     ) : (
@@ -827,7 +827,7 @@ export const MessageDetailBookmark = ({
                                 className={`text-sm font-normal bg-[#eaf8ff] p-1`}>
                                 <div className={`flex flex-col items-start`}>
                                   <p
-                                    className={`font-normal w-[500px]  text-sm hover:cursor-pointer text-start -ml-1 p-1 rounded-[5px] text-gray-600 italic`}>
+                                    className={`font-normal w-[500px]  text-sm  text-start -ml-1 p-1 rounded-[5px] text-gray-600 italic`}>
                                     {TASK_DELETED}
                                   </p>
                                 </div>
@@ -889,7 +889,7 @@ export const MessageDetailBookmark = ({
                     <ImageRound
                       name="Save"
                       src={`/icons/save-active.svg`}
-                      className="w-[10px] h-[12px]  hover:cursor-pointer"
+                      className="w-[10px] h-[12px]"
                     />
                   )}
                 </div>
@@ -909,14 +909,14 @@ export const MessageDetailBookmark = ({
                   <div className="flex flex-col">
                     {messageDetail.deletedAt ? (
                       <p
-                        className={`font-normal text-sm hover:cursor-pointer -ml-1 p-1 rounded-[5px] text-gray-600 italic bg-[#f0f1f1] w-[220px]`}>
+                        className={`font-normal text-sm  -ml-1 p-1 rounded-[5px] text-gray-600 italic bg-[#f0f1f1] w-[220px]`}>
                         {MESSAGE_DELETED}
                       </p>
                     ) : (
                       <div>
                         {messageDetail.type === MessageType.MESSAGE && (
                           <p
-                            className={`text-chat-box font-normal text-sm hover:cursor-pointer max-w-[750px] -ml-1 p-1 rounded-[5px]  `}
+                            className={`text-chat-box font-normal text-sm  max-w-[750px] -ml-1 p-1 rounded-[5px]  `}
                             dangerouslySetInnerHTML={{
                               __html: messageDetail.message,
                             }}></p>
@@ -961,7 +961,7 @@ export const MessageDetailBookmark = ({
                                 className={`text-sm font-normal bg-[#eaf8ff] p-1`}>
                                 <div className={`flex flex-col items-end`}>
                                   <p
-                                    className={`font-normal w-[500px]  text-sm hover:cursor-pointer text-start -ml-1 p-1 rounded-[5px] text-gray-600 italic`}>
+                                    className={`font-normal w-[500px]  text-sm  text-start -ml-1 p-1 rounded-[5px] text-gray-600 italic`}>
                                     {TASK_DELETED}
                                   </p>
                                 </div>
@@ -1010,7 +1010,7 @@ export const MessageDetailBookmark = ({
                     <ImageRound
                       name="Save"
                       src={`/icons/save-active.svg`}
-                      className="w-[10px] h-[12px] hover:cursor-pointer"
+                      className="w-[10px] h-[12px]"
                     />
                   )}
                 </div>
@@ -1031,7 +1031,7 @@ export const MessageDetailBookmark = ({
                     {messageDetail.deletedAt ||
                     (!messageDetail.submitLevel && !messageDetail.message) ? (
                       <p
-                        className={`font-normal text-sm hover:cursor-pointer -ml-1 p-1 rounded-[5px] text-gray-600 italic bg-[#f0f1f1] w-[220px]`}>
+                        className={`font-normal text-sm  -ml-1 p-1 rounded-[5px] text-gray-600 italic bg-[#f0f1f1] w-[220px]`}>
                         {messageDetail.type == MessageType.MESSAGE
                           ? MESSAGE_DELETED
                           : DELETED_SKILL_UP_MESSAGE}
@@ -1040,7 +1040,7 @@ export const MessageDetailBookmark = ({
                       <div>
                         {messageDetail.type === MessageType.MESSAGE && (
                           <p
-                            className={`text-chat-box font-normal text-sm hover:cursor-pointer !w-[100%] -ml-1 p-1 rounded-[5px]`}
+                            className={`text-chat-box font-normal text-sm  !w-[100%] -ml-1 p-1 rounded-[5px]`}
                             dangerouslySetInnerHTML={{
                               __html: messageDetail.message,
                             }}></p>
@@ -1113,7 +1113,7 @@ export const MessageDetailBookmark = ({
                     <ImageRound
                       name="Save"
                       src={`/icons/save-active.svg`}
-                      className="w-[10px] h-[12px]  hover:cursor-pointer"
+                      className="w-[10px] h-[12px]"
                     />
                   )}
                 </div>

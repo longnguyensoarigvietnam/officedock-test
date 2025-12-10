@@ -143,7 +143,9 @@ const HierarchyTable = ({
       <p className="text-[#77858F] text-[16px] font-medium mb-4 max-w-[100%] break-all">
         {hierarchyDetail.name}
       </p>
-      <Table className="w-full h-full bg-white !rounded-[10px]" tableClassName="!w-full !table-fixed">
+      <Table
+        className="w-full h-full bg-white !rounded-[10px]"
+        tableClassName="!w-full !table-fixed">
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
@@ -201,7 +203,7 @@ const HierarchyTable = ({
                       className={`pr-[14px] pl-[18px] h-full flex items-center gap-[14px] ${isHiddenLargeCategory && 'hidden'}`}>
                       <div className="relative">
                         <div
-                          className={`w-[14px] h-[14px] rounded-full hover:cursor-pointer ${isHiddenLargeCategory && 'hidden'}`}
+                          className={`w-[14px] h-[14px] rounded-full ${isHiddenLargeCategory && 'hidden'}`}
                           style={{ backgroundColor: `${row.original.color}` }}
                         />
                       </div>
@@ -236,7 +238,7 @@ const HierarchyTable = ({
                           }  `}>
                         <p
                           className={`text-sm max-w-full break-all font-medium py-5 leading-[1]`}>
-                        {row.original.medium.label || NO_OPTION_CATEGORY}
+                          {row.original.medium.label || NO_OPTION_CATEGORY}
                         </p>
                       </div>
                     )}
