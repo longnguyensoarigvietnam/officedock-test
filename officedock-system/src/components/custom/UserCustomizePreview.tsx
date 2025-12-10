@@ -126,7 +126,7 @@ export const RenderAccessoriesPreview = ({
           {!isFetchingCreationDataCommon &&
             itemsPreview.map((item, index) => (
               <SmoothImage
-                key={`${item.name}-${item.url}-${renderKey}`} // ✅ key luôn thay đổi khi itemsPreview đổi
+                key={`${item.name}-${item.url}-${renderKey}`} //
                 src={item.url || `/images/users/${item.name}.png`}
                 name={item.name}
                 className="absolute bottom-0 inset-0 w-full h-full object-contain pointer-events-none"
