@@ -316,11 +316,13 @@ def get_data_organization_my_statistic(user, company):
         .values_list("task__organization_id", flat=True)
         .distinct()
     )
-    user_org_ids = list(user.organizations.values_list("id", flat=True))
+    user_org_ids = list(user.organizations.values_list("id", flat=True)) + [
+        company.get_calendar_organization().id
+    ]
     all_org_ids = set(user_org_ids + task_org_ids)
 
     organizations = (
-        Organization.objects.filter(Q(id__in=all_org_ids))
+        Organization.all_objects.filter(Q(id__in=all_org_ids))
         .annotate(
             assigned=Case(
                 When(id__in=user_org_ids, then=Value(1)),
@@ -344,12 +346,7 @@ def get_data_organization_my_statistic(user, company):
         )
         data["is_deleted"] = bool(org.deleted_at) or not (org.assigned)
         orgs.append(data)
-    # Add calendar organization
-    orgs.append(
-        CreationDataOrganizationWithStructCategorySerializer(
-            company.get_calendar_organization(), context={"user": user}
-        ).data
-    )
+
     tags = (
         company.tags.filter(organizations__in=organizations)
         .order_by("-deleted_at")
