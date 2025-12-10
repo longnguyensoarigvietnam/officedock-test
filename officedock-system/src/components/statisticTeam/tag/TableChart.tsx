@@ -128,12 +128,12 @@ const TableChart = ({
           prev.map((task) =>
             task.id === data.id
               ? {
-                  ...task,
-                  categories:
-                    data.categories && data.categories.length > 0
-                      ? data.categories
-                      : DEFAULT_EMPTY_CATEGORY,
-                }
+                ...task,
+                categories:
+                  data.categories && data.categories.length > 0
+                    ? data.categories
+                    : DEFAULT_EMPTY_CATEGORY,
+              }
               : task,
           ),
         );
@@ -141,12 +141,12 @@ const TableChart = ({
           prev.map((task) =>
             task.id === data.id
               ? {
-                  ...task,
-                  categories:
-                    data.categories && data.categories.length > 0
-                      ? data.categories
-                      : DEFAULT_EMPTY_CATEGORY,
-                }
+                ...task,
+                categories:
+                  data.categories && data.categories.length > 0
+                    ? data.categories
+                    : DEFAULT_EMPTY_CATEGORY,
+              }
               : task,
           ),
         );
@@ -222,7 +222,7 @@ const TableChart = ({
         setIsLoading(false);
         showErrorToast(error, ERROR_UPDATE_MESSAGE);
       },
-      onSettled: () => {},
+      onSettled: () => { },
     },
   );
   //  Handle call api edit Event
@@ -249,9 +249,9 @@ const TableChart = ({
           prev.map((task) =>
             task.id === data.id
               ? {
-                  ...task,
-                  categories: data.categories,
-                }
+                ...task,
+                categories: data.categories,
+              }
               : task,
           ),
         );
@@ -259,9 +259,9 @@ const TableChart = ({
           prev.map((task) =>
             task.id === data.id
               ? {
-                  ...task,
-                  categories: data.categories,
-                }
+                ...task,
+                categories: data.categories,
+              }
               : task,
           ),
         );
@@ -337,7 +337,7 @@ const TableChart = ({
         setIsLoading(false);
         showErrorToast(error, ERROR_UPDATE_MESSAGE);
       },
-      onSettled: () => {},
+      onSettled: () => { },
     },
   );
 
@@ -494,8 +494,8 @@ const TableChart = ({
         const organization =
           selectedOrganization?.value === ALL_TEAM_STATISTIC
             ? creationDataCommonData?.organizationsOfAllTeamStatistic?.find(
-                (org) => org.id === rowData.organization,
-              )
+              (org) => org.id === rowData.organization,
+            )
             : creationDataStatisticData;
         const listOptionAllTeamOrg =
           creationDataCommonData?.organizationsOfAllTeamStatistic?.map(
@@ -522,8 +522,8 @@ const TableChart = ({
           // Get a list of Medium Categories if there is a Large Item
           const largeCategory = largeItem
             ? organization.statisticCategories.find(
-                (stat) => stat.LARGE?.id === largeItem.value,
-              )
+              (stat) => stat.LARGE?.id === largeItem.value,
+            )
             : null;
 
           if (largeCategory) {
@@ -538,8 +538,8 @@ const TableChart = ({
             // Get a list of Small Categories if there is a Medium Item
             const mediumCategory = mediumItem
               ? largeCategory.MEDIUM?.find(
-                  (medium) => medium.MEDIUM?.id === mediumItem.value,
-                )
+                (medium) => medium.MEDIUM?.id === mediumItem.value,
+              )
               : null;
 
             if (mediumCategory?.SMALL) {
@@ -562,18 +562,24 @@ const TableChart = ({
                 defaultValue={
                   selectedOrganization?.value === ALL_TEAM_STATISTIC
                     ? listOptionAllTeamOrg &&
-                      listOptionAllTeamOrg.find(
-                        (element) => element.value === rowData.organization,
-                      )
+                    listOptionAllTeamOrg.find(
+                      (element) => element.value === rowData.organization,
+                    ) || {
+                      label: rowData.organizationName,
+                      value: rowData.organization,
+                    }
                     : listOptionsOrganization &&
-                      listOptionsOrganization.find(
-                        (element) => element.value === rowData.organization,
-                      )
+                    listOptionsOrganization.find(
+                      (element) => element.value === rowData.organization,
+                    ) || {
+                      label: rowData.organizationName,
+                      value: rowData.organization,
+                    }
                 }
                 placeholder=""
                 showArrow={
                   rowData.organizationType !==
-                    OrganizationStatisticType.CALENDAR &&
+                  OrganizationStatisticType.CALENDAR &&
                   info.row.original.type === EventCalendarType.TASK
                 }
                 options={
@@ -581,45 +587,45 @@ const TableChart = ({
                     ? rowData.organizationType !==
                       OrganizationStatisticType.CALENDAR
                       ? listOptionAllTeamOrg?.filter(
-                          (org) =>
-                            org.label !== ALL_TEAM_STATISTIC &&
-                            org?.type !== OrganizationStatisticType.CALENDAR,
-                        )
-                      : listOptionAllTeamOrg?.filter(
-                          (org) => org.label !== ALL_TEAM_STATISTIC,
-                        )
-                    : listOptionsOrganization?.filter(
                         (org) =>
                           org.label !== ALL_TEAM_STATISTIC &&
                           org?.type !== OrganizationStatisticType.CALENDAR,
                       )
+                      : listOptionAllTeamOrg?.filter(
+                        (org) => org.label !== ALL_TEAM_STATISTIC,
+                      )
+                    : listOptionsOrganization?.filter(
+                      (org) =>
+                        org.label !== ALL_TEAM_STATISTIC &&
+                        org?.type !== OrganizationStatisticType.CALENDAR,
+                    )
                   )?.length
                     ? selectedOrganization?.label === ALL_TEAM_STATISTIC
                       ? rowData.organizationType !==
                         OrganizationStatisticType.CALENDAR
                         ? listOptionAllTeamOrg?.filter(
-                            (org) =>
-                              org.label !== ALL_TEAM_STATISTIC &&
-                              org?.type !== OrganizationStatisticType.CALENDAR,
-                          )
-                        : listOptionAllTeamOrg?.filter(
-                            (org) => org.label !== ALL_TEAM_STATISTIC,
-                          )
-                      : listOptionsOrganization?.filter(
                           (org) =>
                             org.label !== ALL_TEAM_STATISTIC &&
                             org?.type !== OrganizationStatisticType.CALENDAR,
                         )
+                        : listOptionAllTeamOrg?.filter(
+                          (org) => org.label !== ALL_TEAM_STATISTIC,
+                        )
+                      : listOptionsOrganization?.filter(
+                        (org) =>
+                          org.label !== ALL_TEAM_STATISTIC &&
+                          org?.type !== OrganizationStatisticType.CALENDAR,
+                      )
                     : [
-                        {
-                          label: rowData.organizationName,
-                          value: rowData.organization,
-                        },
-                      ]
+                      {
+                        label: rowData.organizationName,
+                        value: rowData.organization,
+                      },
+                    ]
                 }
                 isDisabled={
                   rowData.organizationType ===
-                    OrganizationStatisticType.CALENDAR ||
+                  OrganizationStatisticType.CALENDAR ||
                   info.row.original.type !== EventCalendarType.TASK
                 }
                 onChange={(e) => {
@@ -684,14 +690,14 @@ const TableChart = ({
                 defaultValue={
                   largeItem?.value
                     ? (largeCategories &&
-                        largeCategories.find(
-                          (element) => element.value === largeItem?.value,
-                        )) ||
-                      largeItem
+                      largeCategories.find(
+                        (element) => element.value === largeItem?.value,
+                      )) ||
+                    largeItem
                     : {
-                        value: NO_SETTING,
-                        label: NO_SETTING,
-                      }
+                      value: NO_SETTING,
+                      label: NO_SETTING,
+                    }
                 }
                 placeholder=""
                 options={removeDuplicateOptions(largeCategories)}
@@ -759,14 +765,14 @@ const TableChart = ({
                 defaultValue={
                   mediumItem?.value
                     ? (mediumCategories &&
-                        mediumCategories.find(
-                          (element) => element.value === mediumItem?.value,
-                        )) ||
-                      mediumItem
+                      mediumCategories.find(
+                        (element) => element.value === mediumItem?.value,
+                      )) ||
+                    mediumItem
                     : {
-                        value: NO_SETTING,
-                        label: NO_SETTING,
-                      }
+                      value: NO_SETTING,
+                      label: NO_SETTING,
+                    }
                 }
                 placeholder=""
                 showArrow={info.row.original.type === EventCalendarType.TASK}
@@ -841,14 +847,14 @@ const TableChart = ({
                 defaultValue={
                   smallItem?.value
                     ? (smallCategories &&
-                        smallCategories.find(
-                          (element) => element.value === smallItem?.value,
-                        )) ||
-                      smallItem
+                      smallCategories.find(
+                        (element) => element.value === smallItem?.value,
+                      )) ||
+                    smallItem
                     : {
-                        value: NO_SETTING,
-                        label: NO_SETTING,
-                      }
+                      value: NO_SETTING,
+                      label: NO_SETTING,
+                    }
                 }
                 placeholder=""
                 options={removeDuplicateOptions(smallCategories)}
@@ -939,18 +945,18 @@ const TableChart = ({
             id: Number(task.id),
             categories: task.categories
               ? task.categories.map((category) => {
-                  return {
-                    label: category.name,
-                    value: category.id,
-                    type: category.type,
-                  };
-                })
+                return {
+                  label: category.name,
+                  value: category.id,
+                  type: category.type,
+                };
+              })
               : [
-                  {
-                    label: '',
-                    value: '',
-                  },
-                ],
+                {
+                  label: '',
+                  value: '',
+                },
+              ],
             duration: task.totalDuration,
             name: task.title,
             type: task.type,

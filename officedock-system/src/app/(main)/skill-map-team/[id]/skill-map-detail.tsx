@@ -55,7 +55,7 @@ export const SkillMapDetailByUser = ({
         <ImageRound
           name="Lock treasure"
           src="/icons/lock-treasure.svg"
-          className="w-[51px] h-[40px] cursor-pointer"
+          className="w-[51px] h-[40px]"
         />
       );
     }
@@ -72,7 +72,7 @@ export const SkillMapDetailByUser = ({
         <ImageRound
           name={`Step ${step} treasure`}
           src={treasureIcons[step]}
-          className="w-[60px] h-[60px] cursor-pointer"
+          className="w-[60px] h-[60px]"
         />
       );
     }
@@ -88,7 +88,7 @@ export const SkillMapDetailByUser = ({
                   key={i}
                   name="Coin"
                   src={i < level ? '/icons/coin.svg' : '/icons/gray-coin.svg'}
-                  className="w-[14px] h-[14px] cursor-pointer"
+                  className="w-[14px] h-[14px]"
                 />
               ))}
             </div>
@@ -103,7 +103,7 @@ export const SkillMapDetailByUser = ({
                   src={
                     i < level ? '/icons/diamond.svg' : '/icons/gray-diamond.svg'
                   }
-                  className="w-[14px] h-[14px] cursor-pointer"
+                  className="w-[14px] h-[14px]"
                 />
               ))}
             </div>
@@ -116,7 +116,7 @@ export const SkillMapDetailByUser = ({
                   key={i}
                   name="Crown"
                   src={i < level ? '/icons/crown.svg' : '/icons/gray-crown.svg'}
-                  className="w-[14px] h-[14px] cursor-pointer"
+                  className="w-[14px] h-[14px]"
                 />
               ))}
             </div>
@@ -279,7 +279,7 @@ export const SkillMapDetailByUser = ({
                         return (
                           <div
                             key={skill.id ?? `${index}-${idx}`}
-                            className={`relative hover:cursor-pointer flex items-center ${isLast ? 'w-[calc(33.33333%_-_30px)]' : 'w-[calc(33.33333%_+_15px)]'}`}>
+                            className={`relative ${isLocked && 'hover:cursor-not-allowed'} flex items-center ${isLast ? 'w-[calc(33.33333%_-_30px)]' : 'w-[calc(33.33333%_+_15px)]'}`}>
                             {!skill.id ? (
                               <div className="px-5 h-[90px] bg-white w-full rounded-[14px]"></div>
                             ) : (
@@ -346,7 +346,7 @@ export const SkillMapDetailByUser = ({
                                       <ImageRound
                                         name="Comment"
                                         src={'/icons/comment.svg'}
-                                        className="w-[16px] h-[14px] cursor-pointer"
+                                        className="w-[16px] h-[14px]"
                                         onClick={(e) => {
                                           if (skillMap.isDeleted) return;
                                           e.stopPropagation();

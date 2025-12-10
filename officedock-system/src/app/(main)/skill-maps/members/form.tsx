@@ -94,7 +94,7 @@ export const SkillMapByMembersDetail = ({
               <ImageRound
                 name="Completed"
                 src={'/icons/completed.svg'}
-                className={`w-4 h-3 hover:cursor-pointer`}
+                className={`w-4 h-3`}
               />
             ) : (
               <div className="bg-[#D2DBE1] w-[16px] h-[2px]"></div>
