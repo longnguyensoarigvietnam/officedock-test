@@ -76,19 +76,19 @@ const DetailRoleTable = () => {
           )}
       </div>
       <div
-        className="bg-[#F8FAFC] rounded-[30px] p-5"
+        className="bg-[#F8FAFC] rounded-[30px] p-[30px]"
         style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
-        <p className="text-[#77858F] font-medium text-[16px] mb-5 break-all max-w-[100%]">
+        <p className="text-[#77858F] font-medium text-[16px] mb-[30px] break-all max-w-[100%]">
           {dataRoleDetail?.name}
         </p>
         <div className="flex flex-col h-[calc(100%_-_95px)] justify-between">
           <div
             className={`max-h-[calc(100vh_-_350px)] ring-1 ring-gray-200 overflow-x-auto rounded-lg bg-white`}>
             <div className=" bg-[#F8FAFC] flex w-full sticky top-0 z-10 rounded-tl-lg rounded-tr-lg ring-1 ring-gray-200 [&>div]:bg-[#F8FAFC]">
-              <div className="w-1/2 h-12 flex items-center justify-start pl-4 text-center text-[#77858F] border-r-[1px] font-medium text-xs">
+              <div className="w-1/2 h-12 flex items-center justify-start pl-[18px] text-center text-[#77858F] border-r-[1px] font-medium text-xs">
                 対応機能
               </div>
-              <div className="w-1/2 h-12 flex items-center justify-start pl-4 text-center text-[#77858F] border-r-[1px] font-medium text-xs">
+              <div className="w-1/2 h-12 flex items-center justify-start pl-[14px] text-center text-[#77858F] border-r-[1px] font-medium text-xs">
                 権限
               </div>
             </div>
@@ -104,12 +104,12 @@ const DetailRoleTable = () => {
                   <div
                     key={index}
                     className="flex w-full bg-white relative border-b-[1px]">
-                    <div className="w-1/2 flex items-center justify-start pl-4 py-3 border-r-[1px] text-[16px] font-medium">
+                    <div className="w-1/2 flex items-center justify-start pl-[18px] py-3 border-r-[1px] text-[16px] font-medium">
                       {SCREEN_LIST.find(
                         (screen) => screen.value == permission.screenName,
                       )?.name || ''}
                     </div>
-                    <div className="w-1/2 px-3 flex items-center justify-start py-3 border-r-[1px] text-sm font-medium">
+                    <div className="w-1/2 px-5 flex items-center justify-start py-3 border-r-[1px] text-sm font-medium">
                       {permission.actions || '-'}
                     </div>
                   </div>

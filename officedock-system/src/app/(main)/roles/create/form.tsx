@@ -178,7 +178,7 @@ const CreateRoleForm = () => {
         </div>
       </div>
       <form
-        className="bg-[#F8FAFC] rounded-[30px] p-5"
+        className="bg-[#F8FAFC] rounded-[30px] p-[30px]"
         style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
         <div className="mb-5">
           <div className="flex gap-2 items-center">
@@ -189,7 +189,7 @@ const CreateRoleForm = () => {
               required
               label=""
               placeholder="入力してください"
-              className={`!w-[220px] rounded-[6px] text-sm !h-[34px] !border-[1px] ${error ? '!border-error' : '!border-[#77858F]'} `}
+              className={`!w-[220px] !rounded-[6px] text-sm !h-[34px] !border-[1px] ${error ? '!border-error' : '!border-[#77858F]'} `}
               onChange={(e) => {
                 setRoleName(e.target.value);
                 if (e.target.value != '') {
@@ -205,10 +205,10 @@ const CreateRoleForm = () => {
         <div
           className={`max-h-[calc(100vh_-_320px)] ring-1 ring-gray-200 overflow-x-auto rounded-[10px] bg-white`}>
           <div className="flex bg-[#F8FAFC] w-full sticky top-0 z-10 rounded-tl-[10px] rounded-tr-[10px] ring-gray-200 [&>div]:border-b-[1px] [&>div]:border-[#D2DBE1] [&>div]:bg-[#F8FAFC] ">
-            <div className="w-1/2 h-12 flex items-center justify-start pl-4 text-[#77858F] font-medium text-xs border-r-[1px] border-[#D2DBE1]">
+            <div className="w-1/2 h-12 flex items-center justify-start pl-[18px] text-[#77858F] font-medium text-xs border-r-[1px] border-[#D2DBE1]">
               対応機能
             </div>
-            <div className="w-1/2 h-12 flex items-center justify-start pl-4 text-center text-[#77858F] font-medium text-xs">
+            <div className="w-1/2 h-12 flex items-center justify-start pl-[14px] text-center text-[#77858F] font-medium text-xs">
               権限
             </div>
           </div>
@@ -221,10 +221,10 @@ const CreateRoleForm = () => {
               <div
                 key={index}
                 className={`flex w-full bg-white relative ${index != rows.length - 1 && '[&>div]:border-b-[1px]'} [&>div]:border-[#D2DBE1]`}>
-                <div className="w-1/2 flex items-center sticky left-0 z-[9] bg-white justify-start px-3 border-r-[1px] border-[#D2DBE1] text-[16px] font-medium">
+                <div className="w-1/2 flex items-center sticky left-0 z-[9] bg-white justify-start px-[18px] border-r-[1px] border-[#D2DBE1] text-[16px] font-medium">
                   <div className="w-full">{row.screenLabel}</div>
                 </div>
-                <div className="w-1/2 px-3 z-[8] py-2">
+                <div className="w-1/2 px-[10px] z-[8] py-2">
                   <TableDropdown
                     className="w-full !h-10"
                     valueClassName="rounded-[6px] !border-[#77858F]"

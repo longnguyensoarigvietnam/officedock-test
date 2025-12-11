@@ -142,7 +142,7 @@ const ListRolesDelete = () => {
         <Table className="bg-white !rounded-[10px] relative table-fixed">
           <TableHeader className="!bg-[#F3F3F3]">
             <th className="text-left w-[calc(100%_-_220px)] max-w-[calc(100%_-_220px)]">
-              <span className="text-[#77858F] text-[12px] font-medium">
+              <span className="text-[#77858F] text-[12px] font-medium leading-[1]">
                 権限名
               </span>
             </th>
@@ -152,13 +152,13 @@ const ListRolesDelete = () => {
             {dataRoles && dataRoles.length ? (
               dataRoles.map((element, index) => (
                 <tr key={index} className="text-black">
-                  <td className="text-left w-[calc(100%_-_220px)] break-words max-w-[calc(100%_-_220px)]">
+                  <td className="text-left w-[calc(100%_-_220px)] break-words max-w-[calc(100%_-_220px)] !pl-[18px]">
                     <p className="break-all max-w-[100%] text-[16px] font-medium text-[#000000]">
                       {element.name}
                     </p>
                   </td>
                   <td className="w-[220px]">
-                    <div className="flex w-full gap-5 justify-end pr-3 items-center">
+                    <div className="flex w-full gap-5 justify-end pr-[10px] items-center">
                       <ImageRound
                         name="Hide"
                         src={'/icons/dark-close-eye.svg'}
@@ -167,7 +167,7 @@ const ListRolesDelete = () => {
                       />
                       <Link
                         href={pageRouters.DETAIL_ROLE.href(`${element.id}`)}>
-                        <div className="flex gap-1 items-center">
+                        <div className="flex gap-[6px] items-center">
                           <p className="text-sm font-medium text-[#77858F]">
                             詳細を確認する
                           </p>

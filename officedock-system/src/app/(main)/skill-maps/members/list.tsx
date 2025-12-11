@@ -121,7 +121,7 @@ const ListSkillsMapByMembers = () => {
           <Link href={pageRouters.EDIT_SKILL_MAPS_MEMBERS.href}>
             <Button
               variant="primary"
-              className={`w-[100px] !p-0 text-xs h-[34px] text-white border-none`}
+              className={`w-[100px] !p-0 text-sm h-[34px] text-white border-none`}
               style={{ boxShadow: '0px 1px 5px 0px #00000033' }}>
               編集
             </Button>

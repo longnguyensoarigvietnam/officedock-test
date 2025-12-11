@@ -8,8 +8,6 @@ import {
   DisclosurePanel,
   TabPanel,
 } from '@headlessui/react';
-import { useSessionCache } from '@providers/SessionCacheProvider';
-
 import lodash from 'lodash';
 
 import ImageRound from '@components/common/ImageRound';
@@ -20,6 +18,7 @@ import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 import ChatWarningUploadingFilesModal from '@components/modals/ChatWarningUploadingFilesModal';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
+import HelpIconPortal from '@components/helpMenu';
 
 import {
   SYSTEM_PERMISSIONS_MENU,
@@ -39,13 +38,13 @@ import useTeamList from '@hooks/useListTeam';
 
 import { MenuItem } from '@interfaces/menu';
 import { OptionDropdownType, OptionTabType } from '@interfaces/common';
+import { WebSocketMessageData } from '@interfaces/chat';
 
+import { useSessionCache } from '@providers/SessionCacheProvider';
 import { TaskContext } from '@providers/TaskProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
-import { WebSocketMessageData } from '@interfaces/chat';
+
 import { hasFullPaymentPermissions, showBackgroundColorByTime } from '@utils';
-import HelpIconPortal from '@components/helpMenu';
-import { sl } from 'date-fns/locale';
 
 type Props = {
   className?: string;

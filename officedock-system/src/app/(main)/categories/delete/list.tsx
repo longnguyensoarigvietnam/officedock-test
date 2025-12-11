@@ -147,7 +147,7 @@ const ListCategory = () => {
       <div className="flex justify-between">
         <InputSearch
           placeholder="カテゴリー名を検索"
-          inputClassName="!w-[300px] !py-2 !rounded-[30px] text-sm !bg-[#FFF] border-none placeholder-[#77858F99]"
+          inputClassName="!w-[300px] !py-2 !rounded-[30px] text-sm !bg-[#FFF] border-none !placeholder-[#77858F99]"
           iconClassName="w-[14px] h-[14px]"
           onChange={(e) => {
             setSearchCategoryName(e.target.value);
