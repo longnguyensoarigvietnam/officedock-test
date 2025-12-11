@@ -22,8 +22,6 @@ from skills.models import (
     SkillMapSkillLevel,
     StatisticCategory,
 )
-from submit_levels.constants import SubmitLevelStatus
-from submit_levels.models import SubmitLevelHistory
 from users.models import User
 
 
@@ -289,15 +287,25 @@ class SkillMapSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id"]
 
+    def _get_current_level_obj(self, obj):
+        """
+        Get current skill map skill level
+        """
+        levels = list(obj.skill_map_skill_levels.all())
+
+        for lv in levels:
+            if not lv.is_complete:
+                return lv
+
+        return levels[-1] if levels else None
+
     def get_progress_percent(self, obj):
         """
         Return progress percentage
         """
         if obj.is_complete:
             return 0
-        skill_map_skill_level = obj.skill_map_skill_levels.filter(
-            is_complete=False
-        ).first()
+        skill_map_skill_level = self._get_current_level_obj(obj)
         if skill_map_skill_level:
             skill_level = SkillMapSkillLevelSerializer(
                 skill_map_skill_level
@@ -330,35 +338,21 @@ class SkillMapSerializer(serializers.ModelSerializer):
         """
         Return status of skill map
         """
-        return not obj.skill_map_skill_levels.exists()
+        return not obj.skill_map_skill_levels.all()
 
     def get_is_have_comment(self, obj):
         """
         Check comment of skill map
         """
-        return SubmitLevelHistory.objects.filter(
-            staff=obj.staff,
-            skill=obj.skill,
-            organization=obj.organization,
-            status=SubmitLevelStatus.APPROVE.value,
-        ).exists()
+        histories = getattr(obj.skill, "approved_histories", [])
+        return len(histories) > 0
 
     def get_level(self, obj):
         """
         Return current level of skill map
         """
-        skill_map_skill_level = obj.skill_map_skill_levels.filter(
-            is_complete=False
-        ).first()
-        if not skill_map_skill_level:
-            skill_map_skill_level = obj.skill_map_skill_levels.filter(
-                is_complete=True
-            ).last()
-        return (
-            SkillMapSkillLevelSerializer(skill_map_skill_level).data
-            if skill_map_skill_level
-            else None
-        )
+        lv = self._get_current_level_obj(obj)
+        return SkillMapSkillLevelSerializer(lv).data if lv else None
 
 
 class SkillReplaceSkillMapSerializer(BaseSkillHierarchySerializer):

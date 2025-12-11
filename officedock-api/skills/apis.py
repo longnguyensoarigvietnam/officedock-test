@@ -22,6 +22,7 @@ from organizations.models import (
     OrganizationsStatisticCategories,
     OrganizationsStatisticCategoriesSkills,
     Organization,
+    Step,
     UsersOrganizations,
 )
 from organizations.serializers import (
@@ -349,6 +350,26 @@ class SkillMapViewSet(
             self.screen_name = current_screen
         return super().get_permissions()
 
+    def get_queryset(self):
+        return (
+            super()
+            .get_queryset()
+            .select_related("skill", "organization", "staff")
+            .prefetch_related(
+                Prefetch(
+                    "skill__submit_level_histories",
+                    queryset=SubmitLevelHistory.objects.filter(
+                        status=SubmitLevelStatus.APPROVE.value
+                    ),
+                    to_attr="approved_histories",
+                ),
+                Prefetch(
+                    "skill_map_skill_levels",
+                    queryset=SkillMapSkillLevel.objects.order_by("id"),
+                ),
+            )
+        )
+
     @extend_schema(
         parameters=[
             OpenApiParameter("user_id", type=int),
@@ -371,9 +392,9 @@ class SkillMapViewSet(
 
         # Get organizations related to user's skills
         skill_org_ids = list(
-            SkillMap.objects.filter(staff=user).values_list(
-                "organization_id", flat=True
-            )
+            self.get_queryset()
+            .filter(staff=user)
+            .values_list("organization_id", flat=True)
         )
 
         # Get all organizations related to skill map
@@ -452,36 +473,56 @@ class SkillMapViewSet(
 
         # Handle filter data by permissions
         organizations = self.filter_queryset(organizations)
+        # Handle get all step in organizations
+        step_by_org = {}
+        for step in Step.objects.filter(organization__in=organizations).all():
+            step_by_org[step.organization_id] = step
 
+        # Handle get all skill in organizations
+        skills = list(
+            Skill.objects.filter(organization__in=organizations)
+            .select_related("parent")
+            .order_by("-deleted_at", "created_at")
+        )
+        skills_by_org = {}
+        skill_children_by_org = {}
+        for s in skills:
+            skills_by_org.setdefault(s.organization_id, []).append(s)
+            skill_children_by_org.setdefault(s.organization_id, {}).setdefault(
+                s.parent_id, []
+            ).append(s)
+        # Handle get all skill maps in organizations
+        skill_maps_by_org = {}
+        all_sms = self.get_queryset().filter(
+            staff=user, organization__in=organizations
+        )
+        for sm in all_sms:
+            skill_maps_by_org.setdefault(sm.organization_id, {})[
+                sm.skill_id
+            ] = sm
+
+        # Handle response data each organization
         for organization in organizations:
-            skill_maps = (
-                self.get_queryset()
-                .filter(
-                    organization=organization,
-                    staff=user,
-                    skill_parent__isnull=True,
-                )
-                .order_by("created_at")
-            )
-            step = organization.steps.first()
+            org_skills = skills_by_org.get(organization.id, [])
+            org_children = skill_children_by_org.get(organization.id, {})
+            root_skills = [s for s in org_skills if s.parent_id is None]
+            step = step_by_org.get(organization.id, [])
             data_skill_maps = []
-            for skill_map in skill_maps:
+            for root in root_skills:
+                current = root
                 group_skill_map = []
-                skill = skill_map.skill
+                sm_dict = skill_maps_by_org.get(organization.id, {})
                 # Loop and get child skill map
-                while skill:
-                    skill_map = SkillMap.objects.filter(
-                        skill=skill, organization=organization, staff=user
-                    ).first()
-                    if skill_map:
-                        group_skill_map.append(
-                            SkillMapSerializer(skill_map).data
-                        )
+                while current:
+                    sm = sm_dict.get(current.id)
+                    if sm:
+                        group_skill_map.append(SkillMapSerializer(sm).data)
                     else:
                         group_skill_map.append(
-                            SkillReplaceSkillMapSerializer(skill).data
+                            SkillReplaceSkillMapSerializer(current).data
                         )
-                    skill = Skill.objects.filter(parent_id=skill.id).first()
+                    childs = org_children.get(current.id, [])
+                    current = childs[0] if childs else None
                 data_skill_maps.append(group_skill_map)
 
             # Append data organizations
