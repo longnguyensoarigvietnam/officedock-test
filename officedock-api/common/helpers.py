@@ -330,9 +330,7 @@ def get_data_organization_my_statistic(user, company):
                 output_field=IntegerField(),
             )
         )
-        .order_by(
-            F("deleted_at").asc(nulls_first=True), "-assigned", "created_at"
-        )
+        .order_by(F("deleted_at").asc(nulls_first=True), "-assigned", "-type")
         .distinct()
     )
 

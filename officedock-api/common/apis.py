@@ -2,7 +2,7 @@ from datetime import date, datetime, time, timedelta
 
 from django.conf import settings
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 from django.shortcuts import get_object_or_404
 from django.utils.timezone import now
 from drf_spectacular.utils import extend_schema, OpenApiParameter
@@ -67,6 +67,7 @@ from companies.services import CompanyService
 from dashboard.utils import separate_duration_while_keep_running
 from mvp_votes.constants import DEFAULT_CONTENT_TWEET_END_VOTE, MVPVoteTypes
 from mvp_votes.models import MVPVoteManagement
+from organizations.models import Organization
 from skills.models import SkillMapSkillLevel
 from surveys.constants import DEFAULT_CONTENT_TWEET_END_SURVEY
 from surveys.models import Survey
@@ -447,15 +448,38 @@ class CronJobViewSet(BaseAPIViewSet):
         )
 
         # --- 3. Check Skill Map Levels ---
-        skill_map_levels = SkillMapSkillLevel.objects.filter(
-            skill_map__is_valid=True,
-            popup=True,
-            is_complete=False,
-            skill_map__organization__deleted_at__isnull=True,
-        ).select_related("skill", "skill_map", "skill_map__staff")
+        skill_map_levels = (
+            SkillMapSkillLevel.objects.filter(
+                skill_map__is_valid=True,
+                popup=True,
+                is_complete=False,
+                skill_map__organization__deleted_at__isnull=True,
+                skill__deleted_at__isnull=True,
+                skill_map__staff__deleted_at__isnull=True,
+            )
+            .select_related(
+                "skill",
+                "skill_map",
+                "skill_map__staff",
+                "skill_map__organization",
+            )
+            .prefetch_related(
+                Prefetch(
+                    "skill_map__staff__organizations",
+                    queryset=Organization.objects.filter(
+                        deleted_at__isnull=True
+                    ),
+                    to_attr="prefetched_orgs",
+                )
+            )
+        )
         for skill_map_level in skill_map_levels:
             data = self._check_process_skill_map_level(skill_map_level)
-            if data:
+            staff = skill_map_level.skill_map.staff
+            org_id = skill_map_level.skill_map.organization_id
+            user_org_ids = {org.id for org in staff.prefetched_orgs}
+            is_user_in_organization = org_id in user_org_ids
+            if data and is_user_in_organization:
                 send_web_socket_event(
                     data, user=skill_map_level.skill_map.staff
                 )
