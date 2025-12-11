@@ -843,8 +843,8 @@ const Sidebar = ({ className }: Props) => {
             name="Help page"
             className={`!w-fit !h-fit`}
           />
+          {showHelpMenu && <HelpIconPortal />}
         </Link>
-        {showHelpMenu && <HelpIconPortal />}
         <div
           className="absolute bottom-5 left-5"
           onClick={() => setExpanded((prevExpanded) => !prevExpanded)}>
