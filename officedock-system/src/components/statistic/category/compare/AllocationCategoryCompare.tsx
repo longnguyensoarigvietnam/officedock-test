@@ -2,8 +2,8 @@ import React, { memo, useContext, useEffect, useState } from 'react';
 
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
-import { SkeletonElement } from '@components/common/SkeletonLoading';
 import ListTaskDetailStatisticModal from '@components/modals/ListTaskDetailStatisticModal';
+import { AllocationSkeleton } from '@components/common/SkeletonLoading/AllocationSkeleton';
 
 import {
   StatisticAllTeamInfo,
@@ -265,9 +265,30 @@ const AllocationCategoryCompare = memo(
               main:
                 smallMainCategories.length > 0
                   ? {
-                      id: -1,
-                      label: 'その他',
-                      value: smallMainCategoriesValue,
+                    id: -1,
+                    label: 'その他',
+                    value: smallMainCategoriesValue,
+                    color:
+                      (selectedLargeCategoryColor &&
+                        lightenColor(
+                          selectedLargeCategoryColor,
+                          smallMainCategoriesValue,
+                        )) ||
+                      (selectedLargeCompareCategoryColor &&
+                        lightenColor(
+                          selectedLargeCompareCategoryColor,
+                          smallMainCategoriesValue,
+                        )) ||
+                      getRandomColor(),
+                    duration: totalDurationsForStatistic(
+                      smallMainCategories.map((item) => item.duration),
+                    ),
+                    optionData: smallMainCategories
+                      .flatMap((item) => item.optionData)
+                      .slice(0, 3),
+                    mergedItems: smallMainCategories.map((item) => ({
+                      ...item,
+                      id: item.id as number,
                       color:
                         (selectedLargeCategoryColor &&
                           lightenColor(
@@ -280,71 +301,50 @@ const AllocationCategoryCompare = memo(
                             smallMainCategoriesValue,
                           )) ||
                         getRandomColor(),
-                      duration: totalDurationsForStatistic(
-                        smallMainCategories.map((item) => item.duration),
-                      ),
-                      optionData: smallMainCategories
-                        .flatMap((item) => item.optionData)
-                        .slice(0, 3),
-                      mergedItems: smallMainCategories.map((item) => ({
-                        ...item,
-                        id: item.id as number,
-                        color:
-                          (selectedLargeCategoryColor &&
-                            lightenColor(
-                              selectedLargeCategoryColor,
-                              smallMainCategoriesValue,
-                            )) ||
-                          (selectedLargeCompareCategoryColor &&
-                            lightenColor(
-                              selectedLargeCompareCategoryColor,
-                              smallMainCategoriesValue,
-                            )) ||
-                          getRandomColor(),
-                      })),
-                    }
+                    })),
+                  }
                   : null,
               compare:
                 smallCompareCategories.length > 0
                   ? {
-                      id: -1,
-                      label: 'その他',
-                      value: smallCompareCategoriesValue,
+                    id: -1,
+                    label: 'その他',
+                    value: smallCompareCategoriesValue,
+                    color:
+                      (selectedLargeCategoryColor &&
+                        lightenColor(
+                          selectedLargeCategoryColor,
+                          smallMainCategoriesValue,
+                        )) ||
+                      (selectedLargeCompareCategoryColor &&
+                        lightenColor(
+                          selectedLargeCompareCategoryColor,
+                          smallMainCategoriesValue,
+                        )) ||
+                      getRandomColor(),
+                    duration: totalDurationsForStatistic(
+                      smallCompareCategories.map((item) => item.duration),
+                    ),
+                    optionData: smallCompareCategories
+                      .flatMap((item) => item.optionData)
+                      .slice(0, 3),
+                    mergedItems: smallCompareCategories.map((item) => ({
+                      ...item,
+                      id: item.id as number,
                       color:
                         (selectedLargeCategoryColor &&
                           lightenColor(
                             selectedLargeCategoryColor,
-                            smallMainCategoriesValue,
+                            smallCompareCategoriesValue,
                           )) ||
                         (selectedLargeCompareCategoryColor &&
                           lightenColor(
                             selectedLargeCompareCategoryColor,
-                            smallMainCategoriesValue,
+                            smallCompareCategoriesValue,
                           )) ||
                         getRandomColor(),
-                      duration: totalDurationsForStatistic(
-                        smallCompareCategories.map((item) => item.duration),
-                      ),
-                      optionData: smallCompareCategories
-                        .flatMap((item) => item.optionData)
-                        .slice(0, 3),
-                      mergedItems: smallCompareCategories.map((item) => ({
-                        ...item,
-                        id: item.id as number,
-                        color:
-                          (selectedLargeCategoryColor &&
-                            lightenColor(
-                              selectedLargeCategoryColor,
-                              smallCompareCategoriesValue,
-                            )) ||
-                          (selectedLargeCompareCategoryColor &&
-                            lightenColor(
-                              selectedLargeCompareCategoryColor,
-                              smallCompareCategoriesValue,
-                            )) ||
-                          getRandomColor(),
-                      })),
-                    }
+                    })),
+                  }
                   : null,
             });
           }
@@ -425,11 +425,11 @@ const AllocationCategoryCompare = memo(
               optionData:
                 item.organizationId == SUB_TEAMS
                   ? item?.subTeams
-                      ?.slice(0, 3)
-                      .map((team) => team?.organizationName || '') || []
+                    ?.slice(0, 3)
+                    .map((team) => team?.organizationName || '') || []
                   : item?.data
-                      ?.slice(0, 3)
-                      .map((category) => category?.categoryName || '') || [],
+                    ?.slice(0, 3)
+                    .map((category) => category?.categoryName || '') || [],
             };
 
             mergedMap.set(`${item.organizationId}`, {
@@ -451,11 +451,11 @@ const AllocationCategoryCompare = memo(
               optionData:
                 compareItem.organizationId == SUB_TEAMS
                   ? compareItem?.subTeams
-                      ?.slice(0, 3)
-                      .map((team) => team?.organizationName || '') || []
+                    ?.slice(0, 3)
+                    .map((team) => team?.organizationName || '') || []
                   : compareItem?.data
-                      ?.slice(0, 3)
-                      .map((category) => category?.categoryName || '') || [],
+                    ?.slice(0, 3)
+                    .map((category) => category?.categoryName || '') || [],
             };
 
             if (mergedMap.has(`${compareItem.organizationId}`)) {
@@ -692,9 +692,8 @@ const AllocationCategoryCompare = memo(
             <ImageRound
               src="/icons/extend-calendar.svg"
               name="Extend calendar"
-              className={`!w-[14px] !h-[14px] hover:cursor-pointer ${
-                isExtendData ? '-rotate-90' : 'rotate-90'
-              }`}
+              className={`!w-[14px] !h-[14px] hover:cursor-pointer ${isExtendData ? '-rotate-90' : 'rotate-90'
+                }`}
               onClick={() => {
                 setIsExtendData(!isExtendData);
               }}
@@ -779,18 +778,13 @@ const AllocationCategoryCompare = memo(
                       </div>
 
                       {isLoadingOrganizationCompare || isLoadingOrganization ? (
-                        <div className="flex flex-col mt-[50px]">
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-12" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
-                        </div>
+                        <AllocationSkeleton />
                       ) : (
                         <div className="mt-5 flex flex-col gap-4">
                           {progressDataPairsLarge.map((pair, index) => {
                             return (
                               <div key={index}>
-                                <div className="flex justify-between items-center">
+                                <div className="flex justify-between items-center mb-1">
                                   <span className="text-sm font-medium truncate max-w-40">
                                     {pair.main
                                       ? pair.main.label
@@ -1020,18 +1014,13 @@ const AllocationCategoryCompare = memo(
                         )}
                       </div>
                       {isLoadingLargeCompare || isLoadingLarge ? (
-                        <div className="flex flex-col mt-[50px]">
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-12" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
-                        </div>
+                        <AllocationSkeleton />
                       ) : (
                         <div className="mt-5 flex flex-col gap-4">
                           {progressDataPairsMedium.map((pair, index) => {
                             return (
                               <div key={index}>
-                                <div className="flex justify-between items-center">
+                                <div className="flex justify-between items-center mb-1">
                                   <span className="text-sm font-medium truncate max-w-40">
                                     {pair.main
                                       ? pair.main.label
@@ -1240,18 +1229,13 @@ const AllocationCategoryCompare = memo(
                         )}
                       </div>
                       {isLoadingMediumCompare || isLoadingMedium ? (
-                        <div className="flex flex-col mt-[50px]">
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-12" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
-                        </div>
+                        <AllocationSkeleton />
                       ) : (
                         <div className="mt-5 flex flex-col gap-4">
                           {progressDataPairsSmall.map((pair, index) => {
                             return (
                               <div key={index}>
-                                <div className="flex justify-between items-center">
+                                <div className="flex justify-between items-center mb-1">
                                   <span className="text-sm font-medium truncate max-w-40">
                                     {pair.main
                                       ? pair.main.label

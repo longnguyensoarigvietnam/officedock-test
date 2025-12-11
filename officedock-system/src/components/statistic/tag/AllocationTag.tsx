@@ -313,7 +313,7 @@ const AllocationTag = memo(
                         selectedOption={selectedOrganization || undefined}
                         onChange={(data) => handleSelectOrganization(data)}
                       />
-                      <p className="text-sm text-black my-[26px]">
+                      <p className="text-sm text-black leading-[1] my-[26px]">
                         合計{' '}
                         {totalDurationLarge &&
                           formatTimeToJapanese(totalDurationLarge)}
@@ -387,7 +387,7 @@ const AllocationTag = memo(
                           selectedOrganization?.value == '' || isHasLoading
                         }
                       />
-                      <p className="text-sm text-black my-[26px]">
+                      <p className="text-sm text-black leading-[1] my-[26px]">
                         合計{' '}
                         {totalDurationMedium &&
                           formatTimeToJapanese(totalDurationMedium)}
@@ -458,7 +458,7 @@ const AllocationTag = memo(
                           isDisableCalendar
                         }
                       />
-                      <p className="text-sm text-black my-[26px]">
+                      <p className="text-sm text-black leading-[1] my-[26px]">
                         合計{' '}
                         {totalDurationSmall &&
                           formatTimeToJapanese(totalDurationSmall)}
@@ -526,7 +526,7 @@ const AllocationTag = memo(
                           isDisableCalendar
                         }
                       />
-                      <p className="text-sm text-black my-[26px]">
+                      <p className="text-sm text-black leading-[1] my-[26px]">
                         合計{' '}
                         {totalDurationCategory &&
                           formatTimeToJapanese(totalDurationCategory)}

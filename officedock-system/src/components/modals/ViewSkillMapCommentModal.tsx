@@ -43,7 +43,7 @@ const ViewSkillMapCommentModal = memo(
         onClose={onClose}>
         <div className="py-[40px] px-[20px] flex flex-col gap-4 items-center">
           <p className="text-black font-medium text-[18px] max-w-full break-all text-center">
-            {currentComment.skill.name}
+            {currentComment?.skill?.name}
           </p>
           <div className="flex justify-between items-center w-full">
             {currentIndex > 0 ? (

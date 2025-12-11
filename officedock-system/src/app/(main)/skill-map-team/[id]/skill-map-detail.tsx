@@ -346,7 +346,7 @@ export const SkillMapDetailByUser = ({
                                       <ImageRound
                                         name="Comment"
                                         src={'/icons/comment.svg'}
-                                        className="w-[16px] h-[14px]"
+                                        className="w-[16px] h-[14px] hover:cursor-pointer"
                                         onClick={(e) => {
                                           if (skillMap.isDeleted) return;
                                           e.stopPropagation();

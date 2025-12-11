@@ -210,11 +210,11 @@ const ListUsersDelete = () => {
           </Link>
         </div>
         <div className="mt-[30px] flex justify-between">
-          <div className=" flex gap-3 items-center">
+          <div className=" flex gap-5 items-center">
             <div className="h-[34px] w-fit ">
               <InputSearch
                 className="w-[300px] h-[34px] py-0 bg-white !rounded-[20px]"
-                inputClassName="h-[34px] bg-white border-none !rounded-[20px] text-sm"
+                inputClassName="h-[34px] bg-white border-none !rounded-[20px] text-sm !placeholder-[#77858F99]"
                 iconClassName="w-[14px] h-[14px]"
                 placeholder="名前を検索"
                 value={search}
@@ -223,11 +223,11 @@ const ListUsersDelete = () => {
                 }}
               />
             </div>
-            <div className="flex gap-[10px] items-center">
+            <div className="flex gap-3 items-center">
               <ImageRound
                 src="/icons/filter.svg"
                 name="Filter icon"
-                className="w-[14px] h-[14px] ml-2"
+                className="w-[14px] h-[14px]"
               />
 
               {/* Search team */}
@@ -248,25 +248,25 @@ const ListUsersDelete = () => {
                   }}
                 />
               </div>
-            </div>
-            {/* Search role */}
-            <div className="w-[220px]">
-              <Dropdown
-                options={roleUserOptions}
-                placeholder="権限"
-                placeholderClass="!text-black text-sm font-normal"
-                className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
-                labelTextClass="!text-[#77858F] !text-xs !font-medium"
-                classNameOption="!text-sm"
-                selectedOption={undefined}
-                onChange={(data) => {
-                  setDebouncedParams((prev) => ({
-                    ...prev,
-                    page: 1,
-                    role: data.value as string,
-                  }));
-                }}
-              />
+              {/* Search role */}
+              <div className="w-[220px]">
+                <Dropdown
+                  options={roleUserOptions}
+                  placeholder="権限"
+                  placeholderClass="!text-black text-sm font-normal"
+                  className="!h-[34px] !rounded-md !border text-sm font-normal !py-0 !border-[#77858F]"
+                  labelTextClass="!text-[#77858F] !text-xs !font-medium"
+                  classNameOption="!text-sm"
+                  selectedOption={undefined}
+                  onChange={(data) => {
+                    setDebouncedParams((prev) => ({
+                      ...prev,
+                      page: 1,
+                      role: data.value as string,
+                    }));
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -284,16 +284,16 @@ const ListUsersDelete = () => {
             <th className="w-[220px] !text-[#77858F] text-left">
               <span>名前</span>
             </th>
-            <th className="w-[88px] !text-[#77858F] text-left">
+            <th className="w-[88px] !text-[#77858F] text-left !pl-[14px]">
               <span>ID</span>
             </th>
-            <th className="text-left !text-[#77858F] w-[228px] max-w-[228px]">
+            <th className="text-left !text-[#77858F] w-[228px] max-w-[228px] !pl-[14px]">
               <span>メインチーム</span>
             </th>
-            <th className="text-left !text-[#77858F] w-[328px] max-w-[328px]">
+            <th className="text-left !text-[#77858F] w-[328px] max-w-[328px] !pl-[14px]">
               <span>サブチーム</span>
             </th>
-            <th className="text-left !text-[#77858F] w-[232px] max-w-[232px]">
+            <th className="text-left !text-[#77858F] w-[232px] max-w-[232px] !pl-[14px]">
               <span>権限</span>
             </th>
           </TableHeader>
@@ -328,24 +328,24 @@ const ListUsersDelete = () => {
                       </div>
                     </div>
                   </td>
-                  <td className="w-[88px] break-all text-left align-top !pt-4">
+                  <td className="w-[88px] break-all text-left align-top !pt-4 !pl-[14px]">
                     {element.id}
                   </td>
-                  <td className="text-left w-[228px] max-w-[228px] break-all align-top !pt-4">
+                  <td className="text-left w-[228px] max-w-[228px] break-all align-top !pt-4 !pl-[14px]">
                     {element.organizations &&
                       element.organizations
                         .filter((data) => data.isMain)
                         .map((item) => item.name)
                         .join(' ／ ')}
                   </td>
-                  <td className="text-left w-[328px] max-w-[328px] break-all align-top !pt-4">
+                  <td className="text-left w-[328px] max-w-[328px] break-all align-top !pt-4 !pl-[14px]">
                     {element.organizations &&
                       element.organizations
                         .filter((data) => !data.isMain)
                         .map((item) => item.name)
                         .join(' ／ ')}
                   </td>
-                  <td className="w-[232px] max-w-[232px] text-left break-all align-top !pt-4">
+                  <td className="w-[232px] max-w-[232px] text-left break-all align-top !pt-4 !pl-[14px]">
                     {element.roles.map((item) => item.name).join(' ／ ')}
                   </td>
                 </tr>

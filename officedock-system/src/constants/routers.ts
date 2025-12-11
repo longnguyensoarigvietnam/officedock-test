@@ -191,7 +191,7 @@ export const pageRouters = {
   },
   // CATEGORY
   CATEGORY_MANAGEMENT: {
-    name: '業務カテゴリー',
+    name: '業務カテゴリー設定',
     href: '/categories',
   },
   EDIT_CATEGORY: {
@@ -262,11 +262,11 @@ export const pageRouters = {
 
   // SKILL MAPS
   SKILL_MAPS_MANAGEMENT: {
-    name: 'スキルマップ',
+    name: 'スキルマップ設定',
     href: '/skill-maps',
   },
   SKILL_MAPS_HIDDEN_MANAGEMENT: {
-    name: 'スキルマップ',
+    name: 'スキルマップ設定',
     href: '/skill-maps/delete',
   },
   EDIT_SKILL_MAPS: {
