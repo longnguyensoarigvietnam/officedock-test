@@ -152,7 +152,7 @@ const ListRoles = () => {
       <div className="flex justify-between">
         <InputSearch
           placeholder="権限を検索"
-          inputClassName="!w-[300px] !py-2 !rounded-[30px] text-sm !bg-[#FFF] border-none placeholder-[#77858F99]"
+          inputClassName="!w-[300px] !py-[7px] !rounded-[30px] text-sm !bg-[#FFF] border-none !placeholder-[#77858F99]"
           iconClassName="w-[14px] h-[14px]"
           onChange={(e) => {
             setSearchRoleName(e.target.value);
@@ -186,7 +186,7 @@ const ListRoles = () => {
         <Table className="bg-white !rounded-[10px] relative table-fixed" classCustom='!p-0'>
           <TableHeader className="!bg-[#F8FAFC]">
             <th className="text-left w-[calc(100%_-_220px)] max-w-[calc(100%_-_220px)]">
-              <span className="text-[#77858F] text-[12px] font-medium">
+              <span className="text-[#77858F] text-[12px] font-medium leading-[1]">
                 権限名
               </span>
             </th>
@@ -196,41 +196,44 @@ const ListRoles = () => {
             {dataRoles && dataRoles.length ? (
               dataRoles.map((element, index) => (
                 <tr key={index} className="text-black">
-                  <td className="text-left w-[calc(100%_-_220px)] break-words max-w-[calc(100%_-_220px)]">
+                  <td className="text-left w-[calc(100%_-_220px)] break-words max-w-[calc(100%_-_220px)] !pl-[18px]">
                     <p className="break-all max-w-[100%] text-[16px] font-medium text-[#000000]">
                       {element.name}
                     </p>
                   </td>
                   <td className="w-[220px]">
-                    <div className="flex w-full gap-2 justify-end pr-3 items-center">
-                      {showUpdateIcon(element?.systemRole || false) ? (
-                        <Link
-                          onClick={() => {
-                            setDataRoleDetail(element);
-                          }}
-                          href={pageRouters.EDIT_ROLE.href(`${element.id}`)}>
+                    <div className="flex w-full gap-5 justify-end pr-[10px] items-center">
+                      <div className='flex items-center gap-2'>
+                        {showUpdateIcon(element?.systemRole || false) ? (
+                          <Link
+                            onClick={() => {
+                              setDataRoleDetail(element);
+                            }}
+                            href={pageRouters.EDIT_ROLE.href(`${element.id}`)}>
+                            <ImageRound
+                              name="Edit"
+                              src={'/icons/edit-gray.svg'}
+                              className={`w-3 h-3 hover:cursor-pointer opacity-30`}
+                            />
+                          </Link>
+                        ) : (
+                          <div className="w-3 h-3"></div>
+                        )}
+                        {showDeleteIcon(element?.systemRole || false) ? (
                           <ImageRound
-                            name="Edit"
-                            src={'/icons/edit-gray.svg'}
-                            className={`w-3 h-3 hover:cursor-pointer opacity-30`}
+                            name="Hide"
+                            src={'/icons/eye.svg'}
+                            className={`w-[16px] h-[12px] hover:cursor-pointer`}
+                            onClick={() => handleOpenDeleteRoleModal(element)}
                           />
-                        </Link>
-                      ) : (
-                        <div className="w-3 h-3"></div>
-                      )}
-                      {showDeleteIcon(element?.systemRole || false) ? (
-                        <ImageRound
-                          name="Hide"
-                          src={'/icons/eye.svg'}
-                          className={`w-[16px] h-[12px] hover:cursor-pointer ml-1`}
-                          onClick={() => handleOpenDeleteRoleModal(element)}
-                        />
-                      ) : (
-                        <div className="w-[12px]"></div>
-                      )}
+                        ) : (
+                          <div className="w-[12px]"></div>
+                        )}
+                      </div>
+
                       <Link
                         href={pageRouters.DETAIL_ROLE.href(`${element.id}`)}>
-                        <div className="flex gap-1 items-center">
+                        <div className="flex gap-[6px] items-center">
                           <p className="text-sm font-medium text-[#77858F]">
                             詳細を確認する
                           </p>

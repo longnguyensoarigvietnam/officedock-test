@@ -149,7 +149,7 @@ const HiddenListOrganizations = () => {
       <div className="flex justify-between mb-[30px]">
         <InputSearch
           placeholder="チームを検索"
-          inputClassName="!w-[300px] !py-2 !rounded-[30px] text-sm !bg-[#FFF] border-none placeholder-[#77858F99]"
+          inputClassName="!w-[300px] !py-2 !rounded-[30px] text-sm !bg-[#FFF] border-none !placeholder-[#77858F99]"
           iconClassName="w-[14px] h-[14px]"
           onChange={(e) => {
             setSearchOrganizationName(e.target.value);

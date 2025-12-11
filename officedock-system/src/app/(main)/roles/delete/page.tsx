@@ -13,7 +13,7 @@ const RolePage = () => {
       permission={PermissionsSystem.ROLE_VIEW}
       className="px-10 py-[30px] !bg-[#F3F3F3] !overflow-x-auto"
       showFooter={false}>
-      <div className="flex gap-4 items-center mb-5 justify-between">
+      <div className="flex gap-4 items-center mb-[30px] justify-between">
         <div className="flex items-center gap-5">
           <p className="text-black font-medium text-[26px] leading-[1]">
             権限管理
@@ -40,7 +40,7 @@ const RolePage = () => {
           </div>
         </Link>
       </div>
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-[30px]">
         <ListRolesDelete />
       </div>
     </MainLayout>
