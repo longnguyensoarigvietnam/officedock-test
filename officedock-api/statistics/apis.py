@@ -1652,7 +1652,7 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
             tags=tag_ids,
         )
         data = {"durations": [], "data": []}
-        if not users or not main_organization:
+        if not users or (main_organization_id and not main_organization):
             return self.response_ok(data)
         ranges = split_ranges(
             from_date, end_date, trim_whitespace(statistic_by)
@@ -1666,13 +1666,19 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
             "users": [],
         }
         main_org_name = (
-            main_organization.name
-            if main_organization.deleted_at == None
-            else f"{main_organization.name}{KEYWORDS['deleted']}"
+            (
+                main_organization.name
+                if main_organization.deleted_at == None
+                else f"{main_organization.name}{KEYWORDS['deleted']}"
+            )
+            if main_organization
+            else None
         )
         fake_data_mainteam = {
             "organization_name": main_org_name,
-            "organization_id": main_organization.id,
+            "organization_id": main_organization.id
+            if main_organization
+            else None,
             "color": MAIN_TEAM_COLOR,
             "duration": DEFAULT_TIME,
             "percent": 0,
@@ -1764,7 +1770,7 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
             team_names.append(team.get("organization_name"))
         # Append fake data to table under chart
         if len(team_names) < 3:
-            if main_org_name not in team_names:
+            if main_org_name not in team_names and main_org_name != None:
                 teams.append(fake_data_mainteam)
             if SUB_TEAM not in team_names:
                 teams.append(fake_data_subteam)
