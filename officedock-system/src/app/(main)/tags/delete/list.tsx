@@ -142,8 +142,8 @@ const ListDeleteTags = () => {
       organizationIds: encodeURIComponent(
         watch('organizationIds')
           ? watch('organizationIds')
-              .map((org: OptionDropdownType) => org.value)
-              .join(',')
+            .map((org: OptionDropdownType) => org.value)
+            .join(',')
           : '',
       ),
     }));
@@ -321,8 +321,8 @@ const ListDeleteTags = () => {
                           organizationIds: encodeURIComponent(
                             updatedTagIds
                               ? updatedTagIds
-                                  .map((org: OptionDropdownType) => org.value)
-                                  .join(',')
+                                .map((org: OptionDropdownType) => org.value)
+                                .join(',')
                               : '',
                           ),
                         }));
@@ -344,28 +344,27 @@ const ListDeleteTags = () => {
           </div>
         </div>
       </div>
-      <div className="w-full p-5 bg-[#FFFFFF] rounded-[30px]">
+      <div className="w-full p-[30px] bg-[#FFFFFF] rounded-[30px]">
         <Table className="bg-white !rounded-[10px] relative">
           <TableHeader className="!bg-[#F3F3F3]">
             <th className="w-[500px] max-w-[500px] text-left border-r-[1px] border-r-[#D2DBE1]">
-              <span className="text-[#77858F] text-[12px] font-medium">
+              <span className="text-[#77858F] text-[12px] font-medium leading-[1]">
                 タグ名
               </span>
             </th>
-            <th className="w-[calc(100%_-_550px)] text-left">
-              <span className="text-[#77858F] text-[12px] font-medium">
+            <th className="w-[calc(100%_-_500px)] text-left !pl-[14px] !pr-[18px]">
+              <span className="text-[#77858F] text-[12px] font-medium leading-[1]">
                 表示するチーム
               </span>
             </th>
-            <th className="w-[50px] max-w-[50px]"></th>
           </TableHeader>
           <TableBody>
             {dataTags && dataTags.length ? (
               dataTags.map((element, index) => (
                 <tr key={index}>
-                  <td className="w-[500px] text-black max-w-[500px] border-r-[1px] border-r-[#D2DBE1]">
+                  <td className="w-[500px] text-black max-w-[500px] border-r-[1px] border-r-[#D2DBE1] !pl-[18px] !pr-[14px]">
                     <div className="flex justify-between items-center">
-                      <p className="text-left max-w-[calc(100%_-_30px)] break-all text-[16px] font-medium">
+                      <p className="text-left max-w-[calc(100%_-_30px)] break-all text-[16px] font-medium !pl-[14px] !pr-[18px]">
                         {element.name}
                       </p>
                       {element.actions?.update ? (
@@ -381,21 +380,21 @@ const ListDeleteTags = () => {
                       )}
                     </div>
                   </td>
-                  <td className="!w-[calc(100%_-_550px)] text-black !break-all text-left text-[14px] font-medium">
-                    {element?.organizations &&
-                      element?.organizations
-                        .map((org: Organizations) => org.name)
-                        .join('/ ')}
-                  </td>
-                  <td className="w-[50px] max-w-[50px]">
-                    <div className="flex justify-end pr-[10px]">
-                      {element.isCalendarOrganizationCheck && (
-                        <ImageRound
-                          className={`w-4 h-4`}
-                          name="Calendar icon"
-                          src="/icons/calendar-time.svg"
-                        />
-                      )}
+                  <td className="!w-[calc(100%_-_500px)] text-black !break-all text-left text-[14px] font-medium !pl-[14px] !pr-[18px]">
+                    <div className='flex justify-between items-center'>
+                      <p className='max-w-[calc(100%-50px)]'>{element?.organizations &&
+                        element?.organizations
+                          .map((org: Organizations) => org.name)
+                          .join('/ ')}</p>
+                      <div className="min-w-4">
+                        {element.isCalendarOrganizationCheck && (
+                          <ImageRound
+                            className={`w-4 h-4`}
+                            name="Calendar icon"
+                            src="/icons/calendar-time.svg"
+                          />
+                        )}
+                      </div>
                     </div>
                   </td>
                 </tr>

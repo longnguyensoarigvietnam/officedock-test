@@ -155,7 +155,7 @@ const ListCategory = () => {
         />
       </div>
       <div
-        className="w-full p-5 bg-[#FFFFFF] rounded-[30px]"
+        className="w-full p-[30px] bg-[#FFFFFF] rounded-[30px]"
         style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
         <Table className="bg-white !rounded-[10px] relative">
           <TableHeader className="!bg-[#F3F3F3]">

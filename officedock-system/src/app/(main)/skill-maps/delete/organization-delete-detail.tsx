@@ -175,7 +175,7 @@ export const OrganizationDeleteSkillDetail = ({
 
   return (
     <div
-      className="w-full p-5 bg-white rounded-[30px]"
+      className="w-full p-[30px] bg-white rounded-[30px]"
       style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
       <p className="text-[#77858F] text-[16px] font-medium mb-[30px] max-w-[100%] break-all">
         {orgSkillDetail.name}

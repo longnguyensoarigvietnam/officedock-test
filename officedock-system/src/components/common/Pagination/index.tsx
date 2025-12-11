@@ -123,7 +123,7 @@ const Pagination = ({
       sizeClasses = 'w-9 h-9 text-sm';
       break;
     default:
-      sizeClasses = 'w-[34px] h-[34px] text-sm';
+      sizeClasses = 'w-[30px] h-[30px] text-sm';
       break;
   }
 

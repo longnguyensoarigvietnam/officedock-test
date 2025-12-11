@@ -181,9 +181,9 @@ const ListRoles = () => {
       </div>
 
       <div
-        className="w-full p-5 bg-[#F8FAFC] rounded-[30px]"
+        className="w-full p-[30px] bg-[#F8FAFC] rounded-[30px]"
         style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
-        <Table className="bg-white !rounded-[10px] relative table-fixed">
+        <Table className="bg-white !rounded-[10px] relative table-fixed" classCustom='!p-0'>
           <TableHeader className="!bg-[#F8FAFC]">
             <th className="text-left w-[calc(100%_-_220px)] max-w-[calc(100%_-_220px)]">
               <span className="text-[#77858F] text-[12px] font-medium">
