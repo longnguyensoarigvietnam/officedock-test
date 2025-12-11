@@ -1230,6 +1230,16 @@ export const MessageDetail = ({
                                       があなたのタスクカードを担当者未定に移動しました。
                                     </p>
                                   )}
+                                  {messageDetail.type ==
+                                    MessageType.ASSIGNED_MEMBER_TO_TASK && (
+                                    <p className="w-full">
+                                      <span className="text-[#228CDB] w-fit">
+                                        {' '}
+                                        {messageDetail.sender.fullName}
+                                      </span>
+                                      が担当者未定のタスクカードをあなたに移動しました。
+                                    </p>
+                                  )}
                                 </h4>
                               </div>
                             ) : (

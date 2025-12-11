@@ -75,6 +75,8 @@ const updateCurrent = (menuItems: MenuItem[], pathname: string): MenuItem[] => {
 };
 
 const Sidebar = ({ className }: Props) => {
+  const helpUrl = process.env.NEXT_PUBLIC_HELP_PAGE_URL || '#';
+
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -222,6 +224,15 @@ const Sidebar = ({ className }: Props) => {
               value: String(teamList[0].id),
             };
           }
+        }
+        if (organizationId) {
+          const params = new URLSearchParams(searchParams.toString());
+
+          params.set('organization', String(changeOrganization.value));
+
+          const newUrl = `${pathname}?${params.toString()}`;
+
+          router.push(newUrl);
         }
         setSelectedOrganization({
           label: changeOrganization.label,
@@ -822,15 +833,17 @@ const Sidebar = ({ className }: Props) => {
           </nav>
         </TabPanel>
         {/* HELP MENU */}
-        <div
+        <Link
+          href={helpUrl}
           className="absolute bottom-[52px] left-[13px] cursor-pointer"
-          onClick={() => setShowHelpMenu((prev) => !prev)}>
+          onMouseEnter={() => setShowHelpMenu(true)}
+          onMouseLeave={() => setShowHelpMenu(false)}>
           <ImageRound
             src="/icons/help.svg"
             name="Help page"
             className={`!w-fit !h-fit`}
           />
-        </div>
+        </Link>
         {showHelpMenu && <HelpIconPortal />}
         <div
           className="absolute bottom-5 left-5"
