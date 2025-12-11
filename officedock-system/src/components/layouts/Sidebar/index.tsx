@@ -45,6 +45,7 @@ import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { WebSocketMessageData } from '@interfaces/chat';
 import { hasFullPaymentPermissions, showBackgroundColorByTime } from '@utils';
 import HelpIconPortal from '@components/helpMenu';
+import { sl } from 'date-fns/locale';
 
 type Props = {
   className?: string;
@@ -96,6 +97,7 @@ const Sidebar = ({ className }: Props) => {
     selectedOrganization,
     isChatFilesUploading,
     isHasLoadingSkeleton,
+    lastVisitedByTab,
     setOrganizationTeamList,
     setSelectedOrganization,
     setExpanded,
@@ -204,43 +206,143 @@ const Sidebar = ({ className }: Props) => {
           ),
         })),
       ]);
-      if (selectedOrganization) {
-        let changeOrganization = {
-          label: '',
-          value: '',
+      let changeOrganization = {
+        label: '',
+        value: '',
+      };
+      const mainOrganization = data?.find(
+        (organization) => organization.isMain,
+      );
+      if (mainOrganization) {
+        changeOrganization = {
+          label: mainOrganization.name,
+          value: String(mainOrganization.id),
         };
-        const mainOrganization = teamList?.find(
-          (organization) => organization.isMain,
-        );
-        if (mainOrganization) {
+      } else {
+        if (data?.length && data?.length > 0) {
           changeOrganization = {
-            label: mainOrganization.name,
-            value: String(mainOrganization.id),
+            label: data[0].name,
+            value: String(data[0].id),
           };
-        } else {
-          if (teamList?.length && teamList?.length > 0) {
-            changeOrganization = {
-              label: teamList[0].name,
-              value: String(teamList[0].id),
-            };
-          }
         }
-        if (organizationId) {
-          const params = new URLSearchParams(searchParams.toString());
-
-          params.set('organization', String(changeOrganization.value));
-
-          const newUrl = `${pathname}?${params.toString()}`;
-
-          router.push(newUrl);
-        }
+      }
+      const changeOrganizationImgComponent = data.find(
+        (org) => (org.id as number) == Number(changeOrganization.value),
+      );
+      if (!selectedOrganization) {
         setSelectedOrganization({
           label: changeOrganization.label,
           value: changeOrganization.value,
-          imgComponent: organizationList.find(
-            (org) => org.value == changeOrganization.value,
-          )?.imgComponent,
+          imgComponent: changeOrganizationImgComponent ? (
+            changeOrganizationImgComponent?.icon ? (
+              <CustomUserAvatar
+                avatarUrl={changeOrganizationImgComponent?.icon}
+                avatarColor={
+                  changeOrganizationImgComponent?.iconColor || '#228CDB'
+                }
+                size={24}
+              />
+            ) : (
+              <GroupIconWithDynamicColor
+                color={changeOrganizationImgComponent?.iconColor || '#228CDB'}
+                size={24}
+              />
+            )
+          ) : null,
         });
+      } else {
+        const exists = data.some(
+          (item) => String(item.id) === String(selectedOrganization.value),
+        );
+        if (exists) return;
+        setSelectedOrganization({
+          label: changeOrganization.label,
+          value: changeOrganization.value,
+          imgComponent: changeOrganizationImgComponent ? (
+            changeOrganizationImgComponent?.icon ? (
+              <CustomUserAvatar
+                avatarUrl={changeOrganizationImgComponent?.icon}
+                avatarColor={
+                  changeOrganizationImgComponent?.iconColor || '#228CDB'
+                }
+                size={24}
+              />
+            ) : (
+              <GroupIconWithDynamicColor
+                color={changeOrganizationImgComponent?.iconColor || '#228CDB'}
+                size={24}
+              />
+            )
+          ) : null,
+        });
+      }
+
+      if (data.length === 0) {
+        if (organizationId) {
+          const params = new URLSearchParams(searchParams.toString());
+          params.set('organization', '');
+
+          const newUrl = `${pathname}?${params.toString()}`;
+          router.push(newUrl);
+        }
+        if (lastVisitedByTab.secondTab) {
+          setLastVisitedByTab((prev) => {
+            const second = prev.secondTab;
+            const [pathname, queryString = ''] = second.split('?');
+            const params = Object.fromEntries(
+              queryString
+                .split('&')
+                .filter(Boolean)
+                .map((pair) => pair.split('=')),
+            );
+            params['organization'] = '';
+            const newQuery = Object.entries(params)
+              .map(([k, v]) => `${k}=${v}`)
+              .join('&');
+
+            return {
+              ...prev,
+              secondTab: `${pathname}?${newQuery}`,
+            };
+          });
+        }
+      } else {
+        if (organizationId) {
+          const exists = data.some(
+            (item) => String(item.id) === String(organizationId),
+          );
+          if (exists) return;
+          const params = new URLSearchParams(searchParams.toString());
+          params.set('organization', String(changeOrganization.value));
+
+          const newUrl = `${pathname}?${params.toString()}`;
+          router.push(newUrl);
+        }
+        if (lastVisitedByTab.secondTab && changeOrganization.value) {
+          setLastVisitedByTab((prev) => {
+            const second = prev.secondTab;
+            const [pathname, queryString = ''] = second.split('?');
+            const params = Object.fromEntries(
+              queryString
+                .split('&')
+                .filter(Boolean)
+                .map((pair) => pair.split('=')),
+            );
+            const currentOrg = params['organization'];
+            if (!currentOrg || currentOrg === changeOrganization.value) {
+              return prev;
+            }
+            params['organization'] = changeOrganization.value;
+            const newQuery = Object.entries(params)
+              .map(([k, v]) => `${k}=${v}`)
+              .join('&');
+
+            return {
+              ...prev,
+              secondTab: `${pathname}?${newQuery}`,
+            };
+          });
+        }
       }
     },
   });
