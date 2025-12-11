@@ -71,9 +71,9 @@ const RenderFiles = ({
                 )}
 
                 <p
-                  onClick={() =>
-                    downloadFileName && downloadFileName(newFile.uuid)
-                  }
+                  onClick={() => {
+                    downloadFileName && downloadFileName(newFile.uuid);
+                  }}
                   data-id={messageDetail.uuid}
                   className={`text-primary cursor-pointer font-medium text-[14px] break-all max-w-full ${
                     newFile.fileType.includes('image')

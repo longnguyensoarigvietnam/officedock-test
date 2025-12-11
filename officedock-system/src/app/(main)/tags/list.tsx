@@ -588,7 +588,7 @@ const ListTags = () => {
                     <div className="flex justify-end pr-[10px]">
                       {element.isCalendarOrganizationCheck && (
                         <ImageRound
-                          className={`w-4 h-4 hover:cursor-pointer`}
+                          className={`w-4 h-4 `}
                           name="Calendar icon"
                           src="/icons/calendar-time.svg"
                         />

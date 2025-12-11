@@ -214,7 +214,9 @@ const EditRoleForm = () => {
   return (
     <div>
       <div className="flex justify-between items-center w-full mb-[30px]">
-        <p className="text-black font-medium text-[26px] leading-[1]">権限管理</p>
+        <p className="text-black font-medium text-[26px] leading-[1]">
+          権限管理
+        </p>
         <div className="flex justify-end gap-[10px] items-center">
           <Button
             variant="outline"
@@ -281,7 +283,7 @@ const EditRoleForm = () => {
                 </div>
                 <div className="w-1/2 px-3 z-[8] py-2 border-[#D2DBE1]">
                   <TableDropdown
-                    className="w-full !h-10"
+                    className="w-full !h-10 cursor-pointer"
                     valueClassName="rounded-[6px] !border-[#77858F]"
                     labelOptionClass="ml-0"
                     options={permissionList}

@@ -181,7 +181,10 @@ const HierarchyTable = ({
       <p className="text-[#77858F] text-[16px] font-medium mb-[30px] max-w-[100%] break-all">
         {organizationName}
       </p>
-      <Table className="w-full h-full bg-white !rounded-[10px]" classCustom="!py-0" tableClassName="!w-full !table-fixed">
+      <Table
+        className="w-full h-full bg-white !rounded-[10px]"
+        classCustom="!py-0"
+        tableClassName="!w-full !table-fixed">
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
@@ -234,13 +237,14 @@ const HierarchyTable = ({
                     rowSpan={largeRowspan[rowIndex]}>
                     <div
                       className={`pr-[14px] pl-[18px] py-5 h-full flex items-center gap-[8px] ${isHiddenLargeCategory && 'hidden'} 
-                      ${lastIndex !== rowIndex &&
+                      ${
+                        lastIndex !== rowIndex &&
                         secondLastLargeIndex !== null &&
                         secondLastLargeIndex + 1 !== rowIndex &&
                         'border-b-[1px]'
-                        } border-[#D2DBE1] ${isHiddenLargeCategory && '!border-b-0'}`}>
+                      } border-[#D2DBE1] ${isHiddenLargeCategory && '!border-b-0'}`}>
                       <div
-                        className={`w-[14px] min-w-[14px] h-[14px] rounded-full hover:cursor-pointer ${isHiddenLargeCategory && 'hidden'}`}
+                        className={`w-[14px] min-w-[14px] h-[14px] rounded-full  ${isHiddenLargeCategory && 'hidden'}`}
                         style={{ backgroundColor: `${row.original.color}` }}
                       />
                       {isHiddenLargeCategory ? (
@@ -261,19 +265,20 @@ const HierarchyTable = ({
                     }}
                     rowSpan={mediumRowspan[rowIndex]}>
                     <div
-                      className={`${!lastMediumIndexes.includes(rowIndex) ? 'mx-[14px]' : 'px-[14px]'} flex flex-col !h-full ${isHiddenMediumCategory && '!p-0'} ${(!isHiddenMediumCategory &&
-                        !lastDisplayedMediumIndexesInEachLarge.includes(
-                          rowIndex,
-                        ) &&
-                        !lastMediumIndexes
-                          .slice(0, lastMediumIndexes.length - 1)
-                          .includes(rowIndex)) ||
+                      className={`${!lastMediumIndexes.includes(rowIndex) ? 'mx-[14px]' : 'px-[14px]'} flex flex-col !h-full ${isHiddenMediumCategory && '!p-0'} ${
+                        (!isHiddenMediumCategory &&
+                          !lastDisplayedMediumIndexesInEachLarge.includes(
+                            rowIndex,
+                          ) &&
+                          !lastMediumIndexes
+                            .slice(0, lastMediumIndexes.length - 1)
+                            .includes(rowIndex)) ||
                         (lastMediumIndexes.includes(rowIndex) &&
                           lastDisplayedMediumIndexesInEachLarge.at(-1) !=
-                          rowIndex)
-                        ? 'border-b-[1px] border-[#D2DBE1]'
-                        : ''
-                        } ${isHiddenLargeCategory && isHiddenMediumCategory ? '!border-0' : ''}`}>
+                            rowIndex)
+                          ? 'border-b-[1px] border-[#D2DBE1]'
+                          : ''
+                      } ${isHiddenLargeCategory && isHiddenMediumCategory ? '!border-0' : ''}`}>
                       {isHiddenMediumCategory ? (
                         <>
                           <div className="hidden w-full"></div>
@@ -295,7 +300,8 @@ const HierarchyTable = ({
                   style={{
                     height: isHiddenLargeCategory ? '0px' : 'inherit',
                   }}>
-                  <div className={`!h-full ${lastSmallIndexesInEachLarge.slice(0, lastSmallIndexesInEachLarge.length - 1).includes(rowIndex) && 'border-b-[1px] border-[#D2DBE1]'} ${isHiddenLargeCategory && 'hidden'} px-[14px]`}>
+                  <div
+                    className={`!h-full ${lastSmallIndexesInEachLarge.slice(0, lastSmallIndexesInEachLarge.length - 1).includes(rowIndex) && 'border-b-[1px] border-[#D2DBE1]'} ${isHiddenLargeCategory && 'hidden'} px-[14px]`}>
                     {isHiddenSmallCategory ? (
                       <>
                         <div className="hidden w-full"></div>
@@ -303,12 +309,13 @@ const HierarchyTable = ({
                     ) : (
                       <div
                         className={`flex items-center h-full gap-2 flex-wrap py-5 
-                        ${!lastLargeIndexes.includes(rowIndex) &&
+                        ${
+                          !lastLargeIndexes.includes(rowIndex) &&
                           !lastDisplayedSmallIndexesInEachLarge.includes(
                             rowIndex,
                           ) &&
                           'border-b-[1px] border-[#D2DBE1]'
-                          }`}>
+                        }`}>
                         <p className="text-sm max-w-full break-all font-medium">
                           {row.original.small.label || NO_OPTION_CATEGORY}
                         </p>
@@ -321,18 +328,20 @@ const HierarchyTable = ({
                   style={{
                     height: isHiddenLargeCategory ? '0px' : 'inherit',
                   }}>
-                  <div className={`!h-full ${lastSmallIndexesInEachLarge.slice(0, lastSmallIndexesInEachLarge.length - 1).includes(rowIndex) && 'border-b-[1px] border-[#D2DBE1]'} ${isHiddenLargeCategory && 'hidden'} px-[14px]`}>
+                  <div
+                    className={`!h-full ${lastSmallIndexesInEachLarge.slice(0, lastSmallIndexesInEachLarge.length - 1).includes(rowIndex) && 'border-b-[1px] border-[#D2DBE1]'} ${isHiddenLargeCategory && 'hidden'} px-[14px]`}>
                     {isHiddenSmallCategory ? (
                       <div className="hidden w-full"></div>
                     ) : (
                       <div
                         className={`flex items-center h-full gap-2 flex-wrap py-[13px]
-                        ${!lastLargeIndexes.includes(rowIndex) &&
+                        ${
+                          !lastLargeIndexes.includes(rowIndex) &&
                           !lastDisplayedSmallIndexesInEachLarge.includes(
                             rowIndex,
                           ) &&
                           'border-b-[1px] border-[#D2DBE1]'
-                          }`}>
+                        }`}>
                         {row.original.skills.length > 0 ? (
                           row.original.skills.map((skill) => {
                             return (

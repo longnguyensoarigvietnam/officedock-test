@@ -101,7 +101,7 @@ const PointHistory = () => {
                   <>
                     <div
                       key={index}
-                      className={`relative !w-full hover:cursor-pointer ${index == 0 && 'rounded-t-[14px]'} ${index == pointHistoryList.length - 1 ? 'rounded-b-[14px]' : ''} bg-white flex items-center text-black font-normal gap-[16px] py-[10px]`}>
+                      className={`relative !w-full  ${index == 0 && 'rounded-t-[14px]'} ${index == pointHistoryList.length - 1 ? 'rounded-b-[14px]' : ''} bg-white flex items-center text-black font-normal gap-[16px] py-[10px]`}>
                       {/* Date column */}
                       <div className="w-[18%] text-xs py-[6px] text-nowrap leading-none pl-5 box-border">
                         <p>{formatShowDateJapanese(`${history.createdAt}`)}</p>

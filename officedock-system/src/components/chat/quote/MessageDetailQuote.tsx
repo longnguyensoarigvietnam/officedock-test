@@ -29,10 +29,11 @@ import {
   SubmitLevelStatus,
   TaskRepetitiveValue,
 } from '@constants/enums';
-import { pageRouters } from '@constants/routers';
+import { apiRouters, pageRouters } from '@constants/routers';
 
 import {
   ChatDashboardMember,
+  ChatFileDetailResponse,
   ChatFileResponse,
   ChatMessageResponse,
   ChatRoomDetail,
@@ -44,6 +45,7 @@ import {
   displayRepetitiveEventTime,
   formatWithParagraphTags,
   getUserNameById,
+  handleDownloadFile,
   renderEventDatetimeInChat,
   renderScheduleChangeInCalendarRoom,
 } from '@utils';
@@ -58,6 +60,8 @@ import { Profile } from '@interfaces/user';
 import { DELETED_EVENT_TITLE } from '@constants/message';
 import RenderFiles from '../renderFiles/RenderFiles';
 import { ChatContext } from '@providers/ChatProvider';
+import api from '@base/api';
+import { useMutation } from 'react-query';
 
 export type MessageDetailProps = {
   uuidList: any[];
@@ -300,7 +304,7 @@ export const MessageDetailQuote = ({
                   <ImageRound
                     name="Reply"
                     src={'/icons/reply.svg'}
-                    className="w-[14px] h-[12px] hover:cursor-pointer"
+                    className="w-[14px] h-[12px]"
                   />
                   <span style={{ color: '#77858F' }}>{title}</span>
                 </span>
@@ -444,6 +448,27 @@ export const MessageDetailQuote = ({
       </>
     );
   };
+
+  const handleDownloadFileName = async (fileUuid: string) => {
+    const apiUrl = apiRouters.FILE_DETAIL(`${fileUuid}`);
+
+    const { data } = await api.get<ChatFileDetailResponse>(apiUrl);
+    return data;
+  };
+
+  const { mutate: downloadFileName } = useMutation(
+    'downloadFileName',
+    handleDownloadFileName,
+    {
+      onSuccess: (data) => {
+        if (data.originalFile) {
+          handleDownloadFile(data?.originalFile || '', data?.fileName || '');
+        }
+      },
+      onError: () => {},
+      onSettled: () => {},
+    },
+  );
   return (
     <Fragment>
       {messageDetail && (
@@ -473,7 +498,7 @@ export const MessageDetailQuote = ({
                       <ImageRound
                         name="Save"
                         src="/icons/save-active.svg"
-                        className="w-[10px] h-[12px] hover:cursor-pointer flex-shrink-0"
+                        className="w-[10px] h-[12px]  flex-shrink-0"
                       />
                     )}
                   </div>
@@ -491,7 +516,7 @@ export const MessageDetailQuote = ({
                         <ImageRound
                           name="Dot"
                           src={'/icons/dot.svg'}
-                          className="w-[4px] h-[4px] hover:cursor-pointer ml-2"
+                          className="w-[4px] h-[4px]  ml-2"
                         />
                         <p className="font-normal text-xs ml-2 text-nowrap">
                           編集済
@@ -505,7 +530,7 @@ export const MessageDetailQuote = ({
                     <div className="flex flex-col">
                       {messageDetail.deletedAt ? (
                         <p
-                          className={`font-normal text-sm hover:cursor-pointer -ml-1 p-1 rounded-[5px] text-gray-600 italic bg-[#f0f1f1] w-[220px]`}>
+                          className={`font-normal text-sm  -ml-1 p-1 rounded-[5px] text-gray-600 italic bg-[#f0f1f1] w-[220px]`}>
                           {MESSAGE_DELETED}
                         </p>
                       ) : (
@@ -527,6 +552,7 @@ export const MessageDetailQuote = ({
                                       uuidMain={uuidListMain}
                                       messageDetail={messageDetail}
                                       setDataPreviewFile={setDataPreviewFile}
+                                      downloadFileName={downloadFileName}
                                     />
                                   )}
                               </div>
@@ -650,9 +676,7 @@ export const MessageDetailQuote = ({
                                   <p className="font-semibold mt-2">参加者</p>
                                   {renderParticipantsContent(messageDetail)}
                                   {messageDetail.schedule?.id ? (
-                                    <p className="hover:cursor-pointer mt-2">
-                                      予定を確認する
-                                    </p>
+                                    <p className=" mt-2">予定を確認する</p>
                                   ) : (
                                     <p className="mt-2 italic text-gray-600">
                                       {messageDetail.sender.id &&
@@ -704,9 +728,7 @@ export const MessageDetailQuote = ({
                                   <p className="font-semibold mt-2">参加者</p>
                                   {renderParticipantsContent(messageDetail)}
                                   {messageDetail.schedule?.id ? (
-                                    <p className="hover:cursor-pointer mt-2">
-                                      予定を確認する
-                                    </p>
+                                    <p className=" mt-2">予定を確認する</p>
                                   ) : (
                                     <p className="mt-2 italic text-gray-600">
                                       {messageDetail.sender.id &&
@@ -765,7 +787,7 @@ export const MessageDetailQuote = ({
                                   className={`text-sm font-normal bg-[#eaf8ff] p-1 w-full`}>
                                   <div className={`flex flex-col items-start`}>
                                     <div
-                                      className={`font-normal w-full  text-sm hover:cursor-pointer text-start -ml-1 p-1 rounded-[5px] text-gray-600 italic`}>
+                                      className={`font-normal w-full  text-sm  text-start -ml-1 p-1 rounded-[5px] text-gray-600 italic`}>
                                       {TASK_DELETED}
                                     </div>
                                   </div>
@@ -816,7 +838,7 @@ export const MessageDetailQuote = ({
                       <ImageRound
                         name="Save"
                         src="/icons/save-active.svg"
-                        className="w-[10px] h-[12px] hover:cursor-pointer"
+                        className="w-[10px] h-[12px] "
                       />
                     )}
                   </div>
@@ -837,14 +859,14 @@ export const MessageDetailQuote = ({
                     <div className="flex flex-col">
                       {messageDetail.deletedAt ? (
                         <p
-                          className={`font-normal text-sm hover:cursor-pointer -ml-1 p-1 rounded-[5px] text-gray-600 italic bg-[#f0f1f1] w-[220px]`}>
+                          className={`font-normal text-sm  -ml-1 p-1 rounded-[5px] text-gray-600 italic bg-[#f0f1f1] w-[220px]`}>
                           {MESSAGE_DELETED}
                         </p>
                       ) : (
                         <div>
                           {messageDetail.type === MessageType.MESSAGE && (
                             <p
-                              className={`text-chat-box font-normal text-sm hover:cursor-pointer max-w-full -ml-1 p-1 rounded-[5px]  `}
+                              className={`text-chat-box font-normal text-sm  max-w-full -ml-1 p-1 rounded-[5px]  `}
                               dangerouslySetInnerHTML={{
                                 __html: messageDetail.message,
                               }}></p>
@@ -889,7 +911,7 @@ export const MessageDetailQuote = ({
                                   className={`text-sm font-normal bg-[#eaf8ff] p-1`}>
                                   <div className={`flex flex-col items-end`}>
                                     <p
-                                      className={`font-normal w-[500px]  text-sm hover:cursor-pointer text-start -ml-1 p-1 rounded-[5px] text-gray-600 italic`}>
+                                      className={`font-normal w-[500px]  text-sm  text-start -ml-1 p-1 rounded-[5px] text-gray-600 italic`}>
                                       {TASK_DELETED}
                                     </p>
                                   </div>
@@ -926,7 +948,7 @@ export const MessageDetailQuote = ({
                       <ImageRound
                         name="Save"
                         src="/icons/save-active.svg"
-                        className="w-[10px] h-[12px] hover:cursor-pointer"
+                        className="w-[10px] h-[12px] "
                       />
                     )}
                   </div>
@@ -947,7 +969,7 @@ export const MessageDetailQuote = ({
                       {messageDetail.deletedAt ||
                       (!messageDetail.submitLevel && !messageDetail.message) ? (
                         <p
-                          className={`font-normal text-sm hover:cursor-pointer -ml-1 p-1 rounded-[5px] text-gray-600 italic bg-[#f0f1f1] w-[220px]`}>
+                          className={`font-normal text-sm  -ml-1 p-1 rounded-[5px] text-gray-600 italic bg-[#f0f1f1] w-[220px]`}>
                           {messageDetail.type == MessageType.MESSAGE
                             ? MESSAGE_DELETED
                             : DELETED_SKILL_UP_MESSAGE}
@@ -956,7 +978,7 @@ export const MessageDetailQuote = ({
                         <div>
                           {messageDetail.type === MessageType.MESSAGE && (
                             <p
-                              className={`text-chat-box font-normal text-sm hover:cursor-pointer !w-[100%] -ml-1 p-1 rounded-[5px]`}
+                              className={`text-chat-box font-normal text-sm  !w-[100%] -ml-1 p-1 rounded-[5px]`}
                               dangerouslySetInnerHTML={{
                                 __html: messageDetail.message,
                               }}></p>
@@ -1030,7 +1052,7 @@ export const MessageDetailQuote = ({
                       <ImageRound
                         name="Save"
                         src="/icons/save-active.svg"
-                        className="w-[10px] h-[12px] hover:cursor-pointer"
+                        className="w-[10px] h-[12px] "
                       />
                     )}
                   </div>
@@ -1047,7 +1069,7 @@ export const MessageDetailQuote = ({
                 <div className="relative">
                   <div className={`!w-[100%]`}>
                     <div className="flex flex-col gap-3">
-                      <div className="flex items-center w-full rounded-[6px] h-[42px] border-[1px] border-[#D2DBE1] bg-white px-4 gap-3 hover:cursor-pointer">
+                      <div className="flex items-center w-full rounded-[6px] h-[42px] border-[1px] border-[#D2DBE1] bg-white px-4 gap-3 ">
                         <ImageRound
                           className={`w-[15px] h-[14px]`}
                           name="Calendar icon"

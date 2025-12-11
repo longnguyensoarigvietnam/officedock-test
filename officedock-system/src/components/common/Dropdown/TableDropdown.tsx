@@ -108,7 +108,7 @@ const TableDropdown = ({
         isShow: false,
       });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   const filteredOptions = options.filter((option) =>
@@ -181,7 +181,8 @@ const TableDropdown = ({
                   className="!w-4 !h-4"
                 />
               )}
-              <span className={`ml-3 block ${labelOptionClass} w-[100%] break-all`}>
+              <span
+                className={`ml-3 block ${labelOptionClass} w-[100%] break-all`}>
                 {option.label}
               </span>
             </div>
@@ -218,7 +219,7 @@ const TableDropdown = ({
         }}>
         <div className="h-full">
           <div
-            className={`h-full flex justify-center flex-col relative w-full cursor-default rounded border bg-white py-2.5  leading-5.5 pl-3 pr-10 text-left shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+            className={`h-full flex justify-center cursor-pointer flex-col relative w-full  rounded border bg-white py-2.5  leading-5.5 pl-3 pr-10 text-left shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
               disabled ? 'opacity-50 cursor-not-allowed' : ''
             } ${valueClassName} `}>
             <span

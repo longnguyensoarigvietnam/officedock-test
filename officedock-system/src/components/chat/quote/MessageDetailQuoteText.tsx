@@ -84,7 +84,7 @@ const MessageDetailQuoteText = ({
       </div>
       <p
         data-id={uuidQuote}
-        className={`text-chat-box font-normal text-sm hover:cursor-pointer max-w-full -ml-1 p-1 rounded-[5px]  `}>
+        className={`text-chat-box font-normal text-sm  max-w-full -ml-1 p-1 rounded-[5px]  `}>
         {title}
       </p>
     </div>
