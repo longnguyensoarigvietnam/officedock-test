@@ -451,7 +451,7 @@ export const SkillMapByOrganizationPanel = ({
                       ) : (
                         <div
                           className={`${settingSkillAction ? 'px-5 h-[55px]' : 'px-5 h-[90px]'} ${stepCompleted && '!pr-[15px]'} 
-                            ${(isLocked) ? 'hover:cursor-not-allowed' : (skillMapDetail.isDeleted || skill.skill.deletedAt) ? 'hover:cursor-default' : 'hover:cursor-pointer'} 
+                            ${(isLocked) ? 'hover:cursor-not-allowed' : (skillMapDetail.isDeleted || (skill.skill.deletedAt && !isMyPage)) ? 'hover:cursor-default' : 'hover:cursor-pointer'} 
                               flex gap-3 bg-white items-center w-full rounded-[14px] relative`}
                           style={{
                             boxShadow:
