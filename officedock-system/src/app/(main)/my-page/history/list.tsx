@@ -162,7 +162,7 @@ const HistoryListPage = () => {
                   </div>
                   {activeTab == PointHistoryActiveTab.COIN ? (
                     <div
-                      className="flex items-center gap-[10px] justify-end mt-6 pr-3"
+                      className="flex items-center gap-[10px] justify-end mt-6 pr-3 hover:cursor-pointer"
                       onClick={() => setIsShowTotalPointChangeModal(true)}>
                       <div className="flex items-center gap-3 py-[6px] px-3 rounded-lg bg-[#EBF1F7]">
                         <p className="text-[13px] font-normal">
@@ -179,7 +179,7 @@ const HistoryListPage = () => {
                           </p>
                         </div>
                       </div>
-                      <div className="text-xs text-[#77858F] flex items-center justify-center w-[22px] h-[22px] rounded-full bg-[#EBF1F7] hover:cursor-pointer">
+                      <div className="text-xs text-[#77858F] flex items-center justify-center w-[22px] h-[22px] rounded-full bg-[#EBF1F7]">
                         ?
                       </div>
                     </div>

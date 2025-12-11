@@ -107,21 +107,21 @@ const ActionAnswerSurveyModal = ({
               {surveyDetail && surveyDetail.status.closed && (
                 <Button
                   variant="outline"
-                  className="w-[104px] h-[22px] !px-0 !bg-[#EBF1F7] !rounded-[3px] hover:opacity-80 !text-black text-xs font-normal !border-none ]">
+                  className="w-[104px] h-[22px] hover:!cursor-default !px-0 !bg-[#EBF1F7] !rounded-[3px] hover:opacity-80 !text-black text-xs font-normal !border-none">
                   受付終了
                 </Button>
               )}
               {surveyDetail && surveyDetail.status.open && (
                 <Button
                   variant="option"
-                  className="w-[56px] h-[22px] !font-normal !px-0 !rounded-[3px] hover:opacity-80 !text-black text-xs !border-none !bg-[#FFEE6F]">
+                  className="w-[56px] h-[22px] hover:!cursor-default !font-normal !px-0 !rounded-[3px] hover:opacity-80 !text-black text-xs !border-none !bg-[#FFEE6F]">
                   受付中
                 </Button>
               )}
               {surveyDetail?.status.mySurvey && (
                 <Button
                   variant="outline"
-                  className="w-[104px] h-[22px] !px-0 !bg-[#EBF1F7] !rounded-[3px] hover:opacity-80 !text-black text-xs font-normal !border-none ]">
+                  className="w-[104px] h-[22px] hover:!cursor-default !px-0 !bg-[#EBF1F7] !rounded-[3px] hover:opacity-80 !text-black text-xs font-normal !border-none ]">
                   マイアンケート
                 </Button>
               )}

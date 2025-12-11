@@ -139,7 +139,7 @@ export const HistoryTable = ({
                 <>
                   <div
                     key={index}
-                    className={`relative mb-[2px] hover:cursor-pointer ${index == 0 && 'rounded-t-[14px]'} ${index == historyList.length - 1 && 'rounded-b-[14px]'} bg-white flex items-center text-black font-normal py-[14px]`}>
+                    className={`relative mb-[2px] ${index == 0 && 'rounded-t-[14px]'} ${index == historyList.length - 1 && 'rounded-b-[14px]'} bg-white flex items-center text-black font-normal py-[14px]`}>
                     {/* Date column */}
                     <div className="w-[134px] text-xs pl-5 py-[11px] text-nowrap leading-none">
                       <p>{formatShowDateJapanese(`${history.createdAt}`)}</p>

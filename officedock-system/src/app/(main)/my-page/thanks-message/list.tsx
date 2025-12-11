@@ -175,7 +175,7 @@ const ThanksMessageListPage = () => {
               <ImageRound
                 name="Seagull"
                 src="/icons/seagull.svg"
-                className="w-fit h-[73vh] cursor-pointer"
+                className="w-fit h-[73vh]"
               />
             </div>
 
