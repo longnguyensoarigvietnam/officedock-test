@@ -25,13 +25,13 @@ import {
 import { NO_DATA_AVAILABLE, PAGE_SIZE_OPTIONS } from '@constants';
 
 import useEventLocationList from '@hooks/useEventLocationList';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 import { useToast } from '@providers/ToastProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 
 import { LocationEventType } from '@interfaces/location';
 import api from '@base/api';
-import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 const ListLocation = () => {
   const { showToast } = useToast();
@@ -332,7 +332,7 @@ const ListLocation = () => {
         </div>
       </div>
       <div
-        className="w-full p-5 bg-[#F8FAFC] rounded-[30px]"
+        className="w-full p-[30px] bg-[#F8FAFC] rounded-[30px]"
         style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
         <div className="flex items-center justify-between mb-3">
           <p className="text-[#77858F] font-medium text-sm pl-1">

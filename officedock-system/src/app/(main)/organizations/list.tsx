@@ -422,7 +422,7 @@ const ListOrganizations = () => {
           )}
       </div>
       <div
-        className="w-full p-5 bg-[#F8FAFC] rounded-[30px]"
+        className="w-full p-[30px] bg-[#F8FAFC] rounded-[30px]"
         style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
         <Table className="bg-white !rounded-[10px] relative table-fixed">
           <TableHeader className="!bg-[#F8FAFC]">
