@@ -39,7 +39,7 @@ import {
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 
-import { hasPermissionInArray } from '@utils';
+import { getErrorMessage, handleServerFormErrors, hasPermissionInArray } from '@utils';
 
 import api from '@base/api';
 
@@ -51,9 +51,9 @@ interface OrganizationSkillDetailProps {
   setSelectedFilterStepDetail: React.Dispatch<
     React.SetStateAction<
       | {
-          filterStep: string;
-          filterOrganizationId: number;
-        }
+        filterStep: string;
+        filterOrganizationId: number;
+      }
       | undefined
     >
   >;
@@ -165,7 +165,7 @@ export const OrganizationSkillDetail = ({
   const stepDefinitionBoxRef = useRef<HTMLDivElement | null>(null);
   const isEditingRef = useRef(false);
 
-  const { register, watch, reset } = useForm<OrganizationDefineSteps>({
+  const { register, watch, reset, setError, control, formState: { errors } } = useForm<OrganizationDefineSteps>({
     mode: 'onSubmit',
   });
 
@@ -270,6 +270,7 @@ export const OrganizationSkillDetail = ({
       },
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_UPDATE_MESSAGE);
+        handleServerFormErrors(error, setError, control, true);
         isEditingRef.current = false;
       },
       onSettled: () => {
@@ -322,9 +323,10 @@ export const OrganizationSkillDetail = ({
               </p>
               <div className="!w-full">
                 <Input
-                  className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-full focus:!shadow-none focus:border !border-[1px] !border-[#77858F] rounded-md`}
+                  className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-full focus:!shadow-none focus:border !border-[1px] ${getErrorMessage(errors, 'defineStep1') ? 'border-error' : '!border-[#77858F]'} rounded-md`}
                   defaultValue={orgSkillDetail.steps.step1}
                   register={register('defineStep1')}
+                  error={getErrorMessage(errors, 'defineStep1')}
                 />
               </div>
             </div>
@@ -334,9 +336,10 @@ export const OrganizationSkillDetail = ({
               </p>
               <div className="!w-full">
                 <Input
-                  className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-full focus:!shadow-none focus:border !border-[1px] !border-[#77858F] rounded-md`}
+                  className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-full focus:!shadow-none focus:border !border-[1px] ${getErrorMessage(errors, 'defineStep2') ? 'border-error' : '!border-[#77858F]'} rounded-md`}
                   defaultValue={orgSkillDetail.steps.step2}
                   register={register('defineStep2')}
+                  error={getErrorMessage(errors, 'defineStep2')}
                 />
               </div>
             </div>
@@ -346,9 +349,10 @@ export const OrganizationSkillDetail = ({
               </p>
               <div className="!w-full">
                 <Input
-                  className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-full focus:!shadow-none focus:border !border-[1px] !border-[#77858F] rounded-md`}
+                  className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-full focus:!shadow-none focus:border !border-[1px] ${getErrorMessage(errors, 'defineStep3') ? 'border-error' : '!border-[#77858F]'} rounded-md`}
                   defaultValue={orgSkillDetail.steps.step3}
                   register={register('defineStep3')}
+                  error={getErrorMessage(errors, 'defineStep3')}
                 />
               </div>
             </div>

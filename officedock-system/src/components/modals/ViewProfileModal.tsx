@@ -35,7 +35,7 @@ const ViewProfileModal = memo(
         className="font-primary !rounded-[20px] text-black !p-0 w-[700px]"
         titleClassName="!text-[14px] !text-[#5B6770] !font-medium"
         contentClass="!rounded-[20px]"
-        headerClassName="bg-[#EBF1F7] !rounded-t-[20px] !rounded-b-none px-5 !py-[10px]"
+        headerClassName={`bg-[#EBF1F7] !rounded-t-[20px] !rounded-b-none px-5 !py-[10px] ${isFetchingAuthenticatedUser && '!mb-0'}`}
         closeIconClassName="!bg-white !rounded-full !p-[7px] !hover:cursor-pointer"
         closeClassName="!mt-0 !w-4 !h-4 !hover:cursor-pointer"
         fixedClass="!z-[60]"
@@ -44,9 +44,9 @@ const ViewProfileModal = memo(
         }}
         title="プロフィール">
         {isFetchingAuthenticatedUser ? (
-          <SkeletonContainer className="w-full !bg-[#F8FAFC] !px-8 !pb-5">
+          <SkeletonContainer className="w-full !px-[30px] !pb-[30px]">
             <div className="flex items-center gap-2">
-              <SkeletonElement className="!w-12 !h-12 !rounded-full" />
+              <SkeletonElement className="!w-[70px] !h-[70px] !rounded-full" />
               <div className="flex flex-col gap-2">
                 <SkeletonElement className="!w-[103px]" />
                 <SkeletonElement className="!w-[248px]" />
@@ -55,15 +55,13 @@ const ViewProfileModal = memo(
             <div className="flex flex-col gap-2">
               <SkeletonElement className="!h-10" />
               <SkeletonElement className="!h-10" />
-            </div>
-            <div className="flex flex-col gap-2">
               <SkeletonElement className="!h-10" />
               <SkeletonElement className="!h-10" />
             </div>
           </SkeletonContainer>
         ) : (
-          <div className="mx-8 mb-5">
-            <div className="flex justify-between items-center mb-5">
+          <div className="mx-[30px] mb-[30px]">
+            <div className="flex justify-between items-center mb-[30px]">
               <div className="flex items-center gap-5 max-w-[calc(100%_-_100px)]">
                 <div className="min-w-[70px]">
                   {authenticatedUser ? (
@@ -86,7 +84,7 @@ const ViewProfileModal = memo(
                   <p className="text-[#77858F] text-sm font-medium whitespace-nowrap">
                     名前
                   </p>
-                  <p className="text-black text-[16px] font-medium max-w-full break-all text-justify">
+                  <p className="text-black text-[22px] font-medium max-w-full break-all text-justify">
                     {authenticatedUser?.profile?.fullName || ''}
                   </p>
                 </div>
@@ -94,7 +92,7 @@ const ViewProfileModal = memo(
 
                 <div className="flex gap-[10px] items-center">
                   <p className="text-[#77858F] text-sm font-medium">ID</p>
-                  <p className="text-black text-[16px] font-medium">
+                  <p className="text-black text-base font-medium">
                     {authenticatedUser?.id || ''}
                   </p>
                 </div>
@@ -111,36 +109,36 @@ const ViewProfileModal = memo(
               )}
             </div>
 
-            <div className="flex gap-3 items-center pb-5 mb-5 border-b-[1px] border-b-[#D2DBE1] leading-[1]">
-              <p className="text-[#77858F] text-sm font-medium w-[130px] text-left">
+            <div className="flex gap-3 items-center pb-5 border-b-[1px] border-b-[#D2DBE1]">
+              <p className="text-[#77858F] text-sm font-medium w-[130px] text-left leading-[1]">
                 ID｜メールアドレス
               </p>
-              <p className="text-black text-[16px] text-justify font-medium break-all max-w-[calc(100%_-_142px)]">
+              <p className="text-black text-[16px] text-justify font-medium break-all max-w-[calc(100%_-_142px)] leading-[1]">
                 {authenticatedUser?.email || authenticatedUser?.username || ''}
               </p>
             </div>
-            <div className="flex gap-3 items-center pb-5 mb-5 border-b-[1px] border-b-[#D2DBE1] leading-[1]">
-              <p className="text-[#77858F] text-sm font-medium w-[130px] text-left">
+            <div className="flex gap-3 items-center py-5 border-b-[1px] border-b-[#D2DBE1]">
+              <p className="text-[#77858F] text-sm font-medium w-[130px] text-left leading-[1]">
                 パスワード
               </p>
-              <p className="text-black text-[16px] text-left font-medium">
+              <p className="text-black text-[16px] text-left font-medium leading-[1]">
                 ********
               </p>
             </div>
-            <div className="flex gap-3 items-center pb-5 mb-5 border-b-[1px] border-b-[#D2DBE1] leading-[1]">
-              <p className="text-[#77858F] text-sm font-medium w-[130px] text-left">
+            <div className="flex gap-3 items-center py-5 border-b-[1px] border-b-[#D2DBE1]">
+              <p className="text-[#77858F] text-sm font-medium w-[130px] text-left leading-[1]">
                 メインチーム
               </p>
-              <p className="text-black text-[16px] text-justify font-medium break-all max-w-[calc(100%_-_142px)]">
+              <p className="text-black text-[16px] text-justify font-medium break-all max-w-[calc(100%_-_142px)] leading-[1]">
                 {authenticatedUser?.organizations?.find((org) => org.isMain)
                   ?.name || ''}
               </p>
             </div>
-            <div className="flex gap-3 items-center pb-1 leading-[1]">
-              <p className="text-[#77858F] text-sm font-medium w-[130px] text-left">
+            <div className="flex gap-3 items-center pt-5">
+              <p className="text-[#77858F] text-sm font-medium w-[130px] text-left leading-[1]">
                 サブチーム
               </p>
-              <p className="text-black text-[16px] font-medium break-all max-w-[calc(100%_-_142px)] text-justify">
+              <p className="text-black text-[16px] font-medium break-all max-w-[calc(100%_-_142px)] text-justify leading-[1]">
                 {authenticatedUser?.organizations
                   ?.filter((org) => !org.isMain)
                   ?.map((org) => org.name)

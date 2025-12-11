@@ -39,8 +39,8 @@ interface SkillMapByOrganizationPanelProps {
   settingSkillAction?: ActionsModal;
   isMyPage?: boolean;
   onOpenConfirmSettingSkillInfo?:
-    | ((skill: SkillMapByOrganizationInfo) => void)
-    | undefined;
+  | ((skill: SkillMapByOrganizationInfo) => void)
+  | undefined;
   onEditSettingSkill?: (skillId: string) => Promise<void>;
 }
 
@@ -125,7 +125,7 @@ export const SkillMapByOrganizationPanel = ({
         <ImageRound
           name="Lock treasure"
           src="/icons/lock-treasure.svg"
-          className="w-[51px] h-[40px] cursor-pointer"
+          className="w-[51px] h-[40px]"
         />
       );
     }
@@ -142,7 +142,7 @@ export const SkillMapByOrganizationPanel = ({
         <ImageRound
           name={`Step ${step} treasure`}
           src={treasureIcons[step]}
-          className={`${!settingSkillAction ? 'w-[60px] h-[54px]' : 'w-[50px] h-[50px]'} cursor-pointer`}
+          className={`${!settingSkillAction ? 'w-[60px] h-[54px]' : 'w-[50px] h-[50px]'}`}
         />
       );
     }
@@ -158,7 +158,7 @@ export const SkillMapByOrganizationPanel = ({
                   key={i}
                   name="Coin"
                   src={i < level ? '/icons/coin.svg' : '/icons/gray-coin.svg'}
-                  className="w-[14px] h-[14px] cursor-pointer"
+                  className="w-[14px] h-[14px]"
                 />
               ))}
             </div>
@@ -173,7 +173,7 @@ export const SkillMapByOrganizationPanel = ({
                   src={
                     i < level ? '/icons/diamond.svg' : '/icons/gray-diamond.svg'
                   }
-                  className="w-[14px] h-[14px] cursor-pointer"
+                  className="w-[14px] h-[14px]"
                 />
               ))}
             </div>
@@ -186,7 +186,7 @@ export const SkillMapByOrganizationPanel = ({
                   key={i}
                   name="Crown"
                   src={i < level ? '/icons/crown.svg' : '/icons/gray-crown.svg'}
-                  className="w-[14px] h-[14px] cursor-pointer"
+                  className="w-[14px] h-[14px]"
                 />
               ))}
             </div>
@@ -304,7 +304,7 @@ export const SkillMapByOrganizationPanel = ({
         showErrorToast(error, ERROR_SAVE_MESSAGE);
         isEditingRef.current = false;
       },
-      onSettled: () => {},
+      onSettled: () => { },
     },
   );
 
@@ -332,7 +332,7 @@ export const SkillMapByOrganizationPanel = ({
         showErrorToast(error, ERROR_SAVE_MESSAGE);
         isSubmittingRef.current = false;
       },
-      onSettled: () => {},
+      onSettled: () => { },
     },
   );
 
@@ -354,7 +354,7 @@ export const SkillMapByOrganizationPanel = ({
       onError: (error: AxiosError) => {
         showErrorToast(error, ERROR_SAVE_MESSAGE);
       },
-      onSettled: () => {},
+      onSettled: () => { },
     },
   );
 
@@ -450,12 +450,14 @@ export const SkillMapByOrganizationPanel = ({
                           className={`${settingSkillAction ? 'px-5 h-[55px]' : 'px-5 h-[90px]'} bg-white w-full rounded-[14px]`}></div>
                       ) : (
                         <div
-                          className={`${settingSkillAction ? 'px-5 h-[55px]' : 'px-5 h-[90px]'} ${stepCompleted && '!pr-[15px]'} hover:cursor-pointer flex gap-3 bg-white items-center w-full rounded-[14px] relative`}
+                          className={`${settingSkillAction ? 'px-5 h-[55px]' : 'px-5 h-[90px]'} ${stepCompleted && '!pr-[15px]'} 
+                            ${(isLocked) ? 'hover:cursor-not-allowed' : (skillMapDetail.isDeleted || skill.skill.deletedAt) ? 'hover:cursor-default' : 'hover:cursor-pointer'} 
+                              flex gap-3 bg-white items-center w-full rounded-[14px] relative`}
                           style={{
                             boxShadow:
                               showTwinklingStars &&
-                              !skill.skill.deletedAt &&
-                              !skillMapDetail.isDeleted
+                                !skill.skill.deletedAt &&
+                                !skillMapDetail.isDeleted
                                 ? '0px 0px 20px 0px #36ACDE80'
                                 : '0px 2px 8px 0px #0000001A',
                           }}
@@ -587,7 +589,7 @@ export const SkillMapByOrganizationPanel = ({
                                 <ImageRound
                                   name="Comment"
                                   src={'/icons/comment.svg'}
-                                  className="w-[16px] h-[14px] relative cursor-pointer"
+                                  className="w-[16px] h-[14px] relative"
                                   onClick={(e) => {
                                     if (skillMapDetail.isDeleted) return;
                                     e.stopPropagation();
