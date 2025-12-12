@@ -1450,11 +1450,11 @@ class ScheduleTeamdockViewSet(BaseAPIViewSet):
                 "schedule_id": schedule_id,
                 "title": model.title,
                 "start_date": duration.started_at,
-                "end_date": calendar_type,
+                "end_date": duration.paused_at,
                 "participants": participants,
                 "is_start": not duration.paused_at,
                 "is_cross_team_task": is_cross_team_task,
-                "event_type": model.type,
+                "event_type": calendar_type,
                 "categories": categories,
             }
             results.append(item)

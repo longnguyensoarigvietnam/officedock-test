@@ -1,5 +1,15 @@
 from django.db import transaction
-from django.db.models import F, Q, Case, Prefetch, When, Value, IntegerField
+from django.db.models import (
+    F,
+    Q,
+    Case,
+    Exists,
+    OuterRef,
+    Prefetch,
+    When,
+    Value,
+    IntegerField,
+)
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, OpenApiParameter
@@ -355,14 +365,17 @@ class SkillMapViewSet(
             super()
             .get_queryset()
             .select_related("skill", "organization", "staff")
+            .annotate(
+                is_have_comment=Exists(
+                    SubmitLevelHistory.objects.filter(
+                        staff=OuterRef("staff"),
+                        skill=OuterRef("skill"),
+                        organization=OuterRef("organization"),
+                        status=SubmitLevelStatus.APPROVE.value,
+                    )
+                )
+            )
             .prefetch_related(
-                Prefetch(
-                    "skill__submit_level_histories",
-                    queryset=SubmitLevelHistory.objects.filter(
-                        status=SubmitLevelStatus.APPROVE.value
-                    ),
-                    to_attr="approved_histories",
-                ),
                 Prefetch(
                     "skill_map_skill_levels",
                     queryset=SkillMapSkillLevel.objects.order_by("id"),

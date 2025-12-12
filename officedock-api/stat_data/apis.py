@@ -292,13 +292,13 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
         if organization_ids_params is None:
             organizations = request_user.organizations.prefetch_related(
                 Prefetch("users", queryset=user_qs)
-            ).order_by("id")
+            ).order_by("-created_at")
         else:
             organization_ids = split_id_from_string(organization_ids_params)
             organizations = (
                 Organization.objects.filter(id__in=organization_ids)
                 .prefetch_related(Prefetch("users", queryset=user_qs))
-                .order_by("id")
+                .order_by("-created_at")
             )
 
         data = []
