@@ -176,7 +176,8 @@ export const SkillSetting = ({
                         <p className="max-w-[150px] truncate text-[15px] text-left font-medium leading-none">
                           {skill.skill.name}
                         </p>
-                        <div className="w-[156px] mt-[5px]">
+                        <div
+                          className={`w-[156px] mt-[5px] ${skill.skill.deletedAt ? 'invisible' : ''}`}>
                           <SkillMapProgressBar
                             value={progressPercent}
                             strokeColor={strokeColor}

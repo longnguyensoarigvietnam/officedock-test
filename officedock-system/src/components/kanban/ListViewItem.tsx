@@ -409,7 +409,7 @@ const ListViewItem = ({
                       <ImageRound
                         src={`/icons/${content.isStart ? 'pause-task' : 'play-task'}.svg`}
                         name="Start task"
-                        className={`hover:cursor-pointer ${content.isStart ? '!w-[20px] !h-[20px]' : '!w-[30px] !h-[30px]'}`}
+                        className={`hover:cursor-pointer relative top-[3px] ${content.isStart ? '!w-[20px] !h-[20px]' : '!w-[20px] !h-[20px]'}`}
                         onClick={async () => {
                           await new Promise<void>((resolve) => {
                             setTaskSelectedToStart(content);
