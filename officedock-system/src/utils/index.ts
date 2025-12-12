@@ -2686,9 +2686,9 @@ export const getFieldArrayErrorMessage = (
       for (const key of possibleKeys) {
         if (error[key]) return String(error[key]);
       }
-      return 'Invalid input';
+      return '';
     }
-    return 'Invalid input';
+    return '';
   }
 
   return undefined;

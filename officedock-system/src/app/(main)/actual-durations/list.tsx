@@ -824,7 +824,9 @@ const ListActualDurations = () => {
                   value: selectedStaff.value,
                 }}
                 onChange={(e: OptionDropdownType) => {
+                  setHasMore(true)
                   setPageNumber(1)
+                  setIsActualDurationsByStaffLoading(true);
                   setSelectedStaff(e);
                 }}
               />
