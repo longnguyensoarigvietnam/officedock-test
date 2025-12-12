@@ -430,7 +430,7 @@ def transform_statistic_categories(statistic_categories):
         )
 
     def is_deleted(cat):
-        return cat and cat.get("deleted_at") not in [None, ""]
+        return cat and cat.get("is_hidden")
 
     large_dict = {}
 
