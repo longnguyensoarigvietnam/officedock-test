@@ -1,23 +1,73 @@
-# Use the official Node.js 16.x image as a base
-FROM node:21-alpine3.17
+# ==============================================================================
+# Optimized Dockerfile for Cloud Run
+# ==============================================================================
 
-# Set the working directory
+# Base image
+FROM node:21-alpine3.17 AS base
+
+# ==============================================================================
+# Dependencies stage
+# ==============================================================================
+FROM base AS deps
+
 WORKDIR /app
 
-# Copy the package.json and package-lock.json files to the container
+# Copy dependency files first for cache optimization
 COPY package*.json ./
 
-# Install the dependencies
-RUN npm install
+# Install dependencies with ci for reproducibility
+RUN npm ci
 
-# Copy the rest of the application files to the container
+# ==============================================================================
+# Build stage
+# ==============================================================================
+FROM base AS builder
+
+WORKDIR /app
+
+# Build-time environment variables
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+ARG NEXT_PUBLIC_HELP_PAGE_URL
+ARG API_INTERNAL_URL
+
+# Required for rewrites in next.config.mjs
+ENV API_INTERNAL_URL=${API_INTERNAL_URL}
+
+# Copy dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copy source code and build
 COPY . .
-
 RUN npm run build
+
+# ==============================================================================
+# Runtime stage
+# ==============================================================================
+FROM base AS runner
+
+WORKDIR /app
+
+# Security: Create non-root user
+RUN addgroup --system --gid 1001 nodejs \
+    && adduser --system --uid 1001 nextjs
+
+# Environment file path (mounted from Secret Manager)
+ARG RUNTIME_ENV_PATH=/secrets/.env
+ENV RUNTIME_ENV_PATH=${RUNTIME_ENV_PATH}
+
+# Set environment variables
+ENV NODE_ENV=production \
+    PORT=3000
+
+# Copy Next.js standalone output
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Switch to non-root user
+USER nextjs
 
 EXPOSE 3000
 
-ENV PORT 3000
-
-# Start the application
-CMD ["npm", "run", "start"]
+CMD ["sh", "-c", "node --env-file=${RUNTIME_ENV_PATH} server.js"]

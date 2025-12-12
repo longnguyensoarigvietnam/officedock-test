@@ -34,7 +34,7 @@ steps:
     args: [
         "-c",
         "set -eux && \
-        gcloud builds submit \
+        gcloud builds submit ./officedock-system \
         --config ./officedock-system/cloudbuild-production.yaml \
         --region $LOCATION \
         --revision $TAG_NAME \
@@ -61,7 +61,7 @@ steps:
     args: [
         "-c",
         "set -eux && \
-        gcloud builds submit \
+        gcloud builds submit ./officedock-admin \
         --config ./officedock-admin/cloudbuild-production.yaml \
         --region $LOCATION \
         --revision $TAG_NAME \
