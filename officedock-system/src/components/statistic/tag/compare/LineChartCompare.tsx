@@ -1399,7 +1399,7 @@ const LineChartCompare = ({
                     return (
                       <div key={index} className="flex gap-1 items-center">
                         <div
-                          className="w-8 h-1"
+                          className="w-6 h-1"
                           style={{ backgroundColor: label.color }}></div>
                         <p className="font-medium text-[#77858F] text-xs truncate max-w-[200px]">
                           {label.name}
@@ -1416,7 +1416,7 @@ const LineChartCompare = ({
                     return (
                       <div key={index} className="flex gap-1 items-center">
                         <div
-                          className="w-8 h-1 border-t-2 border-dashed"
+                          className="w-6 h-1 border-t-2 border-dashed"
                           style={{ borderColor: label.color }}></div>
                         <p className="font-medium text-[#77858F] text-xs truncate max-w-[200px]">
                           {label.name}

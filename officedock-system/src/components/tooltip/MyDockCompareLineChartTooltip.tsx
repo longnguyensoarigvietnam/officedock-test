@@ -1,12 +1,14 @@
 import ImageRound from '@components/common/ImageRound';
+
 import { DEFAULT_TIME_TEXT } from '@constants';
 import { StatisticChartType } from '@constants/enums';
+
 import { convertToJapaneseDateRange, subtractDurations } from '@utils/date';
 
 export const MyDockCompareLineChartTooltip = ({ data }: { data: any[] }) => {
   return (
     <div
-      className="p-[13px] bg-white rounded-[8px] w-[250px] max-h-[500px] overflow-y-auto"
+      className="p-5 bg-white rounded-[14px] w-[282px] max-h-[500px] overflow-y-auto"
       style={{
         boxShadow: '0px 2px 8px 0px #0000001A',
       }}>
@@ -64,7 +66,7 @@ export const MyDockCompareLineChartTooltip = ({ data }: { data: any[] }) => {
                 : undefined
             }
             className="flex flex-col gap-[8px]">
-            <div className="flex items-center mb-2 border-b border-[#D2DBE1]">
+            <div className="flex items-center mb-2 pb-4 border-b border-[#D2DBE1]">
               <div
                 className="mr-1 w-3 h-3 rounded-full min-w-[12px]"
                 style={{ backgroundColor: point.color }}></div>
@@ -78,7 +80,7 @@ export const MyDockCompareLineChartTooltip = ({ data }: { data: any[] }) => {
                 <p className="bg-[#EBF1F7] text-primary h-[18px] w-[57px] rounded-[3px] text-xs font-medium flex items-center justify-center">
                   基準期間
                 </p>
-                <div className="text-[#77858F] font-normal text-xs">
+                <div className="text-[#77858F] font-normal text-sm text-nowrap">
                   {point.type == StatisticChartType.COMPARE
                     ? point.anotherStartDate
                       ? convertToJapaneseDateRange(
@@ -94,7 +96,7 @@ export const MyDockCompareLineChartTooltip = ({ data }: { data: any[] }) => {
                       : ''}
                 </div>
               </div>
-              <div className="flex justify-between mb-2 items-end">
+              <div className="flex justify-between mb-2 items-center">
                 <p className="font-normal text-base">
                   {standardDuration.split(':')[0]}時間
                   {standardDuration.split(':')[1]}分
@@ -113,7 +115,7 @@ export const MyDockCompareLineChartTooltip = ({ data }: { data: any[] }) => {
                 <p className="bg-[#F9EAEA] text-[#E95062] h-[18px] w-[57px] rounded-[3px] text-xs font-medium flex items-center justify-center">
                   比較期間
                 </p>
-                <div className="text-[#77858F] font-normal text-xs">
+                <div className="text-[#77858F] font-normal text-sm text-nowrap">
                   {point.type == StatisticChartType.COMPARE
                     ? point.startDate
                       ? convertToJapaneseDateRange(

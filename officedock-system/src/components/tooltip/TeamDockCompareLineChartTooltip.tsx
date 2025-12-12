@@ -15,7 +15,7 @@ export const TeamDockCompareLineChartTooltip = ({
 }) => {
   return (
     <div
-      className="p-[13px] bg-white rounded-[8px] w-[260px] max-h-[500px] overflow-y-auto"
+      className="p-5 bg-white rounded-[14px] w-[282px] max-h-[500px] overflow-y-auto"
       style={{
         boxShadow: '0px 2px 8px 0px #0000001A',
       }}>
@@ -69,7 +69,7 @@ export const TeamDockCompareLineChartTooltip = ({
               marginBottom: isNotLast ? '8px' : '0',
             }}
             className="flex flex-col gap-[8px]">
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-[6px]">
               <CustomUserAvatar
                 avatarUrl={point.user.avatar}
                 avatarColor={point.user.avatarColor || ''}
@@ -79,7 +79,7 @@ export const TeamDockCompareLineChartTooltip = ({
                 {point.user.fullName}
               </p>
             </div>
-            <p className="text-[16px] font-normal max-w-full break-all border-b-[1px] border-b-[#D2DBE1] pb-[8px]">
+            <p className="text-[16px] font-normal max-w-full break-all border-b-[1px] border-b-[#D2DBE1] pb-4 mb-2">
               {selectedOptionName}
             </p>
             <div>
@@ -87,7 +87,7 @@ export const TeamDockCompareLineChartTooltip = ({
                 <p className="bg-[#EBF1F7] text-primary h-[18px] w-[57px] rounded-[3px] text-xs font-medium flex items-center justify-center">
                   基準期間
                 </p>
-                <div className="text-[#77858F] font-normal text-xs text-nowrap">
+                <div className="text-[#77858F] font-normal text-sm text-nowrap">
                   {point.type == StatisticChartType.COMPARE
                     ? point.anotherStartDate
                       ? convertToJapaneseDateRange(
@@ -103,7 +103,7 @@ export const TeamDockCompareLineChartTooltip = ({
                       : ''}
                 </div>
               </div>
-              <div className="flex justify-between mb-[8px] items-end">
+              <div className="flex justify-between mb-[8px] items-center">
                 <p className="font-normal text-[16px]">
                   {standardDuration.split(':')[0]}時間
                   {standardDuration.split(':')[1]}分
@@ -122,7 +122,7 @@ export const TeamDockCompareLineChartTooltip = ({
                 <p className="bg-[#F9EAEA] text-[#E95062] h-[18px] w-[57px] rounded-[3px] text-xs font-medium flex items-center justify-center">
                   比較期間
                 </p>
-                <div className="text-[#77858F] font-normal text-xs text-nowrap">
+                <div className="text-[#77858F] font-normal text-sm text-nowrap">
                   {point.type == StatisticChartType.COMPARE
                     ? point.startDate
                       ? convertToJapaneseDateRange(
