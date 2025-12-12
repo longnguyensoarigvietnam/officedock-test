@@ -133,11 +133,11 @@ export function buildProgressDataCompareWithMergedOthers({
     data:
       baseData.length === 0
         ? compareData.map((i) => ({
-            ...i,
-            percent: 0,
-            duration: DEFAULT_TIME_TEXT,
-            users: [],
-          }))
+          ...i,
+          percent: 0,
+          duration: DEFAULT_TIME_TEXT,
+          users: [],
+        }))
         : baseData,
     threshold,
   });
@@ -146,11 +146,11 @@ export function buildProgressDataCompareWithMergedOthers({
     data:
       compareData.length === 0
         ? baseData.map((i) => ({
-            ...i,
-            percent: 0,
-            duration: DEFAULT_TIME_TEXT,
-            users: [],
-          }))
+          ...i,
+          percent: 0,
+          duration: DEFAULT_TIME_TEXT,
+          users: [],
+        }))
         : compareData,
     threshold,
   });
@@ -364,11 +364,11 @@ const AllocationTagTeamCompare = memo(
               optionData:
                 item.organizationId == SUB_TEAMS
                   ? item?.subTeams
-                      ?.slice(0, 3)
-                      .map((team) => team?.organizationName || '') || []
+                    ?.slice(0, 3)
+                    .map((team) => team?.organizationName || '') || []
                   : item?.data
-                      ?.slice(0, 3)
-                      .map((category) => category?.tagName || '') || [],
+                    ?.slice(0, 3)
+                    .map((category) => category?.tagName || '') || [],
             };
 
             mergedMap.set(`${item.organizationId}`, {
@@ -390,11 +390,11 @@ const AllocationTagTeamCompare = memo(
               optionData:
                 compareItem.organizationId == SUB_TEAMS
                   ? compareItem?.subTeams
-                      ?.slice(0, 3)
-                      .map((team) => team?.organizationName || '') || []
+                    ?.slice(0, 3)
+                    .map((team) => team?.organizationName || '') || []
                   : compareItem?.data
-                      ?.slice(0, 3)
-                      .map((category) => category?.tagName || '') || [],
+                    ?.slice(0, 3)
+                    .map((category) => category?.tagName || '') || [],
             };
 
             if (mergedMap.has(`${compareItem.organizationId}`)) {
@@ -514,9 +514,8 @@ const AllocationTagTeamCompare = memo(
             <ImageRound
               src="/icons/extend-calendar.svg"
               name="Extend calendar"
-              className={`!w-[14px] !h-[14px] hover:cursor-pointer ${
-                isExtendData ? '-rotate-90' : 'rotate-90'
-              }`}
+              className={`!w-[14px] !h-[14px] hover:cursor-pointer ${isExtendData ? '-rotate-90' : 'rotate-90'
+                }`}
               onClick={() => {
                 setIsExtendData(!isExtendData);
               }}
@@ -572,7 +571,7 @@ const AllocationTagTeamCompare = memo(
                                 ? formatTimeToJapanese(totalDurationLarge)
                                 : '-'
                               : totalDurationLarge &&
-                                  progressDataPairsLarge.length > 0
+                                progressDataPairsLarge.length > 0
                                 ? formatTimeToJapanese(totalDurationLarge)
                                 : '-'}
                           </span>
@@ -603,23 +602,23 @@ const AllocationTagTeamCompare = memo(
                               ? totalDurationLargeCompare &&
                                 progressDataAllTeam.length > 0
                                 ? formatTimeToJapanese(
-                                    totalDurationLargeCompare,
-                                  )
+                                  totalDurationLargeCompare,
+                                )
                                 : '-'
                               : totalDurationLargeCompare &&
-                                  progressDataPairsLarge.length > 0
+                                progressDataPairsLarge.length > 0
                                 ? formatTimeToJapanese(
-                                    totalDurationLargeCompare,
-                                  )
+                                  totalDurationLargeCompare,
+                                )
                                 : '-'}
                           </span>
                         </div>
                       </div>
                       {isLoadingOrganizationCompare || isLoadingOrganization ? (
                         <div className="flex flex-col mt-[50px]">
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-12" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
+                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-[6px]" />
+                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-8" />
+                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-[6px]" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                         </div>
                       ) : (
@@ -637,7 +636,7 @@ const AllocationTagTeamCompare = memo(
                                     <span className="text-sm font-medium truncate max-w-24">
                                       {formatTimeToJapanese(
                                         pair.main?.duration ||
-                                          DEFAULT_TIME_TEXT,
+                                        DEFAULT_TIME_TEXT,
                                       )}
                                     </span>
                                   </div>
@@ -659,8 +658,8 @@ const AllocationTagTeamCompare = memo(
                                         setActiveBarLargeId(null);
                                     }}
                                     classProgressClass="h-[20px] rounded-[4px]"
-                                    handleClickTooltip={() => {}}
-                                    handleClickChart={() => {}}
+                                    handleClickTooltip={() => { }}
+                                    handleClickChart={() => { }}
                                     id={pair.main ? pair.main.id : 0}
                                     label={pair.main ? pair.main.label : ''}
                                     value={pair.main ? pair.main.value : 0}
@@ -701,8 +700,8 @@ const AllocationTagTeamCompare = memo(
                                         setActiveBarLargeCompareId(null);
                                     }}
                                     classProgressClass="h-[20px] rounded-[4px]"
-                                    handleClickTooltip={() => {}}
-                                    handleClickChart={() => {}}
+                                    handleClickTooltip={() => { }}
+                                    handleClickChart={() => { }}
                                     id={pair.compare ? pair.compare.id : 0}
                                     label={
                                       pair.compare ? pair.compare.label : ''
@@ -886,9 +885,9 @@ const AllocationTagTeamCompare = memo(
                       </div>
                       {isLoadingLargeCompare || isLoadingLarge ? (
                         <div className="flex flex-col mt-[50px]">
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-12" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
+                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-[6px]" />
+                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-8" />
+                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-[6px]" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                         </div>
                       ) : (
@@ -1018,9 +1017,9 @@ const AllocationTagTeamCompare = memo(
                       </div>
                       {isLoadingMediumCompare || isLoadingMedium ? (
                         <div className="flex flex-col mt-[50px]">
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-12" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
+                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-[6px]" />
+                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-8" />
+                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-[6px]" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                         </div>
                       ) : (
@@ -1168,9 +1167,9 @@ const AllocationTagTeamCompare = memo(
                       </div>
                       {isLoadingSmallCompare || isLoadingSmall ? (
                         <div className="flex flex-col mt-[50px]">
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-12" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
+                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-[6px]" />
+                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-8" />
+                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-[6px]" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                         </div>
                       ) : (

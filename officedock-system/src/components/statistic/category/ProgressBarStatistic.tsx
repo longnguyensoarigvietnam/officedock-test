@@ -82,7 +82,7 @@ const ProgressBarStatistic = ({
   return (
     <>
       <div className={`font-medium text-sm text-black ${className}`}>
-        <div className="mb-[10px]">
+        <div className={`${showInfo ? 'mb-[10px]' : 'mb-[6px]'} `}>
           {showInfo && (
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium truncate max-w-40">

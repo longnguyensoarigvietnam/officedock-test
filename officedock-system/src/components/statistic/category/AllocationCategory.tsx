@@ -23,8 +23,8 @@ import { ALL_TEAM_STATISTIC, NO_SETTING } from '@constants';
 
 import { StatisticStateContext } from '@providers/StatisticProvider';
 
-import ProgressBarStatistic from './ProgressBarStatistic';
 import FilterStatistic from './filter/FilterStatistic';
+import ProgressBarStatistic from './ProgressBarStatistic';
 
 type Props = {
   startDate: Date;
@@ -291,7 +291,7 @@ const AllocationCategory = memo(
                         selectedOption={selectedOrganization || undefined}
                         onChange={(data) => handleSelectOrganization(data)}
                       />
-                      <p className="text-sm text-black my-[26px]">
+                      <p className="text-sm text-black leading-[1] my-[26px]">
                         合計{' '}
                         {totalDurationLarge &&
                           formatTimeToJapanese(totalDurationLarge)}
@@ -381,7 +381,7 @@ const AllocationCategory = memo(
                           selectedOrganization?.value == '' || isHasLoading
                         }
                       />
-                      <p className="text-sm text-black my-[26px]">
+                      <p className="text-sm text-black leading-[1] my-[26px]">
                         合計{' '}
                         {totalDurationMedium &&
                           formatTimeToJapanese(totalDurationMedium)}
@@ -463,7 +463,7 @@ const AllocationCategory = memo(
                           isDisableCalendar
                         }
                       />
-                      <p className="text-sm text-black my-[26px]">
+                      <p className="text-sm text-black leading-[1] my-[26px]">
                         合計{' '}
                         {totalDurationSmall &&
                           formatTimeToJapanese(totalDurationSmall)}

@@ -589,9 +589,8 @@ export const SkillMapByOrganizationPanel = ({
                                 <ImageRound
                                   name="Comment"
                                   src={'/icons/comment.svg'}
-                                  className="w-[16px] h-[14px] relative"
+                                  className="w-[16px] h-[14px] relative hover:cursor-pointer"
                                   onClick={(e) => {
-                                    if (skillMapDetail.isDeleted) return;
                                     e.stopPropagation();
                                     setSelectedSkillMapToViewComment(skill.id);
                                   }}

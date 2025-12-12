@@ -3,7 +3,7 @@ import React, { memo, useContext, useEffect, useState } from 'react';
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import ListTaskDetailStatisticTagModal from '@components/modals/ListTaskDetailStatisticTagModal';
-import { SkeletonElement } from '@components/common/SkeletonLoading';
+import { AllocationSkeleton } from '@components/common/SkeletonLoading/AllocationSkeleton';
 
 import {
   StatisticAllTeamInfo,
@@ -279,11 +279,11 @@ const AllocationTagCompare = memo(
                 optionData:
                   item.organizationId == SUB_TEAMS
                     ? item?.subTeams
-                        ?.slice(0, 3)
-                        .map((team) => team?.organizationName || '') || []
+                      ?.slice(0, 3)
+                      .map((team) => team?.organizationName || '') || []
                     : item?.data
-                        ?.slice(0, 3)
-                        .map((tag) => tag?.tagName || '') || [],
+                      ?.slice(0, 3)
+                      .map((tag) => tag?.tagName || '') || [],
               },
               compare: null,
             });
@@ -306,11 +306,11 @@ const AllocationTagCompare = memo(
                 optionData:
                   compareItem.organizationId == SUB_TEAMS
                     ? compareItem?.subTeams
-                        ?.slice(0, 3)
-                        .map((team) => team?.organizationName || '') || []
+                      ?.slice(0, 3)
+                      .map((team) => team?.organizationName || '') || []
                     : compareItem?.data
-                        ?.slice(0, 3)
-                        .map((tag) => tag?.tagName || '') || [],
+                      ?.slice(0, 3)
+                      .map((tag) => tag?.tagName || '') || [],
               };
             } else {
               mergedMap.set(compareItem.organizationId, {
@@ -326,11 +326,11 @@ const AllocationTagCompare = memo(
                   optionData:
                     compareItem.organizationId == SUB_TEAMS
                       ? compareItem?.subTeams
-                          ?.slice(0, 3)
-                          .map((team) => team?.organizationName || '') || []
+                        ?.slice(0, 3)
+                        .map((team) => team?.organizationName || '') || []
                       : compareItem?.data
-                          ?.slice(0, 3)
-                          .map((tag) => tag?.tagName || '') || [],
+                        ?.slice(0, 3)
+                        .map((tag) => tag?.tagName || '') || [],
                 },
               });
             }
@@ -451,9 +451,8 @@ const AllocationTagCompare = memo(
             <ImageRound
               src="/icons/extend-calendar.svg"
               name="Extend calendar"
-              className={`!w-[14px] !h-[14px] hover:cursor-pointer ${
-                isExtendData ? '-rotate-90' : 'rotate-90'
-              }`}
+              className={`!w-[14px] !h-[14px] hover:cursor-pointer ${isExtendData ? '-rotate-90' : 'rotate-90'
+                }`}
               onClick={() => {
                 setIsExtendData(!isExtendData);
               }}
@@ -541,12 +540,7 @@ const AllocationTagCompare = memo(
                         )}
                       </div>
                       {isLoadingOrganizationCompare || isLoadingOrganization ? (
-                        <div className="flex flex-col mt-[50px]">
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-12" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
-                        </div>
+                        <AllocationSkeleton />
                       ) : (
                         <div className="mt-5 flex flex-col gap-4">
                           {progressDataPairsLarge.map((pair, index) => {
@@ -580,7 +574,7 @@ const AllocationTagCompare = memo(
                                   }}
                                   handleClickChart={(
                                     _data: OptionDropdownType,
-                                  ) => {}}
+                                  ) => { }}
                                   isActive={activeBarLargeId === pair.main?.id}
                                   onActivate={(id: number) => {
                                     setActiveBarLargeId(id);
@@ -630,7 +624,7 @@ const AllocationTagCompare = memo(
                                   }}
                                   handleClickChart={(
                                     _data: OptionDropdownType,
-                                  ) => {}}
+                                  ) => { }}
                                   id={pair.compare ? pair.compare.id : 0}
                                   label={pair.compare ? pair.compare.label : ''}
                                   value={pair.compare ? pair.compare.value : 0}
@@ -753,12 +747,7 @@ const AllocationTagCompare = memo(
                         )}
                       </div>
                       {isLoadingLargeCompare || isLoadingLarge ? (
-                        <div className="flex flex-col mt-[50px]">
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-12" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
-                        </div>
+                        <AllocationSkeleton />
                       ) : (
                         <div className="mt-5 flex flex-col gap-4">
                           {progressDataPairsMedium.map((pair, index) => {
@@ -788,7 +777,7 @@ const AllocationTagCompare = memo(
                                   }}
                                   handleClickChart={(
                                     _data: OptionDropdownType,
-                                  ) => {}}
+                                  ) => { }}
                                   id={pair.main ? pair.main.id : 0}
                                   label={pair.main ? pair.main.label : ''}
                                   value={pair.main ? pair.main.value : 0}
@@ -834,7 +823,7 @@ const AllocationTagCompare = memo(
                                   }}
                                   handleClickChart={(
                                     _data: OptionDropdownType,
-                                  ) => {}}
+                                  ) => { }}
                                   id={pair.compare ? pair.compare.id : 0}
                                   label={pair.compare ? pair.compare.label : ''}
                                   value={pair.compare ? pair.compare.value : 0}
@@ -960,12 +949,7 @@ const AllocationTagCompare = memo(
                         )}
                       </div>
                       {isLoadingMediumCompare || isLoadingMedium ? (
-                        <div className="flex flex-col mt-[50px]">
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-12" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
-                        </div>
+                        <AllocationSkeleton />
                       ) : (
                         <div className="mt-5 flex flex-col gap-4">
                           {progressDataPairsSmall.map((pair, index) => {
@@ -995,7 +979,7 @@ const AllocationTagCompare = memo(
                                   }}
                                   handleClickChart={(
                                     _data: OptionDropdownType,
-                                  ) => {}}
+                                  ) => { }}
                                   id={pair.main ? pair.main.id : 0}
                                   label={pair.main ? pair.main.label : ''}
                                   value={pair.main ? pair.main.value : 0}
@@ -1037,7 +1021,7 @@ const AllocationTagCompare = memo(
                                   }}
                                   handleClickChart={(
                                     _data: OptionDropdownType,
-                                  ) => {}}
+                                  ) => { }}
                                   id={pair.compare ? pair.compare.id : 0}
                                   label={pair.compare ? pair.compare.label : ''}
                                   value={pair.compare ? pair.compare.value : 0}
@@ -1161,12 +1145,7 @@ const AllocationTagCompare = memo(
                         )}
                       </div>
                       {isLoadingSmallCompare || isLoadingSmall ? (
-                        <div className="flex flex-col mt-[50px]">
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-12" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-2" />
-                          <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
-                        </div>
+                        <AllocationSkeleton />
                       ) : (
                         <div className="mt-5 flex flex-col gap-4">
                           {progressDataPairsCategory.map((pair, index) => {
@@ -1197,7 +1176,7 @@ const AllocationTagCompare = memo(
                                   isLast
                                   handleClickChart={(
                                     _data: OptionDropdownType,
-                                  ) => {}}
+                                  ) => { }}
                                   id={pair.main ? pair.main.id : 0}
                                   label={pair.main ? pair.main.label : ''}
                                   value={pair.main ? pair.main.value : 0}
@@ -1243,7 +1222,7 @@ const AllocationTagCompare = memo(
                                   }}
                                   handleClickChart={(
                                     _data: OptionDropdownType,
-                                  ) => {}}
+                                  ) => { }}
                                   id={pair.compare ? pair.compare.id : 0}
                                   label={pair.compare ? pair.compare.label : ''}
                                   value={pair.compare ? pair.compare.value : 0}
