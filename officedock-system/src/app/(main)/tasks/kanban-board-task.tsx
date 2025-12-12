@@ -34,7 +34,6 @@ import ActionsTemplateModal from '@components/modals/ActionsTemplateModal';
 import CardListView from '@components/kanban/CardListView';
 import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
 import Button from '@components/common/Button';
-import InputSearch from '@components/common/InputSearch';
 import socketEventEmitter from '@components/socket/socketEventEmitter';
 import BoardKanban from '@components/kanban/Board';
 import ActionFilterTask from '@components/modals/ActionFilterTask';
@@ -3385,8 +3384,9 @@ const KanbanBoardTask = () => {
                         完了日
                       </Button>
                     )}
-                    <InputSearch
-                      className="w-[300px] h-[34px] py-0 bg-[#EBF1F7] !rounded-[20px]"
+                    {/* TODO:: Implement search task */}
+                    {/* <InputSearch
+                      className="w-[300px] h-[34px] py-0 bg-[#EBF1F7] !invisible !rounded-[20px]"
                       inputClassName="h-[34px] bg-[#EBF1F7] border-none !rounded-[20px] text-sm placeholder-[#77858F]"
                       iconClassName="w-[14px] h-[14px]"
                       placeholder="タスク、キーワードを検索"
@@ -3394,7 +3394,7 @@ const KanbanBoardTask = () => {
                       // onChange={(e) => {
                       //   setSearchValue(e.target.value);
                       // }}
-                    />
+                    /> */}
                   </div>
                   <div
                     className={`w-fit min-w-[200px] flex items-center gap-3 ${isArchiveTaskView && 'justify-end'}`}>

@@ -400,7 +400,7 @@ const TaskCard = ({
                 : event.event?.extendedProps.planEndDate,
               left: 0,
               top: 0,
-              address: event.event?.extendedProps.address,
+              address: event.event?.extendedProps?.location,
               participants: event.event?.extendedProps.participants,
               isAllDay: event.event?.extendedProps.isAllDay,
               type: {

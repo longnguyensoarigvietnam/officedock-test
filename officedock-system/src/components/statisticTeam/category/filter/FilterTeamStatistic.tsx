@@ -96,7 +96,7 @@ const FilterTeamStatistic = ({
                       <ImageRound
                         src={`/icons/user-white.svg`}
                         name="close"
-                        className="w-fit h-fit cursor-pointer"
+                        className="w-fit h-fit "
                       />
                     )}
                     <div className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
@@ -133,7 +133,7 @@ const FilterTeamStatistic = ({
                     <ImageRound
                       src={`/icons/tag-white.svg`}
                       name="close"
-                      className="w-fit h-fit cursor-pointer"
+                      className="w-fit h-fit"
                     />
                   )}
                   <div className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">

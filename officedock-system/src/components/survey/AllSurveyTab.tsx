@@ -86,7 +86,8 @@ const AllSurveyTab = ({ handleAnswer, handleDelete }: AllSurveyTabProp) => {
         <div
           ref={resultsContainerRef}
           className={`overflow-y-auto overflow-x-hidden h-full max-h-[calc(100%_-_90px)] w-full mt-[14px] ${!isLoadingList && !surveyList.length ? 'bg-white h-full w-full' : 'customized-scrollbar'}`}>
-          <div className={`w-full ${isLoadingList ? '' : 'bg-white h-full py-[14px] rounded-[14px]'} `}>
+          <div
+            className={`w-full ${isLoadingList ? '' : 'bg-white h-full py-[14px] rounded-[14px]'} `}>
             {isLoadingList ? (
               <div>
                 <RowSkeleton
@@ -140,7 +141,7 @@ const AllSurveyTab = ({ handleAnswer, handleDelete }: AllSurveyTabProp) => {
                           <>
                             <Button
                               variant="option"
-                              className="w-[104px] h-[22px] !cursor-default !rounded-[3px] hover:opacity-80 !text-black text-xs font-normal !border-none !bg-[#FFEE6F]">
+                              className="w-[104px] h-[22px] !cursor-default !rounded-[3px] hover:opacity-100 !text-black text-xs font-normal !border-none !bg-[#FFEE6F]">
                               受付中
                             </Button>
                             <p className="text-[#77858F]">
@@ -152,7 +153,7 @@ const AllSurveyTab = ({ handleAnswer, handleDelete }: AllSurveyTabProp) => {
                           <>
                             <Button
                               variant="outline"
-                              className="w-[104px] h-[22px] !cursor-default !px-0 !bg-[#EBF1F7] !rounded-[3px] hover:opacity-80 !text-black text-xs font-normal !border-none ]">
+                              className="w-[104px] h-[22px] !cursor-default !px-0 !bg-[#EBF1F7] !rounded-[3px] hover:opacity-100 !text-black text-xs font-normal !border-none ]">
                               受付終了
                             </Button>
                           </>

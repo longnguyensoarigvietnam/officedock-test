@@ -258,6 +258,7 @@ export const SkillMapDetailByUser = ({
                           skill?.progressPercent == 100 &&
                           !stepCompleted &&
                           !skill.skill.deletedAt;
+
                         let strokeColor = '';
                         switch (step) {
                           case 1:
@@ -361,7 +362,7 @@ export const SkillMapDetailByUser = ({
                                   </div>
 
                                   <div
-                                    className={`${skillMap.isDeleted && 'invisible'}`}>
+                                    className={`${skillMap.isDeleted && 'invisible'} ${skill.skill.deletedAt && 'invisible'}`}>
                                     <SkillMapProgressBar
                                       value={progressPercent}
                                       strokeColor={strokeColor}

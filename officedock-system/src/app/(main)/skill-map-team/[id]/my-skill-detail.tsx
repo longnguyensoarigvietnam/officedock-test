@@ -108,6 +108,7 @@ const MySkillDetailByUser = ({ detailSkillData }: Props) => {
                   const lastValidSkill = [...skillMaps]
                     .reverse()
                     .find((skill) => skill.level != null);
+
                   if (!lastValidSkill) return;
                   const step = getSkillStep(`${lastValidSkill?.step}`);
                   const levelNumber =
@@ -189,7 +190,8 @@ const MySkillDetailByUser = ({ detailSkillData }: Props) => {
                                 </>
                               )}
                             </div>
-                            <div className={`w-full mt-[10px] ${item.isDeleted && 'invisible'}`}>
+                            <div
+                              className={`w-full mt-[10px] ${item.isDeleted && 'invisible'} ${lastValidSkill.skill.deletedAt && 'invisible'}`}>
                               <SkillMapProgressBar
                                 value={lastValidSkill.progressPercent || 0}
                                 strokeColor={step?.color || '#0068B6'}

@@ -60,7 +60,6 @@ const BoardSkillUser = () => {
     const newPath = `${pageRouters.SKILL_MAP_TEAM_DETAIL.href(userId)}?${params.toString()}`;
     router.push(newPath);
   };
-
   return (
     <>
       {/* Navigate buttons */}
