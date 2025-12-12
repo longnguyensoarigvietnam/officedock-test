@@ -147,15 +147,15 @@ const ProgressBarStatistic = ({
                   onDeactivate && onDeactivate(id as number);
                 }, 1000);
               }}
-              className={`absolute -top-[25%] ${isLast ? 'right-[100%]' : 'left-[100%]'}  w-[250px] rounded-[14px] p-5 bg-white ${isHovering ? 'block' : 'hidden'} pointer-events-auto transition-opacity duration-300 shadow-lg z-10`}>
+              className={`absolute -top-[25%] ${isLast ? 'right-[100%]' : 'left-[100%]'} w-[288px] rounded-[14px] p-5 bg-white ${isHovering ? 'block' : 'hidden'} pointer-events-auto transition-opacity duration-300 shadow-lg z-10`}>
               {id != -1 ? (
                 <div>
                   {startDate && endDate && (
-                    <div className="flex items-center mb-3">
+                    <div className="flex items-center mb-3 gap-[6px]">
                       <p className="bg-[#EBF1F7] w-[57px] h-[18px] text-primary rounded-sm text-xs font-medium flex items-center justify-center">
                         基準期間
                       </p>
-                      <div className="text-black text-xs font-normal flex items-center gap-[1px]">
+                      <div className="text-[#77858F] text-sm font-normal flex items-center gap-[1px]">
                         <p>
                           {startDate && formatShowStatisticTask(startDate)}(
                           {getJapaneseDayName(String(startDate))})
@@ -169,11 +169,11 @@ const ProgressBarStatistic = ({
                     </div>
                   )}
                   {startDateCompare && endDateCompare && (
-                    <div className="flex items-center mb-3">
+                    <div className="flex items-center mb-3 gap-[6px]">
                       <p className="bg-[#F9EAEA] w-[57px] h-[18px] text-[#E95062] rounded-sm text-xs font-medium flex items-center justify-center">
                         比較期間
                       </p>
-                      <div className="text-black text-xs font-normal flex items-center gap-[1px]">
+                      <div className="text-[#77858F] text-sm font-normal flex items-center gap-[1px]">
                         <p>
                           {startDateCompare &&
                             formatShowStatisticTask(startDateCompare)}
@@ -217,7 +217,7 @@ const ProgressBarStatistic = ({
                         onClick={() => {
                           handleClickTooltip(id as number, organizationId);
                         }}
-                        className="bg-white flex items-center justify-center gap-2 text-[12px] text-[#77858F] h-[34px] rounded-md hover:cursor-pointer">
+                        className="bg-white flex items-center justify-center gap-2 font-normal text-[12px] text-[#77858F] h-[34px] rounded-md hover:cursor-pointer">
                         <span>タスクを見る</span>
                         <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
                           <ImageRound
@@ -236,11 +236,11 @@ const ProgressBarStatistic = ({
                     その他
                   </p>
                   {startDate && endDate && (
-                    <div className="flex items-center mb-3">
+                    <div className="flex items-center mb-3 gap-[6px]">
                       <p className="bg-[#EBF1F7] w-[57px] h-[18px] text-primary rounded-sm text-xs font-medium flex items-center justify-center">
                         基準期間
                       </p>
-                      <div className="text-black text-xs font-normal flex items-center gap-[1px]">
+                      <div className="text-[#77858F] text-sm font-normal flex items-center gap-[1px]">
                         <p>
                           {startDate && formatShowStatisticTask(startDate)}(
                           {getJapaneseDayName(String(startDate))})
@@ -254,11 +254,11 @@ const ProgressBarStatistic = ({
                     </div>
                   )}
                   {startDateCompare && endDateCompare && (
-                    <div className="flex items-center mb-3">
+                    <div className="flex items-center mb-3 gap-[6px]">
                       <p className="bg-[#F9EAEA] w-[57px] h-[18px] text-[#E95062] rounded-sm text-xs font-medium flex items-center justify-center">
                         比較期間
                       </p>
-                      <div className="text-black text-xs font-normal flex items-center gap-[1px]">
+                      <div className="text-[#77858F] text-sm font-normal flex items-center gap-[1px]">
                         <p>
                           {startDateCompare &&
                             formatShowStatisticTask(startDateCompare)}
@@ -301,7 +301,7 @@ const ProgressBarStatistic = ({
                               onClick={() => {
                                 handleClickTooltip(item.id, organizationId);
                               }}
-                              className="bg-white flex items-center justify-center gap-2 text-[12px] text-[#77858F] h-[34px] rounded-md hover:cursor-pointer">
+                              className="bg-white flex items-center justify-center font-normal gap-2 text-[12px] text-[#77858F] h-[34px] rounded-md hover:cursor-pointer">
                               <span>タスクを見る</span>
                               <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
                                 <ImageRound

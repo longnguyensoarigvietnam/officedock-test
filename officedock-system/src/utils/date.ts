@@ -1422,7 +1422,7 @@ export const convertToJapaneseDateRange = (
   const endDate = new Date(endDateStr);
   const startDate = new Date(startDateStr);
 
-  return `${formatDate(startDate)} ~ ${formatDate(endDate)}`;
+  return `${formatDate(startDate)}〜${formatDate(endDate)}`;
 };
 
 export const convertToJapaneseMonthDate = (

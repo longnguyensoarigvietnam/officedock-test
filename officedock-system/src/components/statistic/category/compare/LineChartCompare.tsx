@@ -1225,10 +1225,10 @@ const LineChartCompare = ({
             </div>
           </div>
           <div className="mt-5 px-[30px]">
-            <div className="flex justify-between w-full mb-4">
+            <div className="flex justify-between w-full mb-[30px]">
               <div>
                 {startDate && endDate && (
-                  <div className="flex items-center mb-3 gap-2">
+                  <div className="flex items-center mb-[10px] gap-2">
                     <p className="bg-[#EBF1F7] w-[57px] h-[18px] text-primary rounded-sm text-xs font-medium flex items-center justify-center">
                       基準期間
                     </p>
@@ -1250,7 +1250,7 @@ const LineChartCompare = ({
                   </div>
                 )}
                 {startDateCompare && endDateCompare && (
-                  <div className="flex items-center mb-3 gap-2">
+                  <div className="flex items-center gap-2">
                     <p className="bg-[#F9EAEA] w-[57px] h-[18px] text-[#E95062] rounded-sm text-xs font-medium flex items-center justify-center">
                       比較期間
                     </p>
@@ -1343,7 +1343,7 @@ const LineChartCompare = ({
                     return (
                       <div key={index} className="flex gap-1 items-center">
                         <div
-                          className="w-8 h-1"
+                          className="w-6 h-1"
                           style={{ backgroundColor: label.color }}></div>
                         <p className="font-medium text-[#77858F] text-xs truncate max-w-[200px]">
                           {label.name}
@@ -1360,7 +1360,7 @@ const LineChartCompare = ({
                     return (
                       <div key={index} className="flex gap-1 items-center">
                         <div
-                          className="w-8 h-1 border-t-2 border-dashed"
+                          className="w-6 h-1 border-t-2 border-dashed"
                           style={{ borderColor: label.color }}></div>
                         <p className="font-medium text-[#77858F] text-xs truncate max-w-[200px]">
                           {label.name}
