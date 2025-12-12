@@ -344,8 +344,7 @@ class SkillMapSerializer(serializers.ModelSerializer):
         """
         Check comment of skill map
         """
-        histories = getattr(obj.skill, "approved_histories", [])
-        return len(histories) > 0
+        return obj.is_have_comment
 
     def get_level(self, obj):
         """
