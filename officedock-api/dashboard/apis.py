@@ -779,13 +779,12 @@ class ActualDurationViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
         # Validate user_id
         if not user_id:
             return self.response_ok([])
-
         # Fetch tasks and schedules
         tasks = (
             Task.objects.filter(
                 people_in_charge=user_id,
                 deleted_at__isnull=True,
-                archived_at__isnull=False,
+                archived_at__isnull=True,
             )
             .values("id", "title", "created_at")
             .annotate(
