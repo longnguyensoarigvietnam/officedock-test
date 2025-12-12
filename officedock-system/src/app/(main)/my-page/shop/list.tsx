@@ -24,7 +24,7 @@ import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
 import api from '@base/api';
 import { AvatarItemUser, ItemUser, ShopItemResponse } from '@interfaces/shop';
-import { updateAvatarUrl } from '@utils';
+import { getDefaultThumbByType, updateAvatarUrl } from '@utils';
 
 const ShopItemPage = () => {
   const router = useRouter();
@@ -48,10 +48,10 @@ const ShopItemPage = () => {
   );
 
   const defaultItemsPreview: AvatarItemUser[] = [
-    { name: 'body', type: ItemAvatarType.BODY, url: '' },
-    { name: 'head-full', type: 'head', url: '' },
-    { name: 'hat', type: ItemAvatarType.HAT, url: '' },
-    { name: 'shoes', type: ItemAvatarType.SHOES, url: '' },
+    { name: 'demo-body', type: ItemAvatarType.BODY, url: '' },
+    { name: 'demo-item', type: ItemAvatarType.ITEM, url: '' },
+    { name: 'demo-hat', type: ItemAvatarType.HAT, url: '' },
+    { name: 'demo-shoes', type: ItemAvatarType.SHOES, url: '' },
   ];
 
   const [itemsPreview, setItemsPreview] =
@@ -276,7 +276,10 @@ const ShopItemPage = () => {
                       shopItemList.map((item, index) => (
                         <ItemGroupCard
                           key={`${index}${activeTab}`}
-                          group={item}
+                          group={{
+                            ...item,
+                            thumb: getDefaultThumbByType(item.itemType) || '',
+                          }}
                           totalPearl={totalPearl}
                           handleBuyDataItem={handleBuyDataItem}
                           handlePreviewItem={handlePreviewItem}
@@ -293,7 +296,7 @@ const ShopItemPage = () => {
             </div>
             {/* User */}
             <div className="flex-shrink-0  flex-grow flex items-center justify-center h-full">
-              <div className="h-[424px] w-[336px] mt-20 ml-20  relative">
+              <div className="h-[470px] w-[336px]  mt-20 ml-20  relative">
                 <RenderAccessoriesPreview
                   itemsPreview={itemsPreview}
                   setItemsPreview={setItemsPreview}

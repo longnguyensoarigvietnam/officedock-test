@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import ImageRound from '@components/common/ImageRound';
 import SmoothImage from '@components/common/ImageRound/SmoothImage';
@@ -7,10 +7,12 @@ import Loader from '@components/common/Loader';
 import { TwinklingIcon } from '@components/common/TwinklingIcon';
 
 import { ItemAvatarType } from '@constants/enums';
+import { CACHE_KEY } from '@constants';
+
 import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
+
 import { AvatarItemUser } from '@interfaces/shop';
 import { updateAvatarUrl } from '@utils';
-import { CACHE_KEY, CACHE_TTL } from '@constants';
 
 interface Props {
   isPodium?: boolean;
@@ -31,33 +33,6 @@ export const RenderAccessoriesPreview = ({
   const totalImages = useRef(0);
   const prevUrlsRef = useRef<string>('');
 
-  const initialCache = useMemo(() => {
-    if (typeof window === 'undefined') return null;
-    try {
-      const cached = localStorage.getItem(CACHE_KEY);
-      if (!cached) return null;
-      const parsed = JSON.parse(cached);
-      if (
-        parsed &&
-        Array.isArray(parsed.data) &&
-        Date.now() - parsed.timestamp < CACHE_TTL
-      ) {
-        return parsed.data;
-      }
-    } catch {
-      return null;
-    }
-    return null;
-  }, []);
-
-  useEffect(() => {
-    if (initialCache && initialCache.length > 0) {
-      setItemsPreview(initialCache);
-      totalImages.current = initialCache.length;
-    }
-    setShowLoader(true);
-  }, [initialCache, setItemsPreview]);
-
   const { isFetchingCreationDataCommon } = useCreationDataCommon({
     options: {
       get_balances_of_user: true,
@@ -70,7 +45,9 @@ export const RenderAccessoriesPreview = ({
           url: item.fullFile,
         }));
         const merged = updateAvatarUrl(itemsPreview, updates);
-        setItemsPreview(merged);
+        if (JSON.stringify(merged) !== JSON.stringify(itemsPreview)) {
+          setItemsPreview(merged);
+        }
         localStorage.setItem(
           CACHE_KEY,
           JSON.stringify({
@@ -111,9 +88,8 @@ export const RenderAccessoriesPreview = ({
 
         <div
           key={renderKey}
-          className={`absolute inset-0 transition-opacity duration-500 ${
-            showLoader ? 'opacity-0' : 'opacity-100'
-          }`}>
+          style={{ opacity: showLoader ? 0 : 1 }}
+          className={`absolute inset-0 transition-opacity duration-500 `}>
           {isPodium && (
             <ImageRound
               src="/images/users/podium.png"
@@ -122,16 +98,14 @@ export const RenderAccessoriesPreview = ({
               style={{ zIndex: 0 }}
             />
           )}
-
           {!isFetchingCreationDataCommon &&
             itemsPreview.map((item, index) => (
               <SmoothImage
-                key={`${item.name}-${item.url}-${renderKey}`} //
+                key={`${item.name}-${item.url}-${renderKey}`}
                 src={item.url || `/images/users/${item.name}.png`}
                 name={item.name}
-                className="absolute bottom-0 inset-0 w-full h-full object-contain pointer-events-none"
+                className="absolute bottom-0 left-1/2 -translate-x-1/2 pointer-events-none"
                 style={{ zIndex: index }}
-                fill
                 onLoad={() =>
                   setImagesLoaded((prev) =>
                     Math.min(prev + 1, totalImages.current),
@@ -147,42 +121,42 @@ export const RenderAccessoriesPreview = ({
         </div>
       </div>
       {selectedItemType && !showLoader && (
-        <div className="">
+        <div style={{ opacity: showLoader ? 0 : 1 }} className="">
           {selectedItemType == ItemAvatarType.HAT && (
             <>
               {/* RIGHT 1 */}
               <TwinklingIcon
-                className="absolute top-[-10px] left-[-10px] !w-8 !h-8"
+                className="absolute top-[20px] left-[-10px] !w-8 !h-8"
                 delay={0}
                 iconUrl="/icons/star-new.svg"
               />
               {/* RIGHT 2 */}
               <TwinklingIcon
-                className="absolute top-[35px] left-[-55px] !w-8 !h-8"
+                className="absolute top-[65px] left-[-55px] !w-8 !h-8"
                 delay={1.2}
                 iconUrl="/icons/star-new-main.svg"
               />
               {/* RIGHT 3 */}
               <TwinklingIcon
-                className="absolute top-[95px] left-[-25px] !w-8 !h-8"
+                className="absolute top-[125px] left-[-25px] !w-8 !h-8"
                 delay={1}
                 iconUrl="/icons/star-new.svg"
               />
               {/* LEFT 1 */}
               <TwinklingIcon
-                className="absolute top-[-10px] right-[15px] !w-8 !h-8"
+                className="absolute top-[20px] right-[15px] !w-8 !h-8"
                 delay={0.8}
                 iconUrl="/icons/star-new.svg"
               />
               {/* LEFT 2 */}
               <TwinklingIcon
-                className="absolute top-[35px] right-[-30px] !w-8 !h-8"
+                className="absolute top-[65px] right-[-30px] !w-8 !h-8"
                 delay={0.5}
                 iconUrl="/icons/star-new-main.svg"
               />
               {/* LEFT 3 */}
               <TwinklingIcon
-                className="absolute top-[95px] right-[0px] !w-8 !h-8"
+                className="absolute top-[125px] right-[0px] !w-8 !h-8"
                 delay={1.5}
                 iconUrl="/icons/star-new.svg"
               />
@@ -192,82 +166,43 @@ export const RenderAccessoriesPreview = ({
             <>
               {/* RIGHT 1 */}
               <TwinklingIcon
-                className="absolute top-[180px] left-[-10px] !w-8 !h-8"
+                className="absolute top-[210px] left-[-10px] !w-8 !h-8"
                 delay={0}
                 iconUrl="/icons/star-new.svg"
               />
               {/* RIGHT 2 */}
               <TwinklingIcon
-                className="absolute top-[250px] left-[-55px] !w-8 !h-8"
+                className="absolute top-[280px] left-[-55px] !w-8 !h-8"
                 delay={1.2}
                 iconUrl="/icons/star-new-main.svg"
               />
               {/* RIGHT 3 */}
               <TwinklingIcon
-                className="absolute top-[320px] left-[-25px] !w-8 !h-8"
+                className="absolute top-[350px] left-[-25px] !w-8 !h-8"
                 delay={1}
                 iconUrl="/icons/star-new.svg"
               />
               {/* LEFT 1 */}
               <TwinklingIcon
-                className="absolute top-[180px] right-[15px] !w-8 !h-8"
+                className="absolute top-[210px] right-[15px] !w-8 !h-8"
                 delay={0.8}
                 iconUrl="/icons/star-new.svg"
               />
               {/* LEFT 2 */}
               <TwinklingIcon
-                className="absolute top-[250px] right-[-30px] !w-8 !h-8"
+                className="absolute top-[280px] right-[-30px] !w-8 !h-8"
                 delay={0.5}
                 iconUrl="/icons/star-new-main.svg"
               />
               {/* LEFT 3 */}
               <TwinklingIcon
-                className="absolute top-[320px] right-[0px] !w-8 !h-8"
+                className="absolute top-[350px] right-[0px] !w-8 !h-8"
                 delay={1.5}
                 iconUrl="/icons/star-new.svg"
               />
             </>
           )}
-          {selectedItemType == ItemAvatarType.BODY && (
-            <>
-              {/* RIGHT 1 */}
-              <TwinklingIcon
-                className="absolute top-[180px] left-[-10px] !w-8 !h-8"
-                delay={0}
-                iconUrl="/icons/star-new.svg"
-              />
-              {/* RIGHT 2 */}
-              <TwinklingIcon
-                className="absolute top-[250px] left-[-55px] !w-8 !h-8"
-                delay={1.2}
-                iconUrl="/icons/star-new-main.svg"
-              />
-              {/* RIGHT 3 */}
-              <TwinklingIcon
-                className="absolute top-[320px] left-[-25px] !w-8 !h-8"
-                delay={1}
-                iconUrl="/icons/star-new.svg"
-              />
-              {/* LEFT 1 */}
-              <TwinklingIcon
-                className="absolute top-[180px] right-[15px] !w-8 !h-8"
-                delay={0.8}
-                iconUrl="/icons/star-new.svg"
-              />
-              {/* LEFT 2 */}
-              <TwinklingIcon
-                className="absolute top-[250px] right-[-30px] !w-8 !h-8"
-                delay={0.5}
-                iconUrl="/icons/star-new-main.svg"
-              />
-              {/* LEFT 3 */}
-              <TwinklingIcon
-                className="absolute top-[320px] right-[0px] !w-8 !h-8"
-                delay={1.5}
-                iconUrl="/icons/star-new.svg"
-              />
-            </>
-          )}{' '}
+
           {selectedItemType == ItemAvatarType.SHOES && (
             <>
               {/* RIGHT 1 */}

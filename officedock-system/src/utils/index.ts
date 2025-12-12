@@ -10,6 +10,7 @@ import {
   CalendarViewOptions,
   ChatParticipantType,
   EventWorkCategory,
+  ItemAvatarType,
   LevelUpConditionBy,
   PermissionsSystem,
   PermissionType,
@@ -23,6 +24,7 @@ import {
 } from '@constants/enums';
 import {
   DATE_FORMAT,
+  DEFAULT_THUMB_ITEM,
   DEFAULT_TIME_TEXT,
   MAX_HEX_COLOR_VALUE,
   MENTION_ALL_MEMBERS,
@@ -75,7 +77,10 @@ import { ConditionByMap } from '@interfaces/skill-map';
 import { Candidate } from '@interfaces/mvp';
 import { AvatarItemUser } from '@interfaces/shop';
 import { EventParticipant } from '@interfaces/calendar';
-import { CalendarCategoryRow, OrganizationCategoryRow } from '@interfaces/hierarchy';
+import {
+  CalendarCategoryRow,
+  OrganizationCategoryRow,
+} from '@interfaces/hierarchy';
 
 import {
   convertTimeToDecimal,
@@ -2485,7 +2490,7 @@ export function updateAvatarUrl(
 ): AvatarItemUser[] {
   const updatesArray = Array.isArray(updates) ? updates : [updates];
 
-  return listAvatar.map((avatar) => {
+  return listAvatar?.map((avatar) => {
     const found = updatesArray.find((u) => u.type === avatar.type);
     return found ? { ...avatar, url: found.url } : avatar;
   });
@@ -2832,7 +2837,7 @@ export const getCalendarCategoryRestoreType = ({
         originalRow.large.value === row.large.value &&
         originalRow.medium.value === row.medium.value
       ) {
-        return null
+        return null;
       } else if (originalRow.large.value === row.large.value) {
         return StatisticCategoryType.MEDIUM;
       }
@@ -2884,4 +2889,10 @@ export function getDeletedTypeFromRow(
 
   // Case 4: all visible → deletedType = null
   return null;
+}
+export function getDefaultThumbByType(
+  type: ItemAvatarType | string,
+): string | null {
+  const item = DEFAULT_THUMB_ITEM.find((i) => i.type === type);
+  return item?.url ?? null;
 }
