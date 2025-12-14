@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 
 const nextConfig = {
-  output: 'standalone',
   experimental: {
     missingSuspenseWithCSRBailout: false,
     proxyTimeout: 1800000,

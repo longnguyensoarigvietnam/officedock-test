@@ -3,7 +3,7 @@
 # ==============================================================================
 
 # Base image
-FROM node:21-alpine3.17 AS base
+FROM node:22-alpine AS base
 
 # ==============================================================================
 # Dependencies stage
@@ -27,8 +27,6 @@ WORKDIR /app
 
 # Build-time environment variables
 ARG NEXT_PUBLIC_API_URL
-ARG NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
-ARG NEXT_PUBLIC_HELP_PAGE_URL
 ARG API_INTERNAL_URL
 
 # Required for rewrites in next.config.mjs
@@ -51,10 +49,6 @@ WORKDIR /app
 # Security: Create non-root user
 RUN addgroup --system --gid 1001 nodejs \
     && adduser --system --uid 1001 nextjs
-
-# Environment file path (mounted from Secret Manager)
-ARG RUNTIME_ENV_PATH=/secrets/.env
-ENV RUNTIME_ENV_PATH=${RUNTIME_ENV_PATH}
 
 # Set environment variables
 ENV NODE_ENV=production \

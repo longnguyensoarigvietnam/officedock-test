@@ -19,7 +19,7 @@ steps:
         --build-arg API_INTERNAL_URL="$$(extract_env API_INTERNAL_URL)" \
         --build-arg RUNTIME_ENV_PATH=$_RUNTIME_ENV_PATH \
         -t $$_SYSTEM_ARTIFACT_REGISTRY_PATH:$COMMIT_SHA \
-        -f Dockerfile.staging .
+        -f Dockerfile.cloudrun .
 
   # Push built Docker Image on Artifact Registry
   - id: 'Push Docker Image'
@@ -45,6 +45,7 @@ steps:
         --region $$_SYSTEM_REGION \
         --port 3000 \
         --allow-unauthenticated \
+        --set-env-vars=RUNTIME_ENV_PATH=$_RUNTIME_ENV_PATH \
         --update-secrets=$_RUNTIME_ENV_PATH=$_SECRET_ENV_NAME:latest",
       ]
 
@@ -65,5 +66,5 @@ availableSecrets:
       env: _SYSTEM_REGION
     - versionName: projects/${PROJECT_NUMBER}/secrets/STG_SYSTEM_SERVICE_NAME/versions/latest
       env: _SYSTEM_SERVICE_NAME
-    - versionName: projects/${PROJECT_NUMBER}/secrets/STG_SYSTEM_ENV/versions/latest
+    - versionName: projects/${PROJECT_NUMBER}/secrets/${_SECRET_ENV_NAME}/versions/latest
       env: _BUILD_ENV
