@@ -254,6 +254,7 @@ export interface SkillMapByOrganizationInfo {
     step: string | null;
     deletedAt?: string | null;
   };
+  isDeleted?: boolean;
   isComplete: boolean | null;
   step: string | null;
   isLocked: boolean | null;
