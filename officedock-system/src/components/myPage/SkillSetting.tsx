@@ -126,58 +126,62 @@ export const SkillSetting = ({
                           : '0px 2px 8px 0px #0000001A',
                       }}
                       className="w-[245px] h-[55px] relative bg-white px-5 py-3 flex items-center gap-[10px] justify-center rounded-[14px]">
-                      {showTwinklingStars && !skill.skill.deletedAt && (
-                        <>
-                          <div className="absolute -top-[20px] left-[20px] bg-primary rounded-[20px] w-[140px] h-[20px] flex items-center justify-center">
-                            <p className="text-white text-xs font-bold leading-none">
-                              レベルアップ申請可能
-                            </p>
-                          </div>
-                          <div className="bg-primary absolute clip-diagonal-left h-[7px] w-[7px] top-0 left-[38px]"></div>
-                        </>
-                      )}
+                      {showTwinklingStars &&
+                        !skill.skill.deletedAt &&
+                        !skill.isDeleted && (
+                          <>
+                            <div className="absolute -top-[20px] left-[20px] bg-primary rounded-[20px] w-[140px] h-[20px] flex items-center justify-center">
+                              <p className="text-white text-xs font-bold leading-none">
+                                レベルアップ申請可能
+                              </p>
+                            </div>
+                            <div className="bg-primary absolute clip-diagonal-left h-[7px] w-[7px] top-0 left-[38px]"></div>
+                          </>
+                        )}
 
-                      {showTwinklingStars && !skill.skill.deletedAt && (
-                        <>
-                          <TwinklingIcon
-                            className="absolute top-[-10px] left-[-10px]"
-                            delay={0}
-                            iconUrl="/icons/blue-star.svg"
-                          />
-                          <TwinklingIcon
-                            className="absolute top-[5px] right-[-15px]"
-                            delay={0.5}
-                            iconUrl="/icons/blue-star.svg"
-                          />
-                          <TwinklingIcon
-                            className="absolute top-[-15px] right-[5px]"
-                            delay={0.8}
-                            iconUrl="/icons/blue-star.svg"
-                          />
-                          <TwinklingIcon
-                            className="absolute bottom-[5px] left-[-15px]"
-                            delay={1}
-                            iconUrl="/icons/blue-star.svg"
-                          />
-                          <TwinklingIcon
-                            className="absolute bottom-[-15px] left-[5px]"
-                            delay={1.2}
-                            iconUrl="/icons/blue-star.svg"
-                          />
-                          <TwinklingIcon
-                            className="absolute bottom-[-10px] right-[-10px]"
-                            delay={1.5}
-                            iconUrl="/icons/blue-star.svg"
-                          />
-                        </>
-                      )}
+                      {showTwinklingStars &&
+                        !skill.skill.deletedAt &&
+                        !skill.isDeleted && (
+                          <>
+                            <TwinklingIcon
+                              className="absolute top-[-10px] left-[-10px]"
+                              delay={0}
+                              iconUrl="/icons/blue-star.svg"
+                            />
+                            <TwinklingIcon
+                              className="absolute top-[5px] right-[-15px]"
+                              delay={0.5}
+                              iconUrl="/icons/blue-star.svg"
+                            />
+                            <TwinklingIcon
+                              className="absolute top-[-15px] right-[5px]"
+                              delay={0.8}
+                              iconUrl="/icons/blue-star.svg"
+                            />
+                            <TwinklingIcon
+                              className="absolute bottom-[5px] left-[-15px]"
+                              delay={1}
+                              iconUrl="/icons/blue-star.svg"
+                            />
+                            <TwinklingIcon
+                              className="absolute bottom-[-15px] left-[5px]"
+                              delay={1.2}
+                              iconUrl="/icons/blue-star.svg"
+                            />
+                            <TwinklingIcon
+                              className="absolute bottom-[-10px] right-[-10px]"
+                              delay={1.5}
+                              iconUrl="/icons/blue-star.svg"
+                            />
+                          </>
+                        )}
 
                       <div className="w-fit h-fit">
                         <p className="max-w-[150px] truncate text-[15px] text-left font-medium leading-none">
                           {skill.skill.name}
                         </p>
                         <div
-                          className={`w-[156px] mt-[5px] ${skill.skill.deletedAt ? 'invisible' : ''}`}>
+                          className={`w-[156px] mt-[5px] ${skill.skill.deletedAt ? 'invisible' : ''} ${skill.isDeleted ? 'invisible' : ''}`}>
                           <SkillMapProgressBar
                             value={progressPercent}
                             strokeColor={strokeColor}
