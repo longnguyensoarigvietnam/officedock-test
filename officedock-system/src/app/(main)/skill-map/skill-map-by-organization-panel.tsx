@@ -39,8 +39,8 @@ interface SkillMapByOrganizationPanelProps {
   settingSkillAction?: ActionsModal;
   isMyPage?: boolean;
   onOpenConfirmSettingSkillInfo?:
-    | ((skill: SkillMapByOrganizationInfo) => void)
-    | undefined;
+  | ((skill: SkillMapByOrganizationInfo) => void)
+  | undefined;
   onEditSettingSkill?: (skillId: string) => Promise<void>;
 }
 
@@ -304,7 +304,7 @@ export const SkillMapByOrganizationPanel = ({
         showErrorToast(error, ERROR_SAVE_MESSAGE);
         isEditingRef.current = false;
       },
-      onSettled: () => {},
+      onSettled: () => { },
     },
   );
 
@@ -332,7 +332,7 @@ export const SkillMapByOrganizationPanel = ({
         showErrorToast(error, ERROR_SAVE_MESSAGE);
         isSubmittingRef.current = false;
       },
-      onSettled: () => {},
+      onSettled: () => { },
     },
   );
 
@@ -354,7 +354,7 @@ export const SkillMapByOrganizationPanel = ({
       onError: (error: AxiosError) => {
         showErrorToast(error, ERROR_SAVE_MESSAGE);
       },
-      onSettled: () => {},
+      onSettled: () => { },
     },
   );
 
@@ -451,13 +451,13 @@ export const SkillMapByOrganizationPanel = ({
                       ) : (
                         <div
                           className={`${settingSkillAction ? 'px-5 h-[55px]' : 'px-5 h-[90px]'} ${stepCompleted && '!pr-[15px]'} 
-                            ${isLocked ? 'hover:cursor-not-allowed' : skillMapDetail.isDeleted || (skill.skill.deletedAt && !isMyPage) ? 'hover:cursor-default' : 'hover:cursor-pointer'} 
+                            ${isLocked ? 'hover:cursor-not-allowed' : (skillMapDetail.isDeleted || skill.skill.deletedAt) && !isMyPage ? 'hover:cursor-default' : 'hover:cursor-pointer'} 
                               flex gap-3 bg-white items-center w-full rounded-[14px] relative`}
                           style={{
                             boxShadow:
                               showTwinklingStars &&
-                              !skill.skill.deletedAt &&
-                              !skillMapDetail.isDeleted
+                                !skill.skill.deletedAt &&
+                                !skillMapDetail.isDeleted
                                 ? '0px 0px 20px 0px #36ACDE80'
                                 : '0px 2px 8px 0px #0000001A',
                           }}
@@ -465,7 +465,7 @@ export const SkillMapByOrganizationPanel = ({
                             if (
                               isLocked ||
                               !skill.id ||
-                              skillMapDetail.isDeleted ||
+                              (skillMapDetail.isDeleted && !isMyPage) ||
                               (skill.skill.deletedAt && !isMyPage) ||
                               !isMyOrg
                             ) {
