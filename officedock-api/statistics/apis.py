@@ -1503,7 +1503,10 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
             return self.response_ok(data)
 
         # Get all org ids include team not assigned
-        organization_ids = get_all_organization_id(users)
+        organization_ids = get_all_organization_id(
+            users,
+            exclude_team_unassigned=bool(main_organization_id),  # Is team dock
+        )
 
         if tag_ids_param:
             tag_ids = split_id_from_string(tag_ids_param)
@@ -1649,7 +1652,10 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                     user_list.append(data)
 
         # Get all org ids include team not assigned
-        organization_ids = get_all_organization_id(users)
+        organization_ids = get_all_organization_id(
+            users,
+            exclude_team_unassigned=bool(main_organization_id),  # Is team dock
+        )
 
         tag_ids = split_id_from_string(tag_ids_param)
 
