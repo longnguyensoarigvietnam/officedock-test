@@ -1,6 +1,6 @@
 'use client';
-import React, { Fragment, useContext, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { Fragment, useContext, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { AxiosError } from 'axios';
 import { useMutation } from 'react-query';
 import Link from 'next/link';
@@ -40,6 +40,8 @@ const EditSkillMapByMemberBoard = () => {
   const { showToast } = useToast();
   const showErrorToast = useErrorToast();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const orgIdParam = searchParams.get('orgId')
 
   const [dataSkillMapsByMembers, setDataSkillMapsByMembers] = useState<
     SkillMapByMembers[]
@@ -66,33 +68,28 @@ const EditSkillMapByMemberBoard = () => {
     OptionDropdownType[]
   >([]);
 
-  // Fetch organization skills
-  const { skillMapListByMembers } = useSkillMapByMembers({
-    organizationId: Number(selectedOrganizationOption.value),
-    has_include_deleted_user: 'false',
-    has_include_deleted_skill: 'false',
+  // Fetch skill map by members
+  useSkillMapByMembers({
+    filter: {
+      organizationId: Number(selectedOrganizationOption.value) || Number(orgIdParam),
+      has_include_deleted_user: 'false',
+      has_include_deleted_skill: 'false',
+    }, onSuccess: (data) => {
+      setDataSkillMapsByMembers(data)
+    }
   });
 
   // Fetch organization skills
-  const { organizationSkillList } = useOrganizationSkillList({
+  useOrganizationSkillList({
     filter: {
-      organizationId: Number(selectedOrganizationOption.value),
+      organizationId: Number(selectedOrganizationOption.value) || Number(orgIdParam),
       screen: ScreenName.SKILL_MAP,
       is_deleted: 'false',
     },
+    onSuccess: (data) => {
+      setDataSkillMapList(data as SkillMapSkill[]);
+    }
   });
-
-  useEffect(() => {
-    if (skillMapListByMembers) {
-      setDataSkillMapsByMembers(skillMapListByMembers);
-    }
-  }, [skillMapListByMembers]);
-
-  useEffect(() => {
-    if (organizationSkillList) {
-      setDataSkillMapList(organizationSkillList as SkillMapSkill[]);
-    }
-  }, [organizationSkillList]);
 
   // Get organization options for pulldown
   useCreationDataCommon({
@@ -114,6 +111,13 @@ const EditSkillMapByMemberBoard = () => {
         },
         ...organizationList,
       ]);
+      if (orgIdParam) {
+        const selectedOrg = organizationList.find((org) => org.value == Number(orgIdParam))
+        setSelectedOrganizationOption({
+          label: String(selectedOrg?.label),
+          value: String(selectedOrg?.value)
+        })
+      }
     },
   });
 

@@ -22,7 +22,8 @@ interface FilterProps {
   has_include_deleted_skill?: string;
 }
 
-const useSkillMapByMembers = (filter?: FilterProps) => {
+const useSkillMapByMembers = (
+  { filter, onSuccess }: { filter?: FilterProps, onSuccess?: (data: SkillMapByMembers[]) => void }) => {
   const { data: session } = useSessionCache();
   const router = useRouter();
   const token = session?.accessToken;
@@ -78,6 +79,9 @@ const useSkillMapByMembers = (filter?: FilterProps) => {
           router.push(pageRouters.LOGIN.href);
         }
       }
+    },
+    onSuccess: (data: SkillMapByMembers[]) => {
+      onSuccess && onSuccess(data)
     },
     onSettled: () => {
       setIsLoading(false);
