@@ -60,14 +60,15 @@ ENV RUNTIME_ENV_PATH=${RUNTIME_ENV_PATH}
 ENV NODE_ENV=production \
     PORT=3000
 
-# Copy Next.js standalone output
+# Copy Next.js output
 COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
+COPY --from=builder --chown=nextjs:nodejs /app/dist ./dist
 
 # Switch to non-root user
 USER nextjs
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "node --env-file=${RUNTIME_ENV_PATH} server.js"]
+CMD ["sh", "-c", "node --env-file=${RUNTIME_ENV_PATH} dist/index.js"]
