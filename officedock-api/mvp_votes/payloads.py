@@ -1,10 +1,8 @@
 from copy import deepcopy
 
-from django.db.models import Count, Max
+from django.db.models import Q, Count, Max
 
 from base.messages import KEYWORDS
-from common.constants import AVATAR_GCS_EXPIRATION_SECONDS
-from common.utils import get_signed_url
 from mvp_votes.models import MVPVoteCandidate
 from organizations.models import Organization, UsersOrganizations
 from organizations.serializers import BaseOrganizationSerializer
@@ -164,7 +162,9 @@ def build_present_mvp_vote_with_organization_list(mvp_vote, user):
     if mvp_vote.selected_organizations:
         data["organizations"] = []
         org_ids = list(map(int, mvp_vote.selected_organizations.split(",")))
-        orgs = Organization.objects.filter(id__in=org_ids).all()
+        orgs = Organization.objects.filter(
+            Q(users__in=unique_user_ids) | Q(id__in=org_ids)
+        ).distinct()
 
         # Filter all users belonging to the selected organizations
         users_in_orgs = UsersOrganizations.objects.filter(
