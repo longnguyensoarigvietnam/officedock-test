@@ -120,6 +120,9 @@ def clear_task_category_not_in_category_hierarchy(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
+        ("tasks", "0017_seed_user_to_task_durations"),
+        ("common", "0004_remove_category_name_and_more"),
+        ("calendars", "0004_alter_schedule_organization"),
         ("organizations", "0012_organization_hierarchize_at"),
     ]
 
