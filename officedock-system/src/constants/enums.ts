@@ -706,6 +706,7 @@ export enum ItemAvatarType {
   HAT = '帽子',
   BODY = '服装',
   SHOES = '靴',
+  ITEM = 'アイテム',
   BACKGROUND = '背景',
 }
 export enum PointHistoryActiveTab {

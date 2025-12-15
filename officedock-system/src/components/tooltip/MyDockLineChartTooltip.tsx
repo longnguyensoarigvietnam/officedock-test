@@ -6,7 +6,7 @@ import {
 export const MyDockLineChartTooltip = ({ data }: { data: any[] }) => {
   return (
     <div
-      className="p-[20px] bg-white rounded-[8px] w-[230px] max-h-[500px] overflow-y-auto"
+      className="p-[20px] bg-white rounded-[14px] w-[250px] max-h-[500px] overflow-y-auto"
       style={{
         boxShadow: '0px 2px 8px 0px #0000001A',
       }}>
@@ -19,13 +19,14 @@ export const MyDockLineChartTooltip = ({ data }: { data: any[] }) => {
             style={
               isNotLast
                 ? {
-                    marginBottom: '8px',
+                    marginBottom: '16px',
+                    paddingBottom: '8px',
                     borderBottom: '1px solid #D2DBE1',
                   }
                 : undefined
             }
             className="flex flex-col gap-[8px]">
-            <div className="text-[#77858F] font-normal text-sm mb-[8px]">
+            <div className="text-[#77858F] font-normal text-sm mb-[8px] leading-[1]">
               {convertToJapaneseDateRange(point.x, point.endDate)}
             </div>
 
@@ -38,7 +39,7 @@ export const MyDockLineChartTooltip = ({ data }: { data: any[] }) => {
               </p>
             </div>
 
-            <p className="mb-2 font-normal text-base">
+            <p className="mb-2 font-normal text-base leading-[1]">
               {convertFromNumberToJapaneseTime(point.y).formattedHours}時間
               {convertFromNumberToJapaneseTime(point.y).formattedMinutes}分
             </p>

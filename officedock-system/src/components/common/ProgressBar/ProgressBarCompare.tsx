@@ -78,11 +78,11 @@ const PercentageBarCompare = ({
       ) : (
         <>
           <div className={`mt-[14px] ${!isTag && 'flex justify-between'}`}>
-            <div className="flex items-center ">
+            <div className="flex items-center gap-[6px] ">
               <p className="bg-[#EBF1F7]  w-[30px] h-[18px] text-primary rounded-sm text-xs font-medium flex items-center justify-center">
                 基準
               </p>
-              <div className="text-black text-xs font-normal flex items-center gap-[2px]">
+              <div className="text-[#77858F] text-sm font-normal flex items-center gap-[2px]">
                 <p>{startDate && formatShowStatisticTask(startDate)}</p>~
                 <p>{endDate && formatShowStatisticTask(endDate)}</p>
               </div>
@@ -168,7 +168,7 @@ const PercentageBarCompare = ({
                         setHoverIndex(null);
                       }, 1000);
                     }}
-                    className={`absolute top-0 ${isLast ? (isTag ? 'right-[230px]' : 'right-[290px]') : isTag ? 'left-[230px]' : 'left-[290px]'} z-20  w-[250px]  rounded-[14px] p-5 bg-white ${hoverIndex === index ? 'block' : 'hidden'} pointer-events-auto transition-opacity duration-300 shadow-lg `}>
+                    className={`absolute top-0 ${isLast ? (isTag ? 'right-[230px]' : 'right-[290px]') : isTag ? 'left-[230px]' : 'left-[290px]'} z-20  w-[288px]  rounded-[14px] p-5 bg-white ${hoverIndex === index ? 'block' : 'hidden'} pointer-events-auto transition-opacity duration-300 shadow-lg `}>
                     {item.mergedItems.length > 0 ? (
                       <>
                         <p className="text-xs text-start font-medium text-[#77858F] mb-5">
@@ -205,7 +205,7 @@ const PercentageBarCompare = ({
                                       String(mergeItem.organizationId),
                                     );
                                   }}
-                                  className="bg-white flex items-center  justify-center gap-2 text-sm text-[#77858F] font-medium h-[34px] rounded-md hover:cursor-pointer">
+                                  className="bg-white flex items-center  justify-center gap-2 text-xs text-[#77858F] font-normal h-[34px] rounded-md hover:cursor-pointer">
                                   <span>タスクを見る</span>
                                   <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
                                     <ImageRound
@@ -224,11 +224,11 @@ const PercentageBarCompare = ({
                       </>
                     ) : (
                       <>
-                        <div className="flex items-center ">
+                        <div className="flex items-center gap-[6px] ">
                           <p className="bg-[#EBF1F7] w-[57px] h-[18px] text-primary rounded-sm text-xs font-medium flex items-center justify-center">
                             基準期間
                           </p>
-                          <div className="text-black text-xs font-normal flex items-center gap-[1px]">
+                          <div className="text-[#77858F] text-sm font-normal flex items-center gap-[1px]">
                             <p>
                               {startDate && formatShowStatisticTask(startDate)}(
                               {getJapaneseDayName(String(startDate))})
@@ -277,7 +277,7 @@ const PercentageBarCompare = ({
                                   String(item.organizationId),
                                 );
                               }}
-                              className="bg-white flex items-center  justify-center gap-2 text-sm text-[#77858F] font-medium h-[34px] rounded-md hover:cursor-pointer">
+                              className="bg-white flex items-center  justify-center gap-2 text-xs text-[#77858F] font-normal h-[34px] rounded-md hover:cursor-pointer">
                               <span>タスクを見る</span>
                               <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
                                 <ImageRound
@@ -381,7 +381,7 @@ const PercentageBarCompare = ({
                         setHoverIndexCompare(null);
                       }, 1000);
                     }}
-                    className={`absolute top-0 ${isLast ? (isTag ? 'right-[230px]' : 'right-[290px]') : isTag ? 'left-[230px]' : 'left-[290px]'} w-[250px] z-20  rounded-[14px] p-5 bg-white ${hoverIndexCompare === index ? 'block' : 'hidden'} pointer-events-auto transition-opacity duration-300 shadow-lg `}>
+                    className={`absolute top-0 ${isLast ? (isTag ? 'right-[230px]' : 'right-[290px]') : isTag ? 'left-[230px]' : 'left-[290px]'} w-[288px] z-20  rounded-[14px] p-5 bg-white ${hoverIndexCompare === index ? 'block' : 'hidden'} pointer-events-auto transition-opacity duration-300 shadow-lg `}>
                     {item.mergedItems.length > 0 ? (
                       <>
                         <p className="text-xs text-start font-medium text-[#77858F] mb-5">
@@ -428,7 +428,7 @@ const PercentageBarCompare = ({
                                       String(mergeItem.organizationId),
                                     );
                                   }}
-                                  className="bg-white flex items-center  justify-center gap-2 text-sm text-[#77858F] font-medium h-[34px] rounded-md hover:cursor-pointer">
+                                  className="bg-white flex items-center  justify-center gap-2 text-xs text-[#77858F] font-normal h-[34px] rounded-md hover:cursor-pointer">
                                   <span>タスクを見る</span>
                                   <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
                                     <ImageRound
@@ -447,11 +447,11 @@ const PercentageBarCompare = ({
                       </>
                     ) : (
                       <>
-                        <div className="flex items-center ">
+                        <div className="flex items-center gap-[6px]">
                           <p className="bg-[#F9EAEA] w-[57px] h-[18px] text-[#E95062] rounded-sm text-xs font-medium flex items-center justify-center">
                             比較期間
                           </p>
-                          <div className="text-black text-xs font-normal flex items-center gap-[1px]">
+                          <div className="text-[#77858F] text-sm font-normal flex items-center gap-[1px]">
                             <p>
                               {startDateCompare &&
                                 formatShowStatisticTask(startDateCompare)}
@@ -501,7 +501,7 @@ const PercentageBarCompare = ({
                                   String(item.organizationId),
                                 );
                               }}
-                              className="bg-white flex items-center  justify-center gap-2 text-sm text-[#77858F] font-medium h-[34px] rounded-md hover:cursor-pointer">
+                              className="bg-white flex items-center justify-center gap-2 text-xs text-[#77858F] font-normal h-[34px] rounded-md hover:cursor-pointer">
                               <span>タスクを見る</span>
                               <div className="flex items-center justify-center w-[18px] h-[18px] bg-[#EBF1F7] rounded-full">
                                 <ImageRound
@@ -523,11 +523,11 @@ const PercentageBarCompare = ({
             )}
           </div>
           <div className={`mt-[14px] ${!isTag && 'flex justify-between'}`}>
-            <div className="flex items-center">
+            <div className="flex items-center gap-[6px]">
               <p className="bg-[#F9EAEA] w-[30px] h-[18px] text-[#E95062] rounded-sm text-xs font-medium flex items-center justify-center">
                 比較
               </p>
-              <div className="text-black text-xs font-normal flex items-center gap-[2px]">
+              <div className="text-[#77858F] text-sm font-normal flex items-center gap-[2px]">
                 <p>
                   {startDateCompare &&
                     formatShowStatisticTask(startDateCompare)}

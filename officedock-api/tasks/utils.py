@@ -257,6 +257,8 @@ def calculate_progress_skill_map(
             is_task_updated_before_skill = (
                 old_task_updated
                 and old_task_updated < current_skill_level.created_at
+                and case
+                == CalculateSkillMapProcessCases.NOT_CHANGE_STATUS.value
             )
             # If subtracting progress, make sure the task is already in the tracked list.
             is_skill_deleted_or_invalid = (
@@ -296,10 +298,16 @@ def calculate_progress_skill_map(
                     )
                     if is_minus:
                         time_duration = -time_duration
+                        actual_measure_count -= 1
                         for d_id in duration_ids:
+                            if d_id not in measure_task_duration_ids:
+                                continue
                             measure_task_duration_ids.remove(d_id)
                     else:
+                        actual_measure_count += 1
                         for d_id in duration_ids:
+                            if d_id not in measure_task_duration_ids:
+                                continue
                             measure_task_duration_ids.append(d_id)
                 else:
                     time_duration = duration.paused_at - duration.started_at
@@ -324,6 +332,7 @@ def calculate_progress_skill_map(
                     current_skill_level.measure_time
                     and current_skill_level.measure_time <= hours
                     and current_skill_level.popup
+                    and not is_skill_deleted_or_invalid
                 ):
                     _send_socket_show_popup_complete(
                         skill_map,
@@ -333,8 +342,6 @@ def calculate_progress_skill_map(
                         skill_map_level=current_skill_level,
                     )
             else:
-                # Manage which tasks contributed to this skill’s progress.
-
                 # Adjust the measure count based on the update case.
                 if case in {
                     CalculateSkillMapProcessCases.NOT_CHANGE_COMPLETED_STATUS.value,
@@ -347,32 +354,28 @@ def calculate_progress_skill_map(
                     and not is_minus
                 ):
                     actual_measure_count += 1
-                # If measure count reached threshold, trigger a completion pop-up.
-                if (
-                    current_skill_level.measure_count
-                    and current_skill_level.measure_count
-                    <= actual_measure_count
-                    and current_skill_level.popup
-                    and not (
-                        is_skill_deleted_or_invalid or not skill_map.is_valid
-                    )
-                ):
-                    _send_socket_show_popup_complete(
-                        skill_map,
-                        current_skill_level.measure_count,
-                        None,
-                        user,
-                        skill_map_level=current_skill_level,
-                    )
+            # If measure count reached threshold, trigger a completion pop-up.
+            if (
+                current_skill_level.measure_count
+                and current_skill_level.measure_count <= actual_measure_count
+                and current_skill_level.popup
+                and not is_skill_deleted_or_invalid
+            ):
+                _send_socket_show_popup_complete(
+                    skill_map,
+                    current_skill_level.measure_count,
+                    None,
+                    user,
+                    skill_map_level=current_skill_level,
+                )
 
-                # Manage which tasks contributed to this skill’s progress.
-                measure_task_ids = current_skill_level.measure_task_ids or []
-                if task.id in measure_task_ids and is_minus:
-                    measure_task_ids.remove(task.id)
-                elif task.id not in measure_task_ids:
-                    measure_task_ids.append(task.id)
-                if actual_measure_count == 0:
-                    measure_task_ids = []
+            # Manage which tasks contributed to this skill’s progress.
+            if task.id in measure_task_ids and is_minus:
+                measure_task_ids.remove(task.id)
+            elif task.id not in measure_task_ids:
+                measure_task_ids.append(task.id)
+            if actual_measure_count == 0:
+                measure_task_ids = []
             # Update skill map level
             skill_map.skill_map_skill_levels.filter(
                 id=current_skill_level.id
@@ -467,7 +470,7 @@ def calculate_progress_duration_for_skill_map(
         skill_map_level.measure_time
         and skill_map_level.measure_time <= hours
         and skill_map_level.popup
-        and is_deny_show_popup
+        and not is_deny_show_popup
     ):
         _send_socket_show_popup_complete(
             skill_map_level.skill_map,

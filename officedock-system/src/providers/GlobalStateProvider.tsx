@@ -12,7 +12,7 @@ import {
 
 import { OptionDropdownType } from '@interfaces/common';
 import { AvatarItemUser } from '@interfaces/shop';
-import { listAvatar } from '@constants';
+import { DEFAULT_AVATAR_ITEM } from '@constants';
 
 interface ContextValue {
   isExtendCalendar: boolean;
@@ -88,7 +88,8 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
 
   // Avatar items user
 
-  const [dataItems, setDataItem] = useState<AvatarItemUser[]>(listAvatar);
+  const [dataItems, setDataItem] =
+    useState<AvatarItemUser[]>(DEFAULT_AVATAR_ITEM);
 
   const [expanded, setExpanded] = useState(true);
   const [totalNotifications, setTotalNotifications] = useState(0);

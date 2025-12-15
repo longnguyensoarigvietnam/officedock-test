@@ -399,7 +399,10 @@ const MyPage = () => {
         <div className="relative mx-[30px] mb-[4.49vh] top-[-3vh] flex items-end flex-grow">
           <div className="flex-grow ml-[110px] relative">
             <div className="h-[44.64vh] w-[35vh]  mx-auto">
-              <RenderAccessories handleShowData={() => setIsShowMike(true)} />
+              <RenderAccessories
+                isScale
+                handleShowData={() => setIsShowMike(true)}
+              />
             </div>
 
             {/* Message user */}

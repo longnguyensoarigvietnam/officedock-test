@@ -1519,6 +1519,15 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
 
             if not durations.exists():
                 return self.response_ok(data)
+            if main_organization_id:
+                users_in_org = main_organization.users.values_list(
+                    "id", flat=True
+                )
+                # Remove task duration of unassigned user and another organization (exclude main organization)
+                durations = durations.exclude(
+                    ~Q(user__in=users_in_org)
+                    & ~Q(task__organization=main_organization)
+                )
             if is_tag_page:
                 total_duration, tag_list = process_merge_card_per_tag(
                     tag_ids,
@@ -1654,6 +1663,13 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
         data = {"durations": [], "data": []}
         if not users or (main_organization_id and not main_organization):
             return self.response_ok(data)
+        if main_organization_id:
+            # Remove task duration of unassigned user and another organization (exclude main organization)
+            durations = durations.exclude(
+                ~Q(user__in=users_in_org)
+                & ~Q(task__organization=main_organization)
+            )
+
         ranges = split_ranges(
             from_date, end_date, trim_whitespace(statistic_by)
         )
