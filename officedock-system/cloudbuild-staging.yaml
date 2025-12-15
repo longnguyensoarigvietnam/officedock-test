@@ -2,6 +2,7 @@ steps:
   # Build Docker Image on Cloud Build
   - id: 'Build Docker Image'
     name: 'gcr.io/cloud-builders/docker'
+    dir: 'officedock-system'
     entrypoint: 'bash'
     secretEnv: ['_SYSTEM_ARTIFACT_REGISTRY_PATH', '_BUILD_ENV']
     args:
@@ -17,7 +18,6 @@ steps:
         --build-arg NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="$$(extract_env NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)" \
         --build-arg NEXT_PUBLIC_HELP_PAGE_URL="$$(extract_env NEXT_PUBLIC_HELP_PAGE_URL)" \
         --build-arg API_INTERNAL_URL="$$(extract_env API_INTERNAL_URL)" \
-        --build-arg RUNTIME_ENV_PATH=$_RUNTIME_ENV_PATH \
         -t $$_SYSTEM_ARTIFACT_REGISTRY_PATH:$COMMIT_SHA \
         -f Dockerfile.cloudrun .
 
