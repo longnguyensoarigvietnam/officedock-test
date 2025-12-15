@@ -2317,8 +2317,8 @@ export const sortChatParticipants = (
   )
     return 1;
 
-  // 3. Alphabetical
-  return prev.fullName.localeCompare(next.fullName);
+  // 3. Explicitly equal
+  return 0;
 };
 export function generateVerticalGradient(hexColor: string): string {
   const colorPairs: Record<string, string> = {

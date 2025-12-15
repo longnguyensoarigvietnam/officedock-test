@@ -69,11 +69,11 @@ const ActionsTagModal = ({
       (value.name = `${dataTag.name}`),
         (value.organizations = dataTag.organizations
           ? dataTag.organizations.map((org) => {
-              return {
-                label: org.name,
-                value: Number(org.id),
-              };
-            })
+            return {
+              label: org.name,
+              value: Number(org.id),
+            };
+          })
           : []),
         (value.calendarOrganizationCheck = Boolean(
           dataTag.isCalendarOrganizationCheck,
@@ -116,6 +116,28 @@ const ActionsTagModal = ({
           session?.user.permissions,
           PermissionsSystem.TAG_ADD,
         )));
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const selectedOrganizations = watch('organizations') || [];
+
+  const selectedHiddenOrganizations = useMemo(() => {
+    return selectedOrganizations?.filter(
+      (selected) =>
+        !dataOrganizationList.some(
+          (org) => org.value === selected.value,
+        ),
+    );
+  }, [selectedOrganizations, dataOrganizationList]);
+
+  const mergedOptions = useMemo(() => {
+    const map = new Map<number, OptionDropdownType>();
+
+    [...dataOrganizationList, ...selectedHiddenOrganizations].forEach((opt) => {
+      map.set(opt.value as number, opt);
+    });
+
+    return Array.from(map.values());
+  }, [dataOrganizationList, selectedHiddenOrganizations]);
 
   return (
     <Drawer
@@ -221,7 +243,7 @@ const ActionsTagModal = ({
                 className="!h-[34px]"
                 disabled={isDisabled}
                 valueClassName="!border-[1px] !border-[#77858F]"
-                options={dataOrganizationList}
+                options={mergedOptions}
                 optionClassName="!border-[1px] !border-[#77858F]"
                 labelClass="max-w-[450px] !break-all"
                 labelOptionClass="w-[450px] !break-all"

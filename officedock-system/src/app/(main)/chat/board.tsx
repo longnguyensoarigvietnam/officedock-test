@@ -103,13 +103,13 @@ const BoardChat = () => {
       if (data.organizationUsers) {
         chatOrganizations = data.organizationUsers
           ? data.organizationUsers.map((org) => ({
-              id: `${ChatParticipantType.ORGANIZATION}-${org.id}`,
-              fullName: `${org.name}の全員を選択`,
-              type: ChatParticipantType.ORGANIZATION,
-              userIds: org.users ? org.users.map((user) => user.id) : [],
-              color: org.iconColor || '#0068B6',
-              avatarUrl: org.icon || '',
-            }))
+            id: `${ChatParticipantType.ORGANIZATION}-${org.id}`,
+            fullName: `${org.name}の全員を選択`,
+            type: ChatParticipantType.ORGANIZATION,
+            userIds: org.users ? org.users.map((user) => user.id) : [],
+            color: org.iconColor || '#0068B6',
+            avatarUrl: org.icon || '',
+          }))
           : [];
       }
 
@@ -118,37 +118,36 @@ const BoardChat = () => {
       // ===================================================================
       const membersForCreate: ChatParticipant[] = data.allMembers
         ? data.allMembers
-            .filter((m) => !m.deletedAt)
-            .map((member) => ({
-              id: `${ChatParticipantType.USER}-${member.id}`,
-              fullName: member.fullName,
-              type: ChatParticipantType.USER,
-              mainOrganization: member.organizations
-                ? member.organizations.name
-                : '',
-              color: member.avatarColor || '',
-              avatarUrl: member.avatar || '',
-            }))
+          .filter((m) => !m.deletedAt)
+          .map((member) => ({
+            id: `${ChatParticipantType.USER}-${member.id}`,
+            fullName: member.fullName,
+            type: ChatParticipantType.USER,
+            mainOrganization: member.organizations
+              ? member.organizations.name
+              : '',
+            color: member.avatarColor || '',
+            avatarUrl: member.avatar || '',
+          }))
         : [];
 
       const organizationsForCreate: ChatParticipant[] = data.organizationUsers
         ? (data.organizationUsers
-            .map((org) => {
-              const validUserIds = org.users
-                ? org.users.filter((u) => !u.deletedAt).map((u) => u.id)
-                : [];
-              if (validUserIds.length === 0) return null;
+          .map((org) => {
+            const validUserIds = org.users
+              ? org.users.filter((u) => !u.deletedAt).map((u) => u.id)
+              : [];
 
-              return {
-                id: `${ChatParticipantType.ORGANIZATION}-${org.id}`,
-                fullName: `${org.name}の全員を選択`,
-                type: ChatParticipantType.ORGANIZATION,
-                userIds: validUserIds,
-                color: org.iconColor || '#0068B6',
-                avatarUrl: org.icon || '',
-              };
-            })
-            .filter(Boolean) as ChatParticipant[])
+            return {
+              id: `${ChatParticipantType.ORGANIZATION}-${org.id}`,
+              fullName: `${org.name}の全員を選択`,
+              type: ChatParticipantType.ORGANIZATION,
+              userIds: validUserIds,
+              color: org.iconColor || '#0068B6',
+              avatarUrl: org.icon || '',
+            };
+          })
+          .filter(Boolean) as ChatParticipant[])
         : [];
       setDataOptionsParticipantsCreate([
         ...organizationsForCreate,
@@ -431,10 +430,10 @@ const BoardChat = () => {
       return prevData.map((item) =>
         item.code === data.code
           ? {
-              ...item,
-              lastMessageAt: data.lastMessageAt,
-              unreadMessages: data.unreadMessages,
-            }
+            ...item,
+            lastMessageAt: data.lastMessageAt,
+            unreadMessages: data.unreadMessages,
+          }
           : item,
       );
     });

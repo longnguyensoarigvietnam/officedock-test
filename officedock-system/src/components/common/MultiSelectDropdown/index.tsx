@@ -4,11 +4,12 @@ import Image from 'next/image';
 
 import ErrorMessage from '../ErrorMessage';
 import Spinner from '../Spinner';
-
-import { OptionDropdownType } from '@interfaces/common';
-import { NO_DATA_AVAILABLE } from '@constants';
 import Checkbox from '../Checkbox';
 import ImageRound from '../ImageRound';
+
+import { OptionDropdownType } from '@interfaces/common';
+
+import { NO_DATA_AVAILABLE } from '@constants';
 
 type Props = {
   isShowIconFilter?: boolean;
@@ -72,7 +73,7 @@ const MultiSelectDropdown = ({
   };
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleMouseDownOutside = (event: MouseEvent) => {
       if (
         dropdownOptionsRef.current &&
         !dropdownOptionsRef.current.contains(event.target as Node)
@@ -82,17 +83,18 @@ const MultiSelectDropdown = ({
     };
 
     if (isOpen) {
-      document.addEventListener('click', handleClickOutside);
+      document.addEventListener('mousedown', handleMouseDownOutside);
     }
 
     return () => {
-      document.removeEventListener('click', handleClickOutside);
+      document.removeEventListener('mousedown', handleMouseDownOutside);
     };
   }, [isOpen]);
 
   const renderOptions = () => (
     <div
       ref={dropdownOptionsRef}
+      onClick={(e) => e.stopPropagation()}
       className={`absolute top-8 w-full left-0 mt-1 z-50 max-h-60 overflow-y-auto overflow-x-hidden rounded-[6px] bg-white text-base shadow-lg ring-1 ring-black ring-opacity-5 ${optionClassName}`}>
       {isLoading ? (
         <Spinner className="!h-fit py-3" />
@@ -101,7 +103,8 @@ const MultiSelectDropdown = ({
           <>
             <div
               key={option.value}
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 handleOptionClick(option);
               }}
               className={`relative hover:!cursor-pointer flex items-start justify-between hover:bg-[#f8fafc] py-2 pl-2 pr-3 border-b-[1px] border-gray-100`}>
@@ -172,9 +175,8 @@ const MultiSelectDropdown = ({
           }}>
           <div className="h-full">
             <div
-              className={` h-full flex items-center relative hover:cursor-pointer w-full cursor-default rounded-[6px] border bg-white py-2  leading-5.5 pl-3 pr-10 text-left shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
-                disabled ? 'opacity-50 cursor-not-allowed' : ''
-              } ${valueClassName} `}>
+              className={` h-full flex items-center relative hover:cursor-pointer w-full cursor-default rounded-[6px] border bg-white py-2  leading-5.5 pl-3 pr-10 text-left shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${disabled ? 'opacity-50 cursor-not-allowed' : ''
+                } ${valueClassName} `}>
               <p
                 className={`block truncate ${!selected && 'text-gray-300'} text-left text-xs  ${labelClass}`}>
                 {customLabel
