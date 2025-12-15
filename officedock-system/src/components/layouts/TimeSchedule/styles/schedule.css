@@ -375,7 +375,6 @@
 .schedule-custom .fc-event {
   z-index: 2; /* Ensure event sits above the divider */
   /* padding: 0 12px 0 !important; */
-  left: 0 !important;
 }
 .schedule-custom .fc-timeGridWeek-view .fc-event {
   z-index: 2; /* Ensure event sits above the divider */

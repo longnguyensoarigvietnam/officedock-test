@@ -107,32 +107,32 @@ export const SCREEN_LIST = [
     show: false,
   },
   {
-    name: 'ユーザー画面',
+    name: 'ユーザー管理',
     value: 'user',
     show: true,
   },
   {
-    name: '組織画面',
+    name: 'チーム管理',
     value: 'organization',
     show: true,
   },
   {
-    name: '集計カテゴリ画面',
+    name: '業務カテゴリー設定',
     value: 'category',
     show: true,
   },
   {
-    name: 'スキル画面',
+    name: 'スキル',
     value: 'skill',
     show: false,
   },
   {
-    name: '組織_スキル画面',
+    name: '組織_スキル',
     value: 'organizationSkill',
     show: false,
   },
   {
-    name: '集計タグ画面',
+    name: '集計タグ管理',
     value: 'tag',
     show: true,
   },
@@ -152,7 +152,7 @@ export const SCREEN_LIST = [
     show: false,
   },
   {
-    name: 'ロール画面',
+    name: '権限管理',
     value: 'role',
     show: true,
   },
@@ -167,22 +167,22 @@ export const SCREEN_LIST = [
     show: false,
   },
   {
-    name: '日報一覧画面',
+    name: '日報一覧',
     value: 'teamDailyReport',
     show: true,
   },
   {
-    name: 'チームドック画面',
+    name: 'チームドック',
     value: 'teamdock',
     show: true,
   },
   {
-    name: 'カレンダー設定画面',
+    name: 'カレンダー設定',
     value: 'calendarManagement',
     show: true,
   },
   {
-    name: 'スキルマップ画面',
+    name: 'スキルマップ設定',
     value: 'skillMap',
     show: true,
   },
@@ -207,7 +207,7 @@ export const SCREEN_LIST = [
     show: true,
   },
   {
-    name: 'アンケート管理',
+    name: 'アンケート',
     value: 'surveyManagement',
     show: true,
   },
