@@ -27,11 +27,11 @@ import {
 import {
   ERROR_COMMON_MESSAGE,
   ERROR_CREATE_MESSAGE,
-  ERROR_DELETE_MESSAGE,
+  ERROR_HIDDEN_MESSAGE,
   ERROR_UPDATE_MESSAGE,
   ERROR_UPDATE_ORGANIZATION_MESSAGE,
   SUCCESS_CREATE_MESSAGE,
-  SUCCESS_DELETE_MESSAGE,
+  SUCCESS_HIDDEN_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
 
@@ -210,7 +210,7 @@ const ListUsers = () => {
   const { mutate: deleteUser } = useMutation(postDeleteUser, {
     onSuccess: async () => {
       showToast({
-        description: SUCCESS_DELETE_MESSAGE,
+        description: SUCCESS_HIDDEN_MESSAGE,
       });
       if (userList?.results.length === 1 && debouncedParams.page > 1) {
         // If change current page, useUserList auto recall, just don't need using refetchUserList
@@ -226,7 +226,7 @@ const ListUsers = () => {
       setOriginalUserCount(originalUserCount - 1);
     },
     onError: (error: AxiosError<any>) => {
-      showErrorToast(error, ERROR_DELETE_MESSAGE);
+      showErrorToast(error, ERROR_HIDDEN_MESSAGE);
       setOpenConfirmDeleteModal(false);
       setIsLoading(false);
     },

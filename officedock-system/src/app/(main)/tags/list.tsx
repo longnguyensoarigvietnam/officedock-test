@@ -29,10 +29,10 @@ import { apiRouters, pageRouters } from '@constants/routers';
 import {
   ERROR_COMMON_MESSAGE,
   ERROR_CREATE_MESSAGE,
-  ERROR_DELETE_MESSAGE,
+  ERROR_HIDDEN_MESSAGE,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_CREATE_MESSAGE,
-  SUCCESS_DELETE_MESSAGE,
+  SUCCESS_HIDDEN_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
 import {
@@ -192,8 +192,8 @@ const ListTags = () => {
       organizationIds: encodeURIComponent(
         watch('organizationIds')
           ? watch('organizationIds')
-            .map((org: OptionDropdownType) => org.value)
-            .join(',')
+              .map((org: OptionDropdownType) => org.value)
+              .join(',')
           : '',
       ),
     }));
@@ -328,7 +328,7 @@ const ListTags = () => {
   const { mutate: deleteTag } = useMutation(postDeleteTag, {
     onSuccess: async () => {
       showToast({
-        description: SUCCESS_DELETE_MESSAGE,
+        description: SUCCESS_HIDDEN_MESSAGE,
       });
       if (dataTags.length === 1 && debouncedParams.page > 1) {
         // If change current page, useTagList auto recall, just don't need using refetchTagList
@@ -342,7 +342,7 @@ const ListTags = () => {
       setOpenConfirmDeleteModal(false);
     },
     onError: (error: AxiosError<any>) => {
-      showErrorToast(error, ERROR_DELETE_MESSAGE);
+      showErrorToast(error, ERROR_HIDDEN_MESSAGE);
       setOpenConfirmDeleteModal(false);
       setIsLoading(false);
     },
@@ -477,8 +477,8 @@ const ListTags = () => {
                           organizationIds: encodeURIComponent(
                             updatedTagIds
                               ? updatedTagIds
-                                .map((org: OptionDropdownType) => org.value)
-                                .join(',')
+                                  .map((org: OptionDropdownType) => org.value)
+                                  .join(',')
                               : '',
                           ),
                         }));
@@ -578,11 +578,13 @@ const ListTags = () => {
                     </div>
                   </td>
                   <td className="!w-[calc(100%_-_500px)] text-black !break-all text-left text-[14px] font-medium !pl-[14px] !pr-[18px]">
-                    <div className='flex justify-between items-center'>
-                      <p className='max-w-[calc(100%-50px)]'>{element?.organizations &&
-                        element?.organizations
-                          .map((org: Organizations) => org.name)
-                          .join('/ ')}</p>
+                    <div className="flex justify-between items-center">
+                      <p className="max-w-[calc(100%-50px)]">
+                        {element?.organizations &&
+                          element?.organizations
+                            .map((org: Organizations) => org.name)
+                            .join('/ ')}
+                      </p>
                       <div className="min-w-4">
                         {element.isCalendarOrganizationCheck && (
                           <ImageRound

@@ -25,10 +25,10 @@ import { apiRouters } from '@constants/routers';
 import { NO_DATA_AVAILABLE, PAGE_SIZE_OPTIONS } from '@constants';
 import {
   ERROR_CREATE_MESSAGE,
-  ERROR_DELETE_MESSAGE,
+  ERROR_HIDDEN_MESSAGE,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_CREATE_MESSAGE,
-  SUCCESS_DELETE_MESSAGE,
+  SUCCESS_HIDDEN_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
 import { ActionsModal, PermissionsSystem } from '@constants/enums';
@@ -258,7 +258,7 @@ const ListCategory = () => {
   const { mutate: deleteCategory } = useMutation(postDeleteCategory, {
     onSuccess: async () => {
       showToast({
-        description: SUCCESS_DELETE_MESSAGE,
+        description: SUCCESS_HIDDEN_MESSAGE,
       });
       if (dataCategories.length === 1 && debouncedParams.page > 1) {
         // If change current page, useTagList auto recall, just don't need using refetchTagList
@@ -272,7 +272,7 @@ const ListCategory = () => {
       setOpenConfirmDeleteModal(false);
     },
     onError: (error: AxiosError<any>) => {
-      showErrorToast(error, ERROR_DELETE_MESSAGE);
+      showErrorToast(error, ERROR_HIDDEN_MESSAGE);
       setOpenConfirmDeleteModal(false);
       setIsLoading(false);
     },

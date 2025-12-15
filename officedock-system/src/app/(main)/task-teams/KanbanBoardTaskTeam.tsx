@@ -21,7 +21,6 @@ import { AxiosError } from 'axios';
 
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
-import InputSearch from '@components/common/InputSearch';
 import ActionFilterTaskTeam from '@components/modals/ActionFilterTeamTask';
 import UserColumnTeam from '@components/kanbanTeam/UserColumnTeam';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
@@ -2666,8 +2665,8 @@ const KanbanBoardTaskTeam = () => {
                   重要
                 </Button>
               </>
-
-              <InputSearch
+              {/* TODO : Implement search task */}
+              {/* <InputSearch
                 className="w-[300px] h-[34px] py-0 bg-[#F8FAFC] ml-2 !rounded-[20px]"
                 inputClassName="h-[34px] bg-[#F8FAFC] border-none !rounded-[20px] text-sm placeholder-[#77858F]"
                 iconClassName="w-[14px] h-[14px]"
@@ -2676,8 +2675,7 @@ const KanbanBoardTaskTeam = () => {
                 // onChange={(e) => {
                 //   setValueSearch(e.target.value);
                 // }}
-              />
-
+              /> */}
               <div className="ml-3">
                 <Checkbox
                   label="他チームを表示"

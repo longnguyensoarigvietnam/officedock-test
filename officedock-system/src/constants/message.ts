@@ -69,6 +69,7 @@ export const SUCCESS_SENT_MAIL_MESSAGE = 'メール送信に成功しました�
 export const SUCCESS_UPDATE_MESSAGE = '更新に成功しました。';
 export const SUCCESS_CREATE_MESSAGE = '作成に成功しました。';
 export const SUCCESS_DELETE_MESSAGE = '削除に成功しました。';
+export const SUCCESS_HIDDEN_MESSAGE = '非表示に成功しました。';
 export const SUCCESS_PIN_MESSAGE = 'タスクをピン止めしました。';
 export const SUCCESS_UNPIN_MESSAGE = 'ピン止めを解除しました。';
 export const SUCCESS_RESTORE_MESSAGE = '復元に成功しました。';
@@ -95,6 +96,8 @@ export const OTP_CODE_INVALID =
 export const TOKEN_INVALID = 'トークンは無効です。';
 export const ERROR_CREATE_MESSAGE = '作成に失敗しました。';
 export const ERROR_DELETE_MESSAGE = '削除に失敗しました。';
+export const ERROR_HIDDEN_MESSAGE = '非表示に失敗しました。';
+
 export const ERROR_COMMON_MESSAGE = 'エラーが出ています。再度確認して下さい。';
 export const ERROR_ID_AVAILABLE_MESSAGE = 'このIDはすでに存在しています。';
 export const ERROR_EMAIL_AVAILABLE_MESSAGE =
