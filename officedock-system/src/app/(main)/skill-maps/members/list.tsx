@@ -1,5 +1,6 @@
 'use client';
-import React, { Fragment, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import React, { Fragment, useState } from 'react';
 import Link from 'next/link';
 
 import Dropdown from '@components/common/Dropdown';
@@ -35,6 +36,11 @@ const ListSkillsMapByMembers = () => {
     OptionDropdownType[]
   >([]);
 
+  const searchParams = useSearchParams();
+  const params = new URLSearchParams(searchParams);
+  const router = useRouter();
+  const orgIdParam = searchParams.get('orgId')
+
   // Get organization options for pulldown
   useCreationDataCommon({
     options: {
@@ -58,30 +64,37 @@ const ListSkillsMapByMembers = () => {
     },
   });
 
-  // Fetch organization skills
-  const { skillMapListByMembers } = useSkillMapByMembers({
-    organizationId: Number(selectedOrganizationOption.value),
+  // Fetch skill map by members
+  useSkillMapByMembers({
+    filter: {
+      organizationId: Number(selectedOrganizationOption.value) || Number(orgIdParam),
+    },
+    onSuccess: (data) => {
+      setDataSkillMapsByMembers(data);
+    }
   });
 
   // Fetch organization skills
-  const { organizationSkillList } = useOrganizationSkillList({
+  useOrganizationSkillList({
     filter: {
-      organizationId: Number(selectedOrganizationOption.value),
+      organizationId: Number(selectedOrganizationOption.value) || Number(orgIdParam),
       screen: ScreenName.SKILL_MAP,
     },
+    onSuccess: (data) => {
+      setDataSkillMapList(data as SkillMapSkill[]);
+    }
   });
 
-  useEffect(() => {
-    if (skillMapListByMembers) {
-      setDataSkillMapsByMembers(skillMapListByMembers);
+  const handleSetParam = ({
+    id,
+  }: {
+    id?: string | null;
+  }) => {
+    if (id) {
+      params.set('orgId', id);
     }
-  }, [skillMapListByMembers]);
-
-  useEffect(() => {
-    if (organizationSkillList) {
-      setDataSkillMapList(organizationSkillList as SkillMapSkill[]);
-    }
-  }, [organizationSkillList]);
+    router.push(`?${params.toString()}`);
+  };
 
   return (
     <Fragment>
@@ -112,13 +125,14 @@ const ListSkillsMapByMembers = () => {
               (element) => element.value == selectedOrganizationOption.value,
             )}
             onChange={(e) => {
+              handleSetParam({ id: e.value as string })
               setSelectedOrganizationOption({
                 label: e.label,
                 value: e.value,
               });
             }}
           />
-          <Link href={pageRouters.EDIT_SKILL_MAPS_MEMBERS.href}>
+          <Link href={`${pageRouters.EDIT_SKILL_MAPS_MEMBERS.href}${orgIdParam ? `?orgId=${orgIdParam}` : ''}`}>
             <Button
               variant="primary"
               className={`w-[100px] !p-0 text-sm h-[34px] text-white border-none`}

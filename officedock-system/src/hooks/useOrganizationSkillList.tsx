@@ -27,9 +27,11 @@ interface FilterProps {
 const useOrganizationSkillList = ({
   filter,
   showLoadingIndicator = false,
+  onSuccess
 }: {
   filter?: FilterProps;
   showLoadingIndicator?: boolean;
+  onSuccess?: (data: OrganizationSkill[] | SkillMapSkill[]) => void
 }) => {
   const { data: session } = useSessionCache();
   const router = useRouter();
@@ -94,6 +96,9 @@ const useOrganizationSkillList = ({
           router.push(pageRouters.LOGIN.href);
         }
       }
+    },
+    onSuccess: (data: OrganizationSkill[] | SkillMapSkill[]) => {
+      onSuccess && onSuccess(data)
     },
     onSettled: () => {
       showLoadingIndicator && setIsLoading(false);
