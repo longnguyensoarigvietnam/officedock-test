@@ -389,8 +389,8 @@ const ChatDetail = ({
   const { mutate: actionMuteChat, isLoading: isLoadingMute } = useMutation(
     postActionMuteChat,
     {
-      onSuccess: async () => {},
-      onError: () => {},
+      onSuccess: async () => { },
+      onError: () => { },
       onSettled: () => {
         setIsLoading(false);
       },
@@ -607,9 +607,8 @@ const ChatDetail = ({
     if (chatRoomCode) {
       if (data.pageNumber == 1) setIsLoading(true);
       const encodedQuery = encodeURIComponent(data.searchChatMsg);
-      const apiUrl = `${apiRouters.CHAT_MESSAGES(chatRoomCode)}?${
-        data.searchChatMsg ? `message=${encodedQuery}` : ''
-      }${data.pageNumber ? `&page=${data.pageNumber}` : ''}${data.roomType ? `&chatroom_type=${data.roomType}` : ''}`;
+      const apiUrl = `${apiRouters.CHAT_MESSAGES(chatRoomCode)}?${data.searchChatMsg ? `message=${encodedQuery}` : ''
+        }${data.pageNumber ? `&page=${data.pageNumber}` : ''}${data.roomType ? `&chatroom_type=${data.roomType}` : ''}`;
 
       return await api.get<BasePagination<ChatMessageResponse[]>>(apiUrl);
     }
@@ -1396,8 +1395,8 @@ const ChatDetail = ({
     return response;
   };
   const { mutate: handleDeleteMsgChat } = useMutation(postDeleteMsg, {
-    onSuccess: async () => {},
-    onError: () => {},
+    onSuccess: async () => { },
+    onError: () => { },
   });
 
   const handleConfirmDeleteMessage = () => {
@@ -1569,7 +1568,7 @@ const ChatDetail = ({
     'postGetChatRoomDetail',
     handleGetChatRoomDetail,
     {
-      onSuccess: () => {},
+      onSuccess: () => { },
     },
   );
 
@@ -1767,15 +1766,15 @@ const ChatDetail = ({
 
   const mentionMemberOptions = chatRoomDetail
     ? [
-        {
-          id: null,
-          fullName: MENTION_ALL_MEMBERS,
-        },
-        ...(chatRoomDetail?.participants.map((participant) => ({
-          id: participant.id,
-          fullName: participant?.fullName || '',
-        })) || []),
-      ]
+      {
+        id: null,
+        fullName: MENTION_ALL_MEMBERS,
+      },
+      ...(chatRoomDetail?.participants.map((participant) => ({
+        id: participant.id,
+        fullName: participant?.fullName || '',
+      })) || []),
+    ]
     : [];
 
   // Update bookmark message
@@ -1812,18 +1811,18 @@ const ChatDetail = ({
         setSearchMessageResults((prev) =>
           prev
             ? {
-                ...prev,
-                results: prev.results.map((item) =>
-                  item.uuid === bookmark.uuid
-                    ? { ...item, isBookmark: bookmark.isBookmark }
-                    : item,
-                ),
-              }
+              ...prev,
+              results: prev.results.map((item) =>
+                item.uuid === bookmark.uuid
+                  ? { ...item, isBookmark: bookmark.isBookmark }
+                  : item,
+              ),
+            }
             : prev,
         );
       },
-      onError: () => {},
-      onSettled: () => {},
+      onError: () => { },
+      onSettled: () => { },
     },
   );
 
@@ -2006,9 +2005,8 @@ const ChatDetail = ({
       }
 
       button.style.top = `${rect.top + window.scrollY - 45}px`;
-      button.style.left = `${
-        rect.right + window.scrollX - button.offsetWidth
-      }px`;
+      button.style.left = `${rect.right + window.scrollX - button.offsetWidth
+        }px`;
     };
 
     document.addEventListener('mouseup', handleMouseUp);
@@ -2336,7 +2334,7 @@ const ChatDetail = ({
         handleRemoveChatRoomParam();
       }
     },
-    onError: () => {},
+    onError: () => { },
     onSettled: () => {
       setIsLoading(false);
     },
@@ -2385,11 +2383,10 @@ const ChatDetail = ({
                   </>
                 )}
                 <div
-                  className={`${
-                    chatRoomDetail &&
+                  className={`${chatRoomDetail &&
                     chatRoomDetail.type === ChatRoomType.GROUP &&
                     'max-w-[280px] w-[280px] ml-5'
-                  }`}>
+                    }`}>
                   {chatRoomDetail &&
                     chatRoomDetail.type === ChatRoomType.GROUP && (
                       <div className="flex gap-3 items-center">
@@ -2403,9 +2400,9 @@ const ChatDetail = ({
                           <div className="flex">
                             {chatRoomDetail
                               ? getParticipantAvatars(
-                                  chatRoomDetail?.participants || [],
-                                  false,
-                                )
+                                chatRoomDetail?.participants || [],
+                                false,
+                              )
                               : []}
                           </div>
                         </DynamicTooltip>
@@ -2465,8 +2462,8 @@ const ChatDetail = ({
                         pageNumber: 1,
                         roomType:
                           chatRoomDetail?.type == ChatRoomType.CALENDAR ||
-                          chatRoomDetail?.type == ChatRoomType.SKILL ||
-                          chatRoomDetail?.type == ChatRoomType.TASK
+                            chatRoomDetail?.type == ChatRoomType.SKILL ||
+                            chatRoomDetail?.type == ChatRoomType.TASK
                             ? chatRoomDetail?.type || ''
                             : '',
                       });
@@ -2525,22 +2522,21 @@ const ChatDetail = ({
                                       }}
                                       className="absolute bg-[#5B6770] p-[6px] !rounded-[10px] text-white text-sm  font-medium  top-10 right-0 z-10  transform">
                                       <div
-                                        className={`${
-                                          chatRoomDetail?.type ==
-                                          ChatRoomType.PRIVATE
+                                        className={`${chatRoomDetail?.type ==
+                                            ChatRoomType.PRIVATE
                                             ? 'w-[150px]'
                                             : 'w-[122px]'
-                                        }`}>
+                                          }`}>
                                         {chatRoomDetail?.type ==
                                           ChatRoomType.GROUP && (
-                                          <div
-                                            className="p-[12px] hover:bg-[#7D8A94] leading-none rounded-[6px] hover:cursor-pointer"
-                                            onClick={() => {
-                                              setOpenSettingBox(true);
-                                            }}>
-                                            編集
-                                          </div>
-                                        )}
+                                            <div
+                                              className="p-[12px] hover:bg-[#7D8A94] leading-none rounded-[6px] hover:cursor-pointer"
+                                              onClick={() => {
+                                                setOpenSettingBox(true);
+                                              }}>
+                                              編集
+                                            </div>
+                                          )}
 
                                         <div
                                           onClick={() =>
@@ -2551,17 +2547,17 @@ const ChatDetail = ({
                                         </div>
                                         {chatRoomDetail?.type ==
                                           ChatRoomType.GROUP && (
-                                          <div
-                                            onClick={() =>
-                                              setShowConfirmLeaveGroup(true)
-                                            }
-                                            className="p-[12px] hover:bg-[#7D8A94] leading-none rounded-[6px] hover:cursor-pointer">
-                                            グループを退会
-                                          </div>
-                                        )}
+                                            <div
+                                              onClick={() =>
+                                                setShowConfirmLeaveGroup(true)
+                                              }
+                                              className="p-[12px] hover:bg-[#7D8A94] leading-none rounded-[6px] hover:cursor-pointer">
+                                              グループを退会
+                                            </div>
+                                          )}
                                         <div className="p-[12px] hover:bg-[#7D8A94] leading-none rounded-[6px] hover:cursor-pointer hidden">
                                           {chatRoomDetail?.type !=
-                                          ChatRoomType.PRIVATE
+                                            ChatRoomType.PRIVATE
                                             ? 'グループ'
                                             : '個人チャット'}
                                           を削除
@@ -2684,9 +2680,9 @@ const ChatDetail = ({
                         </div>
                       ))}
                   {dataMessageDetail?.length > 0 &&
-                  chatRoomNotifications &&
-                  chatRoomNotifications.notifications > 0 &&
-                  !hasMoreDetailOnScrollDown ? (
+                    chatRoomNotifications &&
+                    chatRoomNotifications.notifications > 0 &&
+                    !hasMoreDetailOnScrollDown ? (
                     <div className="flex items-center gap-[14px] justify-center">
                       <div className="wavy-line"></div>
                       <p className="text-[12px] font-medium text-[#228CDB] text-nowrap">
@@ -3015,11 +3011,12 @@ const ChatDetail = ({
                             />
                           </div>
                         </DynamicTooltip>
-                        <DynamicTooltip content={'書式設定'} placement="top">
+                        {/* TODO: Implement Aa chat */}
+                        {/* <DynamicTooltip content={'書式設定'} placement="top">
                           <p className="!font-thin text-[#77858F] hover:bg-[#77858F26] rounded-full p-[3px] hover:cursor-pointer flex justify-between items-center w-8 h-8">
                             <span className="w-[20px] ml-1 mt-[-3px]">Aa</span>
                           </p>
-                        </DynamicTooltip>
+                        </DynamicTooltip> */}
                       </div>
 
                       <div className="flex items-center gap-3">
@@ -3201,16 +3198,16 @@ const ChatDetail = ({
           participantsList={
             chatRoomCode
               ? getChatParticipantIds(
-                  chatRoomDetail ? chatRoomDetail.participants : [],
-                )
+                chatRoomDetail ? chatRoomDetail.participants : [],
+              )
               : []
           }
           selectedOrganizations={
             chatRoomDetail?.selectOrganizations
               ? String(chatRoomDetail.selectOrganizations)
-                  .split(',')
-                  .filter(Boolean)
-                  .map((orgId) => Number(orgId))
+                .split(',')
+                .filter(Boolean)
+                .map((orgId) => Number(orgId))
               : []
           }
           code={`${chatRoomCode}`}

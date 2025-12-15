@@ -59,6 +59,7 @@ export const SettingSkillModal = ({
             skillMapByOrganizations.map((skillMap, index) => (
               <SkillMapByOrganizationPanel
                 key={index}
+                isMyPage
                 skillMapDetail={skillMap}
                 userId={skillMapInfo?.user.id || 0}
                 settingSkillAction={action}
