@@ -41,6 +41,7 @@ const EditSkillMapByMemberBoard = () => {
   const showErrorToast = useErrorToast();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const params = new URLSearchParams(searchParams);
   const orgIdParam = searchParams.get('orgId')
 
   const [dataSkillMapsByMembers, setDataSkillMapsByMembers] = useState<
@@ -112,7 +113,9 @@ const EditSkillMapByMemberBoard = () => {
         ...organizationList,
       ]);
       if (orgIdParam) {
-        const selectedOrg = organizationList.find((org) => org.value == Number(orgIdParam))
+        const orgId = Number(orgIdParam);
+        if (Number.isNaN(orgId)) router.push(pageRouters.SKILL_MAPS_MEMBERS_MANAGEMENT.href)
+        const selectedOrg = organizationList.find((org) => org.value == orgId)
         setSelectedOrganizationOption({
           label: String(selectedOrg?.label),
           value: String(selectedOrg?.value)
@@ -153,6 +156,23 @@ const EditSkillMapByMemberBoard = () => {
     },
   );
 
+  const handleSetParam = ({
+    id,
+  }: {
+    id?: string | null;
+  }) => {
+    if (id) {
+      params.set('orgId', id);
+    }
+    router.push(`?${params.toString()}`);
+  };
+
+  const handleRemoveParam = () => {
+    const params = new URLSearchParams(searchParams);
+    params.delete('orgId');
+    router.replace(`?${params.toString()}`);
+  };
+
   return (
     <Fragment>
       <div className="sticky z-[21] top-[0px] px-10 py-[30px] bg-[#E6F3FB]">
@@ -184,6 +204,11 @@ const EditSkillMapByMemberBoard = () => {
               (element) => element.value == selectedOrganizationOption.value,
             )}
             onChange={(e) => {
+              if (e.value) {
+                handleSetParam({ id: e.value as string })
+              } else {
+                handleRemoveParam()
+              }
               setSelectedOrganizationOption({
                 label: e.label,
                 value: e.value,

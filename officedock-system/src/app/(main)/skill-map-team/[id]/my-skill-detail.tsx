@@ -169,26 +169,26 @@ const MySkillDetailByUser = ({ detailSkillData }: Props) => {
                                     /{lastValidSkill.level.measureTime}
                                   </p>
                                   <p className="relative top-[2px]">
-                                    時間経過した
+                                    時間計測しました
                                   </p>
                                 </>
                               )}
                               {lastValidSkill.level.lookBackInterval !==
                                 null && (
-                                <>
-                                  <p className="text-[18px] text-primary">
-                                    {lastValidSkill.level.lookBackInterval}
-                                  </p>
-                                  <p className="relative top-[2px] text-xs">
-                                    {
-                                      SkillMapTypeInterval[
+                                  <>
+                                    <p className="text-[18px] text-primary">
+                                      {lastValidSkill.level.lookBackInterval}
+                                    </p>
+                                    <p className="relative top-[2px] text-xs">
+                                      {
+                                        SkillMapTypeInterval[
                                         lastValidSkill.level
                                           .lookBackType as keyof typeof SkillMapTypeInterval
-                                      ]
-                                    }
-                                  </p>
-                                </>
-                              )}
+                                        ]
+                                      }
+                                    </p>
+                                  </>
+                                )}
                             </div>
                             <div
                               className={`w-full mt-[10px] ${item.isDeleted && 'invisible'} ${lastValidSkill.skill.deletedAt && 'invisible'}`}>

@@ -27,7 +27,7 @@ const CompletionRewardModal = memo(
         open={open}
         className="font-primary bg-white w-[500px] !rounded-lg  py-10"
         isOutSideAction={false}
-        onClose={() => {}}>
+        onClose={() => { }}>
         <div className="flex justify-center">
           <ImageRound
             src={'/icons/success.svg'}
@@ -43,7 +43,7 @@ const CompletionRewardModal = memo(
           {dataRewardSkill?.measureTime !== null && (
             <>
               {dataRewardSkill?.measureTime}
-              時間経過した
+              時間計測しました
             </>
           )}
           {dataRewardSkill?.lookBackInterval !== null && (
@@ -51,7 +51,7 @@ const CompletionRewardModal = memo(
               {dataRewardSkill?.lookBackInterval}
               {
                 SkillMapTypeInterval[
-                  dataRewardSkill?.lookBackType as keyof typeof SkillMapTypeInterval
+                dataRewardSkill?.lookBackType as keyof typeof SkillMapTypeInterval
                 ]
               }
               完了しました！

@@ -61,6 +61,18 @@ const ListSkillsMapByMembers = () => {
         },
         ...organizationList,
       ]);
+      if (orgIdParam) {
+        const orgId = Number(orgIdParam);
+        if (Number.isNaN(orgId)) {
+          handleRemoveParam();
+          return;
+        }
+        const selectedOrg = organizationList.find((org) => org.value == orgId)
+        setSelectedOrganizationOption({
+          label: String(selectedOrg?.label),
+          value: String(selectedOrg?.value)
+        })
+      }
     },
   });
 
@@ -96,6 +108,12 @@ const ListSkillsMapByMembers = () => {
     router.push(`?${params.toString()}`);
   };
 
+  const handleRemoveParam = () => {
+    const params = new URLSearchParams(searchParams);
+    params.delete('orgId');
+    router.replace(`?${params.toString()}`);
+  };
+
   return (
     <Fragment>
       <div className="sticky z-[21] top-[0px] px-10 py-[30px] bg-[#E6F3FB]">
@@ -125,7 +143,11 @@ const ListSkillsMapByMembers = () => {
               (element) => element.value == selectedOrganizationOption.value,
             )}
             onChange={(e) => {
-              handleSetParam({ id: e.value as string })
+              if (e.value) {
+                handleSetParam({ id: e.value as string })
+              } else {
+                handleRemoveParam()
+              }
               setSelectedOrganizationOption({
                 label: e.label,
                 value: e.value,
