@@ -29,12 +29,12 @@ steps:
     entrypoint: bash
 
   - id: deploy-system
-    waitFor: ["deploy-api"]
+    waitFor: ["-"]
     name: gcr.io/cloud-builders/gcloud
     args: [
         "-c",
         "set -eux && \
-        gcloud builds submit \
+        gcloud builds submit ./officedock-system \
         --config ./officedock-system/cloudbuild-production.yaml \
         --region $LOCATION \
         --revision $TAG_NAME \
@@ -51,17 +51,19 @@ steps:
         _CR_CONCURRENCY=$_SYSTEM_CR_CONCURRENCY,\
         _CR_MIN_INSTANCES=$_SYSTEM_CR_MIN_INSTANCES,\
         _CR_MAX_INSTANCES=$_SYSTEM_CR_MAX_INSTANCES,\
-        _CR_SERVICE_ACCOUNT=$_SYSTEM_CR_SERVICE_ACCOUNT_ID@$PROJECT_ID.iam.gserviceaccount.com",
+        _CR_SERVICE_ACCOUNT=$_SYSTEM_CR_SERVICE_ACCOUNT_ID@$PROJECT_ID.iam.gserviceaccount.com,\
+        _SECRET_ENV_NAME=$_SYSTEM_SECRET_ENV_NAME,\
+        _RUNTIME_ENV_PATH=$_SYSTEM_RUNTIME_ENV_PATH",
       ]
     entrypoint: bash
 
   - id: deploy-admin
-    waitFor: ["deploy-api"]
+    waitFor: ["-"]
     name: gcr.io/cloud-builders/gcloud
     args: [
         "-c",
         "set -eux && \
-        gcloud builds submit \
+        gcloud builds submit ./officedock-admin \
         --config ./officedock-admin/cloudbuild-production.yaml \
         --region $LOCATION \
         --revision $TAG_NAME \
@@ -78,7 +80,9 @@ steps:
         _CR_CONCURRENCY=$_ADMIN_CR_CONCURRENCY,\
         _CR_MIN_INSTANCES=$_ADMIN_CR_MIN_INSTANCES,\
         _CR_MAX_INSTANCES=$_ADMIN_CR_MAX_INSTANCES,\
-        _CR_SERVICE_ACCOUNT=$_ADMIN_CR_SERVICE_ACCOUNT_ID@$PROJECT_ID.iam.gserviceaccount.com",
+        _CR_SERVICE_ACCOUNT=$_ADMIN_CR_SERVICE_ACCOUNT_ID@$PROJECT_ID.iam.gserviceaccount.com,\
+        _SECRET_ENV_NAME=$_ADMIN_SECRET_ENV_NAME,\
+        _RUNTIME_ENV_PATH=$_ADMIN_RUNTIME_ENV_PATH",
       ]
     entrypoint: bash
 
@@ -124,6 +128,8 @@ substitutions:
   _SYSTEM_CR_CONCURRENCY: "50"
   _SYSTEM_CR_MIN_INSTANCES: "0" # "0" means cold start
   _SYSTEM_CR_MAX_INSTANCES: "50"
+  _SYSTEM_SECRET_ENV_NAME: PROD_SYSTEM_ENV
+  _SYSTEM_RUNTIME_ENV_PATH: /secrets/.env
 
   # Admin substitutions
   _ADMIN_CR_INGRESS: internal-and-cloud-load-balancing # all / internal / internal-and-cloud-load-balancing
@@ -133,3 +139,5 @@ substitutions:
   _ADMIN_CR_CONCURRENCY: "50"
   _ADMIN_CR_MIN_INSTANCES: "0" # "0" means cold start
   _ADMIN_CR_MAX_INSTANCES: "50"
+  _ADMIN_SECRET_ENV_NAME: PROD_ADMIN_ENV
+  _ADMIN_RUNTIME_ENV_PATH: /secrets/.env

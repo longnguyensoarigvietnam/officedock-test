@@ -1,0 +1,86 @@
+# ==============================================================================
+# Optimized Dockerfile for Cloud Run (with Custom Server)
+# ==============================================================================
+
+# Base image
+FROM node:22-alpine AS base
+
+# ==============================================================================
+# Dependencies stage (for build)
+# ==============================================================================
+FROM base AS deps
+
+WORKDIR /app
+
+# Copy dependency files first for cache optimization
+COPY package*.json ./
+
+# Install all dependencies (including devDependencies for build)
+RUN npm ci
+
+# ==============================================================================
+# Build stage
+# ==============================================================================
+FROM base AS builder
+
+WORKDIR /app
+
+# Build-time environment variables
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+ARG NEXT_PUBLIC_HELP_PAGE_URL
+ARG API_INTERNAL_URL
+
+# Required for rewrites in next.config.mjs
+ENV API_INTERNAL_URL=${API_INTERNAL_URL}
+
+# Copy dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copy source code and build
+COPY . .
+RUN npm run build \
+    && rm -rf .next/cache .next/trace .next/types
+
+# ==============================================================================
+# Production dependencies stage
+# ==============================================================================
+FROM base AS prod-deps
+
+WORKDIR /app
+
+COPY package*.json ./
+
+# Install production dependencies only
+# Remove prepare script to skip husky install (husky is devDependency)
+RUN npm pkg delete scripts.prepare && npm ci --omit=dev
+
+# ==============================================================================
+# Runtime stage
+# ==============================================================================
+FROM base AS runner
+
+WORKDIR /app
+
+# Security: Create non-root user
+RUN addgroup --system --gid 1001 nodejs \
+    && adduser --system --uid 1001 nextjs
+
+# Set environment variables
+ENV NODE_ENV=production \
+    PORT=3000
+
+# Copy production dependencies
+COPY --from=prod-deps /app/node_modules ./node_modules
+
+# Copy built assets and config
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
+COPY --from=builder --chown=nextjs:nodejs /app/dist ./dist
+
+# Switch to non-root user
+USER nextjs
+
+EXPOSE 3000
+
+CMD ["sh", "-c", "node --env-file=${RUNTIME_ENV_PATH} dist/index.js"]

@@ -1,22 +1,23 @@
 steps:
-  # Get ENV from SecretManager and write to .env
-  - id: 'Write ENV'
-    name: gcr.io/cloud-builders/gcloud
-    entrypoint: 'bash'
-    secretEnv: ['_ADMIN_ENV']
-    args: ['-c', 'echo "$$_ADMIN_ENV" > officedock-admin/.env']
-
   # Build Docker Image on Cloud Build
   - id: 'Build Docker Image'
     name: 'gcr.io/cloud-builders/docker'
-    entrypoint: 'bash'
-    secretEnv: ['_ADMIN_ARTIFACT_REGISTRY_PATH']
-    args:
-      [
-        '-c',
-        'docker build --platform linux/amd64 -t $$_ADMIN_ARTIFACT_REGISTRY_PATH:$COMMIT_SHA -f Dockerfile.staging .',
-      ]
     dir: 'officedock-admin'
+    entrypoint: 'bash'
+    secretEnv: ['_ADMIN_ARTIFACT_REGISTRY_PATH', '_BUILD_ENV']
+    args:
+      - "-c"
+      - |
+        # Extract value from .env format
+        extract_env() {
+          echo "$$_BUILD_ENV" | grep "^$1=" | cut -d '=' -f2-
+        }
+
+        docker build --platform linux/amd64 \
+          --build-arg NEXT_PUBLIC_API_URL="$$(extract_env NEXT_PUBLIC_API_URL)" \
+          --build-arg API_INTERNAL_URL="$$(extract_env API_INTERNAL_URL)" \
+          -t $$_ADMIN_ARTIFACT_REGISTRY_PATH:$COMMIT_SHA \
+          -f Dockerfile.cloudrun .
 
   # Push built Docker Image on Artifact Registry
   - id: 'Push Docker Image'
@@ -37,11 +38,18 @@ steps:
         --image $$_ADMIN_ARTIFACT_REGISTRY_PATH:$COMMIT_SHA \
         --region $$_ADMIN_REGION \
         --port 3000 \
-        --allow-unauthenticated",
+        --allow-unauthenticated \
+        --set-env-vars=RUNTIME_ENV_PATH=$_RUNTIME_ENV_PATH \
+        --update-secrets=$_RUNTIME_ENV_PATH=$_SECRET_ENV_NAME:latest",
       ]
 
 options:
   logging: CLOUD_LOGGING_ONLY
+
+substitutions:
+  # Secret Manager settings
+  _SECRET_ENV_NAME: STG_ADMIN_ENV
+  _RUNTIME_ENV_PATH: /secrets/.env
 
 # Settings SecretManager
 availableSecrets:
@@ -52,5 +60,5 @@ availableSecrets:
       env: _ADMIN_REGION
     - versionName: projects/${PROJECT_NUMBER}/secrets/STG_ADMIN_SERVICE_NAME/versions/latest
       env: _ADMIN_SERVICE_NAME
-    - versionName: projects/${PROJECT_NUMBER}/secrets/STG_ADMIN_ENV/versions/latest
-      env: _ADMIN_ENV
+    - versionName: projects/${PROJECT_NUMBER}/secrets/${_SECRET_ENV_NAME}/versions/latest
+      env: _BUILD_ENV
