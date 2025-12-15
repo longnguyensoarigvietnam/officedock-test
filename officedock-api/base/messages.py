@@ -290,7 +290,7 @@ _KEYWORDS = {
         "category": "Category",
         "skill": "Skill",
         "skill_map": "Skill map",
-        "deleted": "(Deleted)",
+        "deleted": "(Hidden)",
         "unassigned": "(Unassigned)",
     },
     "ja": {
@@ -301,7 +301,7 @@ _KEYWORDS = {
         "category": "カテゴリー",
         "skill": "スキル",
         "skill_map": "スキルマップ",
-        "deleted": "(削除済)",
+        "deleted": "(非表示済)",
         "unassigned": "(無所属)",
     },
 }
