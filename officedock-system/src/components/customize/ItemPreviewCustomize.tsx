@@ -27,12 +27,12 @@ const ItemPreviewCustomize = ({ group, handleWearDataItem }: Props) => {
   return (
     <>
       <div className="flex items-center justify-between px-4 py-4 group hover:bg-[#F6F6F6] rounded-[20px]">
-        {/* Left: icon + tên */}
+        {/* Left: icon + name */}
         <div className="flex gap-4 items-center">
           <div className="flex w-[72px] h-[72px] items-center justify-center bg-white rounded-[10px] border border-[#D2DBE1]">
             <Image
               alt={`${group.name} icon`}
-              src={selectedItem?.cropFile || group.items[0].cropFile}
+              src={group.thumb || group.items[0].cropFile}
               width={56}
               height={56}
               className="rounded-full object-contain"

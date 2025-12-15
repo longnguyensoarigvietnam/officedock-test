@@ -48,7 +48,7 @@ const ItemGroupCard = ({
           <div className="flex w-[72px] h-[72px] items-center justify-center bg-white rounded-[10px] border border-[#D2DBE1]">
             <Image
               alt={`${group.name} icon`}
-              src={selectedItem?.cropFile || group.items[0].cropFile}
+              src={group.thumb || group.items[0].cropFile}
               width={56}
               height={56}
               className="rounded-full object-contain"

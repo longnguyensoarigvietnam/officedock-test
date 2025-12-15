@@ -743,7 +743,7 @@ class SkillMapViewSet(
                     SubmitLevelStatus.DRAFT.value,
                     SubmitLevelStatus.APPLYING.value,
                 ],
-            ).first()
+            ).values("id", "approver", "status")
 
             # Get approvers have permission skill map for data options
             # Determine the permission name to check (e.g., 'TEAM_DOCK_SKILL_MAP_UPDATE')
@@ -762,7 +762,8 @@ class SkillMapViewSet(
             ).all()
             # Get all users in the company, excluding the current staff
             all_users = (
-                User.objects.filter(Q(company=skill_map.company))
+                User.objects.prefetch_related("organizations", "profile")
+                .filter(Q(company=skill_map.company, deleted_at__isnull=True))
                 .exclude(id=skill_map.staff_id)
                 .all()
                 .distinct()

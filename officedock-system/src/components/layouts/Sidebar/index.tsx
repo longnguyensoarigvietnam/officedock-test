@@ -75,7 +75,7 @@ const updateCurrent = (menuItems: MenuItem[], pathname: string): MenuItem[] => {
 };
 
 const Sidebar = ({ className }: Props) => {
-  const helpUrl = process.env.NEXT_PUBLIC_HELP_PAGE_URL || '#';
+  const helpUrl = process.env.NEXT_PUBLIC_HELP_PAGE_URL || '';
 
   const router = useRouter();
   const pathname = usePathname();
@@ -934,18 +934,20 @@ const Sidebar = ({ className }: Props) => {
           </nav>
         </TabPanel>
         {/* HELP MENU */}
-        <Link
-          href={helpUrl}
-          className="absolute bottom-[52px] left-[13px] cursor-pointer"
-          onMouseEnter={() => setShowHelpMenu(true)}
-          onMouseLeave={() => setShowHelpMenu(false)}>
-          <ImageRound
-            src="/icons/help.svg"
-            name="Help page"
-            className={`!w-fit !h-fit`}
-          />
-          {showHelpMenu && <HelpIconPortal />}
-        </Link>
+        {helpUrl && (
+          <Link
+            href={helpUrl}
+            className="absolute bottom-[52px] left-[13px] cursor-pointer"
+            onMouseEnter={() => setShowHelpMenu(true)}
+            onMouseLeave={() => setShowHelpMenu(false)}>
+            <ImageRound
+              src="/icons/help.svg"
+              name="Help page"
+              className={`!w-fit !h-fit`}
+            />
+            {showHelpMenu && <HelpIconPortal />}
+          </Link>
+        )}
         <div
           className="absolute bottom-5 left-5"
           onClick={() => setExpanded((prevExpanded) => !prevExpanded)}>
