@@ -345,7 +345,7 @@ class SkillMapViewSet(
     API endpoint for skill map
     """
 
-    queryset = SkillMap.objects.filter(is_valid=True).all()
+    queryset = SkillMap.objects.all()
     serializer_class = SkillMapSerializer
     permission_classes = [ActionPermission]
     filter_backends = [
@@ -513,7 +513,6 @@ class SkillMapViewSet(
             skill_maps_by_org.setdefault(sm.organization_id, {})[
                 sm.skill_id
             ] = sm
-
         # Handle response data each organization
         for organization in organizations:
             org_skills = skills_by_org.get(organization.id, [])
@@ -529,7 +528,13 @@ class SkillMapViewSet(
                 while current:
                     sm = sm_dict.get(current.id)
                     if sm:
-                        group_skill_map.append(SkillMapSerializer(sm).data)
+                        sm_data = SkillMapSerializer(sm).data
+                        if (
+                            sm_data["skill"]["deleted_at"] == None
+                            and not sm.is_valid
+                        ):
+                            sm_data["skill"]["deleted_at"] = now()
+                        group_skill_map.append(sm_data)
                     else:
                         group_skill_map.append(
                             SkillReplaceSkillMapSerializer(current).data
@@ -743,7 +748,7 @@ class SkillMapViewSet(
                     SubmitLevelStatus.DRAFT.value,
                     SubmitLevelStatus.APPLYING.value,
                 ],
-            ).values("id", "approver", "status")
+            ).first()
 
             # Get approvers have permission skill map for data options
             # Determine the permission name to check (e.g., 'TEAM_DOCK_SKILL_MAP_UPDATE')
@@ -787,7 +792,6 @@ class SkillMapViewSet(
                 org_ids = get_user_organizations_with_descendants(user)
                 if skill_map.organization_id in set(org_ids):
                     users.append(user)
-
             data = {
                 "organization": skill_map.organization_id,
                 "skill": {

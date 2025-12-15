@@ -284,9 +284,8 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
         if "get_organization_with_users" in request.query_params:
             if not organizations:
                 organizations = get_all_organizations(company, organizations)
-            filtered_organizations = organizations.filter(users=user)
             response_data["organization_users"] = get_organization_with_users(
-                filtered_organizations
+                organizations
             )
         if "get_items_of_user" in request.query_params:
             response_data["items_of_user"] = get_items_of_user(user)
