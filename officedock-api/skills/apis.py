@@ -345,7 +345,7 @@ class SkillMapViewSet(
     API endpoint for skill map
     """
 
-    queryset = SkillMap.objects.all()
+    queryset = SkillMap.objects.filter(is_valid=True).all()
     serializer_class = SkillMapSerializer
     permission_classes = [ActionPermission]
     filter_backends = [
@@ -520,10 +520,12 @@ class SkillMapViewSet(
             root_skills = [s for s in org_skills if s.parent_id is None]
             step = step_by_org.get(organization.id, [])
             data_skill_maps = []
+            sm_dict = skill_maps_by_org.get(organization.id, {})
             for root in root_skills:
+                if not sm_dict.get(root.id):
+                    continue
                 current = root
                 group_skill_map = []
-                sm_dict = skill_maps_by_org.get(organization.id, {})
                 # Loop and get child skill map
                 while current:
                     sm = sm_dict.get(current.id)
@@ -943,8 +945,20 @@ class SkillMapViewSet(
             )
             .order_by("set_default_at")[:3]
         )
+        user_org_ids = Organization.objects.filter(users=user_id).values_list(
+            "id", flat=True
+        )
 
-        return self.response_ok(SkillMapSerializer(skill_maps, many=True).data)
+        data = []
+        for sm in skill_maps:
+            sm_serializer = SkillMapSerializer(sm).data
+            sm_serializer["is_deleted"] = bool(
+                sm.organization_id not in user_org_ids
+                or sm.organization.deleted_at
+            )
+            data.append(sm_serializer)
+
+        return self.response_ok(data)
 
 
 @extend_schema(tags=["System > Skill"])
