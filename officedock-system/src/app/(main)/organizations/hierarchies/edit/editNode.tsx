@@ -745,8 +745,8 @@ export default function EditNode() {
           open={openConfirmDeleteModal}
           name={orgUuidDelete?.name}
           type="チーム"
-          msgMain="このテンプレートを非表示にしますか？"
-          message="このチームに紐づくチームも階層から解除されます"
+          msgMain="このチームを階層から解除しますか？"
+          message="このチームに紐づくチームも階層から解除されます。"
           classNameMsg="mt-[2px] text-sm !text-[#000000]"
           classNameMain="!mb-5"
           onConfirm={handleConfirmDelete}

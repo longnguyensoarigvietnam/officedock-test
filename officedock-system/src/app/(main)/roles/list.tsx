@@ -9,6 +9,7 @@ import ImageRound from '@components/common/ImageRound';
 import { Table, TableBody, TableHeader } from '@components/common/Table';
 import Pagination from '@components/common/Pagination';
 import Dropdown from '@components/common/Dropdown';
+import ConfirmHiddenModal from '@components/modals/ConfirmHiddenModal';
 import InputSearch from '@components/common/InputSearch';
 
 import { LoadingContext } from '@providers/LoadingProvider';
@@ -20,8 +21,8 @@ import { apiRouters, pageRouters } from '@constants/routers';
 import { PermissionsSystem } from '@constants/enums';
 import { NO_DATA_AVAILABLE, PAGE_SIZE_OPTIONS } from '@constants';
 import {
-  ERROR_DELETE_MESSAGE,
-  SUCCESS_DELETE_MESSAGE,
+  ERROR_HIDDEN_MESSAGE,
+  SUCCESS_HIDDEN_MESSAGE,
 } from '@constants/message';
 
 import useDebounceText from '@hooks/useDebounceText';
@@ -33,7 +34,6 @@ import { RoleDetail } from '@interfaces/role';
 import { hasPermissionInArray } from '@utils';
 
 import api from '@base/api';
-import ConfirmHiddenModal from '@components/modals/ConfirmHiddenModal';
 
 const ListRoles = () => {
   const [openConfirmDeleteModal, setOpenConfirmDeleteModal] = useState(false);
@@ -105,7 +105,7 @@ const ListRoles = () => {
   const { mutate: deleteRole } = useMutation(postDeleteRole, {
     onSuccess: async () => {
       showToast({
-        description: SUCCESS_DELETE_MESSAGE,
+        description: SUCCESS_HIDDEN_MESSAGE,
       });
       if (roleList?.results.length === 1 && debouncedParams.page > 1) {
         // If change current page, useRoleList auto recall, just don't need using refetchRoleList
@@ -119,7 +119,7 @@ const ListRoles = () => {
       setOpenConfirmDeleteModal(false);
     },
     onError: (error: AxiosError<any>) => {
-      showErrorToast(error, ERROR_DELETE_MESSAGE);
+      showErrorToast(error, ERROR_HIDDEN_MESSAGE);
       setOpenConfirmDeleteModal(false);
       setIsLoading(false);
     },
@@ -183,7 +183,9 @@ const ListRoles = () => {
       <div
         className="w-full p-[30px] bg-[#F8FAFC] rounded-[30px]"
         style={{ boxShadow: '0px 4px 10px 0px #0000000D' }}>
-        <Table className="bg-white !rounded-[10px] relative table-fixed" classCustom='!p-0'>
+        <Table
+          className="bg-white !rounded-[10px] relative table-fixed"
+          classCustom="!p-0">
           <TableHeader className="!bg-[#F8FAFC]">
             <th className="text-left w-[calc(100%_-_220px)] max-w-[calc(100%_-_220px)]">
               <span className="text-[#77858F] text-[12px] font-medium leading-[1]">
@@ -203,7 +205,7 @@ const ListRoles = () => {
                   </td>
                   <td className="w-[220px]">
                     <div className="flex w-full gap-5 justify-end pr-[10px] items-center">
-                      <div className='flex items-center gap-2'>
+                      <div className="flex items-center gap-2">
                         {showUpdateIcon(element?.systemRole || false) ? (
                           <Link
                             onClick={() => {

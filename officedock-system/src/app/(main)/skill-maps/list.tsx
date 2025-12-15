@@ -26,11 +26,11 @@ import { apiRouters, pageRouters } from '@constants/routers';
 import {
   ERROR_COMMON_MESSAGE,
   ERROR_CREATE_MESSAGE,
-  ERROR_DELETE_MESSAGE,
+  ERROR_HIDDEN_MESSAGE,
   ERROR_UPDATE_MESSAGE,
   PLEASE_FILL_IN_STEP_2,
   SUCCESS_CREATE_MESSAGE,
-  SUCCESS_DELETE_MESSAGE,
+  SUCCESS_HIDDEN_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
 import {
@@ -476,7 +476,7 @@ const ListSkillsMap = () => {
   const { mutate: deleteSkill } = useMutation(postDeleteSkill, {
     onSuccess: async () => {
       showToast({
-        description: SUCCESS_DELETE_MESSAGE,
+        description: SUCCESS_HIDDEN_MESSAGE,
       });
       setDataOrganizationSkillList((prev) =>
         prev.map((org) => {
@@ -494,7 +494,7 @@ const ListSkillsMap = () => {
       setSelectedSkillToDelete(null);
     },
     onError: (error: AxiosError<any>) => {
-      showErrorToast(error, ERROR_DELETE_MESSAGE);
+      showErrorToast(error, ERROR_HIDDEN_MESSAGE);
       setOpenConfirmDeleteModal(false);
     },
     onSettled: () => {
