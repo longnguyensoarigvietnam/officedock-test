@@ -125,11 +125,11 @@ export const ConfirmSettingSkillModal = ({
           <div
             className={`flex gap-3 bg-white items-center rounded-[14px] relative w-full h-full px-[20px] ${stepCompleted && '!pr-[5px]'} py-[12px]`}
             style={{
-              boxShadow: showTwinklingStars
+              boxShadow: showTwinklingStars && !confirmSettingSkillInfo.isDeleted
                 ? '0px 0px 20px 0px #36ACDE80'
                 : '0px 2px 8px 0px #0000001A',
             }}>
-            {showTwinklingStars && (
+            {showTwinklingStars && !confirmSettingSkillInfo.isDeleted && (
               <>
                 <div className="absolute -top-[20px] left-[20px] bg-primary rounded-[20px] w-[140px] h-[28px] flex items-center justify-center">
                   <p className="text-white text-xs font-bold">
@@ -140,7 +140,7 @@ export const ConfirmSettingSkillModal = ({
               </>
             )}
 
-            {showTwinklingStars && (
+            {showTwinklingStars && !confirmSettingSkillInfo.isDeleted && (
               <>
                 <TwinklingIcon
                   className="absolute top-[10px] left-[-3px] w-[5px] h-[5px]"
@@ -181,15 +181,14 @@ export const ConfirmSettingSkillModal = ({
                   {confirmSettingSkillInfo.skill?.name}
                 </p>
               </div>
-
-              <div>
+              {confirmSettingSkillInfo.isDeleted ? <></> : <div>
                 <SkillMapProgressBar
                   value={progressPercent}
                   strokeColor={strokeColor}
                   trailColor={stepCompleted ? '#D2DBE1' : '#EBF1F7'}
                   height={'6px'}
                 />
-              </div>
+              </div>}
             </div>
             <div className="flex justify-end">
               {' '}
