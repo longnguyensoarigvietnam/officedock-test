@@ -1292,7 +1292,7 @@ const ActionsTaskModalTeam = ({
                 name={'peopleInChart'}
                 render={({ field: { value, onChange } }) => (
                   <PeopleDropdown
-                    className="h-[34px] !py-1 text-sm !border-[1px] !border-[#77858F] rounded-md"
+                    className="h-[34px] !py-1 text-sm !border-[1px] cursor-pointer !border-[#77858F] rounded-md"
                     classNameTextData="!text-sm"
                     classNameOption="!text-sm"
                     classNameError="!text-xs"
@@ -1791,7 +1791,7 @@ const ActionsTaskModalTeam = ({
                         }}
                         src={`/icons/${isShowFieldRemind ? 'bell.svg' : 'bell-white.svg'}`}
                         name="Bell icon"
-                        className="h-4 w-4"
+                        className="h-4 w-4 cursor-pointer"
                       />
                     </div>
                   </div>
