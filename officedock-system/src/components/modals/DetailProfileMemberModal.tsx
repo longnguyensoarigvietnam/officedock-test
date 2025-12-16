@@ -13,7 +13,7 @@ import {
   SkeletonElement,
 } from '@components/common/SkeletonLoading';
 
-import { ItemStartType, PermissionsSystem } from '@constants/enums';
+import { ItemStartType, PermissionsSystem, ScreenName } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
 import { NO_EVENT_MEMBER, TASK_STARTING } from '@constants';
 
@@ -59,6 +59,7 @@ const DetailProfileMemberModal = memo(
     const router = useRouter();
     const [isCalling, setIsCalling] = useState(true);
     const { userDetail } = useUserDetail({
+      current_screen: ScreenName.LIST_MEMBER,
       userId: userId,
       onSettled: () => {
         setIsCalling(false);
@@ -185,7 +186,7 @@ const DetailProfileMemberModal = memo(
                   value={userDetail?.email || ''}
                 />
               </div>
-              <div className="w-[136px] flex flex-col gap-1 justify-end">
+              <div className="w-[136px] flex flex-col gap-1 justify-start mt-[22px]">
                 {isPermissionChatView && (
                   <Button
                     onClick={() => {

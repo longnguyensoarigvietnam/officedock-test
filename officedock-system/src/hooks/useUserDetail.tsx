@@ -10,6 +10,7 @@ import { User } from '@interfaces/user';
 
 interface UseUserDetailHooksProps {
   userId?: string | number;
+  current_screen?: string;
   onSuccess?: (success: User) => void;
   onError?: (error: AxiosError) => void;
   onSettled?: () => void;
@@ -17,6 +18,7 @@ interface UseUserDetailHooksProps {
 
 const useUserDetail = ({
   userId,
+  current_screen,
   onSuccess,
   onError,
   onSettled,
@@ -27,7 +29,7 @@ const useUserDetail = ({
   // Handle call API get User detail
   const getUserDetail = async () => {
     if (!userId) return;
-    const apiUrl = apiRouters.USER_DETAIL(userId);
+    const apiUrl = `${apiRouters.USER_DETAIL(userId)}${current_screen ? `?current_screen=${current_screen}` : ''}`;
 
     const { data } = await api.get<User>(apiUrl);
     return data;
@@ -39,7 +41,7 @@ const useUserDetail = ({
     refetch: refetchUserDetail,
     isFetched: isFetchedUsersDetail,
   } = useQuery({
-    queryKey: ['getUserDetail', userId],
+    queryKey: ['getUserDetail', userId, current_screen],
     queryFn: getUserDetail,
     retry: 0,
     enabled: !!token && !!userId,
