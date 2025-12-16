@@ -170,7 +170,7 @@ const ListSkillsMap = () => {
   // Get organization options for pulldown
   useCreationDataCommon({
     options: {
-      get_organizations_of_user_by_screen: ScreenName.SKILL_MAP,
+      get_organizations_of_user_by_screen: ScreenName.SKILL_MAP_MANAGEMENT,
     },
     onSuccess: (data) => {
       const organizationList =
