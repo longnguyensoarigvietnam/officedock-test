@@ -304,7 +304,17 @@ def calculate_progress_skill_map(
                                 continue
                             measure_task_duration_ids.remove(d_id)
                     else:
-                        actual_measure_count += 1
+                        if case in {
+                            CalculateSkillMapProcessCases.NOT_CHANGE_COMPLETED_STATUS.value,
+                            CalculateSkillMapProcessCases.CHANGE_COMPLETED_STATUS_TO_ANOTHER.value,
+                        }:
+                            actual_measure_count += -1 if is_minus else 1
+                        elif (
+                            case
+                            == CalculateSkillMapProcessCases.CHANGE_ANOTHER_TO_COMPLETED_STATUS.value
+                            and not is_minus
+                        ):
+                            actual_measure_count += 1
                         for d_id in duration_ids:
                             if d_id not in measure_task_duration_ids:
                                 continue
@@ -423,7 +433,6 @@ def calculate_progress_skill_map(
             actual_measure_count=(
                 actual_measure_count if actual_measure_count > 0 else 0
             ),
-            actual_measure_time=actual_measure_time,
             updated_at=now(),
         )
 

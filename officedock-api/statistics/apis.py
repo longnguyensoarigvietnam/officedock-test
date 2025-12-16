@@ -39,7 +39,6 @@ from common.utils import (
     get_deleted_statistic_category_name,
     time_str_to_timedelta,
     split_id_from_string,
-    to_camel_case,
     validate_company_organization,
 )
 from organizations.constants import OrganizationTypes
@@ -121,6 +120,7 @@ class StatisticViewSet(BaseAPIViewSet):
             OpenApiParameter(name="cursor", type=str),
             OpenApiParameter(name="cursor_id", type=int),
             OpenApiParameter(name="is_tag_page", type=bool),
+            OpenApiParameter(name="main_organization_id", type=str),
             OpenApiParameter(
                 name="export_type", type=str, enum=ExportType.values()
             ),
@@ -143,6 +143,7 @@ class StatisticViewSet(BaseAPIViewSet):
         """
         user = request.user
         organization_ids_param = request.query_params.get("organization_ids")
+        main_organization_id = request.query_params.get("main_organization_id")
         large_category_id = request.query_params.get("large_category_id")
         medium_category_id = request.query_params.get("medium_category_id")
         small_category_id = request.query_params.get("small_category_id")
@@ -153,7 +154,6 @@ class StatisticViewSet(BaseAPIViewSet):
         cursor = request.query_params.get("cursor")
         cursor_id = request.query_params.get("cursor_id")
         is_tag_page = request.query_params.get("is_tag_page")
-        current_screen = request.query_params.get("current_screen", None)
         from_date = validate_date_by_regex_and_reformat(
             request.query_params.get("from_date")
         )
@@ -162,17 +162,18 @@ class StatisticViewSet(BaseAPIViewSet):
         )
         start_of_day = datetime.combine(from_date, time.min)
         end_of_day = datetime.combine(end_date, time.max)
+        calendar_org = user.company.get_calendar_organization()
         if user_id:
             user = get_object_or_404(User, id=user_id)
         if organization_ids_param == ALL_TEAM:
             organization_ids = get_all_organization_id(
                 [user],
-                exclude_team_unassigned=(
-                    current_screen
-                    and to_camel_case(current_screen)
-                    == to_camel_case(Screens.TEAMDOCK.value)
-                ),
+                exclude_team_unassigned=bool(main_organization_id),
             )
+            # When main org not in input user orgs (input user unassigned in main organization)
+            # Just show task duration in main org and calendar org of input user
+            if main_organization_id not in organization_ids:
+                organization_ids = [main_organization_id, calendar_org.id]
         else:
             organization_ids = split_id_from_string(organization_ids_param)
 
@@ -234,7 +235,6 @@ class StatisticViewSet(BaseAPIViewSet):
                 ),
             )
         )
-        calendar_org = user.company.get_calendar_organization()
         org_of_task_ids = set(tasks.values_list("organization_id", flat=True))
         org_of_task_ids.add(calendar_org.id)
         category_types = [
@@ -1779,10 +1779,10 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                                 time_str_to_timedelta(team["duration"]),
                             )
                         )
+            org_users_map = defaultdict(set)
             if team.get("sub_teams"):
                 all_subteams = team.pop("sub_teams")
                 if user_ids and option:
-                    org_users_map = defaultdict(set)
                     subteam_org_ids = [
                         st["organization_id"] for st in all_subteams
                     ]
@@ -1883,7 +1883,8 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                     filter_duration_by_range, tag_ids, is_tag_page
                 )
                 for org_id in organization_filters:
-                    org_users = org_users_map.get(org_id, set())
+                    if option == SUB_TEAM:
+                        org_users = org_users_map.get(org_id, set())
                     for user in user_list:
                         if option == SUB_TEAM and user["id"] not in org_users:
                             continue
