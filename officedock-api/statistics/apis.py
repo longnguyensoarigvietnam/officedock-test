@@ -172,7 +172,7 @@ class StatisticViewSet(BaseAPIViewSet):
             )
             # When main org not in input user orgs (input user unassigned in main organization)
             # Just show task duration in main org and calendar org of input user
-            if main_organization_id not in organization_ids:
+            if int(main_organization_id) not in organization_ids:
                 organization_ids = [main_organization_id, calendar_org.id]
         else:
             organization_ids = split_id_from_string(organization_ids_param)
@@ -1764,6 +1764,7 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
         durations_by_user = self._take_duration_for_all_users(
             durations, tag_ids, is_tag_page
         )
+        org_users_map = defaultdict(set)
         for team in teams:
             if user_ids and option:
                 team["users"] = []
@@ -1779,7 +1780,6 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                                 time_str_to_timedelta(team["duration"]),
                             )
                         )
-            org_users_map = defaultdict(set)
             if team.get("sub_teams"):
                 all_subteams = team.pop("sub_teams")
                 if user_ids and option:
