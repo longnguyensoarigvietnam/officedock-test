@@ -74,12 +74,17 @@ const MultiSelectTagDropdown = ({
 
   useEffect(() => {
     const handleMouseDownOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+
+      // Ignore clicks inside trigger OR options
       if (
-        dropdownOptionsRef.current &&
-        !dropdownOptionsRef.current.contains(event.target as Node)
+        dropdownRef.current?.contains(target) ||
+        dropdownOptionsRef.current?.contains(target)
       ) {
-        setIsOpen(false);
+        return;
       }
+
+      setIsOpen(false);
     };
 
     if (isOpen) {
@@ -170,13 +175,14 @@ const MultiSelectTagDropdown = ({
             if (disabled) {
               setIsOpen(false);
             } else {
-              setIsOpen(!isOpen);
+              setIsOpen((prev) => !prev);
             }
           }}>
           <div className="h-full">
             <div
-              className={` h-full flex items-center relative hover:cursor-pointer w-full cursor-default rounded-[6px] border bg-white py-2  leading-5.5 pl-3 pr-10 text-left shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${disabled ? 'opacity-50 cursor-not-allowed' : ''
-                } ${valueClassName} `}>
+              className={` h-full flex items-center relative hover:cursor-pointer w-full cursor-default rounded-[6px] border bg-white py-2  leading-5.5 pl-3 pr-10 text-left shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+                disabled ? 'opacity-50 cursor-not-allowed' : ''
+              } ${valueClassName} `}>
               <p
                 className={`block truncate ${!selected && 'text-gray-300'} text-left text-xs  ${labelClass}`}>
                 {customLabel
