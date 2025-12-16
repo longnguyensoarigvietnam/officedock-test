@@ -172,7 +172,10 @@ class StatisticViewSet(BaseAPIViewSet):
             )
             # When main org not in input user orgs (input user unassigned in main organization)
             # Just show task duration in main org and calendar org of input user
-            if int(main_organization_id) not in organization_ids:
+            if (
+                main_organization_id
+                and int(main_organization_id) not in organization_ids
+            ):
                 organization_ids = [main_organization_id, calendar_org.id]
         else:
             organization_ids = split_id_from_string(organization_ids_param)
