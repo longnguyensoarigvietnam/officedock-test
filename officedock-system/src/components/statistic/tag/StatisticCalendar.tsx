@@ -788,7 +788,7 @@ function StatisticTagCalendar() {
                   className="gap-3 flex items-center mt-[6px]">
                   <span>開始日</span>
                   <div
-                    className={`w-[135px] h-[34px] flex items-center justify-center rounded-md border ${isStartButtonClicked ? 'border-primary' : 'border-[#77858F]'} ${isErrorData.start && '!border-red-500'}`}>
+                    className={`w-[135px] h-[34px] flex items-center cursor-pointer justify-center rounded-md border ${isStartButtonClicked ? 'border-primary' : 'border-[#77858F]'} ${isErrorData.start && '!border-red-500'}`}>
                     {formatShowDateJapanese(dataStartDate)}
                   </div>
                   <div className="h-[34px] flex items-center text-[#77858F]">
@@ -803,7 +803,7 @@ function StatisticTagCalendar() {
                   className="gap-3 flex items-center mt-[6px]">
                   <span>終了日</span>
                   <div
-                    className={`w-[135px] h-[34px] flex items-center justify-center rounded-md border ${isEndButtonClicked ? 'border-primary' : 'border-[#77858F]'} ${isErrorData.end && '!border-red-500'}`}>
+                    className={`w-[135px] h-[34px] flex items-center cursor-pointer justify-center rounded-md border ${isEndButtonClicked ? 'border-primary' : 'border-[#77858F]'} ${isErrorData.end && '!border-red-500'}`}>
                     {dataEndDate && formatShowDateJapanese(dataEndDate)}
                   </div>
                 </div>
@@ -901,7 +901,7 @@ function StatisticTagCalendar() {
                     className="gap-3 flex items-center mt-[6px]">
                     <span>開始日</span>
                     <div
-                      className={`w-[135px] h-[34px] flex items-center justify-center rounded-md border ${isStartButtonClickedCompare ? 'border-primary' : 'border-[#77858F]'} ${isErrorDataCompare.start && '!border-red-500'}`}>
+                      className={`w-[135px] h-[34px] flex items-center cursor-pointer justify-center rounded-md border ${isStartButtonClickedCompare ? 'border-primary' : 'border-[#77858F]'} ${isErrorDataCompare.start && '!border-red-500'}`}>
                       {dataStartDateCompare &&
                         formatShowDateJapanese(dataStartDateCompare)}
                     </div>
@@ -918,7 +918,7 @@ function StatisticTagCalendar() {
                     className="gap-3 flex items-center mt-[6px]">
                     <span>終了日</span>
                     <div
-                      className={`w-[135px] h-[34px] flex items-center justify-center rounded-md border ${isEndButtonClickedCompare ? 'border-primary' : 'border-[#77858F]'} ${isErrorDataCompare.end && '!border-red-500'} `}>
+                      className={`w-[135px] h-[34px] flex items-center justify-center cursor-pointer rounded-md border ${isEndButtonClickedCompare ? 'border-primary' : 'border-[#77858F]'} ${isErrorDataCompare.end && '!border-red-500'} `}>
                       {dataEndDateCompare &&
                         formatShowDateJapanese(dataEndDateCompare)}
                     </div>

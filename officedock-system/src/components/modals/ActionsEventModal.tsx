@@ -10,6 +10,7 @@ import {
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { Controller, SubmitHandler, useForm, useWatch } from 'react-hook-form';
+import { AxiosError } from 'axios';
 import { useMutation } from 'react-query';
 
 import DatePickerCustom from '@components/common/DatePicker/DatePickerCustom';
@@ -35,6 +36,8 @@ import { CategoryStructure } from '@interfaces/skills';
 import { LocationEventType } from '@interfaces/location';
 import { Profile, User } from '@interfaces/user';
 
+import { useErrorToast } from '@hooks/useErrorToast';
+
 import {
   ActionsEvent,
   EventParticipantType,
@@ -47,6 +50,7 @@ import {
 import {
   END_DATE_REQUIRED_SELECTED,
   END_DATE_WRONG_SELECTED,
+  ERROR_COMMON_MESSAGE,
   ERROR_LONG_FIELD_MESSAGE,
   ORGANIZATION_REQUIRED_MESSAGE,
   START_DATE_WRONG_SELECTED,
@@ -117,6 +121,8 @@ const ActionsEventModal = ({
   onDelete,
   onSubmit,
 }: ActionsEventModalProps) => {
+  const showErrorToast = useErrorToast();
+
   // Creation data
   const [dataOptionsOrganizations, setDataOptionsOrganizations] = useState<
     OptionDropdownType[]
@@ -600,6 +606,9 @@ const ActionsEventModal = ({
         setValue('isEventOverlapping', data.isEventOverlapping, {
           shouldDirty: true,
         });
+      },
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_COMMON_MESSAGE);
       },
     },
   );
