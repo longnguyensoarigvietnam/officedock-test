@@ -388,52 +388,36 @@ def calculate_progress_skill_map(
                 measure_task_duration_ids=measure_task_duration_ids,
                 updated_at=now(),
             )
+    duration_id = duration.id if duration else []
     # Update old level up contain task
     skill_map_levels = SkillMapSkillLevel.objects.filter(
-        measure_task_ids__contains=[task.id], is_complete=True
+        Q(
+            Q(measure_task_ids__contains=[task.id])
+            | Q(measure_task_duration_ids__contains=duration_id)
+        )
+        & Q(is_complete=True)
     ).all()
     for skill_map_level in skill_map_levels:
         if (
-            duration.created_at
-            and duration.created_at > skill_map_level.updated_at
+            is_edit_duration
+            or duration
+            and duration.id in measure_task_duration_ids
         ):
+            calculate_progress_duration_for_skill_map(
+                skill_map_level, user, True
+            )
             continue
         actual_measure_count = skill_map_level.actual_measure_count
-        if not duration_time:
-            durations = TaskDuration.objects.filter(
-                task=task,
-                created_at__gte=skill_map_level.created_at,
-                created_at__lte=skill_map_level.updated_at,
-            ).all()
-            total_duration = timedelta()
-            for duration in durations:
-                if duration.paused_at:
-                    total_duration += duration.paused_at - duration.started_at
 
-            # Check task status for minus or plus count and duration
-            if task.status.name == TaskStatus.COMPLETED.value and not is_minus:
-                count = 1
-                duration_time = total_duration
-            else:
-                count = -1
-                duration_time = -total_duration
+        # Check task status for minus or plus count and duration
+        if task.status.name == TaskStatus.COMPLETED.value and not is_minus:
+            count = 1
+        else:
+            count = -1
 
-            # Calculate actual measure count
-            actual_measure_count = skill_map_level.actual_measure_count + count
-        # Calculate actual measure time
-        try:
-            new_actual_measure_time = (
-                time_str_to_timedelta(skill_map_level.actual_measure_time)
-                + duration_time
-            )
-        except:
-            raise ValidationError()
-        # Formatted timedelta to string
-        actual_measure_time = (
-            format_duration(new_actual_measure_time)
-            if new_actual_measure_time > timedelta(0)
-            else DEFAULT_TIME
-        )
+        # Calculate actual measure count
+        actual_measure_count = skill_map_level.actual_measure_count + count
+
         # Update skill map level
         SkillMapSkillLevel.objects.filter(id=skill_map_level.id).update(
             actual_measure_count=(
