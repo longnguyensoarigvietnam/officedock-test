@@ -306,18 +306,7 @@ const ListHierarchy = () => {
               });
             }}
           />
-          <div className="flex gap-[10px]">
-            {session?.user.permissions &&
-              hasPermissionInArray(
-                session?.user.permissions,
-                PermissionsSystem.CATEGORY_HIERARCHY_ADD,
-              ) && (
-                <Button
-                  variant="outline"
-                  className="w-[100px] h-[34px] !p-0 bg-white text-primary">
-                  インポート
-                </Button>
-              )}
+          <div>
             {session?.user.permissions &&
               hasPermissionInArray(
                 session?.user.permissions,

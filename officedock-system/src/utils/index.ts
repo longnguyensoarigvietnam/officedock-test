@@ -530,7 +530,7 @@ export const getPermissionOptionDropdown = (
   }
   if ([ScreenName.TEAM_DAILY_REPORT].includes(screen)) {
     return includePermissions([
-      PermissionType.VIEW_ONLY,
+      PermissionType.CAN_VIEW,
       PermissionType.TEAM_AND_SUB_VIEW,
       PermissionType.NOT_ALLOWED,
     ]);

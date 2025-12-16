@@ -151,6 +151,9 @@ const CreateRoleForm = () => {
     if (permissions['organization']) {
       permissions['organizationHierarchy'] = { ...permissions['organization'] };
     }
+    if(permissions['teamDailyReport'].actions === PermissionType.CAN_VIEW){
+      permissions['teamDailyReport'].actions = PermissionType.VIEW_ONLY;
+    }
     await createNewRole({
       name: roleName,
       permissions,

@@ -177,7 +177,7 @@ export const SkillSetting = ({
                         )}
 
                       <div className="w-fit h-fit">
-                        <p className="max-w-[150px] truncate text-[15px] text-left font-medium leading-none">
+                        <p className="max-w-[150px] truncate text-[15px] text-left font-medium leading-[1.3]">
                           {skill.skill.name}
                         </p>
                         <div

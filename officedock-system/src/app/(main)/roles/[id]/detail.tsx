@@ -7,7 +7,11 @@ import Link from 'next/link';
 import Button from '@components/common/Button';
 
 import { SCREEN_LIST } from '@constants';
-import { PermissionsSystem, ServerStatusCode } from '@constants/enums';
+import {
+  PermissionsSystem,
+  PermissionType,
+  ServerStatusCode,
+} from '@constants/enums';
 import { pageRouters } from '@constants/routers';
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
 
@@ -60,9 +64,12 @@ const DetailRoleTable = () => {
     <div>
       <div className="flex items-center justify-between w-full mb-[30px]">
         <div className="flex items-center gap-5 w-full">
-          <p className="text-black font-medium text-[26px] leading-[1]">権限管理</p>
+          <p className="text-black font-medium text-[26px] leading-[1]">
+            権限管理
+          </p>
         </div>
-        {!dataRoleDetail?.deletedAt && !dataRoleDetail?.systemRole &&
+        {!dataRoleDetail?.deletedAt &&
+          !dataRoleDetail?.systemRole &&
           session?.user.permissions &&
           hasPermissionInArray(
             session.user.permissions,
@@ -110,7 +117,9 @@ const DetailRoleTable = () => {
                       )?.name || ''}
                     </div>
                     <div className="w-1/2 px-5 flex items-center justify-start py-3 border-r-[1px] text-sm font-medium">
-                      {permission.actions || '-'}
+                      {permission.actions == PermissionType.VIEW_ONLY
+                        ? PermissionType.CAN_VIEW
+                        : permission.actions || '-'}
                     </div>
                   </div>
                 );
