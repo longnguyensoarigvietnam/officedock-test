@@ -16,7 +16,11 @@ import TableChart from './TableChart';
 import FilterTagTeam from './filter/FilterTagTeam';
 
 import useStatisticTaskCompare from '@hooks/useStatisticTaskCompare';
-import { DEFAULT_TIME_TEXT, PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
+import {
+  ALL_TEAMS_OPTION,
+  DEFAULT_TIME_TEXT,
+  PAGINATION_PAGE_SIZE_KANBAN,
+} from '@constants';
 import useStatisticTask from '@hooks/useStatisticTask';
 import { useTaskListDownload } from '@hooks/useTaskListDownload';
 
@@ -140,6 +144,10 @@ const TaskListStatisticTeamTags = ({
       tagIds: orderingOptions?.tag_ids,
       user_id: selectedMember as number,
       user_ids: orderingOptions?.user_ids,
+      mainOrganizationId:
+        selectedOrganization?.value === ALL_TEAMS_OPTION
+          ? (selectedOrganizationTeamList?.value as number)
+          : undefined,
     },
     conditions: [listMemberTeam.length !== 0],
     onSuccess: (data) => {
@@ -176,6 +184,10 @@ const TaskListStatisticTeamTags = ({
       isCompare: isCheckCompare && isShowCompare,
       user_id: selectedMember as number,
       user_ids: orderingOptions?.user_ids,
+      mainOrganizationId:
+        selectedOrganization?.value === ALL_TEAMS_OPTION
+          ? (selectedOrganizationTeamList?.value as number)
+          : undefined,
     },
     conditions: [listMemberTeam.length !== 0],
 

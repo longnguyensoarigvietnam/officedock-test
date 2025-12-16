@@ -19,7 +19,11 @@ import useStatisticTask from '@hooks/useStatisticTask';
 import useStatisticTaskCompare from '@hooks/useStatisticTaskCompare';
 import { useTaskListDownload } from '@hooks/useTaskListDownload';
 
-import { DEFAULT_TIME_TEXT, PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
+import {
+  ALL_TEAMS_OPTION,
+  DEFAULT_TIME_TEXT,
+  PAGINATION_PAGE_SIZE_KANBAN,
+} from '@constants';
 import { ExportType, OrganizationStatisticType } from '@constants/enums';
 
 import {
@@ -33,6 +37,7 @@ import { formatDateToYMD, formatShowDateJapanese } from '@utils/date';
 import { removeDuplicateOptions } from '@utils';
 
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
 
 type Props = {
   isCheckCompare: boolean;
@@ -79,6 +84,8 @@ const TaskListTeamStatistic = ({
     setDataMediumCalendar,
     setCurrentPage,
   } = useContext(StatisticTeamStateContext);
+  const { selectedOrganization: selectedOrganizationSideBar } =
+    useContext(GlobalStateContext);
 
   const [isExtendData, setIsExtendData] = useState(true);
 
@@ -122,6 +129,10 @@ const TaskListTeamStatistic = ({
       user_id: selectedMember as number,
       user_ids: orderingOptions?.user_ids,
       tagIds: orderingOptions?.tag_ids,
+      mainOrganizationId:
+        selectedOrganization?.value === ALL_TEAMS_OPTION
+          ? (selectedOrganizationSideBar?.value as number)
+          : undefined,
     },
     conditions: [listMemberTeam.length !== 0],
     onSuccess: (data) => {
@@ -155,6 +166,10 @@ const TaskListTeamStatistic = ({
       isCompare: isCheckCompare && isShowCompare,
       user_ids: orderingOptions?.user_ids,
       user_id: selectedMember as number,
+      mainOrganizationId:
+        selectedOrganization?.value === ALL_TEAMS_OPTION
+          ? (selectedOrganizationSideBar?.value as number)
+          : undefined,
     },
     conditions: [listMemberTeam.length !== 0],
 
