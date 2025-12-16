@@ -1,3 +1,4 @@
+from django.db.models import F, Q
 from organizations.models import Organization
 from tasks.models import Task
 
@@ -30,3 +31,25 @@ def get_all_organization_id(users: list, exclude_team_unassigned=False):
     organization_ids = set(user_org_ids + task_org_ids)
 
     return organization_ids
+
+
+def handle_get_task_duration_of_teamdock(
+    durations, users_in_org, main_organization
+):
+    # Exclude task durations where:
+    # - The user is NOT assigned to the task’s organization, AND
+    # - The task belongs to an organization other than the main organization
+    # This removes durations of users outside the task organization
+    # and excludes cross-organization data except for the main organization
+    return durations.exclude(
+        (
+            ~Q(user__in=users_in_org)
+            & ~Q(task__organization=main_organization)
+            & Q(task_id__isnull=False)
+        )
+        | (
+            ~Q(user__organizations=F("task__organization"))
+            & ~Q(task__organization=main_organization)
+            & Q(task_id__isnull=False)
+        )
+    )
