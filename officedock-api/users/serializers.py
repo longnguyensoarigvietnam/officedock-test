@@ -488,6 +488,62 @@ class UserSerializer(BaseUserSerializer):
             return data
 
 
+class UserDetailSerializer(UserSerializer):
+    """
+    Serializer for the User model.
+    """
+
+    current_event = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "username",
+            "email",
+            "is_two_factor_auth",
+            "two_factor_auth_email",
+            "roles",
+            "permissions",
+            "profile",
+            "full_name",
+            "company",
+            "organizations",
+            "login_type",
+            "setting",
+            "unread_terms",
+            "avatar_color",
+            "avatar",
+            "current_event",
+            "created_at",
+            "deleted_at",
+        ]
+
+    def get_current_event(self, obj):
+        from calendars.constants import CalendarTypes
+
+        durations = obj.task_durations.all()
+
+        if not durations:
+            return None
+
+        duration = durations[0]
+        if duration.task_id:
+            id = duration.task_id
+            title = duration.task.title
+            type = CalendarTypes.TASK.value
+        else:
+            id = duration.schedule_id
+            title = duration.schedule.title
+            type = CalendarTypes.SCHEDULE.value
+
+        return {
+            "id": id,
+            "title": title,
+            "type": type,
+        }
+
+
 class CompanyLoginSerializer(serializers.ModelSerializer):
     """
     Return data for company when login
@@ -757,6 +813,7 @@ class SystemUserInviteSerializer(BaseUserSerializer):
             instance=self.instance, username=value, is_admin_site=False
         )
         return super().validate(value)
+
 
 class AdminUserInviteSerializer(serializers.ModelSerializer):
     """
