@@ -4,7 +4,7 @@ from datetime import datetime
 from django.contrib.auth import authenticate
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 from django.utils.crypto import get_random_string
 from django.utils.timezone import now
 from django_filters.rest_framework import DjangoFilterBackend
@@ -80,6 +80,7 @@ from users.serializers import (
     SystemUserInviteSerializer,
     TokenVerificationSerializer,
     TransactionManagementSerializer,
+    UserDetailSerializer,
     UserListSerializer,
     UserRegisterSerializer,
     UserSerializer,
@@ -94,7 +95,7 @@ from utils.jwt import JWTService
 from common.filters import CustomOrderFilter
 from roles.constants import Screens
 from base.filters import FilterByPermission
-from tasks.models import TeamTaskIndex
+from tasks.models import TaskDuration, TeamTaskIndex
 from base.paginations import CustomCursorPagination
 from users.services.auth_service import UserAuthService
 
@@ -748,6 +749,18 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
             .select_related("profile")
             .prefetch_related("organizations", "roles")
         )
+
+        # Prefetch data for current event in list member
+        if self.action == "retrieve":
+            queryset = queryset.prefetch_related(
+                Prefetch(
+                    "task_durations",
+                    TaskDuration.objects.filter(
+                        paused_at__isnull=True
+                    ).select_related("task", "schedule"),
+                )
+            )
+
         return queryset.order_by("created_at")
 
     def get_serializer_class(self):
@@ -765,6 +778,9 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         if self.action == "list":
             return UserListSerializer
+
+        if self.action == "retrieve":
+            return UserDetailSerializer
 
         return (
             SystemUserInviteSerializer
