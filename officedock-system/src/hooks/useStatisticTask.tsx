@@ -31,6 +31,7 @@ interface FilterProps {
   pageSize: number;
   user_id?: number;
   user_ids?: OptionDropdownType[];
+  mainOrganizationId?: number;
 }
 
 const useStatisticTask = ({
@@ -94,6 +95,8 @@ const useStatisticTask = ({
       params.append('organization_id', filter.organizationId);
     if (filter?.organizationIds)
       params.append('organization_ids', filter.organizationIds);
+    if (filter?.mainOrganizationId)
+      params.append('main_organization_id', String(filter.mainOrganizationId));
     if (filter?.tagIds)
       params.append(
         'tag_ids',

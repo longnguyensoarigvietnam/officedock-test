@@ -31,6 +31,7 @@ interface FilterProps {
   tagIds?: OptionDropdownType[];
   user_id?: number;
   user_ids?: OptionDropdownType[];
+  mainOrganizationId?: number;
 }
 
 const useStatisticTaskCompare = ({
@@ -98,6 +99,8 @@ const useStatisticTaskCompare = ({
     if (filter?.page) params.append('page', String(filter.page));
     if (filter?.totalDuration)
       params.append('total_duration', String(filter.totalDuration));
+    if (filter?.mainOrganizationId)
+      params.append('main_organization_id', String(filter.mainOrganizationId));
     if (filter?.ordering) params.append('ordering', String(filter.ordering));
     if (filter?.pageSize) params.append('page_size', String(filter.pageSize));
     if (filter?.user_id) params.append('user_id', String(filter.user_id));
