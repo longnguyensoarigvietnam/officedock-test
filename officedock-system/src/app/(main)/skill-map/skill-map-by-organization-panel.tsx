@@ -611,7 +611,7 @@ export const SkillMapByOrganizationPanel = ({
                             </div>
 
                             <div
-                              className={`${(skillMapDetail.isDeleted || (skill.skill.deletedAt && !isMyPage) || !isMyOrg) && 'invisible'}`}>
+                              className={`${(skillMapDetail.isDeleted || skill.skill.deletedAt || !isMyOrg) && 'invisible'}`}>
                               <SkillMapProgressBar
                                 value={progressPercent}
                                 strokeColor={strokeColor}

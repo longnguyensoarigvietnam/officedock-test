@@ -33,7 +33,7 @@ type Props = {
   noDataClass?: string;
   onChange?: (value: OptionDropdownType) => void;
 };
-const MultiSelectDropdown = ({
+const MultiSelectTagDropdown = ({
   label,
   required,
   error,
@@ -83,11 +83,11 @@ const MultiSelectDropdown = ({
     };
 
     if (isOpen) {
-      document.addEventListener('click', handleMouseDownOutside);
+      document.addEventListener('mousedown', handleMouseDownOutside);
     }
 
     return () => {
-      document.removeEventListener('click', handleMouseDownOutside);
+      document.removeEventListener('mousedown', handleMouseDownOutside);
     };
   }, [isOpen]);
 
@@ -203,4 +203,4 @@ const MultiSelectDropdown = ({
     </div>
   );
 };
-export default MultiSelectDropdown;
+export default MultiSelectTagDropdown;
