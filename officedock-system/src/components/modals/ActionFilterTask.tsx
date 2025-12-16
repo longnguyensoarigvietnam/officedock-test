@@ -284,7 +284,7 @@ const ActionFilterTask = ({
           <div ref={boxListRef} className="relative">
             <div
               onClick={() => setIsOpen(!isOpen)}
-              className="relative rounded-md flex items-center pl-3 text-sm font-medium text-black border border-[#77858F] h-[34px]">
+              className="relative rounded-md  cursor-pointer flex items-center pl-3 text-sm font-medium text-black border border-[#77858F] h-[34px]">
               <span>チーム&カテゴリー</span>
               <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                 <Image
