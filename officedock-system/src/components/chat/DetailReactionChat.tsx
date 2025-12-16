@@ -5,6 +5,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { AxiosError } from 'axios';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { useMutation } from 'react-query';
@@ -16,6 +17,8 @@ import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 import { apiRouters } from '@constants/routers';
 import { REACTION_LIST_SMALL } from '@constants';
+import { ERROR_COMMON_MESSAGE } from '@constants/message';
+import { useErrorToast } from '@hooks/useErrorToast';
 
 import { ChatMessageResponse } from '@interfaces/chat';
 
@@ -40,6 +43,7 @@ const DetailReactionChat = ({
   const optionRef = useRef<HTMLDivElement | null>(null);
 
   const { data: session } = useSessionCache();
+  const showErrorToast = useErrorToast();
 
   const [isShowModalDetail, setIsShowModalDetail] = useState(false);
 
@@ -99,7 +103,9 @@ const DetailReactionChat = ({
     handleReactionIcon,
     {
       onSuccess: async () => {},
-      onError: () => {},
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_COMMON_MESSAGE);
+      },
       onSettled: () => {},
     },
   );
@@ -120,7 +126,9 @@ const DetailReactionChat = ({
     handleMoveReactionIcon,
     {
       onSuccess: async () => {},
-      onError: () => {},
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_COMMON_MESSAGE);
+      },
       onSettled: () => {},
     },
   );

@@ -14,6 +14,9 @@ import { REACTION_LIST } from '@constants';
 import { ChatMessageResponse, ChatRoomDetail } from '@interfaces/chat';
 import { hasPermissionInArray } from '@utils';
 import api from '@base/api';
+import { AxiosError } from 'axios';
+import { ERROR_COMMON_MESSAGE } from '@constants/message';
+import { useErrorToast } from '@hooks/useErrorToast';
 
 interface MessageHoverOptionsProps {
   messageDetail: ChatMessageResponse;
@@ -50,6 +53,8 @@ export const MessageHoverOptions = ({
   handleReplyMsg,
   handleQuoteMsgIcon,
 }: MessageHoverOptionsProps) => {
+  const showErrorToast = useErrorToast();
+
   const optionRef = useRef<HTMLDivElement | null>(null);
   const { data: session } = useSessionCache();
   const [isShowReaction, setShowReaction] = useState(false);
@@ -94,7 +99,9 @@ export const MessageHoverOptions = ({
         setIsBookmark(!isBookmark);
         handleUpdateBookmark(messageDetail.uuid);
       },
-      onError: () => {},
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_COMMON_MESSAGE);
+      },
       onSettled: () => {},
     },
   );
@@ -115,7 +122,9 @@ export const MessageHoverOptions = ({
     handleReactionIcon,
     {
       onSuccess: async () => {},
-      onError: () => {},
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_COMMON_MESSAGE);
+      },
       onSettled: () => {
         setShowReaction(false);
       },
@@ -138,7 +147,9 @@ export const MessageHoverOptions = ({
     handleMoveReactionIcon,
     {
       onSuccess: async () => {},
-      onError: () => {},
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_COMMON_MESSAGE);
+      },
       onSettled: () => {
         setShowReaction(false);
       },

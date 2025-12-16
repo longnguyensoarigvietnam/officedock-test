@@ -229,11 +229,9 @@ const SurveyListPage = () => {
         setOpenConfirmDeleteModal(false);
         setSelectedSurveyToDelete(null);
       },
-      onError: () => {
-        showToast({
-          variant: 'error',
-          description: ERROR_DELETE_MESSAGE,
-        });
+
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_DELETE_MESSAGE);
       },
       onSettled: () => {
         setIsLoading(false);

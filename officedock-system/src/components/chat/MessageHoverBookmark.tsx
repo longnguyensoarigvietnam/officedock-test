@@ -1,4 +1,5 @@
 'use client';
+import { AxiosError } from 'axios';
 import { useMutation } from 'react-query';
 
 import ImageRound from '@components/common/ImageRound';
@@ -6,6 +7,8 @@ import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 import api from '@base/api';
 import { apiRouters } from '@constants/routers';
+import { useErrorToast } from '@hooks/useErrorToast';
+import { ERROR_COMMON_MESSAGE } from '@constants/message';
 
 interface MessageHoverOptionsProps {
   uuid: string;
@@ -18,6 +21,8 @@ export const MessageHoverBookmark = ({
   onGotoMessage,
   handleRemoveItemBookmark,
 }: MessageHoverOptionsProps) => {
+  const showErrorToast = useErrorToast();
+
   // Handle bookmark msg
   const handleBookMarkMsg = async () => {
     const { data: response } = await api.post(
@@ -36,7 +41,9 @@ export const MessageHoverBookmark = ({
       onSuccess: async () => {
         handleRemoveItemBookmark && handleRemoveItemBookmark(uuid);
       },
-      onError: () => {},
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_COMMON_MESSAGE);
+      },
       onSettled: () => {},
     },
   );

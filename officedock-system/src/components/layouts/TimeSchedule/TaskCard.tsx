@@ -11,8 +11,10 @@ import PopupDetail from './PopupDetail';
 import PopupDetailEvent from './PopupDetailEvent';
 
 import { NO_SETTING } from '@constants';
+import { ERROR_COMMON_MESSAGE } from '@constants/message';
 import { ItemScheduleType, ItemStartType, ViewOptions } from '@constants/enums';
 
+import { useErrorToast } from '@hooks/useErrorToast';
 import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
 import { TaskContext } from '@providers/TaskProvider';
 import { GlobalStateContext } from '@providers/GlobalStateProvider';
@@ -28,6 +30,7 @@ import { generateVerticalGradient } from '@utils';
 import { TaskTimeSchedule } from '@interfaces/task';
 import { EventEditFormData } from '@interfaces/calendar';
 import { CreationDataCommon } from '@interfaces/common';
+import { AxiosError } from 'axios';
 
 interface TaskCardProps {
   event: EventContentArg;
@@ -98,6 +101,8 @@ const TaskCard = ({
     setTaskSelected,
     setDataActualAddSchedule,
   } = useContext(TaskContext);
+  const showErrorToast = useErrorToast();
+
   const { getDelay, recordHover } = useContext(GlobalStateContext);
 
   const searchParams = useSearchParams();
@@ -217,6 +222,9 @@ const TaskCard = ({
           queryClient.refetchQueries(['getDataTaskHeaderList']);
         }
       }
+    },
+    onError: (error: AxiosError<any>) => {
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
     },
   });
 

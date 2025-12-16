@@ -2,6 +2,7 @@
 import { Draggable } from '@hello-pangea/dnd';
 import { useForm } from 'react-hook-form';
 import { formatISO } from 'date-fns';
+import { AxiosError } from 'axios';
 import { useQueryClient } from 'react-query';
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -19,10 +20,12 @@ import {
   TaskRepetitiveType,
   TaskRepetitiveValue,
 } from '@constants/enums';
+import { ERROR_COMMON_MESSAGE } from '@constants/message';
 import { TASK_REPETITIVE_OPTIONS } from '@constants';
 
 import { DataStatusChangeInline, Task, TaskFormData } from '@interfaces/task';
 
+import { useErrorToast } from '@hooks/useErrorToast';
 import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
 
 import { TaskContext } from '@providers/TaskProvider';
@@ -69,6 +72,7 @@ const ItemRoutine = ({
     setShowWarningStartTaskModal,
     setDataActualAddSchedule,
   } = useContext(TaskContext);
+  const showErrorToast = useErrorToast();
 
   const { reset } = useForm<TaskFormData>({
     mode: 'onSubmit',
@@ -214,6 +218,9 @@ const ItemRoutine = ({
           queryClient.refetchQueries(['getDataTaskHeaderList']);
         }
       }
+    },
+    onError: (error: AxiosError<any>) => {
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
     },
   });
 

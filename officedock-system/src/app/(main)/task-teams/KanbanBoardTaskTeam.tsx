@@ -57,6 +57,7 @@ import {
   TASK_REPETITIVE_OPTIONS,
 } from '@constants';
 import {
+  ERROR_COMMON_MESSAGE,
   ERROR_CREATE_MESSAGE,
   ERROR_DELETE_MESSAGE,
   ERROR_MESSAGE_OVERLAP_TASK,
@@ -314,7 +315,9 @@ const KanbanBoardTaskTeam = () => {
         }
         setPage(page + 1);
       },
-      onError: () => {},
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_COMMON_MESSAGE);
+      },
       onSettled: () => {
         isCreatingRef.current = false;
         setInitialLoad(false);
@@ -462,7 +465,9 @@ const KanbanBoardTaskTeam = () => {
         setIsReadyToFetch(false);
         setDataOrderRing('');
       },
-      onError: () => {},
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_COMMON_MESSAGE);
+      },
       onSettled: () => {},
     },
   );
@@ -509,7 +514,9 @@ const KanbanBoardTaskTeam = () => {
         setIsReadyToFetch(false);
         setDataOrderRing('');
       },
-      onError: () => {},
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_COMMON_MESSAGE);
+      },
       onSettled: () => {},
     },
   );

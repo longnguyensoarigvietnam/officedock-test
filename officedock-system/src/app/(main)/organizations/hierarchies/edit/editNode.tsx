@@ -3,6 +3,7 @@ import TreeModel from 'tree-model';
 import { useContext, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
+import { AxiosError } from 'axios';
 import { useMutation } from 'react-query';
 import '../../../../../components/TreeNode/styles/treeNode.css';
 
@@ -21,7 +22,10 @@ import { apiRouters, pageRouters } from '@constants/routers';
 
 import { ConfigNode, NodeDataRequest } from '@interfaces/organization';
 import { OptionDropdownType } from '@interfaces/common';
+
 import useDetailHierarchiesOrganization from '@hooks/useDetailHierarchiesOrganization';
+import { useErrorToast } from '@hooks/useErrorToast';
+
 import api from '@base/api';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
@@ -30,6 +34,7 @@ import { GlobalStateContext } from '@providers/GlobalStateProvider';
 export default function EditNode() {
   const router = useRouter();
   const { showToast } = useToast();
+  const showErrorToast = useErrorToast();
 
   const { setIsLoading } = useContext(LoadingContext);
   const { expanded } = useContext(GlobalStateContext);
@@ -343,11 +348,9 @@ export default function EditNode() {
         });
         router.push(pageRouters.ORGANIZATION_HIERARCHY.href);
       },
-      onError: () => {
-        showToast({
-          variant: 'error',
-          description: ERROR_UPDATE_MESSAGE,
-        });
+
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_UPDATE_MESSAGE);
       },
       onSettled: () => {
         setIsLoading(false);
