@@ -22,6 +22,7 @@ import {
 } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
 import { DEFAULT_TIME_TEXT, OPTION_DEFAULT_TASK } from '@constants';
+import { ERROR_COMMON_MESSAGE, ERROR_CREATE_MESSAGE } from '@constants/message';
 
 import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
 import useContinueCounterTime from '@hooks/useContinueCounterTime';
@@ -29,6 +30,7 @@ import useTaskHeaderStart from '@hooks/useTaskHeaderStart';
 import useTaskDurationDetail from '@hooks/useTaskDurationDetail';
 import useDataHeaderTaskList from '@hooks/useDataHeaderTask';
 import useAuthenticatedUser from '@hooks/useAuthenticatedUser';
+import { useErrorToast } from '@hooks/useErrorToast';
 
 import { OptionDropdownType } from '@interfaces/common';
 import {
@@ -55,6 +57,7 @@ import {
   isTimeEarlier,
 } from '@utils/date';
 import api from '@base/api';
+import { AxiosError } from 'axios';
 
 const ShowTimeCounter = memo(
   ({ statusTaskSelected }: { statusTaskSelected: TaskDuration }) => {
@@ -70,6 +73,7 @@ const TaskPageDataHeader = () => {
   const params = new URLSearchParams(searchParams);
 
   const { data: session } = useSessionCache();
+  const showErrorToast = useErrorToast();
 
   const router = useRouter();
 
@@ -527,7 +531,10 @@ const TaskPageDataHeader = () => {
           isStart: true,
         });
       },
-      onError: () => {},
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_CREATE_MESSAGE);
+      },
+
       onSettled: () => {},
     },
   );
@@ -554,7 +561,9 @@ const TaskPageDataHeader = () => {
           handleStartEmptyTask();
         }
       },
-      onError: () => {},
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_COMMON_MESSAGE);
+      },
       onSettled: () => {},
     },
   );
@@ -646,7 +655,7 @@ const TaskPageDataHeader = () => {
           });
         }
       },
-      onError: () => {
+      onError: (error: AxiosError) => {
         setValueStart(
           statusTaskSelected?.isStart && taskSelected.value
             ? formatTimeTaskCustom(`${dataTaskHeaderStart?.startedAt}`)
@@ -654,6 +663,7 @@ const TaskPageDataHeader = () => {
                 `${timeTaskSelect ? timeTaskSelect.startedAt : ''}`,
               ),
         );
+        showErrorToast(error, ERROR_COMMON_MESSAGE);
       },
       onSettled: () => {},
     },

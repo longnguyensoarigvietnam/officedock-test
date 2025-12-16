@@ -3,6 +3,7 @@ import { memo, useContext, useEffect, useRef, useState } from 'react';
 import { useMutation } from 'react-query';
 import 'react-quill/dist/quill.snow.css';
 import { useSessionCache } from '@providers/SessionCacheProvider';
+import { AxiosError } from 'axios';
 
 import Checkbox from '@components/common/Checkbox';
 import Heading from '@components/common/Heading';
@@ -11,15 +12,18 @@ import Button from '../common/Button';
 
 import { apiRouters } from '@constants/routers';
 import { TermType } from '@constants/enums';
+import { ERROR_COMMON_MESSAGE } from '@constants/message';
 
 import useTermList from '@hooks/useTermList';
 import { TermsStep } from '@interfaces/user';
 import { LoadingContext } from '@providers/LoadingProvider';
 import api from '@base/api';
+import { useErrorToast } from '@hooks/useErrorToast';
 
 const TermAgreeModal = memo(() => {
   const { data: session, update } = useSessionCache();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const showErrorToast = useErrorToast();
 
   const { setIsLoading } = useContext(LoadingContext);
   const [currentStep, setCurrentStep] = useState(0);
@@ -76,6 +80,9 @@ const TermAgreeModal = memo(() => {
         setTermsSteps(updatedTermsSteps);
         setCurrentStep((prevStep) => prevStep + 1);
         setIsChecked(false);
+      },
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_COMMON_MESSAGE);
       },
       onSettled: () => {},
     },
