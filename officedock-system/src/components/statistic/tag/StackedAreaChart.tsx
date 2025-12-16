@@ -723,11 +723,11 @@ const StackedAreaChart = ({
     },
     {
       accessorKey: 'tagDuration',
-      size: 50,
+      size: 43,
       header: () => {
         return (
           <div
-            className="flex gap-6 items-center justify-center"
+            className="flex gap-6 items-center justify-between px-[14px] cursor-pointer"
             onClick={() => {
               if (
                 !durationSortingStatus ||
@@ -766,11 +766,11 @@ const StackedAreaChart = ({
     },
     {
       accessorKey: 'tagPercent',
-      size: 30,
+      size: 27,
       header: () => {
         return (
           <div
-            className="flex gap-2 items-center justify-center"
+            className="flex gap-2 items-center justify-between px-[14px] cursor-pointer"
             onClick={() => {
               if (
                 !percentageSortingStatus ||
@@ -1252,7 +1252,7 @@ const StackedAreaChart = ({
                       {headerGroup.headers.map((header, index) => (
                         <th
                           key={header.id}
-                          className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
+                          className={`py-2.5 ${index !== 0 ? 'border-l' : ''}`}
                           style={{
                             width: header.getSize(),
                             minWidth: header.getSize(),

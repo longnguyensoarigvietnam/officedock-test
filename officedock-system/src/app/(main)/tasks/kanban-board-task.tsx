@@ -1303,8 +1303,9 @@ const KanbanBoardTask = () => {
     handleUpdateTaskStatus,
     {
       onSuccess: () => {},
-      onError: () => {
+      onError: (error: AxiosError<any>) => {
         setResetInitialColumnsData(!resetInitialColumnsData);
+        showErrorToast(error, ERROR_UPDATE_MESSAGE);
       },
       onSettled: () => {
         isItemDropToDone.current = false;
@@ -2058,8 +2059,9 @@ const KanbanBoardTask = () => {
 
         setShowEditTaskModal(true);
       },
-      onError: () => {
+      onError: (error: AxiosError<any>) => {
         handleRemoveParam();
+        showErrorToast(error, ERROR_UPDATE_MESSAGE);
       },
     },
   );
@@ -2093,8 +2095,10 @@ const KanbanBoardTask = () => {
           setShowEditTaskModal(true);
         }
       },
-      onError: () => {
+
+      onError: (error: AxiosError<any>) => {
         handleRemoveTemplateParam();
+        showErrorToast(error, ERROR_UPDATE_MESSAGE);
       },
       onSettled: () => {
         setTimeout(() => {
