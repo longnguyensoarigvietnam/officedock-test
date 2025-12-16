@@ -196,16 +196,21 @@ def get_organizations_of_user_by_screen_role(
         return None
     selection_results = [item.selection_result for item in role_permissions]
     if SelectionResultOptions.ALLOWED.value in selection_results:
-        organizations = Organization.objects.filter(
-            users=user, deleted_at__isnull=True
-        ).all()
+        if screen_name in [Screens.SKILL_MAP_MANAGEMENT.value]:
+            organizations = Organization.objects.filter(
+                company_id=user.company_id, deleted_at__isnull=True
+            ).order_by("-created_at")
+        else:
+            organizations = Organization.objects.filter(
+                users=user, deleted_at__isnull=True
+            ).all()
         if is_return_orgs:
             return organizations
         return CreationDataOrganizationWithMainSerializer(
             organizations, many=True, context={"user": user}
         ).data
     org_ids = list(
-        Organization.all_objects.filter(users=user).values_list("id", flat=True)
+        Organization.objects.filter(users=user).values_list("id", flat=True)
     )
     if screen_name != Screens.ORGANIZATION_HIERARCHY.value:
         # Handle get hierarchy
@@ -217,7 +222,7 @@ def get_organizations_of_user_by_screen_role(
 
         _get_children(user)
         org_ids = set(org_ids)
-    organizations = Organization.all_objects.filter(
+    organizations = Organization.objects.filter(
         id__in=org_ids, deleted_at__isnull=True
     ).all()
     if is_return_orgs:

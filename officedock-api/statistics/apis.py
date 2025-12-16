@@ -39,6 +39,7 @@ from common.utils import (
     get_deleted_statistic_category_name,
     time_str_to_timedelta,
     split_id_from_string,
+    to_camel_case,
     validate_company_organization,
 )
 from organizations.constants import OrganizationTypes
@@ -81,7 +82,10 @@ from roles.constants import Screens
 from base.permissions import ActionPermission
 from statistics.services.export import ExportTaskService
 from statistics.constants import ExportType, PeriodClassification
-from statistics.utils import get_all_organization_id
+from statistics.utils import (
+    get_all_organization_id,
+    handle_get_task_duration_of_teamdock,
+)
 
 
 @extend_schema(tags=["System > Statistics"])
@@ -149,6 +153,7 @@ class StatisticViewSet(BaseAPIViewSet):
         cursor = request.query_params.get("cursor")
         cursor_id = request.query_params.get("cursor_id")
         is_tag_page = request.query_params.get("is_tag_page")
+        current_screen = request.query_params.get("current_screen", None)
         from_date = validate_date_by_regex_and_reformat(
             request.query_params.get("from_date")
         )
@@ -160,7 +165,14 @@ class StatisticViewSet(BaseAPIViewSet):
         if user_id:
             user = get_object_or_404(User, id=user_id)
         if organization_ids_param == ALL_TEAM:
-            organization_ids = get_all_organization_id([user])
+            organization_ids = get_all_organization_id(
+                [user],
+                exclude_team_unassigned=(
+                    current_screen
+                    and to_camel_case(current_screen)
+                    == to_camel_case(Screens.TEAMDOCK.value)
+                ),
+            )
         else:
             organization_ids = split_id_from_string(organization_ids_param)
 
@@ -1526,11 +1538,10 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                 users_in_org = main_organization.users.values_list(
                     "id", flat=True
                 )
-                # Remove task duration of unassigned user and another organization (exclude main organization)
-                durations = durations.exclude(
-                    ~Q(user__in=users_in_org)
-                    & ~Q(task__organization=main_organization)
+                durations = handle_get_task_duration_of_teamdock(
+                    durations, users_in_org, main_organization
                 )
+
             if is_tag_page:
                 total_duration, tag_list = process_merge_card_per_tag(
                     tag_ids,
@@ -1670,10 +1681,8 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
         if not users or (main_organization_id and not main_organization):
             return self.response_ok(data)
         if main_organization_id:
-            # Remove task duration of unassigned user and another organization (exclude main organization)
-            durations = durations.exclude(
-                ~Q(user__in=users_in_org)
-                & ~Q(task__organization=main_organization)
+            durations = handle_get_task_duration_of_teamdock(
+                durations, users_in_org, main_organization
             )
 
         ranges = split_ranges(
@@ -1773,16 +1782,25 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
             if team.get("sub_teams"):
                 all_subteams = team.pop("sub_teams")
                 if user_ids and option:
+                    org_users_map = defaultdict(set)
+                    subteam_org_ids = [
+                        st["organization_id"] for st in all_subteams
+                    ]
+                    for org_id, user_id in Organization.objects.filter(
+                        id__in=subteam_org_ids
+                    ).values_list("id", "users"):
+                        org_users_map[org_id].add(user_id)
                     for subteam in all_subteams:
+                        org_id = subteam["organization_id"]
+                        org_users = org_users_map.get(org_id, set())
+
                         for user in user_list:
-                            if users_in_org and user["id"] not in users_in_org:
+                            if user["id"] not in org_users:
                                 continue
                             team["users"].append(
                                 self.build_user_duration_object(
                                     user,
-                                    durations_by_user[
-                                        subteam["organization_id"], user["id"]
-                                    ],
+                                    durations_by_user[org_id, user["id"]],
                                     subteam["organization_name"],
                                     time_str_to_timedelta(team["duration"]),
                                 )
@@ -1865,7 +1883,10 @@ class AllTeamStatisticViewSet(BaseAPIViewSet):
                     filter_duration_by_range, tag_ids, is_tag_page
                 )
                 for org_id in organization_filters:
+                    org_users = org_users_map.get(org_id, set())
                     for user in user_list:
+                        if option == SUB_TEAM and user["id"] not in org_users:
+                            continue
                         data_by_range["users"].append(
                             self.build_user_duration_object(
                                 user,

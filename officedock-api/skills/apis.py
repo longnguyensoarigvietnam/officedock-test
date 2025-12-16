@@ -22,6 +22,7 @@ from base.apis import BaseAPIViewSet
 from base.messages import ERROR_MESSAGES
 from base.permissions import ActionPermission
 from chat.models import ChatMessage
+from common.helpers import get_organizations_of_user_by_screen_role
 from common.serializers import CreationDataUserWithMainOrganizationSerializer
 from common.utils import (
     get_organization_name,
@@ -1308,9 +1309,13 @@ class SkillViewSet(
             is_deleted = is_deleted_param and is_deleted_param.lower() == "true"
 
         user = request.user
-        organizations = Organization.objects.filter(
-            company_id=user.company_id, deleted_at__isnull=True
-        ).order_by("-created_at")
+        action = Actions.ADD.value
+        organizations = get_organizations_of_user_by_screen_role(
+            user,
+            Screens.SKILL_MAP_MANAGEMENT.value,
+            action,
+            is_return_orgs=True,
+        )
 
         if organization_id:
             organizations = organizations.filter(id=organization_id).all()
