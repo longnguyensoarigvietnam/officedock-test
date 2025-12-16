@@ -52,7 +52,7 @@ const ThankMsgHistoryList = () => {
     <>
       <div>
         <div className="text-[26px] font-medium text-black leading-[1]">
-          サンクスメッセージ履歴
+          サンクスメッセージ管理
         </div>
         <div className="mt-[30px] flex justify-between">
           <div className=" flex gap-3 items-center">

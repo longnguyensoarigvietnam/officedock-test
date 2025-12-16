@@ -366,7 +366,7 @@ const ListTags = () => {
       <div className="flex justify-between">
         <div className="flex items-center gap-[10px]">
           <p className="text-black font-medium text-[26px] leading-[1]">
-            タグ管理
+            集計タグ管理
           </p>
         </div>
         <Link

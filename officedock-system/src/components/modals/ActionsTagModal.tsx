@@ -3,12 +3,12 @@ import { useEffect, useMemo } from 'react';
 
 import { SubmitHandler, useForm } from 'react-hook-form';
 
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import Button from '@components/common/Button';
 import Input from '@components/common/Input';
 import ImageRound from '@components/common/ImageRound';
 import Drawer from '@components/common/Drawers';
 import Checkbox from '@components/common/Checkbox';
+import MultiSelectTagDropdown from '@components/common/MultiSelectDropdown/MultiSelectTagDropdown';
 
 import { OptionDropdownType } from '@interfaces/common';
 import { Tags, TagFormData } from '@interfaces/tag';
@@ -239,7 +239,7 @@ const ActionsTagModal = ({
               表示するチーム
             </p>
             <div className="w-[calc(100%_-_120px)]">
-              <MultiSelectDropdown
+              <MultiSelectTagDropdown
                 className="!h-[34px]"
                 disabled={isDisabled}
                 valueClassName="!border-[1px] !border-[#77858F]"
