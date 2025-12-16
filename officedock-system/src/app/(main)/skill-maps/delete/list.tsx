@@ -13,10 +13,12 @@ import { OrganizationDeleteSkillDetail } from './organization-delete-detail';
 
 import { apiRouters, pageRouters } from '@constants/routers';
 import {
+  ERROR_COMMON_MESSAGE,
   ERROR_RESTORE_MESSAGE,
   SUCCESS_RESTORE_MESSAGE,
 } from '@constants/message';
 import { ALL_TEAMS_OPTION } from '@constants';
+import { ScreenName } from '@constants/enums';
 
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useToast } from '@providers/ToastProvider';
@@ -79,6 +81,9 @@ const ListSkillsMapDelete = () => {
       is_deleted: 'true',
     },
     showLoadingIndicator: true,
+    onError: (error: AxiosError<any>) => {
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
+    },
   });
 
   useEffect(() => {
@@ -92,11 +97,11 @@ const ListSkillsMapDelete = () => {
   // Get organization options for pulldown
   useCreationDataCommon({
     options: {
-      get_all_organizations: true,
+      get_organizations_of_user_by_screen: ScreenName.SKILL_MAP,
     },
     onSuccess: (data) => {
       const organizationList =
-        data.allOrganizations?.map((org) => {
+        data.organizations?.map((org) => {
           return {
             value: Number(org.id),
             label: org.name,
@@ -109,6 +114,9 @@ const ListSkillsMapDelete = () => {
         },
         ...organizationList,
       ]);
+    },
+    onError: (error: AxiosError<any>) => {
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
     },
   });
 

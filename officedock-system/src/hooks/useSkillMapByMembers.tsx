@@ -2,16 +2,13 @@
 
 import { useContext } from 'react';
 import { useQuery } from 'react-query';
-import { signOut } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { AxiosError } from 'axios';
 
 import { useSessionCache } from '@providers/SessionCacheProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 
-import { apiRouters, pageRouters } from '@constants/routers';
-import { ServerStatusCode } from '@constants/enums';
+import { apiRouters } from '@constants/routers';
 
-import { ResponseError } from '@interfaces/response';
 import { SkillMapByMembers } from '@interfaces/skills';
 
 import api from '@base/api';
@@ -22,10 +19,16 @@ interface FilterProps {
   has_include_deleted_skill?: string;
 }
 
-const useSkillMapByMembers = (
-  { filter, onSuccess }: { filter?: FilterProps, onSuccess?: (data: SkillMapByMembers[]) => void }) => {
+const useSkillMapByMembers = ({
+  filter,
+  onSuccess,
+  onError,
+}: {
+  filter?: FilterProps;
+  onSuccess?: (data: SkillMapByMembers[]) => void;
+  onError?: (error: AxiosError) => void;
+}) => {
   const { data: session } = useSessionCache();
-  const router = useRouter();
   const token = session?.accessToken;
 
   const { setIsLoading } = useContext(LoadingContext);
@@ -72,16 +75,11 @@ const useSkillMapByMembers = (
     enabled: !!token,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
-    onError: ({ response }: ResponseError<any>) => {
-      if (response?.status === ServerStatusCode.UNAUTHORIZED) {
-        if (session) {
-          signOut();
-          router.push(pageRouters.LOGIN.href);
-        }
-      }
+    onError: (error: AxiosError) => {
+      onError && onError(error);
     },
     onSuccess: (data: SkillMapByMembers[]) => {
-      onSuccess && onSuccess(data)
+      onSuccess && onSuccess(data);
     },
     onSettled: () => {
       setIsLoading(false);

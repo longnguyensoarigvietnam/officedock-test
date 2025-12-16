@@ -1,5 +1,6 @@
 'use client';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { AxiosError } from 'axios';
 import React, { Fragment, useState } from 'react';
 import Link from 'next/link';
 
@@ -9,6 +10,7 @@ import Button from '@components/common/Button';
 import { ALL_TEAMS_OPTION } from '@constants';
 import { pageRouters } from '@constants/routers';
 import { ScreenName } from '@constants/enums';
+import { ERROR_COMMON_MESSAGE } from '@constants/message';
 
 import { SkillMapByMembers, SkillMapSkill } from '@interfaces/skills';
 import { OptionDropdownType } from '@interfaces/common';
@@ -16,6 +18,7 @@ import { OptionDropdownType } from '@interfaces/common';
 import useSkillMapByMembers from '@hooks/useSkillMapByMembers';
 import useOrganizationSkillList from '@hooks/useOrganizationSkillList';
 import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
+import { useErrorToast } from '@hooks/useErrorToast';
 
 import { SkillMapByMembersDetail } from './form';
 
@@ -39,16 +42,17 @@ const ListSkillsMapByMembers = () => {
   const searchParams = useSearchParams();
   const params = new URLSearchParams(searchParams);
   const router = useRouter();
-  const orgIdParam = searchParams.get('orgId')
+  const orgIdParam = searchParams.get('orgId');
+  const showErrorToast = useErrorToast();
 
   // Get organization options for pulldown
   useCreationDataCommon({
     options: {
-      get_all_organizations: true,
+      get_organizations_of_user_by_screen: ScreenName.SKILL_MAP,
     },
     onSuccess: (data) => {
       const organizationList =
-        data.allOrganizations?.map((org) => {
+        data.organizations?.map((org) => {
           return {
             value: Number(org.id),
             label: org.name,
@@ -67,41 +71,48 @@ const ListSkillsMapByMembers = () => {
           handleRemoveParam();
           return;
         }
-        const selectedOrg = organizationList.find((org) => org.value == orgId)
+        const selectedOrg = organizationList.find((org) => org.value == orgId);
         setSelectedOrganizationOption({
           label: String(selectedOrg?.label),
-          value: String(selectedOrg?.value)
-        })
+          value: String(selectedOrg?.value),
+        });
       }
+    },
+    onError: (error: AxiosError<any>) => {
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
     },
   });
 
   // Fetch skill map by members
   useSkillMapByMembers({
     filter: {
-      organizationId: Number(selectedOrganizationOption.value) || Number(orgIdParam),
+      organizationId:
+        Number(selectedOrganizationOption.value) || Number(orgIdParam),
     },
     onSuccess: (data) => {
       setDataSkillMapsByMembers(data);
-    }
+    },
+    onError: (error: AxiosError<any>) => {
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
+    },
   });
 
   // Fetch organization skills
   useOrganizationSkillList({
     filter: {
-      organizationId: Number(selectedOrganizationOption.value) || Number(orgIdParam),
+      organizationId:
+        Number(selectedOrganizationOption.value) || Number(orgIdParam),
       screen: ScreenName.SKILL_MAP,
     },
     onSuccess: (data) => {
       setDataSkillMapList(data as SkillMapSkill[]);
-    }
+    },
+    onError: (error: AxiosError<any>) => {
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
+    },
   });
 
-  const handleSetParam = ({
-    id,
-  }: {
-    id?: string | null;
-  }) => {
+  const handleSetParam = ({ id }: { id?: string | null }) => {
     if (id) {
       params.set('orgId', id);
     }
@@ -118,7 +129,9 @@ const ListSkillsMapByMembers = () => {
     <Fragment>
       <div className="sticky z-[21] top-[0px] px-10 py-[30px] bg-[#E6F3FB]">
         <div className="flex gap-5 items-center mb-[30px]">
-          <p className="text-black font-medium text-[26px] leading-[1]">スキルマップ設定</p>
+          <p className="text-black font-medium text-[26px] leading-[1]">
+            スキルマップ設定
+          </p>
           <div className="flex gap-[6px] bg-white w-fit p-[6px] rounded-[20px]">
             <Link href={pageRouters.SKILL_MAPS_MANAGEMENT.href}>
               <Button
@@ -144,9 +157,9 @@ const ListSkillsMapByMembers = () => {
             )}
             onChange={(e) => {
               if (e.value) {
-                handleSetParam({ id: e.value as string })
+                handleSetParam({ id: e.value as string });
               } else {
-                handleRemoveParam()
+                handleRemoveParam();
               }
               setSelectedOrganizationOption({
                 label: e.label,
@@ -154,7 +167,8 @@ const ListSkillsMapByMembers = () => {
               });
             }}
           />
-          <Link href={`${pageRouters.EDIT_SKILL_MAPS_MEMBERS.href}${orgIdParam ? `?orgId=${orgIdParam}` : ''}`}>
+          <Link
+            href={`${pageRouters.EDIT_SKILL_MAPS_MEMBERS.href}${orgIdParam ? `?orgId=${orgIdParam}` : ''}`}>
             <Button
               variant="primary"
               className={`w-[100px] !p-0 text-sm h-[34px] text-white border-none`}

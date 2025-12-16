@@ -11,7 +11,11 @@ import { TwinklingIcon } from '@components/common/TwinklingIcon';
 
 import { ActionsModal, ScreenName, SubmitLevelStatus } from '@constants/enums';
 import { apiRouters } from '@constants/routers';
-import { ERROR_SAVE_MESSAGE, SUCCESS_SAVE_MESSAGE } from '@constants/message';
+import {
+  ERROR_COMMON_MESSAGE,
+  ERROR_SAVE_MESSAGE,
+  SUCCESS_SAVE_MESSAGE,
+} from '@constants/message';
 import { SKILL_MAP_LEVEL_COUNT } from '@constants';
 
 import useSkillMapComment from '@hooks/useSkillMapComment';
@@ -39,8 +43,8 @@ interface SkillMapByOrganizationPanelProps {
   settingSkillAction?: ActionsModal;
   isMyPage?: boolean;
   onOpenConfirmSettingSkillInfo?:
-  | ((skill: SkillMapByOrganizationInfo) => void)
-  | undefined;
+    | ((skill: SkillMapByOrganizationInfo) => void)
+    | undefined;
   onEditSettingSkill?: (skillId: string) => Promise<void>;
 }
 
@@ -90,6 +94,9 @@ export const SkillMapByOrganizationPanel = ({
       );
       setOpenSkillMapCommentModal(true);
     },
+    onError: (error: AxiosError) => {
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
+    },
   });
 
   useSkillMapLevelUp({
@@ -110,6 +117,9 @@ export const SkillMapByOrganizationPanel = ({
           predicate: (query) => query.queryKey[0] === 'getSkillMapInfo',
         });
       }
+    },
+    onError: (error: AxiosError) => {
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
     },
   });
 
@@ -304,7 +314,7 @@ export const SkillMapByOrganizationPanel = ({
         showErrorToast(error, ERROR_SAVE_MESSAGE);
         isEditingRef.current = false;
       },
-      onSettled: () => { },
+      onSettled: () => {},
     },
   );
 
@@ -332,7 +342,7 @@ export const SkillMapByOrganizationPanel = ({
         showErrorToast(error, ERROR_SAVE_MESSAGE);
         isSubmittingRef.current = false;
       },
-      onSettled: () => { },
+      onSettled: () => {},
     },
   );
 
@@ -354,7 +364,7 @@ export const SkillMapByOrganizationPanel = ({
       onError: (error: AxiosError) => {
         showErrorToast(error, ERROR_SAVE_MESSAGE);
       },
-      onSettled: () => { },
+      onSettled: () => {},
     },
   );
 
@@ -456,8 +466,8 @@ export const SkillMapByOrganizationPanel = ({
                           style={{
                             boxShadow:
                               showTwinklingStars &&
-                                !skill.skill.deletedAt &&
-                                !skillMapDetail.isDeleted
+                              !skill.skill.deletedAt &&
+                              !skillMapDetail.isDeleted
                                 ? '0px 0px 20px 0px #36ACDE80'
                                 : '0px 2px 8px 0px #0000001A',
                           }}

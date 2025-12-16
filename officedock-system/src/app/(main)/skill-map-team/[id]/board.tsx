@@ -1,4 +1,5 @@
 'use client';
+import { AxiosError } from 'axios';
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -8,7 +9,9 @@ import ImageRound from '@components/common/ImageRound';
 import { SkillMapBanner } from '@components/skillMap/SkillMapBanner';
 
 import { pageRouters } from '@constants/routers';
+import { ERROR_COMMON_MESSAGE } from '@constants/message';
 
+import { useErrorToast } from '@hooks/useErrorToast';
 import useSkillMapInfo from '@hooks/useSkillMapList';
 
 import { SkillMapByOrganization } from '@interfaces/skills';
@@ -20,6 +23,7 @@ const BoardSkillUser = () => {
   const searchParams = useSearchParams();
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const showErrorToast = useErrorToast();
 
   const [isMapOption, setIsMapOption] = useState(true);
 
@@ -40,6 +44,9 @@ const BoardSkillUser = () => {
     userId: userId,
     onSuccess: (data) => {
       setDetailSkillData(data.organizations);
+    },
+    onError: (error: AxiosError) => {
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
     },
   });
 

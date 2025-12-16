@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { AxiosError } from 'axios';
 import Link from 'next/link';
 
 import ReviewSubmittedLevelUpModal from '@components/modals/ReviewSubmittedLevelUpModal';
@@ -9,10 +10,12 @@ import { SkillMapBanner } from '@components/skillMap/SkillMapBanner';
 
 import useSkillMapInfo from '@hooks/useSkillMapList';
 import useSubmitLevelDetail from '@hooks/useSubmitLevelDetail';
+import { useErrorToast } from '@hooks/useErrorToast';
 
 import { SkillMapByOrganization, SubmitLevel } from '@interfaces/skills';
 
 import { pageRouters } from '@constants/routers';
+import { ERROR_COMMON_MESSAGE } from '@constants/message';
 
 import { SkillMapByOrganizationPanel } from './skill-map-by-organization-panel';
 
@@ -21,6 +24,7 @@ const SkillMap = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const tabId = searchParams.get('tabId');
+  const showErrorToast = useErrorToast();
 
   // Skill map list
   const [skillMapByOrganizations, setSkillMapByOrganizations] = useState<
@@ -44,6 +48,9 @@ const SkillMap = () => {
     onSuccess: (data) => {
       setSkillMapByOrganizations(data.organizations);
     },
+    onError: (error: AxiosError) => {
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
+    },
   });
   // Get submit level detail
   useSubmitLevelDetail({
@@ -51,6 +58,9 @@ const SkillMap = () => {
     onSuccess: (data) => {
       setSubmitLevelUpDetail(data);
       setOpenReviewSubmittedLevelupPopup(true);
+    },
+    onError: (error: AxiosError) => {
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
     },
   });
 

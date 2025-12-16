@@ -1,17 +1,17 @@
 'use client';
 import { AxiosError } from 'axios';
 import { useState } from 'react';
-import { useSessionCache } from '@providers/SessionCacheProvider';
-
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import Dropdown from '@components/common/Dropdown';
 import ActionsSkillMapDetailModal from '@components/modals/ActionsSkillMapDetailModal';
 import ImageRound from '@components/common/ImageRound';
 import Button from '@components/common/Button';
 
-import { PermissionsSystem, ServerStatusCode } from '@constants/enums';
+import { PermissionsSystem } from '@constants/enums';
 import { ALL_TEAMS_OPTION } from '@constants';
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
 import { pageRouters } from '@constants/routers';
@@ -22,18 +22,17 @@ import {
 } from '@interfaces/skills';
 import { OptionDropdownType } from '@interfaces/common';
 
+import { useErrorToast } from '@hooks/useErrorToast';
 import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 import useSkillMapUserDetail from '@hooks/useSkillMapUserDetail';
 import useListSkillsInSkillMap from '@hooks/useListSkillsInSkillMap';
-
-import { useToast } from '@providers/ToastProvider';
 
 import { hasPermissionInArray } from '@utils';
 
 import { SkillListByOrganizationPanel } from './skill-list-by-organization-panel';
 
 const SkillList = () => {
-  const { showToast } = useToast();
+  const showErrorToast = useErrorToast();
   const { data: session } = useSessionCache();
 
   const searchParams = useSearchParams();
@@ -64,6 +63,9 @@ const SkillList = () => {
     onSuccess: (data) => {
       setSkillMapByOrganizations(data);
     },
+    onError: (error: AxiosError) => {
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
+    },
   });
 
   useCreationDataCommon({
@@ -86,18 +88,16 @@ const SkillList = () => {
         ...organizationList,
       ]);
     },
+    onError: (error: AxiosError) => {
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
+    },
   });
 
   // Get skill map detail
   useSkillMapUserDetail({
     skillId: Number(selectedSkillMapId),
     onError: (error: AxiosError) => {
-      if (error.response?.status === ServerStatusCode.NOT_FOUND) {
-        showToast({
-          variant: 'error',
-          description: ERROR_COMMON_MESSAGE,
-        });
-      }
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
     },
     onSuccess: (data) => {
       setSkillMapEditDetail(data);
