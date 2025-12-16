@@ -142,6 +142,9 @@ const Header = ({ className }: HeaderProps) => {
 
   const isCalendarPage = pathname === pageRouters.CALENDAR_MANAGEMENT.href;
 
+  const showActualDurationPage =
+    process.env.NEXT_PUBLIC_SHOW_ACTUAL_DURATION_PAGE?.toLowerCase() === 'true';
+
   const typeDetail = searchParams.get('type');
   const [dataTaskEdit, setDataTaskEdit] = useState<Task | null>(null);
   const [openConfirmDeleteModal, setOpenConfirmDeleteModal] = useState(false);
@@ -225,8 +228,12 @@ const Header = ({ className }: HeaderProps) => {
 
   const { showToast } = useToast();
   const { authenticatedUser } = useAuthenticatedUser({});
-
   const COMPANY_SETTING_ITEMS = SYSTEM_PERMISSIONS_MENU.filter((menu) => {
+    if (
+      menu.name == pageRouters.ACTUAL_DURATIONS_MANAGEMENT.name
+    ) {
+      return showActualDurationPage;
+    }
     if (menu.requiredPermission === PermissionsSystem.VIEW_ALL) {
       return true;
     }
@@ -465,38 +472,38 @@ const Header = ({ className }: HeaderProps) => {
           showErrorToast(error, ERROR_MESSAGE_OVERLAP_TASK);
         } else showErrorToast(error, ERROR_UPDATE_MESSAGE);
       },
-      onSettled: () => {},
+      onSettled: () => { },
     },
   );
   // Action call api edit task
   const handleConfirmEditTask = (data: TaskFormData) => {
     const tagIds = data.tagIds
       ? data.tagIds
-          .filter((item) => item.value !== '')
-          .map((item) => ({ tagId: item.value }))
+        .filter((item) => item.value !== '')
+        .map((item) => ({ tagId: item.value }))
       : [];
 
     const planList =
       data.plans &&
-      data.plans.filter((item) => item.planStartDate !== null).length > 0
+        data.plans.filter((item) => item.planStartDate !== null).length > 0
         ? data.plans
-            .filter((item) => item.planStartDate !== null)
-            .map((item) => {
-              return {
-                scheduleId: item.scheduleId || null,
-                planStartDate:
-                  item.planStartDate && item.planStartTime
-                    ? addTimeToDate(
-                        item.planStartDate as Date,
-                        item.planStartTime,
-                      )
-                    : null,
-                planEndDate:
-                  item.planEndDate && item.planEndTime
-                    ? addTimeToDate(item.planEndDate as Date, item.planEndTime)
-                    : null,
-              };
-            })
+          .filter((item) => item.planStartDate !== null)
+          .map((item) => {
+            return {
+              scheduleId: item.scheduleId || null,
+              planStartDate:
+                item.planStartDate && item.planStartTime
+                  ? addTimeToDate(
+                    item.planStartDate as Date,
+                    item.planStartTime,
+                  )
+                  : null,
+              planEndDate:
+                item.planEndDate && item.planEndTime
+                  ? addTimeToDate(item.planEndDate as Date, item.planEndTime)
+                  : null,
+            };
+          })
         : null;
     const todoListData =
       data.todoList && data.todoList.filter((item) => item.content !== '');
@@ -1031,7 +1038,7 @@ const Header = ({ className }: HeaderProps) => {
       onError: (error: AxiosError) => {
         showErrorToast(error, ERROR_SAVE_MESSAGE);
       },
-      onSettled: () => {},
+      onSettled: () => { },
     },
   );
 
@@ -1154,47 +1161,47 @@ const Header = ({ className }: HeaderProps) => {
 
                   {companyItems.filter((item) => item.companyMenu == true)
                     .length > 0 && (
-                    <Transition
-                      as={Fragment}
-                      enter="transition ease-out duration-200"
-                      enterFrom="opacity-0 translate-y-1"
-                      enterTo="opacity-100 translate-y-0"
-                      leave="transition ease-in duration-150"
-                      leaveFrom="opacity-100 translate-y-0"
-                      leaveTo="opacity-0 translate-y-1">
-                      <PopoverPanel className="absolute -right-[14px] top-[44px] z-40 w-fit transform">
-                        <div className="overflow-hidden bg-[#5B6770] rounded-lg shadow-common w-[200px] p-[6px]">
-                          <div className="relative flex flex-col gap-1 text-white text-[14px] font-medium">
-                            {companyItems
-                              .filter((item) => item.companyMenu == true)
-                              .map((item) => {
-                                return (
-                                  <div
-                                    key={item.name}
-                                    className={`flex px-4 py-2 hover:bg-[#7D8A94] hover:cursor-pointer rounded-md ${pathname.includes(item.href) && 'bg-[#7D8A94]'}`}
-                                    onClick={() => {
-                                      if (isChatFilesUploading) {
-                                        setPendingPageChange(
+                      <Transition
+                        as={Fragment}
+                        enter="transition ease-out duration-200"
+                        enterFrom="opacity-0 translate-y-1"
+                        enterTo="opacity-100 translate-y-0"
+                        leave="transition ease-in duration-150"
+                        leaveFrom="opacity-100 translate-y-0"
+                        leaveTo="opacity-0 translate-y-1">
+                        <PopoverPanel className="absolute -right-[14px] top-[44px] z-40 w-fit transform">
+                          <div className="overflow-hidden bg-[#5B6770] rounded-lg shadow-common w-[200px] p-[6px]">
+                            <div className="relative flex flex-col gap-1 text-white text-[14px] font-medium">
+                              {companyItems
+                                .filter((item) => item.companyMenu == true)
+                                .map((item) => {
+                                  return (
+                                    <div
+                                      key={item.name}
+                                      className={`flex px-4 py-2 hover:bg-[#7D8A94] hover:cursor-pointer rounded-md ${pathname.includes(item.href) && 'bg-[#7D8A94]'}`}
+                                      onClick={() => {
+                                        if (isChatFilesUploading) {
+                                          setPendingPageChange(
+                                            item.href as string,
+                                          );
+                                          setShowWarningChatUploadingModal(true);
+                                          close();
+                                          return;
+                                        }
+                                        handleNavigateToNewPage(
                                           item.href as string,
                                         );
-                                        setShowWarningChatUploadingModal(true);
                                         close();
-                                        return;
-                                      }
-                                      handleNavigateToNewPage(
-                                        item.href as string,
-                                      );
-                                      close();
-                                    }}>
-                                    <p>{item.name}</p>
-                                  </div>
-                                );
-                              })}
+                                      }}>
+                                      <p>{item.name}</p>
+                                    </div>
+                                  );
+                                })}
+                            </div>
                           </div>
-                        </div>
-                      </PopoverPanel>
-                    </Transition>
-                  )}
+                        </PopoverPanel>
+                      </Transition>
+                    )}
                 </>
               )}
             </Popover>
