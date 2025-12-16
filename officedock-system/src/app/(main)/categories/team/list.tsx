@@ -1,5 +1,6 @@
 'use client';
 import React, { Fragment, useContext, useState } from 'react';
+import { AxiosError } from 'axios';
 
 import Link from 'next/link';
 
@@ -13,6 +14,7 @@ import {
   PermissionsSystem,
   ScreenName,
 } from '@constants/enums';
+import { ERROR_COMMON_MESSAGE } from '@constants/message';
 
 import { hasPermissionInArray } from '@utils';
 
@@ -30,6 +32,7 @@ import HierarchyTable from './table';
 import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 import useOrganizationCategoryHierarchyDetail from '@hooks/useOrganizationCategoryHierarchyDetail';
 import useOrganizationCategoryHierarchyList from '@hooks/useOrganizationCategoryHierarchyList';
+import { useErrorToast } from '@hooks/useErrorToast';
 
 interface HierarchyDetail {
   id: number | string;
@@ -39,6 +42,7 @@ interface HierarchyDetail {
 
 const ListHierarchy = () => {
   const { data: session } = useSessionCache();
+  const showErrorToast = useErrorToast();
 
   const [hierarchyList, setHierarchyList] = useState<HierarchyDetail[]>([]);
   const { setIsLoading } = useContext(LoadingContext);
@@ -74,6 +78,9 @@ const ListHierarchy = () => {
           ...organizationList,
         ]);
       }
+    },
+    onError: (error: AxiosError) => {
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
     },
   });
 
@@ -234,6 +241,9 @@ const ListHierarchy = () => {
         },
       ]);
     },
+    onError: (error: AxiosError) => {
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
+    },
     onSettled: () => {
       setIsLoading(false);
     },
@@ -250,6 +260,9 @@ const ListHierarchy = () => {
       }));
 
       setHierarchyList(receivedHierarchyList);
+    },
+    onError: (error: AxiosError) => {
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
     },
     onSettled: () => setIsLoading(false),
   });

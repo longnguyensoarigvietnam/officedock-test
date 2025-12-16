@@ -1,12 +1,13 @@
 'use client';
 import React, { Fragment, useContext, useState } from 'react';
-
+import { AxiosError } from 'axios';
 import Link from 'next/link';
 
 import Button from '@components/common/Button';
 
 import { pageRouters } from '@constants/routers';
 import { AddCategoryHierarchyType, PermissionsSystem } from '@constants/enums';
+import { ERROR_COMMON_MESSAGE } from '@constants/message';
 
 import { CalendarCategoryRow } from '@interfaces/hierarchy';
 
@@ -16,6 +17,7 @@ import { useSessionCache } from '@providers/SessionCacheProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 
 import useCalendarCategoryHierarchyDetail from '@hooks/useCalendarCategoryDetail';
+import { useErrorToast } from '@hooks/useErrorToast';
 
 import HierarchyTable from './table';
 
@@ -28,6 +30,7 @@ interface HierarchyDetail {
 const ListHierarchy = () => {
   const { data: session } = useSessionCache();
   const { setIsLoading } = useContext(LoadingContext);
+  const showErrorToast = useErrorToast();
 
   const [hierarchyDetail, setHierarchyDetail] =
     useState<HierarchyDetail | null>(null);
@@ -110,7 +113,9 @@ const ListHierarchy = () => {
         statisticCategories: finalList,
       });
     },
-
+    onError: (error: AxiosError) => {
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
+    },
     onSettled: () => setIsLoading(false),
   });
 

@@ -1,19 +1,19 @@
 'use client';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { signOut } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { AxiosError } from 'axios';
 
-import { ResponseError } from '@interfaces/response';
 import { BasePagination } from '@interfaces/common';
 import { HistoryPointDetail } from '@interfaces/point';
 
-import { apiRouters, pageRouters } from '@constants/routers';
-import { ServerStatusCode } from '@constants/enums';
+import { apiRouters } from '@constants/routers';
 import { PAGINATION_PAGE_SIZE_MEDIUM } from '@constants';
+import { ERROR_COMMON_MESSAGE } from '@constants/message';
 
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import api from '@base/api';
+
+import { useErrorToast } from './useErrorToast';
 
 interface PaginationProps {
   page?: number;
@@ -32,7 +32,7 @@ const usePointHistoryList = ({
 }: UsePointHistoryListHooksProps) => {
   const { data: session } = useSessionCache();
   const token = session?.accessToken;
-  const router = useRouter();
+  const showErrorToast = useErrorToast();
 
   // Handle call API get point history list
   const fetchPointHistory = async ({
@@ -89,13 +89,8 @@ const usePointHistoryList = ({
         onSuccess?.(lastPage);
       }
     },
-    onError: ({ response }: ResponseError<any>) => {
-      if (response?.status === ServerStatusCode.UNAUTHORIZED) {
-        if (session) {
-          signOut();
-          router.push(pageRouters.LOGIN.href);
-        }
-      }
+    onError: (error: AxiosError) => {
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
     },
   });
   return {

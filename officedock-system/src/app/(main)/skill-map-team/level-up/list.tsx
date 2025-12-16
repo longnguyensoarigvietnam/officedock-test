@@ -57,6 +57,9 @@ const LevelUpList = () => {
     onSuccess: (data) => {
       setSubmitLevelUpByOrganization(data);
     },
+    onError: (error: AxiosError) => {
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
+    },
   });
 
   useSubmitLevelDetail({
@@ -64,6 +67,9 @@ const LevelUpList = () => {
     onSuccess: (data) => {
       setSubmitLevelUpDetail(data);
       setOpenLevelUpCensoringPopup(true);
+    },
+    onError: (error: AxiosError) => {
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
     },
   });
 

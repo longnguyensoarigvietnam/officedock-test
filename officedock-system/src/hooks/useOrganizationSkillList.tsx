@@ -2,16 +2,14 @@
 
 import { useContext } from 'react';
 import { useQuery } from 'react-query';
-import { signOut } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { AxiosError } from 'axios';
 
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
-import { apiRouters, pageRouters } from '@constants/routers';
-import { ScreenName, ServerStatusCode } from '@constants/enums';
+import { apiRouters } from '@constants/routers';
+import { ScreenName } from '@constants/enums';
 
-import { ResponseError } from '@interfaces/response';
 import { OrganizationSkill, SkillMapSkill } from '@interfaces/skills';
 
 import api from '@base/api';
@@ -27,14 +25,15 @@ interface FilterProps {
 const useOrganizationSkillList = ({
   filter,
   showLoadingIndicator = false,
-  onSuccess
+  onSuccess,
+  onError,
 }: {
   filter?: FilterProps;
   showLoadingIndicator?: boolean;
-  onSuccess?: (data: OrganizationSkill[] | SkillMapSkill[]) => void
+  onSuccess?: (data: OrganizationSkill[] | SkillMapSkill[]) => void;
+  onError?: (error: AxiosError) => void;
 }) => {
   const { data: session } = useSessionCache();
-  const router = useRouter();
   const token = session?.accessToken;
 
   const { setIsLoading } = useContext(LoadingContext);
@@ -89,16 +88,11 @@ const useOrganizationSkillList = ({
     enabled: !!token,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
-    onError: ({ response }: ResponseError<any>) => {
-      if (response?.status === ServerStatusCode.UNAUTHORIZED) {
-        if (session) {
-          signOut();
-          router.push(pageRouters.LOGIN.href);
-        }
-      }
+    onError: (error: AxiosError) => {
+      onError && onError(error);
     },
     onSuccess: (data: OrganizationSkill[] | SkillMapSkill[]) => {
-      onSuccess && onSuccess(data)
+      onSuccess && onSuccess(data);
     },
     onSettled: () => {
       showLoadingIndicator && setIsLoading(false);

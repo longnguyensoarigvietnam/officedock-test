@@ -31,6 +31,7 @@ import { AddCategoryHierarchyType, PermissionsSystem } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
 import { ALL_TEAMS_OPTION } from '@constants';
 import {
+  ERROR_COMMON_MESSAGE,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
@@ -97,7 +98,7 @@ const EditHierarchyForm = () => {
             value: category.uuid,
             label: category.name,
             teamId: category.team,
-            deletedAt: category.deletedAt
+            deletedAt: category.deletedAt,
           };
         });
         setCategoryList([...options]);
@@ -155,6 +156,9 @@ const EditHierarchyForm = () => {
           ...organizationList,
         ]);
       }
+    },
+    onError: (error: AxiosError) => {
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
     },
   });
 
@@ -372,6 +376,9 @@ const EditHierarchyForm = () => {
           statisticCategories: mapStatisticCategories(data.statisticCategories),
         },
       ]);
+    },
+    onError: (error: AxiosError) => {
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
     },
     onSettled: () => {
       setIsLoading(false);

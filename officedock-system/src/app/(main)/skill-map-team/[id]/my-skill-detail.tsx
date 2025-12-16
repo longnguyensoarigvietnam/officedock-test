@@ -6,11 +6,12 @@ import { SkillMapProgressBar } from '@components/common/ProgressBar/SkillMapProg
 import Button from '@components/common/Button';
 import ActionsSkillMapDetailModal from '@components/modals/ActionsSkillMapDetailModal';
 
-import { ServerStatusCode, SkillMapTypeInterval } from '@constants/enums';
+import { SkillMapTypeInterval } from '@constants/enums';
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
 
-import { useToast } from '@providers/ToastProvider';
 import useSkillMapUserDetail from '@hooks/useSkillMapUserDetail';
+import { useErrorToast } from '@hooks/useErrorToast';
+
 import {
   OrganizationSkillMapDetail,
   SkillMapByOrganization,
@@ -28,7 +29,7 @@ type Props = {
 };
 
 const MySkillDetailByUser = ({ detailSkillData }: Props) => {
-  const { showToast } = useToast();
+  const showErrorToast = useErrorToast();
 
   // Skill map actions
   const [openSkillMapDetailModal, setOpenSkillMapDetailModal] = useState(false);
@@ -41,12 +42,7 @@ const MySkillDetailByUser = ({ detailSkillData }: Props) => {
   useSkillMapUserDetail({
     skillId: Number(selectedSkillMapId),
     onError: (error: AxiosError) => {
-      if (error.response?.status === ServerStatusCode.NOT_FOUND) {
-        showToast({
-          variant: 'error',
-          description: ERROR_COMMON_MESSAGE,
-        });
-      }
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
     },
     onSuccess: (data) => {
       setSkillMapEditDetail(data);

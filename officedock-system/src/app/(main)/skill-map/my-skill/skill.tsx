@@ -11,8 +11,9 @@ import { SkillMapBanner } from '@components/skillMap/SkillMapBanner';
 
 import useSkillMapUserDetail from '@hooks/useSkillMapUserDetail';
 import useSkillMapInfo from '@hooks/useSkillMapList';
+import { useErrorToast } from '@hooks/useErrorToast';
 
-import { ServerStatusCode, SkillMapTypeInterval } from '@constants/enums';
+import { SkillMapTypeInterval } from '@constants/enums';
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
 import { pageRouters } from '@constants/routers';
 
@@ -28,10 +29,8 @@ import {
   timeStringToHours,
 } from '@utils';
 
-import { useToast } from '@providers/ToastProvider';
-
 const MySkill = () => {
-  const { showToast } = useToast();
+  const showErrorToast = useErrorToast();
   const searchParams = useSearchParams();
   const tabId = searchParams.get('tabId');
 
@@ -48,17 +47,15 @@ const MySkill = () => {
     onSuccess: (data) => {
       setMySkillData(data.organizations);
     },
+    onError: (error: AxiosError) => {
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
+    },
   });
 
   useSkillMapUserDetail({
     skillId: Number(selectedSkillMapId),
     onError: (error: AxiosError) => {
-      if (error.response?.status === ServerStatusCode.NOT_FOUND) {
-        showToast({
-          variant: 'error',
-          description: ERROR_COMMON_MESSAGE,
-        });
-      }
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
     },
     onSuccess: (data) => {
       setSkillMapEditDetail(data);
@@ -186,8 +183,9 @@ const MySkill = () => {
                               </div>
                             </div>
                             <div
-                              className={`min-w-[290px] ${item.isDeleted && 'invisible'
-                                } ${lastValidSkill.skill.deletedAt && 'invisible'} text-xs max-w-[290px] flex-shrink-0 break-words border-r px-5 border-[#D2DBE1]`}>
+                              className={`min-w-[290px] ${
+                                item.isDeleted && 'invisible'
+                              } ${lastValidSkill.skill.deletedAt && 'invisible'} text-xs max-w-[290px] flex-shrink-0 break-words border-r px-5 border-[#D2DBE1]`}>
                               <p>対応タスクを始めてから</p>
                               <div className="flex gap-[2px] items-end mt-[4px]">
                                 {lastValidSkill.level.measureCount !== null && (
@@ -217,20 +215,20 @@ const MySkill = () => {
                                 )}
                                 {lastValidSkill.level.lookBackInterval !==
                                   null && (
-                                    <>
-                                      <p className="text-[18px] text-primary">
-                                        {lastValidSkill.level.lookBackInterval}
-                                      </p>
-                                      <p className="relative top-[2px] text-xs">
-                                        {
-                                          SkillMapTypeInterval[
+                                  <>
+                                    <p className="text-[18px] text-primary">
+                                      {lastValidSkill.level.lookBackInterval}
+                                    </p>
+                                    <p className="relative top-[2px] text-xs">
+                                      {
+                                        SkillMapTypeInterval[
                                           lastValidSkill.level
                                             .lookBackType as keyof typeof SkillMapTypeInterval
-                                          ]
-                                        }
-                                      </p>
-                                    </>
-                                  )}
+                                        ]
+                                      }
+                                    </p>
+                                  </>
+                                )}
                               </div>
                               <div
                                 className={`w-full mt-[10px] ${item.isDeleted && 'invisible'}`}>

@@ -27,6 +27,7 @@ import {
   ERROR_COMMON_MESSAGE,
   ERROR_CREATE_MESSAGE,
   ERROR_HIDDEN_MESSAGE,
+  ERROR_NOT_FOUND_SKILL_MAP,
   ERROR_UPDATE_MESSAGE,
   PLEASE_FILL_IN_STEP_2,
   SUCCESS_CREATE_MESSAGE,
@@ -36,6 +37,7 @@ import {
 import {
   ActionsModal,
   PermissionsSystem,
+  ScreenName,
   ServerStatusCode,
   SkillMapStep,
 } from '@constants/enums';
@@ -145,8 +147,10 @@ const ListSkillsMap = () => {
       if (error.response?.status === ServerStatusCode.NOT_FOUND) {
         showToast({
           variant: 'error',
-          description: ERROR_COMMON_MESSAGE,
+          description: ERROR_NOT_FOUND_SKILL_MAP,
         });
+      } else {
+        showErrorToast(error, ERROR_COMMON_MESSAGE);
       }
     },
     onSuccess: (data) => {
@@ -166,11 +170,11 @@ const ListSkillsMap = () => {
   // Get organization options for pulldown
   useCreationDataCommon({
     options: {
-      get_all_organizations: true,
+      get_organizations_of_user_by_screen: ScreenName.SKILL_MAP,
     },
     onSuccess: (data) => {
       const organizationList =
-        data.allOrganizations?.map((org) => {
+        data.organizations?.map((org) => {
           return {
             value: Number(org.id),
             label: org.name,

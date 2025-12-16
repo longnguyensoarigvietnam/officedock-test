@@ -3,19 +3,24 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { AxiosError } from 'axios';
 
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import Button from '@components/common/Button';
 
 import useMemberOrganizationList from '@hooks/userMemberOrganizationList';
+import { useErrorToast } from '@hooks/useErrorToast';
 
 import { pageRouters } from '@constants/routers';
 import { ScreenName } from '@constants/enums';
+import { ERROR_COMMON_MESSAGE } from '@constants/message';
 
 const MemberList = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tabId = searchParams.get('tabId');
+
+  const showErrorToast = useErrorToast();
 
   const [organizationList, setOrganizationList] = useState<
     {
@@ -44,6 +49,9 @@ const MemberList = () => {
           };
         });
       });
+    },
+    onError: (error: AxiosError) => {
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
     },
   });
 

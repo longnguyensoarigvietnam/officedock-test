@@ -23,6 +23,7 @@ import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 import { ScreenName } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
 import {
+  ERROR_COMMON_MESSAGE,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
@@ -42,7 +43,7 @@ const EditSkillMapByMemberBoard = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const params = new URLSearchParams(searchParams);
-  const orgIdParam = searchParams.get('orgId')
+  const orgIdParam = searchParams.get('orgId');
 
   const [dataSkillMapsByMembers, setDataSkillMapsByMembers] = useState<
     SkillMapByMembers[]
@@ -72,34 +73,43 @@ const EditSkillMapByMemberBoard = () => {
   // Fetch skill map by members
   useSkillMapByMembers({
     filter: {
-      organizationId: Number(selectedOrganizationOption.value) || Number(orgIdParam),
+      organizationId:
+        Number(selectedOrganizationOption.value) || Number(orgIdParam),
       has_include_deleted_user: 'false',
       has_include_deleted_skill: 'false',
-    }, onSuccess: (data) => {
-      setDataSkillMapsByMembers(data)
-    }
+    },
+    onSuccess: (data) => {
+      setDataSkillMapsByMembers(data);
+    },
+    onError: (error: AxiosError<any>) => {
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
+    },
   });
 
   // Fetch organization skills
   useOrganizationSkillList({
     filter: {
-      organizationId: Number(selectedOrganizationOption.value) || Number(orgIdParam),
+      organizationId:
+        Number(selectedOrganizationOption.value) || Number(orgIdParam),
       screen: ScreenName.SKILL_MAP,
       is_deleted: 'false',
     },
     onSuccess: (data) => {
       setDataSkillMapList(data as SkillMapSkill[]);
-    }
+    },
+    onError: (error: AxiosError<any>) => {
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
+    },
   });
 
   // Get organization options for pulldown
   useCreationDataCommon({
     options: {
-      get_all_organizations: true,
+      get_organizations_of_user_by_screen: ScreenName.SKILL_MAP,
     },
     onSuccess: (data) => {
       const organizationList =
-        data.allOrganizations?.map((org) => {
+        data.organizations?.map((org) => {
           return {
             value: Number(org.id),
             label: org.name,
@@ -114,13 +124,17 @@ const EditSkillMapByMemberBoard = () => {
       ]);
       if (orgIdParam) {
         const orgId = Number(orgIdParam);
-        if (Number.isNaN(orgId)) router.push(pageRouters.SKILL_MAPS_MEMBERS_MANAGEMENT.href)
-        const selectedOrg = organizationList.find((org) => org.value == orgId)
+        if (Number.isNaN(orgId))
+          router.push(pageRouters.SKILL_MAPS_MEMBERS_MANAGEMENT.href);
+        const selectedOrg = organizationList.find((org) => org.value == orgId);
         setSelectedOrganizationOption({
           label: String(selectedOrg?.label),
-          value: String(selectedOrg?.value)
-        })
+          value: String(selectedOrg?.value),
+        });
       }
+    },
+    onError: (error: AxiosError<any>) => {
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
     },
   });
 
@@ -156,11 +170,7 @@ const EditSkillMapByMemberBoard = () => {
     },
   );
 
-  const handleSetParam = ({
-    id,
-  }: {
-    id?: string | null;
-  }) => {
+  const handleSetParam = ({ id }: { id?: string | null }) => {
     if (id) {
       params.set('orgId', id);
     }
@@ -205,9 +215,9 @@ const EditSkillMapByMemberBoard = () => {
             )}
             onChange={(e) => {
               if (e.value) {
-                handleSetParam({ id: e.value as string })
+                handleSetParam({ id: e.value as string });
               } else {
-                handleRemoveParam()
+                handleRemoveParam();
               }
               setSelectedOrganizationOption({
                 label: e.label,

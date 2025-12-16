@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { AxiosError } from 'axios';
 
 import { StepInfoTooltip } from '@components/tooltip/StepInfoTooltip';
 import ImageRound from '@components/common/ImageRound';
@@ -16,7 +17,9 @@ import {
 import { getLastChar } from '@utils';
 
 import { SKILL_MAP_LEVEL_COUNT } from '@constants';
+import { ERROR_COMMON_MESSAGE } from '@constants/message';
 
+import { useErrorToast } from '@hooks/useErrorToast';
 import useSkillMapComment from '@hooks/useSkillMapComment';
 
 interface SkillMapDetailByUserProps {
@@ -26,6 +29,7 @@ interface SkillMapDetailByUserProps {
 export const SkillMapDetailByUser = ({
   detailSkillData,
 }: SkillMapDetailByUserProps) => {
+  const showErrorToast = useErrorToast();
   // View comment
   const [openSkillMapCommentModal, setOpenSkillMapCommentModal] =
     useState<boolean>(false);
@@ -40,6 +44,9 @@ export const SkillMapDetailByUser = ({
     onSuccess: (data) => {
       setSkillMapCommentList(data);
       setOpenSkillMapCommentModal(true);
+    },
+    onError: (error: AxiosError) => {
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
     },
   });
 

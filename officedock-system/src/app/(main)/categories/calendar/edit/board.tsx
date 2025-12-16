@@ -33,6 +33,7 @@ import {
 import { AddCategoryHierarchyType, PermissionsSystem } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
 import {
+  ERROR_COMMON_MESSAGE,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
@@ -86,11 +87,14 @@ const EditHierarchyBoard = () => {
             value: category.uuid,
             label: category.name,
             teamId: category.team,
-            deletedAt: category.deletedAt
+            deletedAt: category.deletedAt,
           };
         });
         setCategoryList([...options]);
       }
+    },
+    onError: (error: AxiosError) => {
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
     },
   });
 
@@ -211,6 +215,9 @@ const EditHierarchyBoard = () => {
           calendarCategoryHierarchy.statisticCategories,
         ),
       });
+    },
+    onError: (error: AxiosError) => {
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
     },
     onSettled: () => setIsLoading(false),
   });
