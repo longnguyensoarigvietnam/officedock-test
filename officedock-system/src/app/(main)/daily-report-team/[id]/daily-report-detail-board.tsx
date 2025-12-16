@@ -60,6 +60,7 @@ import { DATE_TEXT_FORMAT, NO_SETTING } from '@constants';
 
 import { apiRouters, pageRouters } from '@constants/routers';
 import {
+  ERROR_COMMON_MESSAGE,
   ERROR_DELETE_TASK_RUNNING,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
@@ -628,7 +629,9 @@ const DailyReportDetailBoard = () => {
           return { ...prev, isConfirmed: request.isConfirmed };
         });
       },
-      onError: () => {},
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_COMMON_MESSAGE);
+      },
       onSettled: () => {},
     },
   );

@@ -1,4 +1,5 @@
 'use client';
+import { AxiosError } from 'axios';
 import { useMutation } from 'react-query';
 import { Droppable } from '@hello-pangea/dnd';
 import {
@@ -10,7 +11,6 @@ import {
   useState,
 } from 'react';
 import { useInView } from 'react-intersection-observer';
-import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import Item from './Item';
 import ItemRoutine from './ItemRoutine';
@@ -25,6 +25,7 @@ import {
 } from '@constants/enums';
 import { apiRouters } from '@constants/routers';
 import { PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
+import { ERROR_COMMON_MESSAGE } from '@constants/message';
 
 import {
   Columns,
@@ -36,7 +37,9 @@ import { CreationDataCommon, OptionDropdownType } from '@interfaces/common';
 
 import api from '@base/api';
 import { hasPermissionInArray } from '@utils';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 import { TaskContext } from '@providers/TaskProvider';
+import { useErrorToast } from '@hooks/useErrorToast';
 interface ColumnProps {
   columnId: string;
   title: string;
@@ -98,6 +101,8 @@ const Column = ({
   handleViewArchive,
 }: ColumnProps) => {
   const { data: session } = useSessionCache();
+  const showErrorToast = useErrorToast();
+
   const isMyRoutine = columnId === `${StatusValueTask.MY_ROUTINE}`;
 
   const {
@@ -218,7 +223,9 @@ const Column = ({
           );
         }
       },
-      onError: () => {},
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_COMMON_MESSAGE);
+      },
       onSettled: () => {
         setInitialLoad(false);
       },

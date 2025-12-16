@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useMutation } from 'react-query';
+import { AxiosError } from 'axios';
 
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import Button from '@components/common/Button';
@@ -7,12 +8,12 @@ import Modal from '@components/common/Modal';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
 
 import useSurveyDetail from '@hooks/useSurveyDetail';
+import { useErrorToast } from '@hooks/useErrorToast';
 import { useUpdateSurveyDetailCache } from '@hooks/CacheQuery/useUpdateSurveyDetailCache';
 
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
 import { apiRouters } from '@constants/routers';
 
-import { useToast } from '@providers/ToastProvider';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { formatShowDateJapanese } from '@utils/date';
@@ -34,8 +35,8 @@ const ActionAnswerSurveyModal = ({
   handleAnswerSurvey,
   onClose,
 }: Props) => {
-  const { showToast } = useToast();
   const { data: session } = useSessionCache();
+  const showErrorToast = useErrorToast();
 
   const [isMyCreate, setMyCreate] = useState(isMySurvey);
 
@@ -68,11 +69,8 @@ const ActionAnswerSurveyModal = ({
           updateSurveyQuestion(detailId, id);
         }
       },
-      onError: () => {
-        showToast({
-          variant: 'error',
-          description: ERROR_COMMON_MESSAGE,
-        });
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_COMMON_MESSAGE);
         onClose();
       },
     },

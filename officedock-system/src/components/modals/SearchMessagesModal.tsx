@@ -9,11 +9,17 @@ import {
   useState,
 } from 'react';
 import Image from 'next/image';
+import { useMutation } from 'react-query';
+import { AxiosError } from 'axios';
 
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
+import { MessageHoverAllRoomsSearch } from '@components/chat/MessageHoverAllRoomsSearch';
+import { MessageDetailQuote } from '@components/chat/quote/MessageDetailQuote';
+import MessageDetailQuoteText from '@components/chat/quote/MessageDetailQuoteText';
+import RenderFiles from '@components/chat/renderFiles/RenderFiles';
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
 import InputSearch from '@components/common/InputSearch';
@@ -42,7 +48,7 @@ import {
   TaskRepetitiveValue,
 } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
-import { DELETED_EVENT_TITLE } from '@constants/message';
+import { DELETED_EVENT_TITLE, ERROR_COMMON_MESSAGE } from '@constants/message';
 
 import {
   ChatDashboardMember,
@@ -69,12 +75,8 @@ import {
   renderEventDatetimeInChat,
   renderScheduleChangeInCalendarRoom,
 } from '@utils';
-import { MessageHoverAllRoomsSearch } from '@components/chat/MessageHoverAllRoomsSearch';
-import RenderFiles from '@components/chat/renderFiles/RenderFiles';
-import { useMutation } from 'react-query';
 import api from '@base/api';
-import { MessageDetailQuote } from '@components/chat/quote/MessageDetailQuote';
-import MessageDetailQuoteText from '@components/chat/quote/MessageDetailQuoteText';
+import { useErrorToast } from '@hooks/useErrorToast';
 
 interface SearchMessagesModalProps {
   open: boolean;
@@ -141,6 +143,8 @@ export const SearchMessagesModal = ({
 }: SearchMessagesModalProps) => {
   const { data: session } = useSessionCache();
   const router = useRouter();
+  const showErrorToast = useErrorToast();
+
   const { isLoading } = useContext(LoadingContext);
 
   const resultsContainerRef = useRef<HTMLDivElement | null>(null);
@@ -597,7 +601,9 @@ export const SearchMessagesModal = ({
           handleDownloadFile(data?.originalFile || '', data?.fileName || '');
         }
       },
-      onError: () => {},
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_COMMON_MESSAGE);
+      },
       onSettled: () => {},
     },
   );

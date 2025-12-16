@@ -22,6 +22,7 @@ import {
 import { DataStatusChangeInline, Task, TaskFormData } from '@interfaces/task';
 import { CreationDataCommon, OptionDropdownType } from '@interfaces/common';
 
+import { useErrorToast } from '@hooks/useErrorToast';
 import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
 
 import { TaskContext } from '@providers/TaskProvider';
@@ -32,6 +33,8 @@ import {
   formatShowDeadlineTask,
 } from '@utils/date';
 import { hasPermissionInArray } from '@utils';
+import { AxiosError } from 'axios';
+import { ERROR_COMMON_MESSAGE } from '@constants/message';
 
 interface ItemProps {
   id: string;
@@ -109,6 +112,7 @@ const Item = ({
   });
 
   const { data: session } = useSessionCache();
+  const showErrorToast = useErrorToast();
 
   const searchParams = useSearchParams();
 
@@ -231,6 +235,9 @@ const Item = ({
           queryClient.refetchQueries(['getDataTaskHeaderList']);
         }
       }
+    },
+    onError: (error: AxiosError<any>) => {
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
     },
   });
   // Action call API check start task

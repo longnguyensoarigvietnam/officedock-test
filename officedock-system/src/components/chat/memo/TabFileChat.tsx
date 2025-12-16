@@ -21,6 +21,9 @@ import { ChatMessageResponse, DataChatFileMemo } from '@interfaces/chat';
 import api from '@base/api';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
+import { useErrorToast } from '@hooks/useErrorToast';
+import { AxiosError } from 'axios';
+import { ERROR_DELETE_MESSAGE } from '@constants/message';
 
 type Props = {
   initialLoad: boolean;
@@ -40,6 +43,7 @@ const TabFileChat = ({
   setDataFileAddList,
 }: Props) => {
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const showErrorToast = useErrorToast();
 
   const [page, setPage] = useState(1);
   const [hasNext, setHasNext] = useState(false);
@@ -111,7 +115,9 @@ const TabFileChat = ({
     handleDeleteFileChat,
     {
       onSuccess: async () => {},
-      onError: () => {},
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_DELETE_MESSAGE);
+      },
       onSettled: () => {
         setOpenConfirmDeleteModal(false);
       },

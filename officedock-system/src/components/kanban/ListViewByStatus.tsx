@@ -1,4 +1,5 @@
 'use client';
+import { AxiosError } from 'axios';
 import { useMutation } from 'react-query';
 import {
   Dispatch,
@@ -28,8 +29,10 @@ import { TaskContext } from '@providers/TaskProvider';
 import { apiRouters } from '@constants/routers';
 import { COLOR_BY_TASK_STATUS, PAGINATION_PAGE_SIZE_KANBAN } from '@constants';
 import { StatusValueTask } from '@constants/enums';
+import { ERROR_COMMON_MESSAGE } from '@constants/message';
 
 import api from '@base/api';
+import { useErrorToast } from '@hooks/useErrorToast';
 
 interface ListViewByStatusProps {
   listItems: Task[];
@@ -80,6 +83,8 @@ const ListViewByStatus = ({
   saveExtendColumn,
   handleViewArchive,
 }: ListViewByStatusProps) => {
+  const showErrorToast = useErrorToast();
+
   const [hasMore, setHasMore] = useState(true);
   const [lastIndex, setLastIndex] = useState<number | null>(null);
   const [initialLoad, setInitialLoad] = useState<boolean>(false);
@@ -229,7 +234,9 @@ const ListViewByStatus = ({
           );
         }
       },
-      onError: () => {},
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_COMMON_MESSAGE);
+      },
       onSettled: () => {
         setInitialLoad(false);
       },

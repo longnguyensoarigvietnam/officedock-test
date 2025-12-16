@@ -1,6 +1,7 @@
 'use client';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { AxiosError } from 'axios';
 import { useMutation } from 'react-query';
 
 import ImageRound from '@components/common/ImageRound';
@@ -25,6 +26,7 @@ import {
 import { NO_DATA_AVAILABLE, PAGE_SIZE_OPTIONS } from '@constants';
 
 import useEventLocationList from '@hooks/useEventLocationList';
+import { useErrorToast } from '@hooks/useErrorToast';
 import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
 import { useToast } from '@providers/ToastProvider';
@@ -36,6 +38,7 @@ import api from '@base/api';
 const ListLocation = () => {
   const { showToast } = useToast();
   const { setIsLoading } = useContext(LoadingContext);
+  const showErrorToast = useErrorToast();
 
   const [dataLocation, setDataLocation] = useState<LocationEventType[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -107,11 +110,8 @@ const ListLocation = () => {
           description: SUCCESS_CREATE_MESSAGE,
         });
       },
-      onError: () => {
-        showToast({
-          variant: 'error',
-          description: ERROR_CREATE_MESSAGE,
-        });
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_CREATE_MESSAGE);
       },
     },
   );
@@ -133,11 +133,8 @@ const ListLocation = () => {
           description: SUCCESS_UPDATE_MESSAGE,
         });
       },
-      onError: () => {
-        showToast({
-          variant: 'error',
-          description: ERROR_UPDATE_MESSAGE,
-        });
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_UPDATE_MESSAGE);
       },
     },
   );
@@ -174,11 +171,8 @@ const ListLocation = () => {
 
         setSelectedLocationToDelete(null);
       },
-      onError: () => {
-        showToast({
-          variant: 'error',
-          description: ERROR_DELETE_MESSAGE,
-        });
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_DELETE_MESSAGE);
       },
       onSettled: () => {
         setIsCreating(false);
@@ -304,11 +298,8 @@ const ListLocation = () => {
           description: SUCCESS_UPDATE_MESSAGE,
         });
       },
-      onError: () => {
-        showToast({
-          description: ERROR_UPDATE_MESSAGE,
-          variant: 'error',
-        });
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_UPDATE_MESSAGE);
       },
       onSettled: () => {
         setIsLoading(false);

@@ -2,6 +2,7 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useMutation, useQueryClient } from 'react-query';
+import { AxiosError } from 'axios';
 
 import ImageRound from '@components/common/ImageRound';
 import { RenderAccessories } from '@components/custom/UserCustomize';
@@ -9,6 +10,7 @@ import Button from '@components/common/Button';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
 import ConfirmBuyItemUserModal from '@components/modals/ConfirmBuyItemUserModal';
 import ItemPreviewCustomize from '@components/customize/ItemPreviewCustomize';
+import BackToPage from '@components/custom/BackToPage';
 
 import { apiRouters, pageRouters } from '@constants/routers';
 import { TabTypeShopItem } from '@constants/enums';
@@ -17,21 +19,21 @@ import { ERROR_COMMON_MESSAGE } from '@constants/message';
 import useGetListItemCustomize from '@hooks/useGetListItemCustomize';
 import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 import { useUpdateCusTomizeItemCache } from '@hooks/CacheQuery/useUpdateCustomizeItems';
+import { useErrorToast } from '@hooks/useErrorToast';
 
 import { CustomizeItemResponse, ItemUser } from '@interfaces/shop';
 import api from '@base/api';
 import { LoadingContext } from '@providers/LoadingProvider';
-import { useToast } from '@providers/ToastProvider';
-import BackToPage from '@components/custom/BackToPage';
 import { getDefaultThumbByType } from '@utils';
 
 const CustomizeItemPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
+  const showErrorToast = useErrorToast();
+
   const resultsContainerRef = useRef<HTMLDivElement | null>(null);
   const { setIsLoading } = useContext(LoadingContext);
-  const { showToast } = useToast();
   const [totalPearl, setTotalPearl] = useState(0);
 
   const tabParam = searchParams.get('tab') as TabTypeShopItem | null;
@@ -126,11 +128,9 @@ const CustomizeItemPage = () => {
           itemType: dataItemWear?.itemType || '',
         });
       },
-      onError: () => {
-        showToast({
-          variant: 'error',
-          description: ERROR_COMMON_MESSAGE,
-        });
+
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_COMMON_MESSAGE);
       },
       onSettled: () => {
         setTimeout(() => {

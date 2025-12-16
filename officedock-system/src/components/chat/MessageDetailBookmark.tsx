@@ -1,8 +1,9 @@
 import { Dispatch, Fragment, SetStateAction } from 'react';
+import { AxiosError } from 'axios';
 import { format } from 'date-fns';
 import { useSessionCache } from '@providers/SessionCacheProvider';
-
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import ImageRound from '@components/common/ImageRound';
@@ -31,7 +32,7 @@ import {
   TaskRepetitiveValue,
 } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
-import { DELETED_EVENT_TITLE } from '@constants/message';
+import { DELETED_EVENT_TITLE, ERROR_COMMON_MESSAGE } from '@constants/message';
 
 import {
   ChatDashboardMember,
@@ -61,7 +62,7 @@ import api from '@base/api';
 import { useMutation } from 'react-query';
 import MessageDetailQuoteText from './quote/MessageDetailQuoteText';
 import { MessageDetailQuote } from './quote/MessageDetailQuote';
-import Image from 'next/image';
+import { useErrorToast } from '@hooks/useErrorToast';
 
 export type MessageDetailProps = {
   isLastItem: boolean;
@@ -112,6 +113,7 @@ export const MessageDetailBookmark = ({
 }: MessageDetailProps) => {
   const { data: session } = useSessionCache();
   const router = useRouter();
+  const showErrorToast = useErrorToast();
 
   let uuidListMain = [];
   const parser = new DOMParser();
@@ -533,7 +535,9 @@ export const MessageDetailBookmark = ({
           handleDownloadFile(data?.originalFile || '', data?.fileName || '');
         }
       },
-      onError: () => {},
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_COMMON_MESSAGE);
+      },
       onSettled: () => {},
     },
   );

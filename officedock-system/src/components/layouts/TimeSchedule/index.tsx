@@ -583,6 +583,9 @@ const TimeSchedule = memo(
             });
           }
         },
+        onError: (error: AxiosError<any>) => {
+          showErrorToast(error, ERROR_COMMON_MESSAGE);
+        },
         onSettled: () => {},
       },
     );
@@ -3031,6 +3034,8 @@ const TimeSchedule = memo(
               description: ERROR_NOT_FOUND_EVENT,
             });
             handleRemoveEventParam();
+          } else {
+            showErrorToast(error, ERROR_COMMON_MESSAGE);
           }
         },
         onSettled: () => {

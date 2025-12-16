@@ -21,6 +21,7 @@ import {
   Transition,
 } from '@headlessui/react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { AxiosError } from 'axios';
 
 import ImageRound from '@components/common/ImageRound';
 import InputSearch from '@components/common/InputSearch';
@@ -34,6 +35,7 @@ import { AllChatRoomSearchMessagesModal } from '@components/modals/AllChatRoomSe
 import Spinner from '@components/common/Spinner';
 import ErrorUploadFileValidationModal from '@components/modals/ErrorUploadFileValidationModal';
 import {
+  ERROR_COMMON_MESSAGE,
   ERROR_CREATE_MESSAGE,
   SUCCESS_CREATE_MESSAGE,
   UPLOAD_AVATAR_FILE_MAXIMUM_SIZE,
@@ -68,6 +70,7 @@ import { BasePagination } from '@interfaces/common';
 import { Profile } from '@interfaces/user';
 
 import useDebounceText from '@hooks/useDebounceText';
+import { useErrorToast } from '@hooks/useErrorToast';
 
 import api from '@base/api';
 
@@ -130,6 +133,7 @@ const ListChatUsers = ({
   const { data: session } = useSessionCache();
   const { setIsLoading } = useContext(LoadingContext);
   const { showToast } = useToast();
+  const showErrorToast = useErrorToast();
 
   // Load items
   const [hasMoreSearch, setHasMoreSearch] = useState<boolean>(true);
@@ -226,7 +230,9 @@ const ListChatUsers = ({
           setLastPinAt(null);
         }
       },
-      onError: () => {},
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_COMMON_MESSAGE);
+      },
       onSettled: () => {
         setInitialLoad(false);
       },
@@ -575,6 +581,9 @@ const ListChatUsers = ({
     handleGetChatRoomDetail,
     {
       onSuccess: () => {},
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_COMMON_MESSAGE);
+      },
     },
   );
 
@@ -729,11 +738,8 @@ const ListChatUsers = ({
         description: SUCCESS_CREATE_MESSAGE,
       });
     },
-    onError: () => {
-      showToast({
-        variant: 'error',
-        description: ERROR_CREATE_MESSAGE,
-      });
+    onError: (error: AxiosError) => {
+      showErrorToast(error, ERROR_CREATE_MESSAGE);
     },
   });
 
@@ -794,8 +800,10 @@ const ListChatUsers = ({
         }
         isSearchingRoomNameRef.current = false;
       },
-      onError: () => {
+
+      onError: (error: AxiosError) => {
         isSearchingRoomNameRef.current = false;
+        showErrorToast(error, ERROR_COMMON_MESSAGE);
       },
     },
   );
@@ -836,7 +844,9 @@ const ListChatUsers = ({
           setHasMoreSearch(true);
         }
       },
-      onError: () => {},
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_COMMON_MESSAGE);
+      },
       onSettled: () => {
         setInitialLoadSearch(false);
       },
@@ -880,8 +890,10 @@ const ListChatUsers = ({
           isSearchingMessagesRef.current = false;
         }
       },
-      onError: () => {
+
+      onError: (error: AxiosError) => {
         isSearchingMessagesRef.current = false;
+        showErrorToast(error, ERROR_COMMON_MESSAGE);
       },
       onSettled: () => {
         setIsLoading(false);
@@ -921,7 +933,9 @@ const ListChatUsers = ({
             : prev,
         );
       },
-      onError: () => {},
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_COMMON_MESSAGE);
+      },
       onSettled: () => {},
     },
   );

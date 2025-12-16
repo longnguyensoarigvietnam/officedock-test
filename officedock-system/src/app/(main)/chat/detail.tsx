@@ -81,6 +81,8 @@ import {
   ItemStartType,
 } from '@constants/enums';
 import {
+  ERROR_COMMON_MESSAGE,
+  ERROR_DELETE_MESSAGE,
   ERROR_SAVE_MESSAGE,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
@@ -390,7 +392,9 @@ const ChatDetail = ({
     postActionMuteChat,
     {
       onSuccess: async () => {},
-      onError: () => {},
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_COMMON_MESSAGE);
+      },
       onSettled: () => {
         setIsLoading(false);
       },
@@ -636,9 +640,11 @@ const ChatDetail = ({
           isSearchingMessagesRef.current = false;
         }
       },
-      onError: () => {
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_COMMON_MESSAGE);
         isSearchingMessagesRef.current = false;
       },
+
       onSettled: () => {
         setIsLoading(false);
       },
@@ -1397,7 +1403,9 @@ const ChatDetail = ({
   };
   const { mutate: handleDeleteMsgChat } = useMutation(postDeleteMsg, {
     onSuccess: async () => {},
-    onError: () => {},
+    onError: (error: AxiosError) => {
+      showErrorToast(error, ERROR_DELETE_MESSAGE);
+    },
   });
 
   const handleConfirmDeleteMessage = () => {
@@ -1474,8 +1482,10 @@ const ChatDetail = ({
         [variables.uuid]: { progress: 100 },
       }));
     },
-    onError: () => {
+
+    onError: (error: AxiosError) => {
       setUploadFileStatus({});
+      showErrorToast(error, ERROR_UPDATE_MESSAGE);
     },
     onSettled: () => {
       setMessage('');
@@ -1570,6 +1580,9 @@ const ChatDetail = ({
     handleGetChatRoomDetail,
     {
       onSuccess: () => {},
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_COMMON_MESSAGE);
+      },
     },
   );
 
@@ -1822,7 +1835,9 @@ const ChatDetail = ({
             : prev,
         );
       },
-      onError: () => {},
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_COMMON_MESSAGE);
+      },
       onSettled: () => {},
     },
   );
@@ -2336,7 +2351,9 @@ const ChatDetail = ({
         handleRemoveChatRoomParam();
       }
     },
-    onError: () => {},
+    onError: (error: AxiosError) => {
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
+    },
     onSettled: () => {
       setIsLoading(false);
     },

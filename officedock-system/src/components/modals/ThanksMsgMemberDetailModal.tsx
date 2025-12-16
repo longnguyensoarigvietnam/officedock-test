@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useMutation } from 'react-query';
 import { useQueryClient } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import Button from '@components/common/Button';
@@ -10,15 +11,15 @@ import RowSkeleton from '@components/skeleton/RowSkeleton';
 
 import useThankMsgDetailUserList from '@hooks/useThankMsgDetailUserList';
 import { useUpdateThankMsgHistoryCache } from '@hooks/CacheQuery/useUpdateThankMsgHistory';
+import { useErrorToast } from '@hooks/useErrorToast';
 
 import { formatShowDateJapanese } from '@utils/date';
-import { useToast } from '@providers/ToastProvider';
+import { formatWithParagraphTags, hasPermissionInArray } from '@utils';
 import api from '@base/api';
 import { apiRouters } from '@constants/routers';
-import { ERROR_DELETE_MESSAGE } from '@constants/message';
-import { formatWithParagraphTags, hasPermissionInArray } from '@utils';
-import { useSessionCache } from '@providers/SessionCacheProvider';
 import { PermissionsSystem } from '@constants/enums';
+import { ERROR_DELETE_MESSAGE } from '@constants/message';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 
 type Props = {
   open: boolean;
@@ -34,7 +35,8 @@ type Props = {
 
 const ThanksMsgMemberDetailModal = ({ open, userDetailId, onClose }: Props) => {
   const [isSended, setIsSended] = useState(false);
-  const { showToast } = useToast();
+  const showErrorToast = useErrorToast();
+
   const { data: session } = useSessionCache();
 
   const [openDeleteIds, setOpenDeleteIds] = useState<number[]>([]);
@@ -98,11 +100,8 @@ const ThanksMsgMemberDetailModal = ({ open, userDetailId, onClose }: Props) => {
     handleDeleteThankMsg,
     {
       onSuccess: () => {},
-      onError: () => {
-        showToast({
-          variant: 'error',
-          description: ERROR_DELETE_MESSAGE,
-        });
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_DELETE_MESSAGE);
       },
       onSettled: () => {},
     },

@@ -1,31 +1,37 @@
 'use client';
 
 import React, { useContext, useState } from 'react';
+import { AxiosError } from 'axios';
+import { useMutation } from 'react-query';
 
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
 import RadioButtonSingle from '@components/common/RadioButton/CustomRadioButton';
 import ActionAddCreditCardModal from '@components/modals/credit-card/ActionAddCreditCardModal';
-import useGetListPaymentCard from '@hooks/useGetListPaymentCard';
-import { apiRouters } from '@constants/routers';
-import api from '@base/api';
-import { useMutation } from 'react-query';
 import ConfirmDeletePaymentModal from '@components/modals/credit-card/ConfirmDeletePaymentModal';
+
 import { useUpdatePaymentCardCache } from '@hooks/CacheQuery/useUpdatePaymentCardCache';
-import { useToast } from '@providers/ToastProvider';
+import useGetListPaymentCard from '@hooks/useGetListPaymentCard';
+import { useErrorToast } from '@hooks/useErrorToast';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 import {
   ERROR_DELETE_MESSAGE,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
+import { apiRouters } from '@constants/routers';
+
+import api from '@base/api';
 import { LoadingContext } from '@providers/LoadingProvider';
+import { useToast } from '@providers/ToastProvider';
 import { PaymentMethod } from '@interfaces/payment';
-import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 import { formatShowDateJapanese } from '@utils/date';
 
 const PaymentDetail = () => {
   const { showToast } = useToast();
+  const showErrorToast = useErrorToast();
+
   const { setIsLoading } = useContext(LoadingContext);
 
   // STATE
@@ -65,12 +71,10 @@ const PaymentDetail = () => {
           description: SUCCESS_DELETE_MESSAGE,
         });
       },
-      onError: () => {
-        showToast({
-          variant: 'error',
-          description: ERROR_DELETE_MESSAGE,
-        });
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_DELETE_MESSAGE);
       },
+
       onSettled: () => {
         setIsLoading(false);
       },
@@ -97,11 +101,8 @@ const PaymentDetail = () => {
           description: SUCCESS_UPDATE_MESSAGE,
         });
       },
-      onError: () => {
-        showToast({
-          variant: 'error',
-          description: ERROR_UPDATE_MESSAGE,
-        });
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_UPDATE_MESSAGE);
       },
       onSettled: () => {
         setIsLoading(false);

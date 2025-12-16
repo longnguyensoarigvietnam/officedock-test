@@ -3,6 +3,7 @@ import { Dispatch, Fragment, MutableRefObject, SetStateAction } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
+import { AxiosError } from 'axios';
 import { format } from 'date-fns';
 import { Editor } from '@tiptap/react';
 
@@ -39,7 +40,7 @@ import {
   TaskRepetitiveValue,
 } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
-import { DELETED_EVENT_TITLE } from '@constants/message';
+import { DELETED_EVENT_TITLE, ERROR_COMMON_MESSAGE } from '@constants/message';
 
 import {
   ChatDashboardMember,
@@ -67,6 +68,7 @@ import {
 } from '@utils/date';
 
 import api from '@base/api';
+import { useErrorToast } from '@hooks/useErrorToast';
 
 export type MessageDetailProps = {
   isExtendMoreData?: boolean;
@@ -169,6 +171,8 @@ export const MessageDetail = ({
   handleResetChatRoomNotification,
 }: MessageDetailProps) => {
   const { data: session } = useSessionCache();
+  const showErrorToast = useErrorToast();
+
   const router = useRouter();
   let uuidListMain = [];
   const parser = new DOMParser();
@@ -643,7 +647,9 @@ export const MessageDetail = ({
           handleDownloadFile(data?.originalFile || '', data?.fileName || '');
         }
       },
-      onError: () => {},
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_COMMON_MESSAGE);
+      },
       onSettled: () => {},
     },
   );

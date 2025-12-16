@@ -34,6 +34,7 @@ import {
   PAGINATION_PAGE_SIZE_MEDIUM,
 } from '@constants';
 import {
+  ERROR_COMMON_MESSAGE,
   ERROR_DELETE_MESSAGE,
   ERROR_NOT_FOUND_EVENT,
   ERROR_UPDATE_MESSAGE,
@@ -231,7 +232,8 @@ const BookmarkList = ({
           isSearchingMessagesRef.current = false;
         }
       },
-      onError: () => {
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_COMMON_MESSAGE);
         isSearchingMessagesRef.current = false;
       },
       onSettled: () => {
@@ -271,7 +273,9 @@ const BookmarkList = ({
             : prev,
         );
       },
-      onError: () => {},
+      onError: (error: AxiosError) => {
+        showErrorToast(error, ERROR_COMMON_MESSAGE);
+      },
       onSettled: () => {},
     },
   );
@@ -296,6 +300,8 @@ const BookmarkList = ({
             variant: 'error',
             description: ERROR_NOT_FOUND_EVENT,
           });
+        } else {
+          showErrorToast(error, ERROR_COMMON_MESSAGE);
         }
       },
       onSettled: () => {
