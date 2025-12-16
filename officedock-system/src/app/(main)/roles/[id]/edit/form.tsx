@@ -115,7 +115,11 @@ const EditRoleForm = () => {
                 (screen) => screen.value == permission.screenName,
               )?.name || '',
             screenValue: permission.screenName,
-            actions: `${permission.actions}`,
+            actions:
+              permission.screenName == ScreenName.TEAM_DAILY_REPORT &&
+              permission.actions == PermissionType.VIEW_ONLY
+                ? PermissionType.CAN_VIEW
+                : permission.actions,
           });
         });
       setRows(initialRows);
@@ -204,6 +208,9 @@ const EditRoleForm = () => {
     }
     if (permissions['organization']) {
       permissions['organizationHierarchy'] = { ...permissions['organization'] };
+    }
+    if (permissions['teamDailyReport'].actions === PermissionType.CAN_VIEW) {
+      permissions['teamDailyReport'].actions = PermissionType.VIEW_ONLY;
     }
     await editRole({
       name: roleName,

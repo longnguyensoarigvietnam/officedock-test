@@ -477,6 +477,7 @@ export enum PermissionType {
   ALL_TEAMS = '全チーム参加',
   TEAM_AND_SUB = '自チームと下位チームのみ参加',
   ONLY_SELF_CAN_EDIT = '自分のみ編集可',
+  CAN_VIEW = '閲覧可'
 }
 
 export enum CurrentScreen {

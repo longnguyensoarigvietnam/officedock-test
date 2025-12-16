@@ -219,6 +219,10 @@ export const PERMISSION_OPTIONS = [
     value: PermissionType.VIEW_ONLY,
   },
   {
+    label: PermissionType.CAN_VIEW,
+    value: PermissionType.CAN_VIEW,
+  },
+  {
     label: PermissionType.EDITABLE,
     value: PermissionType.EDITABLE,
   },

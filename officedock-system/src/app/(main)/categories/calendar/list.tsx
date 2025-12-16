@@ -4,7 +4,6 @@ import React, { Fragment, useContext, useState } from 'react';
 import Link from 'next/link';
 
 import Button from '@components/common/Button';
-import ImageRound from '@components/common/ImageRound';
 
 import { pageRouters } from '@constants/routers';
 import { AddCategoryHierarchyType, PermissionsSystem } from '@constants/enums';
@@ -152,23 +151,7 @@ const ListHierarchy = () => {
               )}
           </div>
         </div>
-        <div className="flex justify-end gap-[10px]">
-          {session?.user.permissions &&
-            hasPermissionInArray(
-              session?.user.permissions,
-              PermissionsSystem.CATEGORY_HIERARCHY_ADD,
-            ) && (
-              <Button
-                variant="outline"
-                className="w-[120px] h-[34px] !p-0 !text-white !bg-[#77858F] !border-none">
-                ダウンロード{' '}
-                <ImageRound
-                  name="Arrow down icon"
-                  src={'/icons/white-arrow-down.svg'}
-                  className="w-2 h-2 cursor-pointer ml-1"
-                />
-              </Button>
-            )}
+        <div className="flex justify-end">
           {session?.user.permissions &&
             hasPermissionInArray(
               session?.user.permissions,

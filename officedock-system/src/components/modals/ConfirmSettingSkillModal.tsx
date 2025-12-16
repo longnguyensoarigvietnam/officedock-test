@@ -125,70 +125,82 @@ export const ConfirmSettingSkillModal = ({
           <div
             className={`flex gap-3 bg-white items-center rounded-[14px] relative w-full h-full px-[20px] ${stepCompleted && '!pr-[5px]'} py-[12px]`}
             style={{
-              boxShadow: showTwinklingStars && !confirmSettingSkillInfo.isDeleted
-                ? '0px 0px 20px 0px #36ACDE80'
-                : '0px 2px 8px 0px #0000001A',
+              boxShadow:
+                showTwinklingStars &&
+                !confirmSettingSkillInfo.isDeleted &&
+                !confirmSettingSkillInfo.skill.deletedAt
+                  ? '0px 0px 20px 0px #36ACDE80'
+                  : '0px 2px 8px 0px #0000001A',
             }}>
-            {showTwinklingStars && !confirmSettingSkillInfo.isDeleted && (
-              <>
-                <div className="absolute -top-[20px] left-[20px] bg-primary rounded-[20px] w-[140px] h-[28px] flex items-center justify-center">
-                  <p className="text-white text-xs font-bold">
-                    レベルアップ申請可能
-                  </p>
-                </div>
-                <div className="bg-primary absolute clip-diagonal-left h-3 w-3 top-[3px] left-[38px]"></div>
-              </>
-            )}
+            {showTwinklingStars &&
+              !confirmSettingSkillInfo.isDeleted &&
+              !confirmSettingSkillInfo.skill.deletedAt && (
+                <>
+                  <div className="absolute -top-[20px] left-[20px] bg-primary rounded-[20px] w-[140px] h-[28px] flex items-center justify-center">
+                    <p className="text-white text-xs font-bold">
+                      レベルアップ申請可能
+                    </p>
+                  </div>
+                  <div className="bg-primary absolute clip-diagonal-left h-3 w-3 top-[3px] left-[38px]"></div>
+                </>
+              )}
 
-            {showTwinklingStars && !confirmSettingSkillInfo.isDeleted && (
-              <>
-                <TwinklingIcon
-                  className="absolute top-[10px] left-[-3px] w-[5px] h-[5px]"
-                  delay={0}
-                  iconUrl="/icons/blue-star.svg"
-                />
-                <TwinklingIcon
-                  className="absolute top-[3px] left-[5px] w-[5px] h-[5px]"
-                  delay={0.5}
-                  iconUrl="/icons/blue-star.svg"
-                />
-                <TwinklingIcon
-                  className="absolute top-[10px] -right-[3px] w-[5px] h-[5px]"
-                  delay={0.8}
-                  iconUrl="/icons/blue-star.svg"
-                />
-                <TwinklingIcon
-                  className="absolute bottom-[5px] left-[-3px] w-[5px] h-[5px]"
-                  delay={1}
-                  iconUrl="/icons/blue-star.svg"
-                />
-                <TwinklingIcon
-                  className="absolute bottom-[5px] -right-[3px] w-[5px] h-[5px]"
-                  delay={1.2}
-                  iconUrl="/icons/blue-star.svg"
-                />
-                <TwinklingIcon
-                  className="absolute -bottom-[3px] right-[5px] w-[5px] h-[5px]"
-                  delay={1.5}
-                  iconUrl="/icons/blue-star.svg"
-                />
-              </>
-            )}
+            {showTwinklingStars &&
+              !confirmSettingSkillInfo.isDeleted &&
+              !confirmSettingSkillInfo.skill.deletedAt && (
+                <>
+                  <TwinklingIcon
+                    className="absolute top-[10px] left-[-3px] w-[5px] h-[5px]"
+                    delay={0}
+                    iconUrl="/icons/blue-star.svg"
+                  />
+                  <TwinklingIcon
+                    className="absolute top-[3px] left-[5px] w-[5px] h-[5px]"
+                    delay={0.5}
+                    iconUrl="/icons/blue-star.svg"
+                  />
+                  <TwinklingIcon
+                    className="absolute top-[10px] -right-[3px] w-[5px] h-[5px]"
+                    delay={0.8}
+                    iconUrl="/icons/blue-star.svg"
+                  />
+                  <TwinklingIcon
+                    className="absolute bottom-[5px] left-[-3px] w-[5px] h-[5px]"
+                    delay={1}
+                    iconUrl="/icons/blue-star.svg"
+                  />
+                  <TwinklingIcon
+                    className="absolute bottom-[5px] -right-[3px] w-[5px] h-[5px]"
+                    delay={1.2}
+                    iconUrl="/icons/blue-star.svg"
+                  />
+                  <TwinklingIcon
+                    className="absolute -bottom-[3px] right-[5px] w-[5px] h-[5px]"
+                    delay={1.5}
+                    iconUrl="/icons/blue-star.svg"
+                  />
+                </>
+              )}
             <div className="w-[calc(100%_-_49px)]">
               <div className={`flex justify-between items-start mb-[10px]`}>
                 <p
-                  className={`text-[15px] leading-none font-medium max-w-[calc(100%_-_5px)] line-clamp-1 break-all ${stepCompleted ? 'text-[#B3B3B3]' : 'text-black'}`}>
+                  className={`text-[15px] leading-[1.3] font-medium max-w-[calc(100%_-_5px)] line-clamp-1 break-all ${stepCompleted ? 'text-[#B3B3B3]' : 'text-black'}`}>
                   {confirmSettingSkillInfo.skill?.name}
                 </p>
               </div>
-              {confirmSettingSkillInfo.isDeleted ? <></> : <div>
-                <SkillMapProgressBar
-                  value={progressPercent}
-                  strokeColor={strokeColor}
-                  trailColor={stepCompleted ? '#D2DBE1' : '#EBF1F7'}
-                  height={'6px'}
-                />
-              </div>}
+              {confirmSettingSkillInfo.isDeleted ||
+              confirmSettingSkillInfo.skill.deletedAt ? (
+                <></>
+              ) : (
+                <div>
+                  <SkillMapProgressBar
+                    value={progressPercent}
+                    strokeColor={strokeColor}
+                    trailColor={stepCompleted ? '#D2DBE1' : '#EBF1F7'}
+                    height={'6px'}
+                  />
+                </div>
+              )}
             </div>
             <div className="flex justify-end">
               {' '}

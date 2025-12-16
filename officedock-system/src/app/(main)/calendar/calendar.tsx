@@ -745,9 +745,11 @@ const EventCalendar = () => {
 
   // Handle click to more link button
   const handleMoreLinkClick = (clickInfo: any) => {
+    setDefaultCreateStartDate(clickInfo.date);
     const clickInfoEvents = clickInfo.allSegs.map((seg: any) => {
       return seg.event.id;
     });
+
     if (events) {
       const filterEvents: EventCalendarDetail[] = [];
       events
@@ -2413,7 +2415,7 @@ const EventCalendar = () => {
                           searchParams.get('view') == ViewOptions.WEEK ? 7 : 2
                         }
                         className={`${searchParams.get('view') == ViewOptions.WEEK
-                          ? 'pt-[20px] -mt-3'
+                          ? 'pt-[20px] mt-[45px]'
                           : `${authenticatedUser
                             ? 'mt-[60px] pt-[10px]'
                             : 'mt-[-30px] pt-[20px]'
