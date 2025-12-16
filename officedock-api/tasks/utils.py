@@ -284,10 +284,8 @@ def calculate_progress_skill_map(
                 continue
 
             if (
-                (is_minus and task.id not in measure_task_ids)
-                or (not is_minus and is_skill_deleted_or_invalid)
-                or is_task_updated_before_skill
-            ):
+                not is_minus and is_skill_deleted_or_invalid
+            ) or is_task_updated_before_skill:
                 continue
 
             if is_create_duration or is_change_categories:
@@ -298,27 +296,13 @@ def calculate_progress_skill_map(
                     )
                     if is_minus:
                         time_duration = -time_duration
-                        actual_measure_count -= 1
                         for d_id in duration_ids:
-                            if d_id not in measure_task_duration_ids:
-                                continue
-                            measure_task_duration_ids.remove(d_id)
+                            if d_id in measure_task_duration_ids:
+                                measure_task_duration_ids.remove(d_id)
                     else:
-                        if case in {
-                            CalculateSkillMapProcessCases.NOT_CHANGE_COMPLETED_STATUS.value,
-                            CalculateSkillMapProcessCases.CHANGE_COMPLETED_STATUS_TO_ANOTHER.value,
-                        }:
-                            actual_measure_count += -1 if is_minus else 1
-                        elif (
-                            case
-                            == CalculateSkillMapProcessCases.CHANGE_ANOTHER_TO_COMPLETED_STATUS.value
-                            and not is_minus
-                        ):
-                            actual_measure_count += 1
                         for d_id in duration_ids:
                             if d_id not in measure_task_duration_ids:
-                                continue
-                            measure_task_duration_ids.append(d_id)
+                                measure_task_duration_ids.append(d_id)
                 else:
                     time_duration = duration.paused_at - duration.started_at
                     # Add new duration to list ids
@@ -351,7 +335,7 @@ def calculate_progress_skill_map(
                         user,
                         skill_map_level=current_skill_level,
                     )
-            else:
+            if case:
                 # Adjust the measure count based on the update case.
                 if case in {
                     CalculateSkillMapProcessCases.NOT_CHANGE_COMPLETED_STATUS.value,
