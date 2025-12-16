@@ -124,11 +124,16 @@ const CategoryStepRaw = ({
       isAllEmpty
     ) {
       if (rawCategories && rawCategories.length === 0) {
-        appendOuter({
-          LARGE: { label: '', value: '' },
-          MEDIUM: { label: '', value: '' },
-          SMALL: { label: '', value: '' },
-        });
+        if (action !== ActionsModal.EDIT) {
+          setTimeout(() => {
+            removeOuter();
+            appendOuter({
+              LARGE: { label: '', value: '' },
+              MEDIUM: { label: '', value: '' },
+              SMALL: { label: '', value: '' },
+            });
+          }, 0);
+        }
       } else {
         if (action !== ActionsModal.EDIT) {
           setTimeout(() => {
@@ -146,19 +151,6 @@ const CategoryStepRaw = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stepKey]);
-
-  useEffect(() => {
-    if (action === ActionsModal.EDIT) {
-      const rawCategories = getValues(`${stepKey}.rawCategories`) as any[];
-      if (rawCategories && rawCategories.length === 0) {
-        appendOuter({
-          LARGE: { label: '', value: '' },
-          MEDIUM: { label: '', value: '' },
-          SMALL: { label: '', value: '' },
-        });
-      }
-    }
-  }, [action, getValues, stepKey]);
 
   // Validate show error duplicate row
   useEffect(() => {

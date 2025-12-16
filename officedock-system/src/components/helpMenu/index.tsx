@@ -11,8 +11,8 @@ export default function HelpIconPortal() {
             background: 'linear-gradient(180deg, #355AC9 0%, #5282FC 100%)',
           }}
           className="w-[126px] h-[40px]  text-xs text-white font-bold 
-           pl-[10px] pt-2 pb-3 rounded-lg relative">
-          <div className="px-4 relative top-[3px]">
+            pt-2 pb-3 rounded-lg relative">
+          <div className="text-center relative top-[3px] pr-[1px]">
             <div className="h-6 cursor-pointer hover:opacity-65">
               ヘルプページへ
             </div>

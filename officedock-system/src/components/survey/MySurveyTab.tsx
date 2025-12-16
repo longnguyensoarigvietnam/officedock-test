@@ -116,7 +116,7 @@ const MySurveyTab = ({ handleAnswer, handleDelete }: MySurveyTabProp) => {
                           }
                         }}
                         dangerouslySetInnerHTML={{ __html: item.title }}
-                        className={`${item.isAnswered === false && item.status.open && 'text-[#228CDB]'} ${item.status.open && 'cursor-pointer'} break-all text-sm font-medium`}></p>
+                        className={`${item.isAnswered === false && item.status.open && 'text-[#228CDB]'} cursor-pointer break-all text-sm font-medium`}></p>
                       {item.actions.delete && (
                         <ImageRound
                           onClick={() => handleDelete(item.id)}

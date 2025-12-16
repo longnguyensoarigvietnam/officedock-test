@@ -1109,18 +1109,11 @@ const ScheduleTeamBoard = () => {
               ) : (
                 <div className="!w-[8px] !h-[10px]"></div>
               )}
-              <div className="flex items-end font-normal gap-[6px]">
+              <div className="flex items-end font-normal gap-[2px]">
                 <div className="flex items-center">
                   <p className="text-[20px] text-[#5B6770]  font-medium">
-                    {displayMonth}
+                    {displayMonth}月{displayDay}日
                   </p>
-                  <p className="text-[18px] text-[#5B6770]  font-medium">月</p>
-                </div>
-                <div className="flex items-center">
-                  <p className="text-[20px] text-[#5B6770] font-medium">
-                    {displayDay}
-                  </p>
-                  <p className="text-[18px] text-[#5B6770] font-medium">日</p>
                 </div>
                 <p className="text-[14px] mb-[2px] text-[#5B6770] font-medium">
                   (

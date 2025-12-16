@@ -108,9 +108,7 @@ const ListMember = () => {
           avatarUrl={userClick?.avatarUrl || ''}
           organizationId={organizationId}
           type={''}
-          onConfirm={function (): void {
-            throw new Error('Function not implemented.');
-          }}
+          onConfirm={() => {}}
           onClose={() => setIsShowModalDetail(false)}
         />
       )}

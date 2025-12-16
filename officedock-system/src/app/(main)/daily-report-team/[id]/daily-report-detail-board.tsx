@@ -1376,7 +1376,7 @@ const DailyReportDetailBoard = () => {
 
         return (
           <div
-            className="flex gap-1 items-center justify-center"
+            className="flex gap-1 items-center justify-between px-[14px]"
             onClick={() => {
               const newSortState = isAsc
                 ? [{ id: column.id, desc: true }]
@@ -1433,7 +1433,7 @@ const DailyReportDetailBoard = () => {
 
         return (
           <div
-            className={`font-bold text-xs mt-2 relative ${isHasChild ? 'top-[-12px]' : 'top-[-3px]'} min-w-[150px] `}>
+            className={`font-bold text-xs mt-2 relative ${isHasChild ? 'top-[-14px]' : 'top-[-3px]'} min-w-[150px] `}>
             {isRowParent && isAnyRunning ? (
               <p>計測中</p>
             ) : (
@@ -1478,7 +1478,7 @@ const DailyReportDetailBoard = () => {
                           );
                         }
                       }}
-                      className="!w-full !h-[30px] !py-0 bg-[#EBF1F7] text-black !text-sm !pb-[2px] font-normal rounded-[3px] !px-0 text-center !border-none  !opacity-100"
+                      className="!w-full !h-[30px] !py-0 bg-[#EBF1F7] text-black !text-sm !pb-[2px] font-normal !rounded-[6px] !px-0 text-center !border-none  !opacity-100"
                     />
                   </div>
                 </div>
@@ -1526,14 +1526,14 @@ const DailyReportDetailBoard = () => {
                           );
                         }
                       }}
-                      className={`${row.original.isRunning && 'cursor-not-allowed'} !w-full rounded-[3px] !h-[30px] !py-0 bg-[#EBF1F7] text-black !pb-[2px] !text-sm font-normal text-center  !px-0 !border-none  !opacity-100`}
+                      className={`${row.original.isRunning && 'cursor-not-allowed'} !w-full !rounded-[6px] !h-[30px] !py-0 bg-[#EBF1F7] text-black !pb-[2px] !text-sm font-normal text-center  !px-0 !border-none  !opacity-100`}
                     />
                   </div>
                 </div>
               </div>
             )}
             {isParent && (
-              <div className="text-base font-medium text-blacks mt-3 text-end mr-[19px]">
+              <div className="text-base font-medium text-black mt-3 text-end mr-[19px]">
                 {convertToJapaneseTime(getValue() as string)}{' '}
               </div>
             )}
@@ -1549,7 +1549,7 @@ const DailyReportDetailBoard = () => {
 
         return (
           <div
-            className="flex gap-1 items-center justify-center cursor-pointer min-w-[110px]"
+            className="flex gap-1 items-center justify-between px-[14px] cursor-pointer min-w-[110px]"
             onClick={() => {
               const newSortState = isAsc
                 ? [{ id: column.id, desc: true }]
@@ -2452,8 +2452,8 @@ const DailyReportDetailBoard = () => {
                           className={`${row.depth > 0 ? 'bg-[#F8FAFC]' : 'bg-white'} `}>
                           <td
                             rowSpan={2}
-                            className={`${index === 3 || index === 4 ? '' : ''} !pr-0 border-b border-[#D2DBE1] w-[18px] !pl-0`}>
-                            <div className="w-[18px]"></div>
+                            className={`${index === 3 || index === 4 ? '' : ''} !pr-0 border-b border-[#D2DBE1] w-0 !pl-0`}>
+                            <div className="w-0"></div>
                           </td>
                           {row
                             .getVisibleCells()
@@ -2462,7 +2462,7 @@ const DailyReportDetailBoard = () => {
                               <td
                                 key={cell.id}
                                 style={{ width: '20%' }}
-                                className={`!pt-0 !pb-1 !pl-0 ${cellIndex !== 2 ? '!pr-0' : '!pr-[18px]'}`}>
+                                className={`!pt-0 !pb-1 !pl-0 ${cellIndex !== 2 ? '!pr-0' : '!pr-[18px] '}  ${cellIndex == 0 ? '!pl-[18px]' : '!pl-0 '}`}>
                                 {flexRender(
                                   cell.column.columnDef.cell,
                                   cell.getContext(),
@@ -2490,7 +2490,7 @@ const DailyReportDetailBoard = () => {
                           className={`${row.depth > 0 ? 'bg-[#F8FAFC]' : 'bg-white'}  !border-none !pr-0`}>
                           <td
                             colSpan={3}
-                            className={`text-left !pt-0 !pl-0  !pr-[18px]  border-b border-[#D2DBE1]`}>
+                            className={`text-left !pt-0   !px-[18px]  border-b border-[#D2DBE1]`}>
                             <div
                               className={`flex items-center justify-between  ${isHasChild ? 'pb-[19px]' : 'relative top-[-8px]'} ${!isParent && 'relative top-[-4px]'}`}>
                               <div className=" w-full break-all text-base font-medium text-black flex items-start gap-[6px]">

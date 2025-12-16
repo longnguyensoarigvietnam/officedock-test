@@ -405,7 +405,7 @@ const LineChart = ({
           if (
             index === normalizeDataObject.durations.length - 1 &&
             String(normalizeDataObject.durations.at(-1)?.endDate) !=
-            String(normalizeDataObject.durations.at(-1)?.startDate)
+              String(normalizeDataObject.durations.at(-1)?.startDate)
           ) {
             const endDate = normalizeDataObject.durations.at(-1)?.endDate;
             if (endDate) {
@@ -429,7 +429,7 @@ const LineChart = ({
               if (
                 index === normalizeDataObject.durations.length - 1 &&
                 String(normalizeDataObject.durations.at(-1)?.endDate) !=
-                String(normalizeDataObject.durations.at(-1)?.startDate)
+                  String(normalizeDataObject.durations.at(-1)?.startDate)
               ) {
                 existing.data[index + 1] = {
                   x: durationDetail.endDate,
@@ -553,7 +553,7 @@ const LineChart = ({
           if (
             index === normalizeDataObject.durations.length - 1 &&
             String(normalizeDataObject.durations.at(-1)?.endDate) !=
-            String(normalizeDataObject.durations.at(-1)?.startDate)
+              String(normalizeDataObject.durations.at(-1)?.startDate)
           ) {
             const endDate = normalizeDataObject.durations.at(-1)?.endDate;
             if (endDate) {
@@ -580,7 +580,7 @@ const LineChart = ({
               if (
                 index === normalizeDataObject.durations.length - 1 &&
                 String(normalizeDataObject.durations.at(-1)?.endDate) !=
-                String(normalizeDataObject.durations.at(-1)?.startDate)
+                  String(normalizeDataObject.durations.at(-1)?.startDate)
               ) {
                 existing.data[index + 1] = {
                   x: durationDetail.endDate,
@@ -724,11 +724,11 @@ const LineChart = ({
     },
     {
       accessorKey: 'duration',
-      size: 50,
+      size: 43,
       header: () => {
         return (
           <div
-            className="flex gap-6 items-center justify-center"
+            className="flex gap-6 items-center justify-between px-[14px] cursor-pointer"
             onClick={() => {
               if (
                 !durationSortingStatus ||
@@ -767,11 +767,11 @@ const LineChart = ({
     },
     {
       accessorKey: 'percent',
-      size: 30,
+      size: 27,
       header: () => {
         return (
           <div
-            className="flex gap-2 items-center justify-center"
+            className="flex gap-2 items-center justify-between px-[14px] cursor-pointer"
             onClick={() => {
               if (
                 !percentageSortingStatus ||
@@ -855,8 +855,9 @@ const LineChart = ({
         <ImageRound
           src="/icons/extend-calendar.svg"
           name="Extend calendar"
-          className={`!w-[14px] !h-[14px] hover:cursor-pointer ${isExtendData ? '-rotate-90' : 'rotate-90'
-            }`}
+          className={`!w-[14px] !h-[14px] hover:cursor-pointer ${
+            isExtendData ? '-rotate-90' : 'rotate-90'
+          }`}
           onClick={() => {
             setIsExtendData(!isExtendData);
           }}
@@ -1044,8 +1045,8 @@ const LineChart = ({
           </div>
           {(isFetchingStatisticTaskDurationsListTag &&
             selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
-            (isFetchingStatisticAllTeamTaskDurationsList &&
-              selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
+          (isFetchingStatisticAllTeamTaskDurationsList &&
+            selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
             <RowSkeleton
               numberOfRows={1}
               className={`!h-[395px] w-[calc(100%_-_60px)] mx-auto`}
@@ -1060,10 +1061,10 @@ const LineChart = ({
                   labels: lineChartData?.labels.length
                     ? lineChartData?.labels
                     : getStatisticMilestones(
-                      `${formatDateToYMD(startDate)}`,
-                      `${formatDateToYMD(endDate || '')}`,
-                      lineChartViewBy?.value as StatisticViewOptions,
-                    ),
+                        `${formatDateToYMD(startDate)}`,
+                        `${formatDateToYMD(endDate || '')}`,
+                        lineChartViewBy?.value as StatisticViewOptions,
+                      ),
                 }}
                 options={options}
               />
@@ -1077,8 +1078,8 @@ const LineChart = ({
           <div className="px-[30px]">
             {(!isFetchingStatisticTaskDurationsListTag &&
               selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
-              (!isFetchingStatisticAllTeamTaskDurationsList &&
-                selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
+            (!isFetchingStatisticAllTeamTaskDurationsList &&
+              selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
               <div className="flex gap-8 items-center justify-end flex-wrap">
                 {standardLabelsInfo.map((label, index) => {
                   return (
@@ -1099,8 +1100,8 @@ const LineChart = ({
 
             {(isFetchingStatisticTaskDurationsListTag &&
               selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
-              (isFetchingStatisticAllTeamTaskDurationsList &&
-                selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
+            (isFetchingStatisticAllTeamTaskDurationsList &&
+              selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
               <StatisticLineChartTableSkeleton />
             ) : (
               <Table
@@ -1113,7 +1114,7 @@ const LineChart = ({
                       {headerGroup.headers.map((header, index) => (
                         <th
                           key={header.id}
-                          className={`py-2.5 cursor-pointer ${index !== 0 ? 'border-l' : ''}`}
+                          className={`py-2.5 ${index !== 0 ? 'border-l' : ''}`}
                           style={{
                             width: header.getSize(),
                             minWidth: header.getSize(),
