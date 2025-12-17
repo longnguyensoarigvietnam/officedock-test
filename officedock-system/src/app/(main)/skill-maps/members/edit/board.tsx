@@ -159,7 +159,7 @@ const EditSkillMapByMemberBoard = () => {
           description: SUCCESS_UPDATE_MESSAGE,
         });
         setSelectedSkillByUserToUpdate([]);
-        router.push(pageRouters.SKILL_MAPS_MEMBERS_MANAGEMENT.href);
+        router.push(`${pageRouters.SKILL_MAPS_MEMBERS_MANAGEMENT.href}${orgIdParam ? `?orgId=${orgIdParam}` : ''}`);
       },
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_UPDATE_MESSAGE);
@@ -226,7 +226,7 @@ const EditSkillMapByMemberBoard = () => {
             }}
           />
           <div className="flex justify-center gap-[10px] items-center">
-            <Link href={pageRouters.SKILL_MAPS_MEMBERS_MANAGEMENT.href}>
+            <Link href={`${pageRouters.SKILL_MAPS_MEMBERS_MANAGEMENT.href}${orgIdParam ? `?orgId=${orgIdParam}` : ''}`}>
               <Button variant="outline" className="w-[100px] !p-0 !h-[34px]">
                 キャンセル
               </Button>
