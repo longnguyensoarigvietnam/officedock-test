@@ -318,7 +318,7 @@ const TableChart = ({
 
         return (
           <div
-            className="flex gap-1 items-center justify-center cursor-pointer"
+            className="flex gap-1 items-center justify-between px-[14px] cursor-pointer"
             onClick={() => {
               if (ordering === OrderingDataType.TOTAL_DURATION) {
                 setOrdering('');
@@ -357,7 +357,7 @@ const TableChart = ({
 
         return (
           <div
-            className="flex gap-1 items-center justify-center cursor-pointer"
+            className="flex gap-1 items-center justify-between px-[14px] cursor-pointer"
             onClick={() => {
               if (ordering === OrderingDataType.PERCENT) {
                 setOrdering('');
