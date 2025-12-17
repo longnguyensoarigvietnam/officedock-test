@@ -18,6 +18,7 @@ export const USER_NAME_REQUIRED_MESSAGE =
 export const ID_REQUIRED_MESSAGE = 'IDは必須です。';
 export const CATEGORY_NAME_REQUIRED_MESSAGE = 'カテゴリ名を入力してください。';
 export const SKILL_NAME_REQUIRED_MESSAGE = 'スキル名を入力してください。';
+export const LEVEL_NUMBER_REQUIRED_MESSAGE = '入力してください。';
 export const ROLE_NAME_REQUIRED_MESSAGE = '権限名を入力してください。';
 
 export const NAME_REQUIRED_MESSAGE = '名前は必須です。';

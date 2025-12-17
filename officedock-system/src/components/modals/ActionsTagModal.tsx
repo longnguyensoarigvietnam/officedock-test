@@ -17,7 +17,10 @@ import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { ActionsEvent, ActionTask, PermissionsSystem } from '@constants/enums';
 import { UNREGISTERED } from '@constants';
-import { ERROR_LONG_FIELD_MESSAGE } from '@constants/message';
+import {
+  ERROR_LONG_FIELD_MESSAGE,
+  TAG_NAME_REQUIRED_MESSAGE,
+} from '@constants/message';
 
 import { formatShowDateJapanese } from '@utils/date';
 import {
@@ -69,11 +72,11 @@ const ActionsTagModal = ({
       (value.name = `${dataTag.name}`),
         (value.organizations = dataTag.organizations
           ? dataTag.organizations.map((org) => {
-            return {
-              label: org.name,
-              value: Number(org.id),
-            };
-          })
+              return {
+                label: org.name,
+                value: Number(org.id),
+              };
+            })
           : []),
         (value.calendarOrganizationCheck = Boolean(
           dataTag.isCalendarOrganizationCheck,
@@ -123,9 +126,7 @@ const ActionsTagModal = ({
   const selectedHiddenOrganizations = useMemo(() => {
     return selectedOrganizations?.filter(
       (selected) =>
-        !dataOrganizationList.some(
-          (org) => org.value === selected.value,
-        ),
+        !dataOrganizationList.some((org) => org.value === selected.value),
     );
   }, [selectedOrganizations, dataOrganizationList]);
 
@@ -192,9 +193,10 @@ const ActionsTagModal = ({
         <header className="flex sticky z-[100] top-[0px] pt-10 pb-[35px] items-center gap-5 justify-between bg-white">
           <div className="w-full">
             <Input
-              className="shadow-none text-[22px] leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[42px] focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md"
+              className={`shadow-none text-[22px] leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[42px] focus:!shadow-none focus:border  ${!errors?.name ? '!border-[#77858F]' : '!border-error'}  !border-[1px] rounded-md"`}
               register={register('name', {
-                required: watch('name') !== null ? true : false,
+                required:
+                  watch('name') !== null ? TAG_NAME_REQUIRED_MESSAGE : false,
                 maxLength: {
                   value: 255,
                   message: ERROR_LONG_FIELD_MESSAGE,
@@ -205,7 +207,8 @@ const ActionsTagModal = ({
               disabled={isDisabled || dataTag?.actions?.updateName === false}
             />
           </div>
-          <div className="flex gap-[10px] items-center">
+          <div
+            className={`flex gap-[10px] items-center ${errors?.name?.message ? 'relative top-[-11px]' : ''}`}>
             {session?.user.permissions &&
               ((action === ActionsEvent.EDIT &&
                 hasPermissionInArray(

@@ -45,6 +45,7 @@ import {
   ORGANIZATION_REQUIRED_MESSAGE,
   START_DATE_REQUIRED_SELECTED,
   STATUS_REQUIRED_MESSAGE,
+  TITLE_TASK_REQUIRED_MESSAGE,
 } from '@constants/message';
 import {
   COPY_MESSAGE,
@@ -1120,7 +1121,8 @@ const ActionsTaskModal = ({
               placeholder="タスクのタイトル"
               className={`shadow-none text-2xl leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[46px] focus:!shadow-none focus:border !border-[1px] rounded-md  ${!errors?.title ? '!border-[#77858F]' : '!border-error'}`}
               register={register('title', {
-                required: watch('title') !== null ? true : false,
+                required:
+                  watch('title') !== null ? TITLE_TASK_REQUIRED_MESSAGE : false,
                 maxLength: {
                   value: 255,
                   message: ERROR_LONG_FIELD_MESSAGE,
@@ -1132,7 +1134,8 @@ const ActionsTaskModal = ({
               error={errors.title?.message}
             />
           </div>
-          <div className="flex gap-2 items-center">
+          <div
+            className={`flex gap-2 items-center ${errors.title?.message && 'relative top-[-11px]'}`}>
             {isPermissionAdd &&
               (action === ActionTask.COPY || action === ActionTask.CREATE) && (
                 <Button

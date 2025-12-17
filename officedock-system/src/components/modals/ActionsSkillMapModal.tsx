@@ -47,6 +47,8 @@ import {
   ERROR_INTEGER_MESSAGE,
   ERROR_LONG_FIELD_MESSAGE,
   ERROR_UPDATE_MESSAGE,
+  LEVEL_NUMBER_REQUIRED_MESSAGE,
+  SKILL_NAME_REQUIRED_MESSAGE,
 } from '@constants/message';
 
 import { formatShowDateJapanese } from '@utils/date';
@@ -243,20 +245,20 @@ const ActionsSkillMapModal = forwardRef<
               );
               return levelDetail
                 ? {
-                  skillLevelId: levelDetail.id ?? null,
-                  organization: detail.organization?.id ?? 0,
-                  level: levelKey,
-                  items: levelDetail.items.map((item) => ({ value: item })),
-                  measureCount: levelDetail.measureCount ?? null,
-                  measureTime: levelDetail.measureTime ?? null,
-                  lookBackInterval: levelDetail.lookBackInterval ?? null,
-                  lookBackType: levelDetail.lookBackType
-                    ? {
-                      value: levelDetail.lookBackType,
-                      label: levelDetail.lookBackType,
-                    }
-                    : null,
-                }
+                    skillLevelId: levelDetail.id ?? null,
+                    organization: detail.organization?.id ?? 0,
+                    level: levelKey,
+                    items: levelDetail.items.map((item) => ({ value: item })),
+                    measureCount: levelDetail.measureCount ?? null,
+                    measureTime: levelDetail.measureTime ?? null,
+                    lookBackInterval: levelDetail.lookBackInterval ?? null,
+                    lookBackType: levelDetail.lookBackType
+                      ? {
+                          value: levelDetail.lookBackType,
+                          label: levelDetail.lookBackType,
+                        }
+                      : null,
+                  }
                 : null;
             })
             .filter(Boolean) as SkillLevelDetail[];
@@ -351,12 +353,12 @@ const ActionsSkillMapModal = forwardRef<
 
               return (
                 selectedMedium.SMALL &&
-                selectedMedium.SMALL.filter(
-                  (small) => !small.isHidden,
-                ).map((small) => ({
-                  label: small.name,
-                  value: small.id,
-                }))
+                selectedMedium.SMALL.filter((small) => !small.isHidden).map(
+                  (small) => ({
+                    label: small.name,
+                    value: small.id,
+                  }),
+                )
               );
             });
             setDataOptionsCategoryMedium((prev) => ({
@@ -648,7 +650,7 @@ const ActionsSkillMapModal = forwardRef<
           levelKey as 1 | 2 | 3,
           'measureCount',
         ),
-      )
+      );
       const measureTimeError = get(
         errors,
         getSkillLevelField(
@@ -656,7 +658,7 @@ const ActionsSkillMapModal = forwardRef<
           levelKey as 1 | 2 | 3,
           'measureTime',
         ),
-      )
+      );
       const lookBackIntervalError = get(
         errors,
         getSkillLevelField(
@@ -664,7 +666,7 @@ const ActionsSkillMapModal = forwardRef<
           levelKey as 1 | 2 | 3,
           'lookBackInterval',
         ),
-      )
+      );
       switch (levelUpConditionBy) {
         case LevelUpConditionBy.NUMBER_OF_TIMES:
           return (
@@ -673,17 +675,18 @@ const ActionsSkillMapModal = forwardRef<
                 <p className="text-[13px] font-normal">対応タスクを</p>
                 <div className="w-[50px]">
                   <Input
-                    className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-[50px] focus:!shadow-none focus:border !border-[1px] rounded-md ${!get(
-                      errors,
-                      getSkillLevelField(
-                        currentStep as 1 | 2 | 3,
-                        levelKey as 1 | 2 | 3,
-                        'measureCount',
-                      ),
-                    )
-                      ? '!border-[#77858F]'
-                      : '!border-error'
-                      }`}
+                    className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-[50px] focus:!shadow-none focus:border !border-[1px] rounded-md ${
+                      !get(
+                        errors,
+                        getSkillLevelField(
+                          currentStep as 1 | 2 | 3,
+                          levelKey as 1 | 2 | 3,
+                          'measureCount',
+                        ),
+                      )
+                        ? '!border-[#77858F]'
+                        : '!border-error'
+                    }`}
                     type="text"
                     inputMode="numeric"
                     pattern="[0-9]*"
@@ -694,12 +697,14 @@ const ActionsSkillMapModal = forwardRef<
                         'measureCount',
                       ),
                       {
-                        required: true,
+                        required: LEVEL_NUMBER_REQUIRED_MESSAGE,
                         validate: (value) => {
                           if (!value) return true;
                           const num = Number(value);
-                          return Number.isSafeInteger(num) && num <= MAX_INT
-                            || ERROR_INTEGER_MESSAGE;
+                          return (
+                            (Number.isSafeInteger(num) && num <= MAX_INT) ||
+                            ERROR_INTEGER_MESSAGE
+                          );
                         },
                         onChange: (e) => {
                           const cleanValue = e.target.value.replace(/\D/g, ''); // Remove non-digits
@@ -712,9 +717,14 @@ const ActionsSkillMapModal = forwardRef<
                 </div>
                 <p className="text-[13px] font-normal">回完了した</p>
               </div>
-              {measureCountError?.message ?
-                <ErrorMessage error={measureCountError?.message} className='mt-[6px] text-xs' />
-                : <></>}
+              {measureCountError?.message ? (
+                <ErrorMessage
+                  error={measureCountError?.message}
+                  className="mt-[6px] text-xs"
+                />
+              ) : (
+                <></>
+              )}
             </>
           );
         case LevelUpConditionBy.MEASUREMENT_TIME:
@@ -725,7 +735,8 @@ const ActionsSkillMapModal = forwardRef<
                 <div className="w-[50px]">
                   <Input
                     className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-[50px] focus:!shadow-none focus:border !border-[1px] rounded-md
-                  ${!get(
+                  ${
+                    !get(
                       errors,
                       getSkillLevelField(
                         currentStep as 1 | 2 | 3,
@@ -733,9 +744,9 @@ const ActionsSkillMapModal = forwardRef<
                         'measureTime',
                       ),
                     )
-                        ? '!border-[#77858F]'
-                        : '!border-error'
-                      }`}
+                      ? '!border-[#77858F]'
+                      : '!border-error'
+                  }`}
                     type="text"
                     inputMode="numeric"
                     pattern="[0-9]*"
@@ -746,12 +757,14 @@ const ActionsSkillMapModal = forwardRef<
                         'measureTime',
                       ),
                       {
-                        required: true,
+                        required: LEVEL_NUMBER_REQUIRED_MESSAGE,
                         validate: (value) => {
                           if (!value) return true;
                           const num = Number(value);
-                          return Number.isSafeInteger(num) && num <= MAX_INT
-                            || ERROR_INTEGER_MESSAGE;
+                          return (
+                            (Number.isSafeInteger(num) && num <= MAX_INT) ||
+                            ERROR_INTEGER_MESSAGE
+                          );
                         },
                         onChange: (e) => {
                           const cleanValue = e.target.value.replace(/\D/g, ''); // Remove non-digits
@@ -764,11 +777,15 @@ const ActionsSkillMapModal = forwardRef<
                 </div>
                 <p className="text-[13px] font-normal">時間行った</p>
               </div>
-              {measureTimeError?.message ?
-                <ErrorMessage error={measureTimeError?.message} className='mt-[6px] text-xs' />
-                : <></>}
+              {measureTimeError?.message ? (
+                <ErrorMessage
+                  error={measureTimeError?.message}
+                  className="mt-[6px] text-xs"
+                />
+              ) : (
+                <></>
+              )}
             </>
-
           );
         case LevelUpConditionBy.PERIOD:
           return (
@@ -778,7 +795,8 @@ const ActionsSkillMapModal = forwardRef<
                 <div className="w-[36px]">
                   <Input
                     className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-[36px] focus:!shadow-none focus:border !border-[1px] rounded-md
-                  ${!get(
+                  ${
+                    !get(
                       errors,
                       getSkillLevelField(
                         currentStep as 1 | 2 | 3,
@@ -786,9 +804,9 @@ const ActionsSkillMapModal = forwardRef<
                         'lookBackInterval',
                       ),
                     )
-                        ? '!border-[#77858F]'
-                        : '!border-error'
-                      } `}
+                      ? '!border-[#77858F]'
+                      : '!border-error'
+                  } `}
                     type="text"
                     inputMode="numeric"
                     pattern="[0-9]*"
@@ -803,8 +821,10 @@ const ActionsSkillMapModal = forwardRef<
                         validate: (value) => {
                           if (!value) return true;
                           const num = Number(value);
-                          return Number.isSafeInteger(num) && num <= MAX_INT
-                            || ERROR_INTEGER_MESSAGE;
+                          return (
+                            (Number.isSafeInteger(num) && num <= MAX_INT) ||
+                            ERROR_INTEGER_MESSAGE
+                          );
                         },
                         onChange: (e) => {
                           const cleanValue = e.target.value.replace(/\D/g, ''); // Remove non-digits
@@ -828,17 +848,18 @@ const ActionsSkillMapModal = forwardRef<
                     }}
                     render={({ field: { onChange } }) => (
                       <Dropdown
-                        className={`h-[34px] !w-[68px] !py-1 !pr-0 text-xs !border-[1px] !rounded-md ${!get(
-                          errors,
-                          getSkillLevelField(
-                            currentStep as 1 | 2 | 3,
-                            levelKey as 1 | 2 | 3,
-                            'lookBackType',
-                          ),
-                        )
-                          ? '!border-[#77858F]'
-                          : '!border-error'
-                          }`}
+                        className={`h-[34px] !w-[68px] !py-1 !pr-0 text-xs !border-[1px] !rounded-md ${
+                          !get(
+                            errors,
+                            getSkillLevelField(
+                              currentStep as 1 | 2 | 3,
+                              levelKey as 1 | 2 | 3,
+                              'lookBackType',
+                            ),
+                          )
+                            ? '!border-[#77858F]'
+                            : '!border-error'
+                        }`}
                         classNameTextData="!text-xs"
                         classNameOption="!text-xs"
                         classNameError="!text-xs"
@@ -865,9 +886,14 @@ const ActionsSkillMapModal = forwardRef<
                 </div>
                 <p className="text-[13px] font-normal">ごと</p>
               </div>
-              {lookBackIntervalError?.message ?
-                <ErrorMessage error={lookBackIntervalError?.message} className='mt-[6px] text-xs' />
-                : <></>}
+              {lookBackIntervalError?.message ? (
+                <ErrorMessage
+                  error={lookBackIntervalError?.message}
+                  className="mt-[6px] text-xs"
+                />
+              ) : (
+                <></>
+              )}
             </>
           );
       }
@@ -988,16 +1014,17 @@ const ActionsSkillMapModal = forwardRef<
                         ),
                       )}
                       className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] 
-                        focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md ${!getErrorMessage(
-                        errors,
-                        getItemFieldArrayPath(
-                          currentStep as 1 | 2 | 3,
-                          levelKey as 1 | 2 | 3,
-                          index,
-                        ),
-                      )
-                          ? '!border-[#77858F]'
-                          : '!border-error'
+                        focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md ${
+                          !getErrorMessage(
+                            errors,
+                            getItemFieldArrayPath(
+                              currentStep as 1 | 2 | 3,
+                              levelKey as 1 | 2 | 3,
+                              index,
+                            ),
+                          )
+                            ? '!border-[#77858F]'
+                            : '!border-error'
                         }`}
                       placeholder="振り返り項目"
                     />
@@ -1087,14 +1114,14 @@ const ActionsSkillMapModal = forwardRef<
             <p className="">
               登録日{' '}
               {action === ActionsEvent.EDIT &&
-                skillMapEditDetail?.find(
-                  (skillMap) => skillMap.step == `ステップ${currentStep}`,
-                )?.createdAt
+              skillMapEditDetail?.find(
+                (skillMap) => skillMap.step == `ステップ${currentStep}`,
+              )?.createdAt
                 ? formatShowDateJapanese(
-                  skillMapEditDetail?.find(
-                    (skillMap) => skillMap.step == `ステップ${currentStep}`,
-                  )?.createdAt || '',
-                )
+                    skillMapEditDetail?.find(
+                      (skillMap) => skillMap.step == `ステップ${currentStep}`,
+                    )?.createdAt || '',
+                  )
                 : formatShowDateJapanese(new Date())}
             </p>
           </div>
@@ -1146,10 +1173,11 @@ const ActionsSkillMapModal = forwardRef<
             <div className="flex items-center gap-5 justify-between">
               <div className="w-full">
                 <Input
-                  className={`shadow-none text-[22px] leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[42px] focus:!shadow-none focus:border !border-[1px] rounded-md ${!get(errors, getStepField(currentStep as 1 | 2 | 3, 'name'))
-                    ? '!border-[#77858F]'
-                    : '!border-error'
-                    }`}
+                  className={`shadow-none text-[22px] leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[42px] focus:!shadow-none focus:border !border-[1px] rounded-md ${
+                    !get(errors, getStepField(currentStep as 1 | 2 | 3, 'name'))
+                      ? '!border-[#77858F]'
+                      : '!border-error'
+                  }`}
                   value={
                     watch(getStepField(currentStep as 1 | 2 | 3, 'name')) || ''
                   }
@@ -1164,7 +1192,7 @@ const ActionsSkillMapModal = forwardRef<
                         value: 255,
                         message: ERROR_LONG_FIELD_MESSAGE,
                       },
-                      required: true,
+                      required: SKILL_NAME_REQUIRED_MESSAGE,
                       onChange: () => {
                         setIsFormTouched(true);
                       },
@@ -1172,7 +1200,13 @@ const ActionsSkillMapModal = forwardRef<
                   )}
                 />
               </div>
-              <div className="flex gap-[10px] items-center">
+              <div
+                className={`flex gap-[10px] items-center ${
+                  getErrorMessage(
+                    errors,
+                    getStepField(currentStep as 1 | 2 | 3, 'name'),
+                  ) && 'relative top-[-11px]'
+                }`}>
                 {!isDisabled && (
                   <Button
                     type="submit"

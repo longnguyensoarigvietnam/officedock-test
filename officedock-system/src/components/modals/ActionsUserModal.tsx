@@ -444,11 +444,13 @@ const ActionsUserModal = ({
                   });
                 },
               })}
+              error={errorMessages?.fullName || errors?.name?.message}
               className={`shadow-none text-[22px] leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[42px] focus:!shadow-none focus:border border-[1px] ${errors?.name?.message || errorMessages?.fullName ? '!border-error' : '!border-[#77858F]'} rounded-md`}
             />
           </div>
 
-          <div className="flex gap-[10px] items-center">
+          <div
+            className={`flex gap-[10px] items-center ${errorMessages?.fullName || errors?.name?.message ? 'relative top-[-11px]' : ''}`}>
             <Button
               type="submit"
               disabled={action == ActionsEvent.EDIT && !isDirty}
@@ -464,20 +466,6 @@ const ActionsUserModal = ({
             </Button>
           </div>
         </header>
-
-        {errorMessages?.fullName ? (
-          <ErrorMessage
-            error={errorMessages.fullName}
-            className="mt-[5px] mb-[5px] text-xs"
-          />
-        ) : errors?.name ? (
-          <ErrorMessage
-            error={errors?.name.message}
-            className="mt-[5px] mb-[5px] text-xs"
-          />
-        ) : (
-          <></>
-        )}
 
         <div className=" flex flex-col gap-[35px] text-sm font-medium text-black">
           {/* Options */}
