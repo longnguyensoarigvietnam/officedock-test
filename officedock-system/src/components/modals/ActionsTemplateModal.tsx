@@ -31,6 +31,7 @@ import { useSessionCache } from '@providers/SessionCacheProvider';
 import {
   DEFAULT_VALUE_TODO_LIST,
   ERROR_LONG_FIELD_MESSAGE,
+  TEMPLATE_TITLE_REQUIRED_MESSAGE,
 } from '@constants/message';
 import { COPY_MESSAGE, NO_SETTING, UNREGISTERED } from '@constants';
 import {
@@ -198,9 +199,9 @@ const ActionsTemplateModal = ({
         }),
         (value.organization = dataTemplate.organization
           ? {
-              label: dataTemplate.organization.name,
-              value: dataTemplate.organization.id as number,
-            }
+            label: dataTemplate.organization.name,
+            value: dataTemplate.organization.id as number,
+          }
           : undefined);
 
       if (dataTemplate.tags) {
@@ -261,12 +262,12 @@ const ActionsTemplateModal = ({
         (organization) => organization.isMain,
       )
         ? {
-            label:
-              orgUserList.find((organization) => organization.isMain)?.name ||
-              '',
-            value:
-              orgUserList.find((organization) => organization.isMain)?.id || '',
-          }
+          label:
+            orgUserList.find((organization) => organization.isMain)?.name ||
+            '',
+          value:
+            orgUserList.find((organization) => organization.isMain)?.id || '',
+        }
         : null;
     }
     return value;
@@ -287,7 +288,7 @@ const ActionsTemplateModal = ({
     organizationId: organizationValue
       ? String(organizationValue)
       : orgUserList &&
-          orgUserList?.find((organization) => organization.isMain)?.id
+        orgUserList?.find((organization) => organization.isMain)?.id
         ? String(orgUserList?.find((organization) => organization.isMain)?.id)
         : '',
     options: {
@@ -593,11 +594,11 @@ const ActionsTemplateModal = ({
         !isFormTouched
           ? onClose()
           : onEdit &&
-            onEdit({
-              ...data,
-              todoList: todoList,
-              tagIds: filteredTagIds,
-            });
+          onEdit({
+            ...data,
+            todoList: todoList,
+            tagIds: filteredTagIds,
+          });
       }
       if (action === ActionTask.CREATE) {
         onSubmit &&
@@ -721,9 +722,9 @@ const ActionsTemplateModal = ({
               disabled={isCheckActionPermission}
               autoCompleteInput
               placeholder="タスクのタイトル"
-              className="shadow-none text-2xl  leading-[56px] font-bold !pl-3 flex items-centers !py-0 h-[46px] focus:!shadow-none focus:border !border-[#77858F] rounded-md"
+              className={`shadow-none text-2xl leading-[56px] font-bold !pl-3 flex items-centers !py-0 h-[46px] focus:!shadow-none focus:border ${errors.title ? '!border-error' : '!border-[#77858F]'} rounded-md`}
               register={register('title', {
-                required: watch('title') !== null ? true : false,
+                required: TEMPLATE_TITLE_REQUIRED_MESSAGE,
                 maxLength: {
                   value: 255,
                   message: ERROR_LONG_FIELD_MESSAGE,
@@ -738,13 +739,13 @@ const ActionsTemplateModal = ({
           <div className="flex gap-2 items-center">
             {((isPermissionAdd && action === TemplateAction.CREATE) ||
               (isPermissionUpdate && action === TemplateAction.EDIT)) && (
-              <Button
-                type="submit"
-                disabled={action === TemplateAction.EDIT && !isFormTouched}
-                className="w-[86px] h-[36px] !text-sm !px-0">
-                保存
-              </Button>
-            )}
+                <Button
+                  type="submit"
+                  disabled={action === TemplateAction.EDIT && !isFormTouched}
+                  className="w-[86px] h-[36px] !text-sm !px-0">
+                  保存
+                </Button>
+              )}
             <Button
               variant="outline"
               type="button"
@@ -1105,7 +1106,7 @@ const ActionsTemplateModal = ({
                                       </div>
                                       <div className="w-5">
                                         {!isCheckActionPermission &&
-                                        todo.isChecked ? (
+                                          todo.isChecked ? (
                                           <ImageRound
                                             className="w-fit h-fit cursor-grab hover:cursor-pointer"
                                             src="/icons/complete-blue.svg"
@@ -1183,10 +1184,10 @@ const ActionsTemplateModal = ({
                                 );
                                 return snapshot.isDragging
                                   ? // eslint-disable-next-line import/no-named-as-default-member
-                                    ReactDOM.createPortal(
-                                      draggableElement,
-                                      document.body,
-                                    )
+                                  ReactDOM.createPortal(
+                                    draggableElement,
+                                    document.body,
+                                  )
                                   : draggableElement;
                               }}
                             </Draggable>
@@ -1214,15 +1215,15 @@ const ActionsTemplateModal = ({
           {((isPermissionAdd &&
             (action === ActionTask.COPY || action === ActionTask.CREATE)) ||
             (isPermissionUpdate && action === ActionTask.EDIT)) && (
-            <div className="flex justify-center">
-              <Button
-                type="submit"
-                disabled={action === ActionTask.EDIT && !isFormTouched}
-                className="w-[200px] !rounded-md h-[46px] !text-sm !px-2">
-                保存
-              </Button>
-            </div>
-          )}
+              <div className="flex justify-center">
+                <Button
+                  type="submit"
+                  disabled={action === ActionTask.EDIT && !isFormTouched}
+                  className="w-[200px] !rounded-md h-[46px] !text-sm !px-2">
+                  保存
+                </Button>
+              </div>
+            )}
         </div>
       </form>
     </Drawer>

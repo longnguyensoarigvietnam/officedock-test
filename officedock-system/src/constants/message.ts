@@ -38,6 +38,9 @@ export const ANSWER_VALUE_REQUIRED_MESSAGE = '回答の内容を入力してく�
 export const DATE_STOP_SURVEY_REQUIRED_MESSAGE =
   '受付終了時間を指定してください。';
 export const DELETED_EVENT_TITLE = '予定が削除されました。';
+export const TEMPLATE_TITLE_REQUIRED_MESSAGE = 'タスクのタイトルは必須です。';
+export const EVENT_TITLE_REQUIRED_MESSAGE = '予定のタイトルは必須です。';
+export const GROUP_NAME_REQUIRED_MESSAGE = 'グループ名は必須です。';
 
 //Validate message
 export const PASSWORD_MIN_LENGTH_MESSAGE =

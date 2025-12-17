@@ -22,7 +22,7 @@ import GroupIconWithDynamicColor from '@components/common/GroupIcon';
 
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
-import { ERROR_LONG_FIELD_MESSAGE } from '@constants/message';
+import { ERROR_LONG_FIELD_MESSAGE, GROUP_NAME_REQUIRED_MESSAGE } from '@constants/message';
 import { ChatParticipantType } from '@constants/enums';
 import {
   ALLOWED_IMAGE_TYPES,
@@ -73,7 +73,7 @@ const ActionsAddMembersModal = memo(
 
     const [searchName, setSearchName] = useState<string>('');
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const { register, setValue, watch, control } = useForm<{
+    const { register, setValue, watch, control, formState: { errors } } = useForm<{
       members: number[];
       groupName: string;
       organizations: number[];
@@ -429,8 +429,9 @@ const ActionsAddMembersModal = memo(
                     グループ名
                   </p>
                   <Input
-                    className="!py-1.5 !pl-1.5 !w-full !border-[#77858F] text-sm"
+                    className={`!py-1.5 !pl-1.5 !w-full ${errors.groupName ? '!border-error' : '!border-[#77858F]'}  text-sm`}
                     register={register('groupName', {
+                      required: GROUP_NAME_REQUIRED_MESSAGE,
                       maxLength: {
                         value: 255,
                         message: ERROR_LONG_FIELD_MESSAGE,
@@ -487,8 +488,8 @@ const ActionsAddMembersModal = memo(
             {dataOptionsParticipants?.filter((member) =>
               member.fullName.toLowerCase().includes(searchName.toLowerCase()),
             ).length === 0 && (
-              <p className="text-gray-500 text-center text-sm">{NO_OPTIONS}</p>
-            )}
+                <p className="text-gray-500 text-center text-sm">{NO_OPTIONS}</p>
+              )}
             <div className="flex flex-col">
               {dataOptionsParticipants
                 ?.filter((member) =>
@@ -506,13 +507,12 @@ const ActionsAddMembersModal = memo(
                 .map((member) => {
                   return (
                     <div
-                      className={`flex gap-[10px] items-center py-2 px-5 hover:cursor-pointer hover:bg-[#EBF1F7] ${
-                        checkIsParticipantSelected(
-                          member,
-                          watch('members').filter(Boolean) ?? [],
-                          watch('organizations').filter(Boolean) ?? [],
-                        ) && 'bg-[#EBF1F7]'
-                      }`}
+                      className={`flex gap-[10px] items-center py-2 px-5 hover:cursor-pointer hover:bg-[#EBF1F7] ${checkIsParticipantSelected(
+                        member,
+                        watch('members').filter(Boolean) ?? [],
+                        watch('organizations').filter(Boolean) ?? [],
+                      ) && 'bg-[#EBF1F7]'
+                        }`}
                       key={member.id}
                       style={{
                         order: checkIsParticipantSelected(
