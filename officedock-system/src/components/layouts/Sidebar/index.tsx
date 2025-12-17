@@ -937,6 +937,7 @@ const Sidebar = ({ className }: Props) => {
         {helpUrl && (
           <Link
             href={helpUrl}
+            target="_blank"
             className="absolute bottom-[52px] left-[13px] cursor-pointer"
             onMouseEnter={() => setShowHelpMenu(true)}
             onMouseLeave={() => setShowHelpMenu(false)}>
