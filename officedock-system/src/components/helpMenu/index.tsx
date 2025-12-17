@@ -1,8 +1,11 @@
 'use client';
 
+import Link from 'next/dist/client/link';
 import { createPortal } from 'react-dom';
 
 export default function HelpIconPortal() {
+  const helpUrl = process.env.NEXT_PUBLIC_HELP_PAGE_URL || '';
+
   return createPortal(
     <div className="absolute bottom-[78px] left-[60px] z-[9999]">
       <div className="relative">
@@ -12,11 +15,14 @@ export default function HelpIconPortal() {
           }}
           className="w-[126px] h-[40px]  text-xs text-white font-bold 
             pt-2 pb-3 rounded-lg relative">
-          <div className="text-center relative top-[3px] pr-[1px]">
+          <Link
+            href={helpUrl}
+            target="_blank"
+            className="text-center relative top-[3px] pr-[1px]">
             <div className="h-6 cursor-pointer hover:opacity-65">
               ヘルプページへ
             </div>
-          </div>
+          </Link>
         </div>
 
         <div
