@@ -163,7 +163,8 @@ def build_present_mvp_vote_with_organization_list(mvp_vote, user):
         data["organizations"] = []
         org_ids = list(map(int, mvp_vote.selected_organizations.split(",")))
         orgs = Organization.objects.filter(
-            Q(users__in=unique_user_ids) | Q(id__in=org_ids)
+            (Q(users__in=unique_user_ids) | Q(id__in=org_ids))
+            & Q(deleted_at__isnull=True)
         ).distinct()
 
         # Filter all users belonging to the selected organizations
