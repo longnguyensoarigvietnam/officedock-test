@@ -7,7 +7,6 @@ import {
   useMemo,
   useState,
 } from 'react';
-
 import {
   Controller,
   SubmitHandler,
@@ -23,6 +22,7 @@ import Drawer from '@components/common/Drawers';
 import Dropdown from '@components/common/Dropdown';
 import RadioButton from '@components/common/RadioButton';
 import CategoryStepRaw from '@components/skillMap/CategoryStepRaw';
+import ErrorMessage from '@components/common/ErrorMessage';
 
 import useOrganizationStatisticCategories from '@hooks/useOrganizationStatisticCategories';
 
@@ -37,12 +37,14 @@ import {
 } from '@constants/enums';
 import {
   LEVEL_UP_PERIOD_OPTIONS,
+  MAX_INT,
   SKILL_MAP_LEVEL_COUNT,
   SKILL_MAP_STEP_COUNT,
   SKILL_MAP_STEPS,
 } from '@constants';
 import {
   ERROR_CREATE_MESSAGE,
+  ERROR_INTEGER_MESSAGE,
   ERROR_LONG_FIELD_MESSAGE,
   ERROR_UPDATE_MESSAGE,
 } from '@constants/message';
@@ -241,20 +243,20 @@ const ActionsSkillMapModal = forwardRef<
               );
               return levelDetail
                 ? {
-                    skillLevelId: levelDetail.id ?? null,
-                    organization: detail.organization?.id ?? 0,
-                    level: levelKey,
-                    items: levelDetail.items.map((item) => ({ value: item })),
-                    measureCount: levelDetail.measureCount ?? null,
-                    measureTime: levelDetail.measureTime ?? null,
-                    lookBackInterval: levelDetail.lookBackInterval ?? null,
-                    lookBackType: levelDetail.lookBackType
-                      ? {
-                          value: levelDetail.lookBackType,
-                          label: levelDetail.lookBackType,
-                        }
-                      : null,
-                  }
+                  skillLevelId: levelDetail.id ?? null,
+                  organization: detail.organization?.id ?? 0,
+                  level: levelKey,
+                  items: levelDetail.items.map((item) => ({ value: item })),
+                  measureCount: levelDetail.measureCount ?? null,
+                  measureTime: levelDetail.measureTime ?? null,
+                  lookBackInterval: levelDetail.lookBackInterval ?? null,
+                  lookBackType: levelDetail.lookBackType
+                    ? {
+                      value: levelDetail.lookBackType,
+                      label: levelDetail.lookBackType,
+                    }
+                    : null,
+                }
                 : null;
             })
             .filter(Boolean) as SkillLevelDetail[];
@@ -639,15 +641,39 @@ const ActionsSkillMapModal = forwardRef<
       currentStep: number,
       levelKey: number,
     ) => {
+      const measureCountError = get(
+        errors,
+        getSkillLevelField(
+          currentStep as 1 | 2 | 3,
+          levelKey as 1 | 2 | 3,
+          'measureCount',
+        ),
+      )
+      const measureTimeError = get(
+        errors,
+        getSkillLevelField(
+          currentStep as 1 | 2 | 3,
+          levelKey as 1 | 2 | 3,
+          'measureTime',
+        ),
+      )
+      const lookBackIntervalError = get(
+        errors,
+        getSkillLevelField(
+          currentStep as 1 | 2 | 3,
+          levelKey as 1 | 2 | 3,
+          'lookBackInterval',
+        ),
+      )
       switch (levelUpConditionBy) {
         case LevelUpConditionBy.NUMBER_OF_TIMES:
           return (
-            <div className="flex gap-2 items-center">
-              <p className="text-[13px] font-normal">対応タスクを</p>
-              <div className="w-[50px]">
-                <Input
-                  className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-[50px] focus:!shadow-none focus:border !border-[1px] rounded-md ${
-                    !get(
+            <>
+              <div className="flex gap-2 items-center">
+                <p className="text-[13px] font-normal">対応タスクを</p>
+                <div className="w-[50px]">
+                  <Input
+                    className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-[50px] focus:!shadow-none focus:border !border-[1px] rounded-md ${!get(
                       errors,
                       getSkillLevelField(
                         currentStep as 1 | 2 | 3,
@@ -657,39 +683,49 @@ const ActionsSkillMapModal = forwardRef<
                     )
                       ? '!border-[#77858F]'
                       : '!border-error'
-                  }`}
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  register={register(
-                    getSkillLevelField(
-                      currentStep as 1 | 2 | 3,
-                      levelKey as 1 | 2 | 3,
-                      'measureCount',
-                    ),
-                    {
-                      required: true,
-                      onChange: (e) => {
-                        const cleanValue = e.target.value.replace(/\D/g, ''); // Remove non-digits
-                        e.target.value = cleanValue;
-                        setIsFormTouched(true);
+                      }`}
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    register={register(
+                      getSkillLevelField(
+                        currentStep as 1 | 2 | 3,
+                        levelKey as 1 | 2 | 3,
+                        'measureCount',
+                      ),
+                      {
+                        required: true,
+                        validate: (value) => {
+                          if (!value) return true;
+                          const num = Number(value);
+                          return Number.isSafeInteger(num) && num <= MAX_INT
+                            || ERROR_INTEGER_MESSAGE;
+                        },
+                        onChange: (e) => {
+                          const cleanValue = e.target.value.replace(/\D/g, ''); // Remove non-digits
+                          e.target.value = cleanValue;
+                          setIsFormTouched(true);
+                        },
                       },
-                    },
-                  )}
-                />
+                    )}
+                  />
+                </div>
+                <p className="text-[13px] font-normal">回完了した</p>
               </div>
-              <p className="text-[13px] font-normal">回完了した</p>
-            </div>
+              {measureCountError?.message ?
+                <ErrorMessage error={measureCountError?.message} className='mt-[6px] text-xs' />
+                : <></>}
+            </>
           );
         case LevelUpConditionBy.MEASUREMENT_TIME:
           return (
-            <div className="flex gap-2 items-center">
-              <p className="text-[13px] font-normal">対応タスクを</p>
-              <div className="w-[50px]">
-                <Input
-                  className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-[50px] focus:!shadow-none focus:border !border-[1px] rounded-md
-                  ${
-                    !get(
+            <>
+              <div className="flex gap-2 items-center">
+                <p className="text-[13px] font-normal">対応タスクを</p>
+                <div className="w-[50px]">
+                  <Input
+                    className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-[50px] focus:!shadow-none focus:border !border-[1px] rounded-md
+                  ${!get(
                       errors,
                       getSkillLevelField(
                         currentStep as 1 | 2 | 3,
@@ -697,41 +733,52 @@ const ActionsSkillMapModal = forwardRef<
                         'measureTime',
                       ),
                     )
-                      ? '!border-[#77858F]'
-                      : '!border-error'
-                  }`}
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  register={register(
-                    getSkillLevelField(
-                      currentStep as 1 | 2 | 3,
-                      levelKey as 1 | 2 | 3,
-                      'measureTime',
-                    ),
-                    {
-                      required: true,
-                      onChange: (e) => {
-                        const cleanValue = e.target.value.replace(/\D/g, ''); // Remove non-digits
-                        e.target.value = cleanValue;
-                        setIsFormTouched(true);
+                        ? '!border-[#77858F]'
+                        : '!border-error'
+                      }`}
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    register={register(
+                      getSkillLevelField(
+                        currentStep as 1 | 2 | 3,
+                        levelKey as 1 | 2 | 3,
+                        'measureTime',
+                      ),
+                      {
+                        required: true,
+                        validate: (value) => {
+                          if (!value) return true;
+                          const num = Number(value);
+                          return Number.isSafeInteger(num) && num <= MAX_INT
+                            || ERROR_INTEGER_MESSAGE;
+                        },
+                        onChange: (e) => {
+                          const cleanValue = e.target.value.replace(/\D/g, ''); // Remove non-digits
+                          e.target.value = cleanValue;
+                          setIsFormTouched(true);
+                        },
                       },
-                    },
-                  )}
-                />
+                    )}
+                  />
+                </div>
+                <p className="text-[13px] font-normal">時間行った</p>
               </div>
-              <p className="text-[13px] font-normal">時間行った</p>
-            </div>
+              {measureTimeError?.message ?
+                <ErrorMessage error={measureTimeError?.message} className='mt-[6px] text-xs' />
+                : <></>}
+            </>
+
           );
         case LevelUpConditionBy.PERIOD:
           return (
-            <div className="flex gap-2 items-center w-full">
-              <p className="text-[13px] font-normal">振り返りの期間</p>{' '}
-              <div className="w-[36px]">
-                <Input
-                  className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-[36px] focus:!shadow-none focus:border !border-[1px] rounded-md
-                  ${
-                    !get(
+            <>
+              <div className="flex gap-2 items-center w-full">
+                <p className="text-[13px] font-normal">振り返りの期間</p>{' '}
+                <div className="w-[36px]">
+                  <Input
+                    className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] !w-[36px] focus:!shadow-none focus:border !border-[1px] rounded-md
+                  ${!get(
                       errors,
                       getSkillLevelField(
                         currentStep as 1 | 2 | 3,
@@ -739,44 +786,49 @@ const ActionsSkillMapModal = forwardRef<
                         'lookBackInterval',
                       ),
                     )
-                      ? '!border-[#77858F]'
-                      : '!border-error'
-                  } `}
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  register={register(
-                    getSkillLevelField(
+                        ? '!border-[#77858F]'
+                        : '!border-error'
+                      } `}
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    register={register(
+                      getSkillLevelField(
+                        currentStep as 1 | 2 | 3,
+                        levelKey as 1 | 2 | 3,
+                        'lookBackInterval',
+                      ),
+                      {
+                        required: true,
+                        validate: (value) => {
+                          if (!value) return true;
+                          const num = Number(value);
+                          return Number.isSafeInteger(num) && num <= MAX_INT
+                            || ERROR_INTEGER_MESSAGE;
+                        },
+                        onChange: (e) => {
+                          const cleanValue = e.target.value.replace(/\D/g, ''); // Remove non-digits
+                          e.target.value = cleanValue;
+                          setIsFormTouched(true);
+                        },
+                      },
+                    )}
+                  />
+                </div>
+                <div className="w-[68px]">
+                  <Controller
+                    control={control}
+                    name={getSkillLevelField(
                       currentStep as 1 | 2 | 3,
                       levelKey as 1 | 2 | 3,
-                      'lookBackInterval',
-                    ),
-                    {
+                      'lookBackType',
+                    )}
+                    rules={{
                       required: true,
-                      onChange: (e) => {
-                        const cleanValue = e.target.value.replace(/\D/g, ''); // Remove non-digits
-                        e.target.value = cleanValue;
-                        setIsFormTouched(true);
-                      },
-                    },
-                  )}
-                />
-              </div>
-              <div className="w-[68px]">
-                <Controller
-                  control={control}
-                  name={getSkillLevelField(
-                    currentStep as 1 | 2 | 3,
-                    levelKey as 1 | 2 | 3,
-                    'lookBackType',
-                  )}
-                  rules={{
-                    required: true,
-                  }}
-                  render={({ field: { onChange } }) => (
-                    <Dropdown
-                      className={`h-[34px] !w-[68px] !py-1 !pr-0 text-xs !border-[1px] !rounded-md ${
-                        !get(
+                    }}
+                    render={({ field: { onChange } }) => (
+                      <Dropdown
+                        className={`h-[34px] !w-[68px] !py-1 !pr-0 text-xs !border-[1px] !rounded-md ${!get(
                           errors,
                           getSkillLevelField(
                             currentStep as 1 | 2 | 3,
@@ -786,37 +838,40 @@ const ActionsSkillMapModal = forwardRef<
                         )
                           ? '!border-[#77858F]'
                           : '!border-error'
-                      }`}
-                      classNameTextData="!text-xs"
-                      classNameOption="!text-xs"
-                      classNameError="!text-xs"
-                      labelOptionClass="!pr-0"
-                      options={LEVEL_UP_PERIOD_OPTIONS}
-                      selectedOption={LEVEL_UP_PERIOD_OPTIONS.find(
-                        (element) =>
-                          element.value ==
-                          watch(
-                            getSkillLevelField(
-                              currentStep as 1 | 2 | 3,
-                              levelKey as 1 | 2 | 3,
-                              'lookBackType',
-                            ),
-                          )?.value,
-                      )}
-                      onChange={(e) => {
-                        setIsFormTouched(true);
-                        onChange(e);
-                      }}
-                    />
-                  )}
-                />
+                          }`}
+                        classNameTextData="!text-xs"
+                        classNameOption="!text-xs"
+                        classNameError="!text-xs"
+                        labelOptionClass="!pr-0"
+                        options={LEVEL_UP_PERIOD_OPTIONS}
+                        selectedOption={LEVEL_UP_PERIOD_OPTIONS.find(
+                          (element) =>
+                            element.value ==
+                            watch(
+                              getSkillLevelField(
+                                currentStep as 1 | 2 | 3,
+                                levelKey as 1 | 2 | 3,
+                                'lookBackType',
+                              ),
+                            )?.value,
+                        )}
+                        onChange={(e) => {
+                          setIsFormTouched(true);
+                          onChange(e);
+                        }}
+                      />
+                    )}
+                  />
+                </div>
+                <p className="text-[13px] font-normal">ごと</p>
               </div>
-              <p className="text-[13px] font-normal">ごと</p>
-            </div>
+              {lookBackIntervalError?.message ?
+                <ErrorMessage error={lookBackIntervalError?.message} className='mt-[6px] text-xs' />
+                : <></>}
+            </>
           );
       }
     };
-
     const LevelUpConditions = ({
       levelTitle,
       levelKey,
@@ -933,17 +988,16 @@ const ActionsSkillMapModal = forwardRef<
                         ),
                       )}
                       className={`shadow-none text-sm leading-[56px] !pl-3 flex items-center !py-0 h-[34px] 
-                        focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md ${
-                          !getErrorMessage(
-                            errors,
-                            getItemFieldArrayPath(
-                              currentStep as 1 | 2 | 3,
-                              levelKey as 1 | 2 | 3,
-                              index,
-                            ),
-                          )
-                            ? '!border-[#77858F]'
-                            : '!border-error'
+                        focus:!shadow-none focus:border !border-[#77858F] !border-[1px] rounded-md ${!getErrorMessage(
+                        errors,
+                        getItemFieldArrayPath(
+                          currentStep as 1 | 2 | 3,
+                          levelKey as 1 | 2 | 3,
+                          index,
+                        ),
+                      )
+                          ? '!border-[#77858F]'
+                          : '!border-error'
                         }`}
                       placeholder="振り返り項目"
                     />
@@ -1033,14 +1087,14 @@ const ActionsSkillMapModal = forwardRef<
             <p className="">
               登録日{' '}
               {action === ActionsEvent.EDIT &&
-              skillMapEditDetail?.find(
-                (skillMap) => skillMap.step == `ステップ${currentStep}`,
-              )?.createdAt
+                skillMapEditDetail?.find(
+                  (skillMap) => skillMap.step == `ステップ${currentStep}`,
+                )?.createdAt
                 ? formatShowDateJapanese(
-                    skillMapEditDetail?.find(
-                      (skillMap) => skillMap.step == `ステップ${currentStep}`,
-                    )?.createdAt || '',
-                  )
+                  skillMapEditDetail?.find(
+                    (skillMap) => skillMap.step == `ステップ${currentStep}`,
+                  )?.createdAt || '',
+                )
                 : formatShowDateJapanese(new Date())}
             </p>
           </div>
@@ -1092,11 +1146,10 @@ const ActionsSkillMapModal = forwardRef<
             <div className="flex items-center gap-5 justify-between">
               <div className="w-full">
                 <Input
-                  className={`shadow-none text-[22px] leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[42px] focus:!shadow-none focus:border !border-[1px] rounded-md ${
-                    !get(errors, getStepField(currentStep as 1 | 2 | 3, 'name'))
-                      ? '!border-[#77858F]'
-                      : '!border-error'
-                  }`}
+                  className={`shadow-none text-[22px] leading-[56px] font-bold !pl-3 flex items-center !py-0 h-[42px] focus:!shadow-none focus:border !border-[1px] rounded-md ${!get(errors, getStepField(currentStep as 1 | 2 | 3, 'name'))
+                    ? '!border-[#77858F]'
+                    : '!border-error'
+                    }`}
                   value={
                     watch(getStepField(currentStep as 1 | 2 | 3, 'name')) || ''
                   }

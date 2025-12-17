@@ -610,3 +610,5 @@ export const RANK = {
   [StatisticCategoryType.MEDIUM]: 2,
   [StatisticCategoryType.SMALL]: 3,
 } as const;
+
+export const MAX_INT = 2147483647;

@@ -131,3 +131,4 @@ export const PLEASE_SELECT_AT_LEAST_ONE_CANDIDATE =
   '候補メンバーを選択してください。';
 
 export const ERROR_WRONG_DATE_VOTING = '現時刻より後の時刻に設定してください。';
+export const ERROR_INTEGER_MESSAGE = '有効な整数を入力してください。';

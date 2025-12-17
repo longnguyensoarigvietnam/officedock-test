@@ -209,40 +209,40 @@ const ListSkillsMap = () => {
       skillLevels:
         step?.skillLevels && step?.skillLevels.length > 0
           ? step.skillLevels.map((level, index) => ({
-              level: `レベル${index + 1}`,
-              items:
-                level.items.length > 0
-                  ? level.items
-                      .filter((item) => item.value)
-                      .map((item) => item.value)
-                  : [],
-              lookBackType: level?.lookBackType
-                ? String(level?.lookBackType.value)
-                : null,
-              lookBackInterval: level?.lookBackInterval
-                ? Number(level?.lookBackInterval)
-                : null,
-              measureCount: level?.measureCount
-                ? Number(level?.measureCount)
-                : null,
-              measureTime: level?.measureTime
-                ? Number(level?.measureTime)
-                : null,
-              organization: Number(organizationParam) || 0,
-            }))
+            level: `レベル${index + 1}`,
+            items:
+              level.items.length > 0
+                ? level.items
+                  .filter((item) => item.value)
+                  .map((item) => item.value)
+                : [],
+            lookBackType: level?.lookBackType
+              ? String(level?.lookBackType.value)
+              : null,
+            lookBackInterval: level?.lookBackInterval
+              ? Number(level?.lookBackInterval)
+              : null,
+            measureCount: level?.measureCount
+              ? Number(level?.measureCount)
+              : null,
+            measureTime: level?.measureTime
+              ? Number(level?.measureTime)
+              : null,
+            organization: Number(organizationParam) || 0,
+          }))
           : [],
       categoryIds: step.rawCategories.map((cate) => ({
         largeStatisticCategoryId:
-          cate.LARGE.value !== NO_SETTING && cate.LARGE.value !== ''
-            ? (cate.LARGE.value as number)
+          cate.LARGE?.value !== NO_SETTING && cate.LARGE?.value !== ''
+            ? (cate.LARGE?.value as number)
             : null,
         mediumStatisticCategoryId:
-          cate.MEDIUM.value !== NO_SETTING && cate.MEDIUM.value !== ''
-            ? (cate.MEDIUM.value as number)
+          cate.MEDIUM?.value !== NO_SETTING && cate.MEDIUM?.value !== ''
+            ? (cate.MEDIUM?.value as number)
             : null,
         smallStatisticCategoryId:
-          cate.SMALL.value !== NO_SETTING && cate.SMALL.value !== ''
-            ? (cate.SMALL.value as number)
+          cate.SMALL?.value !== NO_SETTING && cate.SMALL?.value !== ''
+            ? (cate.SMALL?.value as number)
             : null,
       })),
     });
@@ -275,32 +275,32 @@ const ListSkillsMap = () => {
       skillLevels:
         step?.skillLevels && step?.skillLevels.length > 0
           ? step.skillLevels.map((level, index) => ({
-              level: `レベル${index + 1}`,
-              items:
-                level.items.length > 0
-                  ? level.items
-                      .filter((item) => item.value)
-                      .map((item) => item.value)
-                  : [],
-              lookBackType: level?.lookBackType
-                ? String(level?.lookBackType.value)
-                : null,
-              lookBackInterval: level?.lookBackInterval
-                ? Number(level?.lookBackInterval)
-                : null,
-              measureCount: level?.measureCount
-                ? Number(level?.measureCount)
-                : null,
-              measureTime: level?.measureTime
-                ? Number(level?.measureTime)
-                : null,
-              skillLevelId: level?.skillLevelId
-                ? Number(level.skillLevelId)
-                : null,
-              organization: level?.organization
-                ? Number(level?.organization)
-                : 0,
-            }))
+            level: `レベル${index + 1}`,
+            items:
+              level.items.length > 0
+                ? level.items
+                  .filter((item) => item.value)
+                  .map((item) => item.value)
+                : [],
+            lookBackType: level?.lookBackType
+              ? String(level?.lookBackType.value)
+              : null,
+            lookBackInterval: level?.lookBackInterval
+              ? Number(level?.lookBackInterval)
+              : null,
+            measureCount: level?.measureCount
+              ? Number(level?.measureCount)
+              : null,
+            measureTime: level?.measureTime
+              ? Number(level?.measureTime)
+              : null,
+            skillLevelId: level?.skillLevelId
+              ? Number(level.skillLevelId)
+              : null,
+            organization: level?.organization
+              ? Number(level?.organization)
+              : 0,
+          }))
           : [],
       categoryIds: step.rawCategories.map((cate) => ({
         largeStatisticCategoryId:
