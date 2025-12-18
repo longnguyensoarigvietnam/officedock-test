@@ -602,6 +602,7 @@ export const apiRouters = {
   // TERM
   READ_TERM: (id: string) => `/terms/${id}/read/`,
   TERM_LIST: '/terms/',
+  RETRIEVE_TERM: '/terms/retrieve-term/',
 
   // DAILY REPORT
   DATA_DAILY_STATISTIC: '/stat-data/daily-report/',

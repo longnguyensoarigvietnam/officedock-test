@@ -13,34 +13,33 @@ import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import api from '@base/api';
 
-interface UseTermHooksProps {
+interface UseLegalHooksProps {
   conditions?: boolean[];
-  onSuccess?: (success: TermsStep[]) => void;
+  onSuccess?: (data: TermsStep[]) => void;
 }
 
-const useTermList = ({ onSuccess, conditions }: UseTermHooksProps) => {
+const useLegalList = ({ onSuccess, conditions }: UseLegalHooksProps) => {
   const { data: session } = useSessionCache();
-  const token = session?.accessToken;
   const router = useRouter();
 
-  // Handle call API get term list
-  const getTermList = async () => {
-    const apiUrl = apiRouters.TERM_LIST;
+  // Handle call API get legal list
+  const getLegalList = async () => {
+    const apiUrl = `${apiRouters.RETRIEVE_TERM}`;
 
     const { data } = await api.get<TermsStep[]>(apiUrl);
     return data;
   };
 
-  // Handle API get term list
+  // Handle API get legal list
   const {
-    data: termList,
-    refetch: refetchTermList,
-    isFetched: isFetchedTermList,
+    data: legalList,
+    refetch: refetchLegalList,
+    isFetched: isFetchedLegalList,
   } = useQuery({
-    queryKey: ['getTermList'],
-    queryFn: getTermList,
+    queryKey: ['getLegalList'],
+    queryFn: getLegalList,
     retry: 0,
-    enabled: !!token && conditions?.every(Boolean),
+    enabled: conditions?.every(Boolean),
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     onSuccess: (response: TermsStep[]) => {
@@ -57,10 +56,10 @@ const useTermList = ({ onSuccess, conditions }: UseTermHooksProps) => {
   });
 
   return {
-    termList,
-    refetchTermList,
-    isFetchedTermList,
+    legalList,
+    refetchLegalList,
+    isFetchedLegalList,
   };
 };
 
-export default useTermList;
+export default useLegalList;

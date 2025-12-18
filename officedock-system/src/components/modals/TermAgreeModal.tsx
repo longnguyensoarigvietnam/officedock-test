@@ -2,7 +2,6 @@
 import { memo, useContext, useEffect, useRef, useState } from 'react';
 import { useMutation } from 'react-query';
 import 'react-quill/dist/quill.snow.css';
-import { useSessionCache } from '@providers/SessionCacheProvider';
 import { AxiosError } from 'axios';
 
 import Checkbox from '@components/common/Checkbox';
@@ -15,10 +14,14 @@ import { TermType } from '@constants/enums';
 import { ERROR_COMMON_MESSAGE } from '@constants/message';
 
 import useTermList from '@hooks/useTermList';
-import { TermsStep } from '@interfaces/user';
-import { LoadingContext } from '@providers/LoadingProvider';
-import api from '@base/api';
 import { useErrorToast } from '@hooks/useErrorToast';
+
+import { TermsStep } from '@interfaces/user';
+
+import { useSessionCache } from '@providers/SessionCacheProvider';
+import { LoadingContext } from '@providers/LoadingProvider';
+
+import api from '@base/api';
 
 const TermAgreeModal = memo(() => {
   const { data: session, update } = useSessionCache();
@@ -133,43 +136,45 @@ const TermAgreeModal = memo(() => {
       overlayClassName="flex justify-center items-center"
       fixedClass="!z-[50]"
       showIconClose={false}>
-      <header className="flex  border-b pb-4  border-solid border-gray-100 justify-between items-center mb-4">
-        <Heading
-          className="leading-10 !text-[#374151] text-lg min-h-[28px]"
-          as="h1">
-          {termsSteps[currentStep].title}
-        </Heading>
-      </header>
-      <div
-        ref={scrollRef}
-        className="custom-quill-text text-sm w-full text-gray-700 min-h-[78vh] max-h-[78vh] overflow-y-auto leading-6 text-neutral-02 text-neutral-02 gap-4 flex flex-col justify-between quill-editor ql-editor">
+      <div className="flex flex-col h-full">
+        <header className="flex  border-b pb-4  border-solid border-gray-100 justify-between items-center mb-4">
+          <Heading
+            className="leading-10 !text-[#374151] text-lg min-h-[28px] break-words max-w-full"
+            as="h1">
+            {termsSteps[currentStep].title}
+          </Heading>
+        </header>
         <div
-          dangerouslySetInnerHTML={{
-            __html: termsSteps[currentStep].description
-              ? `${termsSteps[currentStep].description}`
-              : '',
-          }}></div>
-        <div className="pt-3">
-          <Checkbox
-            classSize={`w-5 h-5 cursor-pointer `}
-            label={
-              termsSteps[currentStep].type == TermType.TERM_OF_USE
-                ? '利用規約を全部読みました。'
-                : 'プライバシーポリシーを全部読みました。'
-            }
-            isChecked={isChecked}
-            onChange={(state) => {
-              setIsChecked(state);
-            }}
-          />
-          <div className="border-t mt-4 pt-4 border-solid border-gray-100 gap-4 flex justify-end">
-            <Button
-              variant="primary"
-              disabled={!isChecked}
-              onClick={handleConfirmStep}
-              className={`w-[107px] rounded-xl h-10`}>
-              同意する
-            </Button>
+          ref={scrollRef}
+          className="custom-quill-text text-sm w-full text-gray-700 flex-1 overflow-y-auto leading-6 text-neutral-02 text-neutral-02 gap-4 flex flex-col justify-between quill-editor ql-editor !p-0">
+          <div
+            dangerouslySetInnerHTML={{
+              __html: termsSteps[currentStep].description
+                ? `${termsSteps[currentStep].description}`
+                : '',
+            }}></div>
+          <div className="pt-3">
+            <Checkbox
+              classSize={`w-5 h-5 cursor-pointer `}
+              label={
+                termsSteps[currentStep].type == TermType.TERM_OF_USE
+                  ? '利用規約を全部読みました。'
+                  : 'プライバシーポリシーを全部読みました。'
+              }
+              isChecked={isChecked}
+              onChange={(state) => {
+                setIsChecked(state);
+              }}
+            />
+            <div className="border-t mt-4 pt-4 border-solid border-gray-100 gap-4 flex justify-end">
+              <Button
+                variant="primary"
+                disabled={!isChecked}
+                onClick={handleConfirmStep}
+                className={`w-[107px] rounded-xl h-10`}>
+                同意する
+              </Button>
+            </div>
           </div>
         </div>
       </div>
