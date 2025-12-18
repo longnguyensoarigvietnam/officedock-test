@@ -9,7 +9,7 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from base.apis import BaseAPIViewSet
 from base.messages import ERROR_MESSAGES, KEYWORDS
@@ -70,6 +70,11 @@ class SystemTermViewSet(BaseAPIViewSet):
     queryset = Term.objects.all()
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
+
+    def get_permissions(self):
+        if self.action == "retrieve_term":
+            return [AllowAny()]
+        return super().get_permissions()
 
     @action(
         detail=True, methods=["POST"], url_path="read", serializer_class=None
@@ -135,3 +140,23 @@ class SystemTermViewSet(BaseAPIViewSet):
                 data.append(TermSerializer(privacy_policy).data)
 
             return self.response_ok(data)
+
+    @action(detail=False, methods=["GET"], url_path="retrieve-term")
+    def retrieve_term(self, request):
+        """
+        Handle response term by param
+        """
+        today = timezone.now().date()
+        terms = Term.objects.filter(
+            Q(
+                type__in=[
+                    TermTypes.TERM_OF_USE.value,
+                    TermTypes.PRIVACY_POLICY.value,
+                ]
+            )
+            & Q(status=TermStatus.PUBLIC.value)
+            & Q(period_start__lte=today)
+            & Q(Q(period_end__gte=today) | Q(period_end__isnull=True))
+        ).all()
+
+        return self.response_ok(TermSerializer(terms, many=True).data)
