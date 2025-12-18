@@ -33,7 +33,9 @@ import { apiRouters } from '@constants/routers';
 import {
   ERROR_CREATE_MESSAGE,
   ERROR_HIDDEN_MESSAGE,
+  ERROR_LONG_FIELD_MESSAGE,
   ERROR_UPDATE_MESSAGE,
+  ORGANIZATION_NAME_REQUIRED_MESSAGE,
   SUCCESS_CREATE_MESSAGE,
   SUCCESS_HIDDEN_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
@@ -68,12 +70,14 @@ const ListOrganizations = () => {
       status: boolean;
       action: string;
       showError: boolean;
+      errMessage: string;
     }>({
       name: '',
       uuid: '',
       status: false,
       action: '',
       showError: false,
+      errMessage: '',
     });
   const [selectedOrganizationToDelete, setSelectedOrganizationToDelete] =
     useState<Organizations | null>(null);
@@ -159,6 +163,7 @@ const ListOrganizations = () => {
           status: false,
           action: '',
           showError: false,
+          errMessage: '',
         });
         setPreviewAvatarUrl(null);
         setAvatarImgFile(null);
@@ -167,12 +172,15 @@ const ListOrganizations = () => {
       },
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_UPDATE_MESSAGE);
-        setSelectedOrganizationToUpdate((prev) => {
-          return {
-            ...prev,
-            showError: true,
-          };
-        });
+        const nameErr = error?.response?.data.name[0];
+        if (nameErr)
+          setSelectedOrganizationToUpdate((prev) => {
+            return {
+              ...prev,
+              showError: true,
+              errMessage: nameErr,
+            };
+          });
         isEditingRef.current = false;
       },
     },
@@ -209,6 +217,7 @@ const ListOrganizations = () => {
           status: false,
           action: '',
           showError: false,
+          errMessage: '',
         });
         refetchOrganizationList();
         setPreviewAvatarUrl(null);
@@ -217,12 +226,15 @@ const ListOrganizations = () => {
       },
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_CREATE_MESSAGE);
-        setSelectedOrganizationToUpdate((prev) => {
-          return {
-            ...prev,
-            showError: true,
-          };
-        });
+        const nameErr = error?.response?.data.name[0];
+        if (nameErr)
+          setSelectedOrganizationToUpdate((prev) => {
+            return {
+              ...prev,
+              showError: true,
+              errMessage: nameErr,
+            };
+          });
         isCreatingRef.current = false;
       },
     },
@@ -294,6 +306,23 @@ const ListOrganizations = () => {
               (category) => category.uuid == selectedOrganizationToUpdate.uuid,
             )?.name || '';
           if (
+            selectedOrganizationToUpdate.name.trim().length > 255 ||
+            !selectedOrganizationToUpdate.name.trim()
+          ) {
+            setSelectedOrganizationToUpdate((prev) => {
+              return {
+                ...prev,
+                showError: true,
+                errMessage:
+                  selectedOrganizationToUpdate.name.trim().length > 255
+                    ? ERROR_LONG_FIELD_MESSAGE
+                    : ORGANIZATION_NAME_REQUIRED_MESSAGE,
+              };
+            });
+            return;
+          }
+
+          if (
             oldCategoryName.trim() !=
               selectedOrganizationToUpdate.name.trim() ||
             avatarImgFile
@@ -310,11 +339,15 @@ const ListOrganizations = () => {
               status: false,
               action: '',
               showError: false,
+              errMessage: '',
             });
           }
         } else {
           if (isCreatingRef.current) return;
-          if (selectedOrganizationToUpdate.name.trim()) {
+          if (
+            selectedOrganizationToUpdate.name.trim() &&
+            selectedOrganizationToUpdate.name.trim().length <= 255
+          ) {
             createOrganization({
               uuid: String(selectedOrganizationToUpdate.uuid),
               name: selectedOrganizationToUpdate.name,
@@ -325,6 +358,10 @@ const ListOrganizations = () => {
               return {
                 ...prev,
                 showError: true,
+                errMessage:
+                  selectedOrganizationToUpdate.name.trim().length > 255
+                    ? ERROR_LONG_FIELD_MESSAGE
+                    : ORGANIZATION_NAME_REQUIRED_MESSAGE,
               };
             });
           }
@@ -409,6 +446,7 @@ const ListOrganizations = () => {
                     status: true,
                     action: ActionsModal.CREATE,
                     showError: false,
+                    errMessage: '',
                   });
                 }
               }}>
@@ -493,11 +531,16 @@ const ListOrganizations = () => {
                             placeholder="チーム名を入力"
                             className={`!border-[1px] !border-[#77858F] ${selectedOrganizationToUpdate.showError && '!border-error'} !w-full !text-sm !h-[34px]`}
                             defaultValue={element.name}
+                            error={
+                              selectedOrganizationToUpdate.errMessage || ''
+                            }
                             onChange={(e) => {
                               setSelectedOrganizationToUpdate((prev) => {
                                 return {
                                   ...prev,
                                   name: e.target.value,
+                                  errMessage: '',
+                                  showError: false,
                                 };
                               });
                             }}
@@ -575,6 +618,7 @@ const ListOrganizations = () => {
                                 status: true,
                                 action: ActionsModal.EDIT,
                                 showError: false,
+                                errMessage: '',
                               });
                             }}
                           />
@@ -630,6 +674,7 @@ const ListOrganizations = () => {
                               status: false,
                               action: '',
                               showError: false,
+                              errMessage: '',
                             });
                           }}
                         />

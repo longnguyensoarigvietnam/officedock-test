@@ -83,13 +83,17 @@ export const CompanyMetaNav = () => {
         <p className="font-medium text-sm">
           <span
             className={`${termContent && 'hover:cursor-pointer'}`}
-            onClick={() => handleClick(LegalContentType.TERM_OF_USE)}>
+            onClick={() =>
+              termContent && handleClick(LegalContentType.TERM_OF_USE)
+            }>
             利用規約
           </span>
           ｜
           <span
             className={`${policyContent && 'hover:cursor-pointer'}`}
-            onClick={() => handleClick(LegalContentType.PRIVACY_POLICY)}>
+            onClick={() =>
+              policyContent && handleClick(LegalContentType.PRIVACY_POLICY)
+            }>
             個人情報保護方針
           </span>
           ｜<span>お問い合わせ</span>

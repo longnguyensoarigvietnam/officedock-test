@@ -24,8 +24,10 @@ import ConfirmHiddenModal from '@components/modals/ConfirmHiddenModal';
 import { apiRouters } from '@constants/routers';
 import { NO_DATA_AVAILABLE, PAGE_SIZE_OPTIONS } from '@constants';
 import {
+  CATEGORY_NAME_REQUIRED_MESSAGE,
   ERROR_CREATE_MESSAGE,
   ERROR_HIDDEN_MESSAGE,
+  ERROR_LONG_FIELD_MESSAGE,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_CREATE_MESSAGE,
   SUCCESS_HIDDEN_MESSAGE,
@@ -73,12 +75,14 @@ const ListCategory = () => {
     status: boolean;
     action: string;
     showError: boolean;
+    errMessage: string;
   }>({
     name: '',
     uuid: '',
     status: false,
     action: '',
     showError: false,
+    errMessage: '',
   });
   const categoryNameInputRef = useRef<HTMLInputElement | null>(null);
   const isCreatingRef = useRef(false);
@@ -150,6 +154,7 @@ const ListCategory = () => {
           status: false,
           action: '',
           showError: false,
+          errMessage: '',
         });
         refetchCategoryList();
         isEditingRef.current = false;
@@ -170,12 +175,16 @@ const ListCategory = () => {
           description,
         });
 
-        setSelectedCategoryToUpdate((prev) => {
-          return {
-            ...prev,
-            showError: true,
-          };
-        });
+        if (name) {
+          setSelectedCategoryToUpdate((prev) => {
+            return {
+              ...prev,
+              showError: true,
+              errMessage: name?.[0],
+            };
+          });
+        }
+
         isEditingRef.current = false;
       },
     },
@@ -203,6 +212,7 @@ const ListCategory = () => {
           status: false,
           action: '',
           showError: false,
+          errMessage: '',
         });
         refetchCategoryList();
         isCreatingRef.current = false;
@@ -223,12 +233,15 @@ const ListCategory = () => {
           description,
         });
 
-        setSelectedCategoryToUpdate((prev) => {
-          return {
-            ...prev,
-            showError: true,
-          };
-        });
+        if (name) {
+          setSelectedCategoryToUpdate((prev) => {
+            return {
+              ...prev,
+              showError: true,
+              errMessage: name?.[0],
+            };
+          });
+        }
         isCreatingRef.current = false;
       },
     },
@@ -296,6 +309,22 @@ const ListCategory = () => {
             dataCategories.find(
               (category) => category.uuid == selectedCategoryToUpdate.uuid,
             )?.name || '';
+          if (
+            selectedCategoryToUpdate.name.trim().length > 255 ||
+            !selectedCategoryToUpdate.name.trim()
+          ) {
+            setSelectedCategoryToUpdate((prev) => {
+              return {
+                ...prev,
+                showError: true,
+                errMessage:
+                  selectedCategoryToUpdate.name.trim().length > 255
+                    ? ERROR_LONG_FIELD_MESSAGE
+                    : CATEGORY_NAME_REQUIRED_MESSAGE,
+              };
+            });
+            return;
+          }
           if (oldCategoryName.trim() != selectedCategoryToUpdate.name.trim()) {
             setWarningChangeCategoryModalOpen(true);
             setPendingSelection({
@@ -309,11 +338,15 @@ const ListCategory = () => {
               status: false,
               action: '',
               showError: false,
+              errMessage: '',
             });
           }
         } else {
           if (isCreatingRef.current) return;
-          if (selectedCategoryToUpdate.name.trim()) {
+          if (
+            selectedCategoryToUpdate.name.trim() &&
+            selectedCategoryToUpdate.name.trim().length <= 255
+          ) {
             createCategory({
               uuid: String(selectedCategoryToUpdate.uuid),
               name: selectedCategoryToUpdate.name,
@@ -323,6 +356,10 @@ const ListCategory = () => {
               return {
                 ...prev,
                 showError: true,
+                errMessage:
+                  selectedCategoryToUpdate.name.trim().length > 255
+                    ? ERROR_LONG_FIELD_MESSAGE
+                    : CATEGORY_NAME_REQUIRED_MESSAGE,
               };
             });
           }
@@ -381,6 +418,7 @@ const ListCategory = () => {
                     status: true,
                     action: ActionsModal.CREATE,
                     showError: false,
+                    errMessage: '',
                   });
                 }
               }}>
@@ -432,11 +470,15 @@ const ListCategory = () => {
                             placeholder="カテゴリー名を入力"
                             className={`!border-[1px] !border-[#77858F] ${selectedCategoryToUpdate.showError && '!border-error'} w-full !text-sm !h-[34px]`}
                             defaultValue={element.name}
+                            error={selectedCategoryToUpdate.errMessage || ''}
+                            errorClassName="!text-left"
                             onChange={(e) => {
                               setSelectedCategoryToUpdate((prev) => {
                                 return {
                                   ...prev,
                                   name: e.target.value,
+                                  errMessage: '',
+                                  showError: false,
                                 };
                               });
                             }}
@@ -462,7 +504,7 @@ const ListCategory = () => {
                             <ImageRound
                               name="Edit"
                               src={'/icons/edit-gray.svg'}
-                              className={`w-3 h-3 edit-icon ${
+                              className={`w-3 min-w-3 h-3 edit-icon ${
                                 selectedCategoryToUpdate.uuid != element.uuid &&
                                 selectedCategoryToUpdate.status
                                   ? 'hover:cursor-not-allowed'
@@ -495,6 +537,7 @@ const ListCategory = () => {
                                   status: true,
                                   action: ActionsModal.EDIT,
                                   showError: false,
+                                  errMessage: '',
                                 });
                               }}
                             />
@@ -545,6 +588,7 @@ const ListCategory = () => {
                                 status: false,
                                 action: '',
                                 showError: false,
+                                errMessage: '',
                               });
                             }}
                           />
@@ -663,6 +707,7 @@ const ListCategory = () => {
               status: false,
               action: '',
               showError: false,
+              errMessage: '',
             });
             setWarningChangeCategoryModalOpen(false);
             setPendingSelection(null);

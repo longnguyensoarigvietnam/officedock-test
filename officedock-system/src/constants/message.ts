@@ -25,7 +25,7 @@ export const NAME_REQUIRED_MESSAGE = '名前は必須です。';
 export const ROLE_REQUIRED_MESSAGE = '権限を選択してください。';
 export const SUPERIOR_REQUIRED_MESSAGE = '上位組織は必須です。';
 
-export const ORGANIZATION_NAME_REQUIRED_MESSAGE = '組織名は必須です。';
+export const ORGANIZATION_NAME_REQUIRED_MESSAGE = 'チーム名は必須です。';
 
 export const TAG_NAME_REQUIRED_MESSAGE = '集計タグは必須です。';
 
