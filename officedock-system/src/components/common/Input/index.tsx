@@ -5,6 +5,7 @@ import { UseFormRegisterReturn } from 'react-hook-form';
 
 import ErrorMessage from '../ErrorMessage';
 import TimeDropdown from '../Dropdown/TimeDropdown';
+
 import { OptionDropdownType } from '@interfaces/common';
 
 export type InputProps = InputHTMLAttributes<HTMLInputElement> & {
@@ -22,6 +23,7 @@ export type InputProps = InputHTMLAttributes<HTMLInputElement> & {
   iconSrc?: string;
   options?: OptionDropdownType[];
   valueInput?: string | null;
+  errorClassName?: string;
   onChangeDropdown?: (value: OptionDropdownType) => void;
 };
 
@@ -42,6 +44,7 @@ const Input = ({
   valueInput,
   classNameOption,
   isBottomOptions,
+  errorClassName,
   onChangeDropdown,
   ...props
 }: InputProps) => {
@@ -120,7 +123,9 @@ const Input = ({
           )
         ) : null}
       </div>
-      {error && <ErrorMessage error={error} className="mt-[6px]" />}
+      {error && (
+        <ErrorMessage error={error} className={`mt-[6px] ${errorClassName}`} />
+      )}
     </div>
   );
 };
