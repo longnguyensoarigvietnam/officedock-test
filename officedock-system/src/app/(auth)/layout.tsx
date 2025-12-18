@@ -1,7 +1,9 @@
 import { redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth';
-import Image from 'next/image';
+
 import { options } from '@app/api/auth/[...nextauth]/options';
+
+import { CompanyMetaNav } from '@components/layouts/CompanyMetaNav';
 
 import { pageRouters } from '@constants/routers';
 import { SYSTEM_PERMISSIONS_MENU } from '@constants/menu';
@@ -27,20 +29,7 @@ const MainRootLayout = async ({ children }: { children: React.ReactNode }) => {
         background: 'linear-gradient(168.55deg, #289BF2 0.21%, #73CCDF 99.79%)',
       }}>
       <div className="w-[37.5%] flex flex-col min-h-screen items-center justify-center pb-5">
-        <div className="flex flex-grow flex-col justify-center items-center ">
-          <Image
-            width={200}
-            height={200}
-            src="/images/officedock_logo_white.svg"
-            alt="Officedock logo"
-          />
-        </div>
-        <div className="flex flex-col text-white items-center gap-3">
-          <p className="font-medium text-sm">
-            利用規約｜個人情報保護方針｜お問い合わせ
-          </p>
-          <p className="font-normal text-xs">@OFFICEDOCK</p>
-        </div>
+        <CompanyMetaNav />
       </div>
       <div className="w-[62.5%] rounded-l-[60px] bg-white">{children}</div>
     </main>
