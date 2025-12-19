@@ -11,6 +11,7 @@ import Button from '@components/common/Button';
 import ConfirmDeleteModal from '@components/modals/ConfirmDeleteModal';
 import Pagination from '@components/common/Pagination';
 import Dropdown from '@components/common/Dropdown';
+import ErrorMessage from '@components/common/ErrorMessage';
 
 import { apiRouters } from '@constants/routers';
 import {
@@ -19,6 +20,7 @@ import {
   ERROR_DUPLICATE_LOCATION,
   ERROR_LONG_FIELD_MESSAGE,
   ERROR_UPDATE_MESSAGE,
+  LOCATION_NAME_REQUIRED_MESSAGE,
   SUCCESS_CREATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
@@ -33,6 +35,7 @@ import { useToast } from '@providers/ToastProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 
 import { LocationEventType } from '@interfaces/location';
+
 import api from '@base/api';
 
 const ListLocation = () => {
@@ -49,7 +52,15 @@ const ListLocation = () => {
     useState<boolean>(false);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const [errors, setErrors] = useState<Record<string, boolean>>({});
+  const [errors, setErrors] = useState<
+    Record<
+      string,
+      {
+        status: boolean;
+        message: string;
+      }
+    >
+  >({});
   const [openConfirmDeleteModal, setOpenConfirmDeleteModal] = useState(false);
   const [selectedLocationToDelete, setSelectedLocationToDelete] =
     useState<LocationEventType | null>(null);
@@ -198,25 +209,26 @@ const ListLocation = () => {
   const handleBlur = (uuid: string) => {
     const trimmedText = editText.trim();
     if (trimmedText === '') {
-      setErrors((prev) => ({ ...prev, [uuid]: true }));
+      setErrors((prev) => ({
+        ...prev,
+        [uuid]: {
+          status: true,
+          message: LOCATION_NAME_REQUIRED_MESSAGE,
+        },
+      }));
       setTimeout(() => {
         inputRef.current?.focus();
       }, 0);
       return;
     }
     if (trimmedText.length > 255) {
-      if (isCreating) {
-        showToast({
-          variant: 'error',
-          description: ERROR_LONG_FIELD_MESSAGE,
-        });
-      } else {
-        showToast({
-          variant: 'error',
-          description: ERROR_LONG_FIELD_MESSAGE,
-        });
-      }
-      setErrors((prev) => ({ ...prev, [uuid]: true }));
+      setErrors((prev) => ({
+        ...prev,
+        [uuid]: {
+          status: true,
+          message: ERROR_LONG_FIELD_MESSAGE,
+        },
+      }));
       setTimeout(() => {
         inputRef.current?.focus();
       }, 0);
@@ -229,11 +241,13 @@ const ListLocation = () => {
     );
 
     if (isDuplicate) {
-      showToast({
-        variant: 'error',
-        description: ERROR_DUPLICATE_LOCATION,
-      });
-      setErrors((prev) => ({ ...prev, [uuid]: true }));
+      setErrors((prev) => ({
+        ...prev,
+        [uuid]: {
+          status: true,
+          message: ERROR_DUPLICATE_LOCATION,
+        },
+      }));
       setTimeout(() => {
         inputRef.current?.focus();
       }, 0);
@@ -263,7 +277,13 @@ const ListLocation = () => {
     setIsCreating(false);
     setIsEditing(false);
 
-    setErrors((prev) => ({ ...prev, [uuid]: false }));
+    setErrors((prev) => ({
+      ...prev,
+      [uuid]: {
+        status: false,
+        message: '',
+      },
+    }));
   };
 
   // Handle click edit item
@@ -362,11 +382,26 @@ const ListLocation = () => {
                           <input
                             ref={inputRef}
                             value={editText}
-                            onChange={(e) => setEditText(e.target.value)}
+                            onChange={(e) => {
+                              setEditText(e.target.value);
+                              setErrors((prev) => ({
+                                ...prev,
+                                [String(item.uuid)]: {
+                                  status: false,
+                                  message: '',
+                                },
+                              }));
+                            }}
                             onBlur={() => handleBlur(item?.uuid as string)}
                             placeholder="場所名を入力"
-                            className={`w-full px-3.5 ${errors[item.uuid] && '!border-red-500'} py-2.5 leading-5.5 placeholder-gray-300  rounded-lg focus:outline-none focus:shadow-sm focus:border-focus focus:ring-0 !border-[1px] !border-[#77858F] !text-sm !h-[34px]`}
+                            className={`w-full px-3.5 ${errors[item.uuid]?.status && '!border-red-500'} py-2.5 leading-5.5 placeholder-gray-300  rounded-lg focus:outline-none focus:shadow-sm focus:border-focus focus:ring-0 !border-[1px] !border-[#77858F] !text-sm !h-[34px]`}
                           />
+                          {errors[item.uuid]?.status && (
+                            <ErrorMessage
+                              error={errors[item.uuid]?.message}
+                              className="mt-[6px]"
+                            />
+                          )}{' '}
                         </div>
                       ) : (
                         <>
