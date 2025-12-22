@@ -32,6 +32,7 @@ export const TAG_NAME_REQUIRED_MESSAGE = '集計タグは必須です。';
 export const TITLE_TASK_REQUIRED_MESSAGE = 'タスクのタイトルは必須です。';
 
 export const DEFAULT_VALUE_TODO_LIST = '入力してください。';
+export const LOCATION_NAME_REQUIRED_MESSAGE = '場所名は必須です。';
 
 export const QUESTION_VALUE_REQUIRED_MESSAGE = '質問の内容を入力してください。';
 export const ANSWER_VALUE_REQUIRED_MESSAGE = '回答の内容を入力してください。';
