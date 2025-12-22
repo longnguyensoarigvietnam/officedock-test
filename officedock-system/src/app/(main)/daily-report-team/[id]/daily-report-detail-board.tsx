@@ -1806,11 +1806,13 @@ const DailyReportDetailBoard = () => {
     const chartElem = document.getElementById('chart-to-pdf');
     let chartImgData = '';
     if (chartElem) {
-      const chartCanvas = await html2canvas(chartElem, {
-        scale: 2,
-        useCORS: true,
-      });
-      chartImgData = chartCanvas.toDataURL('image/png');
+      const chartCanvas = chartElem.querySelector(
+        'canvas',
+      ) as HTMLCanvasElement;
+
+      if (chartCanvas) {
+        chartImgData = chartCanvas.toDataURL('image/png', 1);
+      }
     }
 
     const pdf = new jsPDF('p', 'mm', 'a4');
@@ -2577,7 +2579,7 @@ const DailyReportDetailBoard = () => {
             left: '-9999px',
           }}>
           <div className="w-full overflow-y-auto px-5">
-            <div className="pdf-header">
+            <div className="pdf-header max-h-[300px]">
               <div className="flex items-center  py-1 justify-between text-lg border-b border-b-gray-400 border-l-[2px] border-l-black pl-[2px]">
                 <div className="w-full flex items-end gap-3 -translate-y-[20%]">
                   <span className="text-[30px] font-medium -translate-y-[10%]">
@@ -2672,7 +2674,8 @@ const DailyReportDetailBoard = () => {
                                     backgroundColor: item.color,
                                   }}
                                   className={`w-3 h-3 border border-black  relative top-[-1px] `}></div>
-                                <p className=" break-all h-5 max-w-[150px] w-fit line-clamp-3">
+                                <p
+                                  className={`break-all h-5 ${index > 1 && 'max-w-[250px]'} max-w-[150px] truncate w-fit line-clamp-3`}>
                                   {item.categoryName}
                                 </p>
                                 <p className=" w-fit h-5 mr-1">

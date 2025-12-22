@@ -343,3 +343,9 @@
 .daily-custom .css-1dimb5e-singleValue {
   font-size: 13px;
 }
+/* FIX CANVAS BASELINE BUG DO EXTENSION */
+#chart-to-pdf canvas {
+  display: block !important;
+  vertical-align: top !important;
+  line-height: 0 !important;
+}
