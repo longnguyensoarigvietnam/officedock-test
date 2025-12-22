@@ -143,6 +143,8 @@ const PieChart = ({
   };
 
   const options: ChartOptions<'pie'> = {
+    maintainAspectRatio: true,
+    aspectRatio: 1,
     plugins: {
       legend: {
         display: showLegend,
