@@ -41,6 +41,7 @@ import { Table, TableBody } from '@components/common/Table';
 import socketEventEmitter from '@components/socket/socketEventEmitter';
 import Input from '@components/common/Input';
 import ActionDetailDaily from '@components/daily/ActionDetailDaily';
+import Spinner from '@components/common/Spinner';
 import SingleSelect from '@components/common/SingleSelect';
 import ResizeTextArea from '@components/custom/ResizeTextArea';
 import DetailActualItemDailyModal from '@components/daily/DetailActualItemDailyModal';
@@ -136,6 +137,7 @@ const DailyReportBoard = () => {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
 
   const [remarkData, setRemarkData] = useState<string>('');
+  const [isDownloading, setIsDownloading] = useState<boolean>(false);
 
   const { dataStatistic, refetchDataStatistic } = useDataStatistic({
     date: formatDateServer(currentDate),
@@ -1698,6 +1700,7 @@ const DailyReportBoard = () => {
 
   const handleDownloadPDF = async () => {
     if (!divRef.current) return;
+    setIsDownloading(true);
 
     // --- show DOM offscreen so html2canvas can render ---
     divRef.current.style.visibility = 'visible';
@@ -1977,6 +1980,7 @@ const DailyReportBoard = () => {
     pdf.save(
       `${formatShowDateJapanese(currentDate)}_${session?.user.profile.fullName}_日報.pdf`,
     );
+    setIsDownloading(false);
 
     // cleanup
     divRef.current.style.visibility = 'hidden';
@@ -2097,17 +2101,22 @@ const DailyReportBoard = () => {
             <div className="flex items-center gap-3">
               {isPermissionAction && (
                 <Button
-                  className="flex gap-2 px-0 py-0 w-[138px] h-[34px]"
+                  disabled={isDownloading}
+                  className="flex gap-2 !px-0 py-0 w-[138px] h-[34px]"
                   onClick={() => {
                     if (!isLoadingDownload) return;
                     handleDownloadPDF();
                   }}>
                   <span className="break-all">PDF書き出し</span>
-                  <ImageRound
-                    className=" w-3 h-3"
-                    src="/icons/upload.svg"
-                    name="upload"
-                  />
+                  {!isDownloading ? (
+                    <ImageRound
+                      className=" w-3 h-3"
+                      src="/icons/upload.svg"
+                      name="upload"
+                    />
+                  ) : (
+                    <Spinner className="!w-4 !h-4" iconClassName="!m-0" />
+                  )}
                 </Button>
               )}
             </div>
