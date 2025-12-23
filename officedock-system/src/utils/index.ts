@@ -2896,3 +2896,9 @@ export function getDefaultThumbByType(
   const item = DEFAULT_THUMB_ITEM.find((i) => i.type === type);
   return item?.url ?? null;
 }
+
+// Very simple text clamping
+export const clampText = (text: string, maxChars: number) => {
+  if (!text) return '';
+  return text.length > maxChars ? text.slice(0, maxChars) + '…' : text;
+};

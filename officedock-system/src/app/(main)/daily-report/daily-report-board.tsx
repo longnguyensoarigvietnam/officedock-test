@@ -103,6 +103,7 @@ import {
 import {
   adjustPositionForViewportSchedule,
   calculateTotalMinutes,
+  clampText,
   hasPermissionInArray,
   removeDuplicateOptions,
   secondsToTimeString,
@@ -1975,7 +1976,7 @@ const DailyReportBoard = () => {
 
     // save pdf
     pdf.save(
-      `${formatShowDateJapanese(currentDate)}_${session?.user.profile.fullName}_日報.pdf`,
+      `${formatShowDateJapanese(currentDate)}_${dataStatisticPDF?.remark?.user.fullName}_日報.pdf`,
     );
 
     // cleanup
@@ -2023,7 +2024,7 @@ const DailyReportBoard = () => {
 
   return (
     <div className="flex  flex-col ">
-      <div className="h-[calc(100vh_-_83px)]  overflow-y-auto">
+      <div className="h-[calc(100vh_-_83px)]   overflow-y-auto">
         <header className="flex justify-between my-[30px] pr-10 ">
           <div className="flex gap-5 items-center">
             <span className="text-2xl font-medium ">日報</span>
@@ -2416,11 +2417,16 @@ const DailyReportBoard = () => {
                   </div>
                 </div>
                 <div className="flex text-lg items-center gap-1 h-full basis-1/2 py-1 justify-end">
-                  <p className=" max-w-[170px] flex-shrink-0 w-fit font-medium break-all py-1 min-h-5">
-                    {dataStatisticPDF?.remark?.user?.organizations?.name}
+                  <p className=" max-w-[170px] flex-shrink-0 font-medium py-1 min-h-5 break-words">
+                    {dataStatisticPDF?.remark?.user?.organizations?.name &&
+                      clampText(
+                        dataStatisticPDF?.remark?.user?.organizations?.name,
+                        15,
+                      )}
                   </p>
-                  <span className=" max-w-[170px] flex-shrink-0 w-fit min-h-5 break-all ">
-                    {session?.user.profile.fullName}
+                  <span className=" max-w-[170px] flex-shrink-0  min-h-5 break-words ">
+                    {dataStatisticPDF?.remark?.user.fullName &&
+                      clampText(dataStatisticPDF?.remark?.user.fullName, 40)}
                   </span>
                 </div>
               </div>
