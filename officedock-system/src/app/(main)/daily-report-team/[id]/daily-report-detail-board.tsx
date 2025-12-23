@@ -123,6 +123,7 @@ import { TeamDailyStateContext } from '@providers/TeamDailyReportProvider';
 import { TaskContext } from '@providers/TaskProvider';
 import api from '@base/api';
 import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
+import Spinner from '@components/common/Spinner';
 
 const DailyReportDetailBoard = () => {
   const { statusTaskSelected, setStatusTaskSelected } = useContext(TaskContext);
@@ -175,6 +176,7 @@ const DailyReportDetailBoard = () => {
     },
   });
   const [isLoadingDownload, setIsLoadingDownload] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const { dataStatisticPDF, refetchDataStatisticPDF } = useDataStatisticPDF({
     date: formatDateServer(dataDatePicker),
@@ -1793,6 +1795,7 @@ const DailyReportDetailBoard = () => {
 
   const handleDownloadPDF = async () => {
     if (!divRef.current) return;
+    setIsDownloading(true);
 
     // --- show DOM offscreen so html2canvas can render ---
     divRef.current.style.visibility = 'visible';
@@ -2071,6 +2074,7 @@ const DailyReportDetailBoard = () => {
     pdf.save(
       `${formatShowDateJapanese(dataDatePicker)}_${dataDetailUser && dataDetailUser?.fullName}_日報.pdf`,
     );
+    setIsDownloading(false);
     // cleanup
     divRef.current.style.visibility = 'hidden';
     divRef.current.style.position = 'absolute';
@@ -2282,17 +2286,22 @@ const DailyReportDetailBoard = () => {
             <div className="flex items-center gap-3">
               {isPermissionAction && (
                 <Button
-                  className="flex gap-2 px-0 py-0 w-[138px] h-[34px]"
+                  className="flex gap-2 !px-0 py-0 w-[138px] h-[34px]"
+                  disabled={isDownloading}
                   onClick={() => {
                     if (!isLoadingDownload) return;
                     handleDownloadPDF();
                   }}>
                   <span className="break-all">PDF書き出し</span>
-                  <ImageRound
-                    className=" w-3 h-3"
-                    src="/icons/upload.svg"
-                    name="upload"
-                  />
+                  {!isDownloading ? (
+                    <ImageRound
+                      className=" w-3 h-3"
+                      src="/icons/upload.svg"
+                      name="upload"
+                    />
+                  ) : (
+                    <Spinner className="!w-4 !h-4" iconClassName="!m-0" />
+                  )}
                 </Button>
               )}
             </div>
