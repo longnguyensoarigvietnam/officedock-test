@@ -2606,7 +2606,7 @@ const DailyReportDetailBoard = () => {
                   </p>
                   <span className=" max-w-[170px] flex-shrink-0  min-h-5 break-words ">
                     {dataStatisticPDF?.remark?.user.fullName &&
-                      clampText(dataStatisticPDF?.remark?.user.fullName, 40)}
+                      clampText(dataStatisticPDF?.remark?.user.fullName, 20)}
                   </span>
                 </div>
               </div>
