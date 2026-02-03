@@ -44,7 +44,12 @@ class ThanksMessageViewSet(
         Filtering by company
         """
         company_id = self.request.user.company_id
-        return super().get_queryset().filter(company_id=company_id)
+        return (
+            super()
+            .get_queryset()
+            .filter(company_id=company_id)
+            .select_related("sender__profile", "recipient__profile")
+        )
 
     @extend_schema(
         parameters=[

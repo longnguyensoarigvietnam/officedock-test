@@ -971,6 +971,7 @@ class TaskTeamdockSerializer(BaseUserSerializer):
         results = []
         all_tasks = obj.in_charge_tasks.filter(
             deleted_at__isnull=True,
+            archived_at__isnull=True,
         ).exclude(type=TaskTypes.MY_TEMPLATE.value)
         for status in statuses:
             tasks = all_tasks.filter(status=status)

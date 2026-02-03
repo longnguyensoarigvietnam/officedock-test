@@ -636,8 +636,10 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
                 task_running = user.task_durations.filter(
                     started_at__gte=start_of_today,
                 ).last()
+
         if not task_running:
             return self.response_ok(data)
+
         current_duration_start = task_running.task or task_running.schedule
         obj_type = (
             CalendarTypes.TASK.value
@@ -659,9 +661,9 @@ class DurationViewSet(BaseAPIViewSet, UpdateModelMixin, DestroyModelMixin):
                 )
 
             categories = None
-            if current_duration_start.categories.exists():
+            if first_category := current_duration_start.categories.first():
                 categories = get_common_categories(
-                    current_duration_start.categories.first(),
+                    first_category,
                     current_duration_start,
                 )
 
