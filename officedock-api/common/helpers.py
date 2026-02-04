@@ -1,4 +1,14 @@
-from django.db.models import F, Q, Case, IntegerField, Prefetch, Value, When
+from django.db.models import (
+    F,
+    Q,
+    Case,
+    IntegerField,
+    Prefetch,
+    Value,
+    When,
+    Exists,
+    OuterRef,
+)
 from django.utils.timezone import now
 from calendars.serializers import EventLocationSerializer
 from common.serializers import (
@@ -23,10 +33,10 @@ from companies.constants import CompanyStatus
 from companies.serializers import CompanySerializer
 from mvp_votes.constants import MVPVoteTypes
 from mvp_votes.models import MVPVoteManagement
-from organizations.models import Organization
+from organizations.models import Organization, UsersOrganizations
 from organizations.serializers import (
     BaseStatisticCategorySerializer,
-    OrganizationDetailSerializer,
+    OrganizationStatisticCategoriesSerializer,
 )
 from plans.constants import CUSTOM_PLAN
 from plans.models import Plan
@@ -89,13 +99,17 @@ def get_members(company, organization=None, request=None):
     Get list users of company
     """
     if organization:
-        users = organization.users.filter(
-            filter_include_deleted_user(request)
-        ).order_by("created_at")
+        users = (
+            organization.users.filter(filter_include_deleted_user(request))
+            .select_related("profile")
+            .order_by("created_at")
+        )
     else:
-        users = company.users.filter(
-            filter_include_deleted_user(request)
-        ).order_by("created_at")
+        users = (
+            company.users.filter(filter_include_deleted_user(request))
+            .select_related("profile")
+            .order_by("created_at")
+        )
 
     return CreationDataUserWithMainOrganizationSerializer(users, many=True).data
 
@@ -195,6 +209,19 @@ def get_organizations_of_user_by_screen_role(
     if not role_permissions:
         return None
     selection_results = [item.selection_result for item in role_permissions]
+
+    # Common annotate for is_main
+    is_main_annotate = Exists(
+        UsersOrganizations.objects.filter(
+            user=user,
+            organization=OuterRef("pk"),
+            is_main=True,
+        )
+    )
+
+    # ----------------------
+    # Case: ALLOWED
+    # ----------------------
     if SelectionResultOptions.ALLOWED.value in selection_results:
         if screen_name in [Screens.SKILL_MAP_MANAGEMENT.value]:
             organizations = Organization.objects.filter(
@@ -204,11 +231,21 @@ def get_organizations_of_user_by_screen_role(
             organizations = Organization.objects.filter(
                 users=user, deleted_at__isnull=True
             ).all()
+
         if is_return_orgs:
             return organizations
+
         return CreationDataOrganizationWithMainSerializer(
-            organizations, many=True, context={"user": user}
+            organizations.select_related("superior").annotate(
+                is_main=is_main_annotate
+            ),
+            many=True,
+            context={"user": user},
         ).data
+
+    # ----------------------
+    # Case: NOT ALLOWED / PARTIAL
+    # ----------------------
     org_ids = list(
         Organization.objects.filter(users=user).values_list("id", flat=True)
     )
@@ -222,13 +259,20 @@ def get_organizations_of_user_by_screen_role(
 
         _get_children(user)
         org_ids = set(org_ids)
+
     organizations = Organization.objects.filter(
         id__in=org_ids, deleted_at__isnull=True
     ).all()
+
     if is_return_orgs:
         return organizations
+
     return CreationDataOrganizationWithMainSerializer(
-        organizations, many=True, context={"user": user}
+        organizations.select_related("superior").annotate(
+            is_main=is_main_annotate
+        ),
+        many=True,
+        context={"user": user},
     ).data
 
 
@@ -249,10 +293,12 @@ def get_data_organization_team_statistic(user, company, organization):
     """
     if not organization:
         return None
+
     calendar_org = company.get_calendar_organization()
     organizations = CreationDataOrganizationWithStructCategorySerializer(
         [organization, calendar_org], many=True, context={"user": user}
     ).data
+
     task_user_ids = list(
         PeopleInChargeTasks.objects.filter(
             task__organization=organization
@@ -262,6 +308,7 @@ def get_data_organization_team_statistic(user, company, organization):
     all_user_ids = set(org_user_ids + task_user_ids)
     users = (
         User.objects.filter(id__in=all_user_ids)
+        .select_related("profile")
         .annotate(
             assigned=Case(
                 When(id__in=org_user_ids, then=Value(1)),
@@ -281,8 +328,10 @@ def get_data_organization_team_statistic(user, company, organization):
         )
         members.append(data)
 
+    # Attach members to each organization
     for org in organizations:
         org["members"] = members
+
     organizations_by_role = get_organizations_of_user_by_screen_role(
         user, Screens.TEAMDOCK.value, Actions.VIEW.value, is_return_orgs=True
     )
@@ -382,7 +431,7 @@ def get_filter_organization_categories(organizations):
     """
     list_cats = []
     for organization in organizations:
-        organization_categories = OrganizationDetailSerializer(
+        organization_categories = OrganizationStatisticCategoriesSerializer(
             organization
         ).data["statistic_categories"]
         categories = transform_statistic_categories(organization_categories)
@@ -405,12 +454,9 @@ def get_organization_with_users(organizations):
     """
     Get list organization with users
     """
-    list_org = []
-    for organization in organizations:
-        list_org.append(
-            CreationDataOrganizationWithUserSerializer(organization).data
-        )
-    return list_org
+    return CreationDataOrganizationWithUserSerializer(
+        organizations, many=True
+    ).data
 
 
 def get_items_of_user(user):

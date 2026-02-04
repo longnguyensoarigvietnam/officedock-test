@@ -763,6 +763,15 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         return queryset.order_by("created_at")
 
+    def get_permissions(self):
+        """
+        Return the permissions by action.
+        """
+        if self.action in ["report"]:
+            self.screen_name = Screens.DAILY_REPORT.value
+
+        return super().get_permissions()
+
     def get_serializer_class(self):
         """
         Return the serializer class to use.
@@ -1194,6 +1203,7 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
 
         while DailyReport.objects.filter(user=user, date=date).count() > 1:
             DailyReport.objects.filter(user=user, date=date).first().delete()
+
         if is_confirmed is not None:
             ConfirmReport.objects.update_or_create(
                 date=date,
@@ -1202,14 +1212,14 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 defaults={"is_confirmed": is_confirmed},
             )
             return self.response_ok()
-        else:
-            daily, created = DailyReport.objects.update_or_create(
-                user=user,
-                date=date,
-                defaults=serializer.validated_data,
-            )
 
-            return self.response_ok(self.get_serializer(daily).data)
+        daily, created = DailyReport.objects.update_or_create(
+            user=user,
+            date=date,
+            defaults=serializer.validated_data,
+        )
+
+        return self.response_ok(self.get_serializer(daily).data)
 
     @action(
         methods=["GET"],

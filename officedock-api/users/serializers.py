@@ -361,6 +361,11 @@ class OrganizationForUserSerializer(OrganizationSerializer):
         """
         Get the is_main value from UsersOrganizations.
         """
+        # If annotated value exists, use it directly
+        if hasattr(obj, "is_main"):
+            return obj.is_main
+
+        # Fallback to querying the UsersOrganizations model
         user = self.context.get("user")
         users_org = UsersOrganizations.objects.filter(
             user=user, organization=obj
