@@ -1,4 +1,12 @@
 'use client';
+import jaLocale from '@fullcalendar/core/locales/ja';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import interactionPlugin from '@fullcalendar/interaction';
+import FullCalendar from '@fullcalendar/react';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import html2canvas from 'html2canvas-pro';
+import jsPDF from 'jspdf';
+import Image from 'next/image';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import React, {
   ChangeEvent,
@@ -8,46 +16,41 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import FullCalendar from '@fullcalendar/react';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import timeGridPlugin from '@fullcalendar/timegrid';
-import interactionPlugin from '@fullcalendar/interaction';
-import Image from 'next/image';
-import jaLocale from '@fullcalendar/core/locales/ja';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas-pro';
 
+import { EventContentArg } from '@fullcalendar/core/index.js';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 import {
-  useReactTable,
+  ColumnDef,
+  flexRender,
   getCoreRowModel,
   getExpandedRowModel,
-  flexRender,
-  ColumnDef,
-  Row,
   getSortedRowModel,
+  Row,
   SortingState,
+  useReactTable,
 } from '@tanstack/react-table';
-import { EventContentArg } from '@fullcalendar/core/index.js';
 import { useMutation, useQueryClient } from 'react-query';
-import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { AxiosError } from 'axios';
 
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import Button from '@components/common/Button';
+import PieChart from '@components/common/Chart/PieChart';
+import Checkbox from '@components/common/Checkbox';
 import DatePicker from '@components/common/DatePicker';
 import ImageRound from '@components/common/ImageRound';
-import PieChart from '@components/common/Chart/PieChart';
-import { Table, TableBody } from '@components/common/Table';
-import socketEventEmitter from '@components/socket/socketEventEmitter';
 import Input from '@components/common/Input';
-import ActionDetailDaily from '@components/daily/ActionDetailDaily';
 import SingleSelect from '@components/common/SingleSelect';
+import Spinner from '@components/common/Spinner';
+import { Table, TableBody } from '@components/common/Table';
 import ResizeTextArea from '@components/custom/ResizeTextArea';
-import Checkbox from '@components/common/Checkbox';
-import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
+import ActionDetailDaily from '@components/daily/ActionDetailDaily';
 import DetailActualItemDailyModal from '@components/daily/DetailActualItemDailyModal';
+import socketEventEmitter from '@components/socket/socketEventEmitter';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import TaskDailyCard from '../../../../components/daily/taskDailyCard';
 
+import { DATE_TEXT_FORMAT, NO_SETTING } from '@constants';
 import {
   EventCalendarType,
   EventWorkCategory,
@@ -56,23 +59,25 @@ import {
   SocketActions,
   StatusValueTask,
 } from '@constants/enums';
-import { DATE_TEXT_FORMAT, NO_SETTING } from '@constants';
 
-import { apiRouters, pageRouters } from '@constants/routers';
 import {
   ERROR_COMMON_MESSAGE,
   ERROR_DELETE_TASK_RUNNING,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_DELETE_MESSAGE,
 } from '@constants/message';
+import { apiRouters, pageRouters } from '@constants/routers';
 
-import './../styles/daily-report.css';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 import useDataStatistic from '@hooks/useDataStatistic';
-import { useErrorToast } from '@hooks/useErrorToast';
 import useDataStatisticPDF from '@hooks/useDataStatisticPdf';
 import { useDebounceCallback } from '@hooks/useDebounceCallback';
-import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
+import { useErrorToast } from '@hooks/useErrorToast';
+import './../styles/daily-report.css';
 
+import api from '@base/api';
+import { WebSocketMessageData } from '@interfaces/chat';
+import { OptionDropdownType } from '@interfaces/common';
 import {
   ChildTask,
   DataActualDetail,
@@ -86,9 +91,22 @@ import {
   SmallCategory,
   TaskTimeStatistic,
 } from '@interfaces/statistic';
-import { WebSocketMessageData } from '@interfaces/chat';
-import { OptionDropdownType } from '@interfaces/common';
 import { Profile } from '@interfaces/user';
+import { LoadingContext } from '@providers/LoadingProvider';
+import { TaskContext } from '@providers/TaskProvider';
+import { TeamDailyStateContext } from '@providers/TeamDailyReportProvider';
+import { useToast } from '@providers/ToastProvider';
+import { useWebSocket } from '@providers/WebSocketProvider';
+import {
+  adjustPositionForViewportSchedule,
+  calculateTotalMinutes,
+  clampText,
+  hasPermissionInArray,
+  removeDuplicateOptions,
+  secondsToTimeString,
+  timeStringToSeconds,
+  transformDataTaskDailyToTable,
+} from '@utils';
 import {
   calculateActualDurationDaily,
   combineDateAndTime,
@@ -107,24 +125,6 @@ import {
   isTodaySchedule,
   isYesterdaySchedule,
 } from '@utils/date';
-import {
-  adjustPositionForViewportSchedule,
-  calculateTotalMinutes,
-  clampText,
-  hasPermissionInArray,
-  removeDuplicateOptions,
-  secondsToTimeString,
-  timeStringToSeconds,
-  transformDataTaskDailyToTable,
-} from '@utils';
-import { useWebSocket } from '@providers/WebSocketProvider';
-import { LoadingContext } from '@providers/LoadingProvider';
-import { useToast } from '@providers/ToastProvider';
-import { TeamDailyStateContext } from '@providers/TeamDailyReportProvider';
-import { TaskContext } from '@providers/TaskProvider';
-import api from '@base/api';
-import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
-import Spinner from '@components/common/Spinner';
 
 const DailyReportDetailBoard = () => {
   const { statusTaskSelected, setStatusTaskSelected } = useContext(TaskContext);
@@ -868,17 +868,22 @@ const DailyReportDetailBoard = () => {
   const [sortState, setSortState] = useState<SortingState>([]);
   const [expandedState, setExpandedState] = useState<any>();
 
-  const isPermissionAction =
-    (session?.user.permissions &&
-      hasPermissionInArray(
-        session?.user.permissions,
-        PermissionsSystem.TEAM_DAILY_REPORT_UPDATE,
-      )) ||
-    (session?.user.permissions &&
-      hasPermissionInArray(
-        session?.user.permissions,
-        PermissionsSystem.TEAM_DAILY_REPORT_ADD,
-      ));
+ const isSameUser = String(session?.user.id) === String(userId);
+
+const hasPermission =
+  !!session?.user.permissions &&
+  (
+    hasPermissionInArray(
+      session.user.permissions,
+      PermissionsSystem.TEAM_DAILY_REPORT_UPDATE,
+    ) ||
+    hasPermissionInArray(
+      session.user.permissions,
+      PermissionsSystem.TEAM_DAILY_REPORT_ADD,
+    )
+  );
+
+  const isPermissionAction = isSameUser && hasPermission;
   const handleExpandChange = (row: Row<dataTaskDailyTable>) => {
     const newExpandedState: any = {
       ...expandedState,
@@ -1391,7 +1396,7 @@ const DailyReportDetailBoard = () => {
               column.toggleSorting();
             }}>
             <p className="!text-xs font-medium !text-[#77858F]">計測時間</p>
-            <div className="ml-[60px] relative flex flex-col">
+            <div className="relative flex flex-col">
               <Image
                 src="/icons/sort-down.svg"
                 alt="Sort down"
@@ -2532,6 +2537,7 @@ const DailyReportDetailBoard = () => {
                               <div className="text-left !pt-0 !pl-2">
                                 <ActionDetailDaily
                                   row={row}
+                                  isPermissionAction={isPermissionAction}
                                   optionsTag={
                                     row.original.organization
                                       ? creationDataCommonData?.myStatistics?.find(
@@ -2567,6 +2573,7 @@ const DailyReportDetailBoard = () => {
               <p className="text-[#77858F]">備考</p>
               <ResizeTextArea
                 currentDate={dataDatePicker}
+                isDisabled={!isPermissionAction}
                 defaultData={
                   dataStatistic?.remark.remark
                     ? dataStatistic?.remark.remark
@@ -2850,6 +2857,7 @@ const DailyReportDetailBoard = () => {
       </div>
       {popoverInfo && (
         <DetailActualItemDailyModal
+          isPermissionAction={isPermissionAction}
           popoverInfo={popoverInfo}
           popoverRef={popoverRef}
           onClose={() => setPopoverInfo(null)}

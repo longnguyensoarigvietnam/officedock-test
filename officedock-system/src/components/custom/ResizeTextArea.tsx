@@ -1,28 +1,33 @@
 'use client';
+import { useParams } from 'next/navigation';
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import TextArea from '@components/common/TextArea';
-import ImageRound from '@components/common/ImageRound';
-import { hasPermissionInArray } from '@utils';
-import { PermissionsSystem } from '@constants/enums';
-import api from '@base/api';
-import { apiRouters } from '@constants/routers';
 import { useMutation } from 'react-query';
+
+import ImageRound from '@components/common/ImageRound';
+import TextArea from '@components/common/TextArea';
+
+import { PermissionsSystem } from '@constants/enums';
 import { ERROR_UPDATE_MESSAGE } from '@constants/message';
+import { apiRouters } from '@constants/routers';
+
 import useDebounceText from '@hooks/useDebounceText';
-import { formatDateServer } from '@utils/date';
-import { useToast } from '@providers/ToastProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
 import { useSessionCache } from '@providers/SessionCacheProvider';
+import { useToast } from '@providers/ToastProvider';
 
-import { useParams } from 'next/navigation';
+import api from '@base/api';
+import { hasPermissionInArray } from '@utils';
+import { formatDateServer } from '@utils/date';
 
 interface ResizeType {
+  isDisabled?: boolean;
   currentDate: Date;
   defaultData: string;
   setDefaultData: React.Dispatch<React.SetStateAction<string>>;
 }
 
 const ResizeTextArea = ({
+  isDisabled = false,
   currentDate,
   defaultData,
   setDefaultData,
@@ -121,7 +126,7 @@ const ResizeTextArea = ({
       className="py-3 pr-3 ">
       <TextArea
         value={remarkData}
-        disabled={
+        disabled={ isDisabled || 
           session?.user.permissions &&
           !hasPermissionInArray(
             session?.user.permissions,

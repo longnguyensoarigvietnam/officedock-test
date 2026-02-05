@@ -1,4 +1,4 @@
-import React, { MutableRefObject, useEffect, useState } from 'react';
+import { MutableRefObject, useEffect, useState } from 'react';
 
 import ImageRound from '@components/common/ImageRound';
 import { DataActualDetail } from '@interfaces/statistic';
@@ -8,6 +8,7 @@ type Props = {
   popoverInfo: DataActualDetail | null;
   popoverRef: MutableRefObject<HTMLDivElement | null>;
   onClose: () => void;
+  isPermissionAction?: boolean;
   deleteActualTask: (uuid: string) => void;
 };
 
@@ -15,6 +16,7 @@ const DetailActualItemDailyModal = ({
   popoverInfo,
   popoverRef,
   onClose,
+  isPermissionAction = true,
   deleteActualTask,
 }: Props) => {
   const [isShowAction, setIsShowAction] = useState(false);
@@ -50,6 +52,8 @@ const DetailActualItemDailyModal = ({
           <div className="flex justify-between items-center">
             <span>実績</span>
             <div className="flex gap-x-[6px] items-center justify-center">
+              {
+                isPermissionAction && 
               <div
                 onClick={() => setIsShowAction(!isShowAction)}
                 className={`rounded-full cursor-pointer w-6 h-6  flex items-center justify-center  ${isShowAction && 'bg-[#E3EAED]'}`}>
@@ -59,6 +63,7 @@ const DetailActualItemDailyModal = ({
                   className="w-fit h-fit"
                 />
               </div>
+              }
               <div
                 style={{
                   padding: '5px',
@@ -100,7 +105,7 @@ const DetailActualItemDailyModal = ({
               </span>
             </div>
           </div>
-          {isShowAction && (
+          {isShowAction && isPermissionAction && (
             <div className="absolute top-10 right-[-105px] bg-[#5B6770] w-[126px] rounded-md py-[6px] text-white font-medium text-sm">
               <p
                 onClick={() => deleteActualTask(popoverInfo.uuid)}

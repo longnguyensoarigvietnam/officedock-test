@@ -1,34 +1,35 @@
+import {
+  DragDropContext,
+  Draggable,
+  DropResult,
+  Droppable,
+} from '@hello-pangea/dnd';
+import { useSessionCache } from '@providers/SessionCacheProvider';
 import { Row } from '@tanstack/react-table';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useMutation } from 'react-query';
-import {
-  DragDropContext,
-  Draggable,
-  Droppable,
-  DropResult,
-} from '@hello-pangea/dnd';
-import { useSessionCache } from '@providers/SessionCacheProvider';
 
+import Button from '@components/common/Button';
 import Checkbox from '@components/common/Checkbox';
 import ImageRound from '@components/common/ImageRound';
-import Button from '@components/common/Button';
 
-import { apiRouters } from '@constants/routers';
 import { PermissionsSystem } from '@constants/enums';
+import { apiRouters } from '@constants/routers';
 
+import { OptionDropdownType } from '@interfaces/common';
 import {
   CreationStatisticType,
   dataTaskDailyTable,
 } from '@interfaces/statistic';
-import { TodoItem } from '@interfaces/task';
-import { OptionDropdownType } from '@interfaces/common';
 import { TagCreationStatisticType, TagId } from '@interfaces/tag';
+import { TodoItem } from '@interfaces/task';
 
 import api from '@base/api';
 import { hasPermissionInArray } from '@utils';
 
 interface DataActionType {
+  isPermissionAction?: boolean;
   isEvent?: boolean;
   row: Row<dataTaskDailyTable>;
   dataTagsList: OptionDropdownType[];
@@ -41,6 +42,7 @@ interface DataActionType {
 const ActionDetailDaily = ({
   row,
   isEvent = false,
+  isPermissionAction = true ,
   dataTagsList,
   optionsTag,
   setDataTaskDailyList,
@@ -314,7 +316,7 @@ const ActionDetailDaily = ({
           opacity: isTagOptionsReady ? 1 : 0,
           visibility: isTagOptionsReady ? 'visible' : 'hidden',
         }}>
-        <div className="relative flex w-[144px] rounded-md overflow-y-auto min-h-[144px] max-h-[144px] flex-col p-[14px]  gap-[10px] text-gray-700">
+        <div className="relative flex w-[144px] rounded-md overflow-y-auto min-h-[144px] max-h-[144px] flex-col p-[14px] !py-2 gap-[10px] text-gray-700">
           <p className="text-xs font-medium text-[#77858F]">タグ</p>
           <div className="flex flex-col gap-4 max-h-[200px] overflow-y-auto">
             {/* TODO: Implement action tag */}
@@ -324,14 +326,15 @@ const ActionDetailDaily = ({
                   <Button
                     variant="text"
                     className="!w-fit !h-fit !p-0 !bg-transparent"
-                    disabled={
+                    disabled={ !isPermissionAction ||  (
                       (session?.user.permissions &&
                         !hasPermissionInArray(
                           session?.user.permissions,
                           PermissionsSystem.STATISTIC_UPDATE,
                         )) ||
-                      isPreventAction ||
-                      isEvent
+                        isPreventAction ||
+                        isEvent
+                      )
                     }
                     onClick={() => {
                       if (
@@ -424,7 +427,7 @@ const ActionDetailDaily = ({
           opacity: isTodoOptionsReady ? 1 : 0,
           visibility: isTodoOptionsReady ? 'visible' : 'hidden',
         }}>
-        <div className="relative flex w-[144px] rounded-md overflow-y-auto min-h-[144px] max-h-[144px] flex-col p-[14px]  gap-[10px] text-gray-700">
+        <div className="relative flex w-[144px] rounded-md overflow-y-auto min-h-[144px] max-h-[144px] flex-col p-[14px] !py-2  gap-[10px] text-gray-700">
           <DragDropContext onDragEnd={handleOnDragEnd}>
             <Droppable droppableId="todo-list">
               {(provided) => (
@@ -433,30 +436,32 @@ const ActionDetailDaily = ({
                     To Do リスト
                   </p>
                   <ul
-                    className="flex flex-col gap-4 max-h-[200px] overflow-y-auto"
+                    className="flex flex-col gap-4 max-h-[100px] overflow-y-auto"
                     {...provided.droppableProps}
                     ref={provided.innerRef}>
                     {todoList.map((todo, index) => (
                       <Draggable
                         key={todo.id || todo.customId}
                         draggableId={`${todo.id || todo.customId}`}
-                        index={index}>
+                        index={index}
+                        isDragDisabled={!isPermissionAction}>
                         {(provided, snapshot) => {
                           const draggableElement = (
                             <div
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
+                              {...(isPermissionAction ? provided.draggableProps : {})}
+                              {...(isPermissionAction ? provided.dragHandleProps : {})}
                               ref={provided.innerRef}
                               className="flex gap-[6px] items-start">
                               <div className="w-4 h-6">
                                 <Checkbox
-                                  disable={
+                                  disable={ !isPermissionAction || (
                                     (session?.user.permissions &&
                                       !hasPermissionInArray(
                                         session?.user.permissions,
                                         PermissionsSystem.STATISTIC_UPDATE,
                                       )) ||
                                     isPreventAction
+                                  )
                                   }
                                   isChecked={todo.isChecked}
                                   onChange={() => handleCheck(index)}

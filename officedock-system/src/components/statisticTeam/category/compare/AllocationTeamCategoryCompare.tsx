@@ -554,7 +554,7 @@ const AllocationTeamCategoryCompare = memo(
                   src={`/icons/statistic-active.svg`}
                 />
                 <span className="text-black w-fit flex-shrink-0 font-semibold text-[18px]">
-                  カテゴリーの割合
+                  各カテゴリーの時間配分
                 </span>
               </div>
               {/* Filter modal */}
