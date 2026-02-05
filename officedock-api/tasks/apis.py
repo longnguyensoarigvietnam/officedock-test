@@ -1655,7 +1655,7 @@ class TaskBoardViewSet(BaseAPIViewSet, mixins.ListModelMixin):
     """
 
     queryset = (
-        Task.objects.filter(deleted_at__isnull=True)
+        Task.objects.filter(deleted_at__isnull=True, archived_at__isnull=True)
         .exclude(type=TaskTypes.MY_TEMPLATE.value)
         .all()
     )
