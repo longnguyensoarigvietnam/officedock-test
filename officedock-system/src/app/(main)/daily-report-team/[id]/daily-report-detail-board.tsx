@@ -54,7 +54,6 @@ import { DATE_TEXT_FORMAT, NO_SETTING } from '@constants';
 import {
   EventCalendarType,
   EventWorkCategory,
-  PermissionsSystem,
   ScreenName,
   SocketActions,
   StatusValueTask,
@@ -101,7 +100,6 @@ import {
   adjustPositionForViewportSchedule,
   calculateTotalMinutes,
   clampText,
-  hasPermissionInArray,
   removeDuplicateOptions,
   secondsToTimeString,
   timeStringToSeconds,
@@ -868,22 +866,10 @@ const DailyReportDetailBoard = () => {
   const [sortState, setSortState] = useState<SortingState>([]);
   const [expandedState, setExpandedState] = useState<any>();
 
- const isSameUser = String(session?.user.id) === String(userId);
 
-const hasPermission =
-  !!session?.user.permissions &&
-  (
-    hasPermissionInArray(
-      session.user.permissions,
-      PermissionsSystem.TEAM_DAILY_REPORT_UPDATE,
-    ) ||
-    hasPermissionInArray(
-      session.user.permissions,
-      PermissionsSystem.TEAM_DAILY_REPORT_ADD,
-    )
-  );
+   
 
-  const isPermissionAction = isSameUser && hasPermission;
+  const isPermissionAction = session?.user.permissions && String(session?.user.id) === String(userId);
   const handleExpandChange = (row: Row<dataTaskDailyTable>) => {
     const newExpandedState: any = {
       ...expandedState,
@@ -2289,8 +2275,7 @@ const hasPermission =
             </div>
           </div>
           <div className="flex gap-4 items-center">
-            <div className="flex items-center gap-3">
-              {isPermissionAction && (
+            <div className="flex items-center gap-3">            
                 <Button
                   className="flex gap-2 !px-0 py-0 w-[138px] h-[34px]"
                   disabled={isDownloading}
@@ -2308,8 +2293,7 @@ const hasPermission =
                   ) : (
                     <Spinner className="!w-4 !h-4" iconClassName="!m-0" />
                   )}
-                </Button>
-              )}
+                </Button>           
             </div>
           </div>
         </div>

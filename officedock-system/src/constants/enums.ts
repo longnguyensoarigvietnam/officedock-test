@@ -368,9 +368,6 @@ export enum PermissionsSystem {
 
   // Team Daily Report Permissions
   TEAM_DAILY_REPORT_VIEW = 'team_daily_report_view',
-  TEAM_DAILY_REPORT_ADD = 'team_daily_report_add',
-  TEAM_DAILY_REPORT_UPDATE = 'team_daily_report_update',
-  TEAM_DAILY_REPORT_DELETE = 'team_daily_report_delete',
 
   // Organization Hierarchy Permissions
   ORGANIZATION_HIERARCHY_VIEW = 'organization_hierarchy_view',
