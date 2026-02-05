@@ -53,6 +53,7 @@ from .serializers import (
     OrganizationSerializer,
     OrganizationDetailSerializer,
     ListOrganizationStatisticSerializer,
+    OrganizationStatisticCategoriesSerializer,
     StepSerializer,
 )
 from .models import (
@@ -461,9 +462,9 @@ class OrganizationByIDViewSet(BaseAPIViewSet):
         instance = self.get_object()
         if request.method == "GET":
             current_screen = request.query_params.get("current_screen")
-            categories = OrganizationDetailSerializer(instance).data[
-                "statistic_categories"
-            ]
+            categories = OrganizationStatisticCategoriesSerializer(
+                instance
+            ).data["statistic_categories"]
             if current_screen == to_camel_case(Screens.SKILL_MAP.value):
                 return self.response_ok(
                     transform_statistic_categories_for_skill_map(categories)

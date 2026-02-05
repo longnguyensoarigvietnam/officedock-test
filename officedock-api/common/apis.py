@@ -285,7 +285,9 @@ class SystemCreationDataViewSet(BaseAPIViewSet):
             if not organizations:
                 organizations = get_all_organizations(company, organizations)
             response_data["organization_users"] = get_organization_with_users(
-                organizations.order_by("-created_at")
+                organizations.select_related("superior")
+                .prefetch_related("users")
+                .order_by("-created_at")
             )
         if "get_items_of_user" in request.query_params:
             response_data["items_of_user"] = get_items_of_user(user)

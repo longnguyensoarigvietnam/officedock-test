@@ -5,7 +5,7 @@ from users.models import User
 from organizations.models import Organization
 from organizations.serializers import (
     BaseOrganizationSerializer,
-    OrganizationDetailSerializer,
+    OrganizationStatisticCategoriesSerializer,
 )
 from tags.models import Tag
 from tasks.models import Task, TaskStatus
@@ -160,7 +160,7 @@ class CreationDataOrganizationWithStructCategorySerializer(
         """
         Transform statistic category list to serializer data
         """
-        categories = OrganizationDetailSerializer(obj).data[
+        categories = OrganizationStatisticCategoriesSerializer(obj).data[
             "statistic_categories"
         ]
         return transform_statistic_categories(categories)

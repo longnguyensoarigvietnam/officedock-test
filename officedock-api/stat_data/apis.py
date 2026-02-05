@@ -29,7 +29,7 @@ from common.utils import (
     validate_company_organization,
 )
 from organizations.models import Organization
-from organizations.serializers import OrganizationDetailSerializer
+from organizations.serializers import OrganizationStatisticCategoriesSerializer
 from stat_data.serializers import (
     DailyEventSerializer,
     DailyTaskSerializer,
@@ -177,7 +177,7 @@ class StatDataViewSet(BaseAPIViewSet, mixins.ListModelMixin):
                 item.organization_id
                 and item.organization_id not in data["organization_categories"]
             ):
-                categories = OrganizationDetailSerializer(
+                categories = OrganizationStatisticCategoriesSerializer(
                     item.organization
                 ).data["statistic_categories"]
                 data["organization_categories"][

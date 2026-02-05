@@ -541,6 +541,16 @@ class OrganizationDetailSerializer(OrganizationSerializer):
         ).data
 
 
+class OrganizationStatisticCategoriesSerializer(OrganizationDetailSerializer):
+    """
+    Serializer for the Organization Statistic Categories.
+    """
+
+    class Meta:
+        model = Organization
+        fields = ["statistic_categories"]
+
+
 class OrganizationStatisticCategorySerializer(serializers.ModelSerializer):
     """
     Serializer for the Organization Statistic Category.
