@@ -162,7 +162,7 @@ const UserColumnTeam = ({
               </DynamicTooltip>
             </div>
           </div>
-          <div className="h-[calc(100vh_-_285px)] overflow-y-auto">
+          <div className="h-[calc(100vh_-_319px)] overflow-y-auto">
             <div className="flex flex-col gap-6 mt-[14px]">
               {statuses.map((status) => {
                 if ((status as string) !== 'MY_ROUTINE') return;
