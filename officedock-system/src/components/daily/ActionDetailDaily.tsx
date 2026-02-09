@@ -465,8 +465,8 @@ const ActionDetailDaily = ({
                                   }
                                   isChecked={todo.isChecked}
                                   onChange={() => handleCheck(index)}
-                                  className="!rounded-full"
-                                  classSize="!rounded-full"
+                                  className={!isPermissionAction ? "cursor-not-allowed !rounded-full" : "!rounded-full"}
+                                  classSize={!isPermissionAction ? "cursor-not-allowed !rounded-full" : "!rounded-full"}
                                 />
                               </div>
                               <div className="break-all text-left w-fit max-w-[100px]">
