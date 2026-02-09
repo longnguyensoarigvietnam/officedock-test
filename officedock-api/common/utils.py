@@ -28,7 +28,7 @@ from organizations.constants import CategoryColors, OrganizationTypes
 from organizations.models import OrganizationsStatisticCategories, Organization
 from roles.constants import SelectionResultOptions
 from skills.constants import DEFAULT_TIME
-from stat_data.constants import NONE_CATEGORY
+from stat_data.constants import NONE_CATEGORY, NONE_CATEGORY_COLOR
 from users.models import User, RoleDetail
 
 
@@ -340,7 +340,11 @@ def transform_statistic_categories_for_skill_map(statistic_categories):
         )
 
     def get_color(category, default_color="#D7576A"):
-        return "#83919E" if category["id"] == NONE_CATEGORY else default_color
+        return (
+            NONE_CATEGORY_COLOR
+            if category["id"] == NONE_CATEGORY
+            else default_color
+        )
 
     large_dict = {}
 
@@ -374,7 +378,7 @@ def transform_statistic_categories_for_skill_map(statistic_categories):
             small_entry = {**small}
             if small_entry["id"] == NONE_CATEGORY:
                 small_entry["uuid"] = NONE_CATEGORY
-                small_entry["color"] = "#83919E"
+                small_entry["color"] = NONE_CATEGORY_COLOR
             small_list.append(small_entry)
 
     # Change dict to list and push None category to first
@@ -677,7 +681,7 @@ def get_common_categories_with_none_category(
                 {
                     "id": NONE_CATEGORY,
                     "name": NONE_CATEGORY,
-                    "color": color if is_large_cate else None,
+                    "color": NONE_CATEGORY_COLOR,
                     "type": type_value,
                     "is_hidden": is_hidden,
                 }
