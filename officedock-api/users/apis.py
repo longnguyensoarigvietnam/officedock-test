@@ -909,9 +909,14 @@ class SystemUserViewSet(BaseAPIViewSet, viewsets.ModelViewSet):
                 user_name=user.full_name,
             )
         else:
+            email_recipient = (
+                self.request.user.email
+                if self.request.user.login_type == LoginTypes.EMAIL.value
+                else company.responsible_person_mail
+            )
             new_user_email = serializer_data.get("username")
             mail_service.send_system_invite_user_by_id(
-                self.request.user.email,
+                email_recipient,
                 new_user_email,
                 password,
                 company,
