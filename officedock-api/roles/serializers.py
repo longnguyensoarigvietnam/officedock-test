@@ -95,6 +95,16 @@ class RolePermissionSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "system_role", "permissions", "deleted_at"]
         read_only_fields = ["id"]
 
+    def _find_permission(self, actions_map, mapping):
+        """
+        Helper to find permission key by matching actions_map against mapping values.
+        Returns the permission key (string) if found, otherwise None.
+        """
+        for permission_key, base_actions in mapping.items():
+            if base_actions == actions_map:
+                return permission_key
+        return None
+
     def get_permissions(self, obj):
         """
         Get role permissions and format them into a structured response.
@@ -113,7 +123,28 @@ class RolePermissionSerializer(serializers.ModelSerializer):
         data = []
         has_get_skill_map = False
         for screen, actions in permissions.items():
-            # Compare and get action
+            # TEAM_DAILY_REPORT: special case - if permission is ALLOW_EDIT (編集可), map to ONLY_VIEW (閲覧のみ)
+            if screen == Screens.TEAM_DAILY_REPORT.value:
+                permission = self._find_permission(
+                    actions, ROLE_PERMISSION_BY_OPTIONS
+                )
+                if permission == PermissionOptions.ALLOW_EDIT.value:
+                    data.append(
+                        {
+                            "screen_name": to_camel_case(screen),
+                            "actions": PermissionOptions.ONLY_VIEW.value,
+                        }
+                    )
+                elif permission:
+                    data.append(
+                        {
+                            "screen_name": to_camel_case(screen),
+                            "actions": permission,
+                        }
+                    )
+                continue
+
+            # Skill-map screens: consolidate into single SKILL_MAP entry once
             if screen in [
                 Screens.MY_TASK_SKILL_MAP.value,
                 Screens.TEAM_DOCK_SKILL_MAP.value,
@@ -121,52 +152,48 @@ class RolePermissionSerializer(serializers.ModelSerializer):
                 Screens.SKILL_MAP_OTHER.value,
                 Screens.SKILL_MAP.value,
             ]:
-                # Handle get option data for skill-map
                 if (
                     not has_get_skill_map
                     and screen == Screens.TEAM_DOCK_SKILL_MAP.value
                 ):
-                    for (
-                        permission,
-                        base_actions,
-                    ) in SKILL_MAP_ACTION_PERMISSION_BY_OPTIONS.items():
-                        if base_actions == actions:
-                            data.append(
-                                {
-                                    "screen_name": to_camel_case(
-                                        Screens.SKILL_MAP.value
-                                    ),
-                                    "actions": permission,
-                                }
-                            )
-                            has_get_skill_map = True
-                            break
-            elif screen == Screens.TEAMDOCK.value:
-                # Handle get option data for team dock
-                for (
-                    permission,
-                    base_actions,
-                ) in TEAMDOCK_ROLE_PERMISSION_BY_OPTIONS.items():
-                    if base_actions == actions:
+                    permission = self._find_permission(
+                        actions, SKILL_MAP_ACTION_PERMISSION_BY_OPTIONS
+                    )
+                    if permission:
                         data.append(
                             {
-                                "screen_name": to_camel_case(screen),
+                                "screen_name": to_camel_case(
+                                    Screens.SKILL_MAP.value
+                                ),
                                 "actions": permission,
                             }
                         )
-                        break
-            else:
-                # Handle get option data for other screens
-                for (
-                    permission,
-                    base_actions,
-                ) in ROLE_PERMISSION_BY_OPTIONS.items():
-                    if base_actions == actions:
-                        data.append(
-                            {
-                                "screen_name": to_camel_case(screen),
-                                "actions": permission,
-                            }
-                        )
-                        break
+                        has_get_skill_map = True
+                continue
+
+            # TEAMDOCK: use TEAMDOCK specific mapping
+            if screen == Screens.TEAMDOCK.value:
+                permission = self._find_permission(
+                    actions, TEAMDOCK_ROLE_PERMISSION_BY_OPTIONS
+                )
+                if permission:
+                    data.append(
+                        {
+                            "screen_name": to_camel_case(screen),
+                            "actions": permission,
+                        }
+                    )
+                continue
+
+            # Default: match against ROLE_PERMISSION_BY_OPTIONS
+            permission = self._find_permission(
+                actions, ROLE_PERMISSION_BY_OPTIONS
+            )
+            if permission:
+                data.append(
+                    {
+                        "screen_name": to_camel_case(screen),
+                        "actions": permission,
+                    }
+                )
         return data
