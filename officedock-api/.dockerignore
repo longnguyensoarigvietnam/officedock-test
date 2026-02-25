@@ -1,0 +1,43 @@
+# Python/DRF specific exclusions
+__pycache__
+*.pyc
+*.pyd
+*.pyo
+.pytest_cache
+
+# Virtual environments
+.venv
+venv
+pip-wheel-cache
+
+# Source control
+.git
+.gitignore
+
+# IDE files
+.idea/
+.vscode/
+
+# Sensitive data/environment files
+.env
+*.env
+settings/local_settings.py
+
+# Collected static and media files
+static_root/
+staticfiles/
+media/
+
+# Logs and local data
+logs/
+local_data/
+*.log
+
+# Docker
+Dockerfile*
+.dockerignore
+docker-compose*.yml
+
+# Misc
+README.md
+*.md
