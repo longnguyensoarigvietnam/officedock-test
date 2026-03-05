@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { AxiosError } from 'axios';
 import { useMutation } from 'react-query';
@@ -7,6 +8,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Input from '@components/common/Input';
 import TableDropdown from '@components/common/Dropdown/TableDropdown';
 import Button from '@components/common/Button';
+import ImageRound from '@components/common/ImageRound';
 
 import { PermissionType, ScreenName, ServerStatusCode } from '@constants/enums';
 import { PERMISSION_OPTIONS, SCREEN_LIST } from '@constants';
@@ -221,9 +223,22 @@ const EditRoleForm = () => {
   return (
     <div>
       <div className="flex justify-between items-center w-full mb-[30px]">
-        <p className="text-black font-medium text-[26px] leading-[1]">
-          権限管理
-        </p>
+        <div className="flex gap-5 items-center">
+          <Link
+            href={pageRouters.ROLES_MANAGEMENT.href}
+            className="flex items-center hover:cursor-pointer">
+            <div className="ml-[6px] flex justify-between p-[3px] rounded-full bg-white border-b">
+              <ImageRound
+                name="Filter extend icon"
+                src={'/icons/arrow-down.svg'}
+                className={`w-4 h-4 hover:cursor-pointer rotate-90`}
+              />
+            </div>
+          </Link>
+          <p className="text-black font-medium text-[26px] leading-[1]">
+            権限管理
+          </p>
+        </div>
         <div className="flex justify-end gap-[10px] items-center">
           <Button
             variant="outline"
