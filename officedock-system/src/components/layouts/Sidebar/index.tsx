@@ -310,7 +310,25 @@ const Sidebar = ({ className }: Props) => {
           const exists = data.some(
             (item) => String(item.id) === String(organizationId),
           );
-          if (exists) return;
+          if (exists) {
+            if (!lastVisitedByTab.firstTab) {
+              const listItemFirst = menuItems.filter(
+                (item) =>
+                  item.companyMenu == false &&
+                  item.href !== pageRouters.MEMBER_MANAGEMENT.href,
+              );
+              const firstItem =
+                listItemFirst.length > 0 ? listItemFirst[0].href : '';
+
+              setLastVisitedByTab((prev) => {
+                return {
+                  ...prev,
+                  firstTab: `${firstItem}`,
+                };
+              });
+            }
+            return;
+          }
           const params = new URLSearchParams(searchParams.toString());
           params.set('organization', String(changeOrganization.value));
 
@@ -339,6 +357,22 @@ const Sidebar = ({ className }: Props) => {
             return {
               ...prev,
               secondTab: `${pathname}?${newQuery}`,
+            };
+          });
+        }
+        if (!lastVisitedByTab.secondTab && data.length > 0) {
+          const listItemSecond = menuItemsTeam.filter(
+            (item) =>
+              item.companyMenu == false &&
+              item.href !== pageRouters.MEMBER_MANAGEMENT.href,
+          );
+          const firstItem =
+            listItemSecond.length > 0 ? listItemSecond[0].href : '';
+
+          setLastVisitedByTab((prev) => {
+            return {
+              ...prev,
+              secondTab: `${firstItem}?tabId=1&organization=${data[0].id}`,
             };
           });
         }

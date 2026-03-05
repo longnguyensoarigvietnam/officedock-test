@@ -5,6 +5,7 @@ import { AxiosError } from 'axios';
 import Link from 'next/link';
 
 import Button from '@components/common/Button';
+import ImageRound from '@components/common/ImageRound';
 
 import { SCREEN_LIST } from '@constants';
 import {
@@ -63,7 +64,18 @@ const DetailRoleTable = () => {
   return (
     <div>
       <div className="flex items-center justify-between w-full mb-[30px]">
-        <div className="flex items-center gap-5 w-full">
+        <div className="flex items-center justify-start gap-5 w-full">
+          <Link
+            href={pageRouters.ROLES_MANAGEMENT.href}
+            className="flex items-center hover:cursor-pointer">
+            <div className="ml-[6px] flex justify-between p-[3px] rounded-full bg-white border-b">
+              <ImageRound
+                name="Filter extend icon"
+                src={'/icons/arrow-down.svg'}
+                className={`w-4 h-4 hover:cursor-pointer rotate-90`}
+              />
+            </div>
+          </Link>
           <p className="text-black font-medium text-[26px] leading-[1]">
             権限管理
           </p>
