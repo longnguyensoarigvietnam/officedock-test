@@ -48,6 +48,10 @@ interface ContextValue {
   >;
   isHasLoadingSkeleton: boolean;
   setIsHasLoadingSkeleton: Dispatch<SetStateAction<boolean>>;
+  hasUnsavedChanges: boolean;
+  setHasUnsavedChanges: Dispatch<SetStateAction<boolean>>;
+  pendingGlobalNavigationHref: string | null;
+  setPendingGlobalNavigationHref: Dispatch<SetStateAction<string | null>>;
 }
 
 const defaultValue: ContextValue = {
@@ -79,6 +83,10 @@ const defaultValue: ContextValue = {
   setLastVisitedByTab: () => {},
   isHasLoadingSkeleton: false,
   setIsHasLoadingSkeleton: () => {},
+  hasUnsavedChanges: false,
+  setHasUnsavedChanges: () => {},
+  pendingGlobalNavigationHref: null,
+  setPendingGlobalNavigationHref: () => {},
 };
 
 export const GlobalStateContext = createContext<ContextValue>(defaultValue);
@@ -108,6 +116,11 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
   });
   // Loading Statistic
   const [isHasLoadingSkeleton, setIsHasLoadingSkeleton] = useState(false);
+
+  // Unsaved changes navigation guard
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [pendingGlobalNavigationHref, setPendingGlobalNavigationHref] =
+    useState<string | null>(null);
 
   // Uploading files
   const [isChatFilesUploading, setIsChatFilesUploading] = useState(false);
@@ -162,6 +175,10 @@ export const GlobalStateProvider = ({ children }: { children: ReactNode }) => {
     setIsHasLoadingSkeleton,
     dataItems,
     setDataItem,
+    hasUnsavedChanges,
+    setHasUnsavedChanges,
+    pendingGlobalNavigationHref,
+    setPendingGlobalNavigationHref,
   };
 
   return (

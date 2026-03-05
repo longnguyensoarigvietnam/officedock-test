@@ -3,18 +3,21 @@
 import {
   Dispatch,
   SetStateAction,
+  useCallback,
   useContext,
+  useEffect,
+  useRef,
   useState,
   useTransition,
 } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation } from 'react-query';
-import Link from 'next/link';
 import { v4 as uuidv4, validate as isUUID } from 'uuid';
 
 import { AxiosError } from 'axios';
 
 import Button from '@components/common/Button';
+import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
 import ImageRound from '@components/common/ImageRound';
 import Switch from '@components/common/Switch';
 
@@ -40,6 +43,7 @@ import {
 
 import { useSessionCache } from '@providers/SessionCacheProvider';
 import { LoadingContext } from '@providers/LoadingProvider';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { useToast } from '@providers/ToastProvider';
 
 import { hasPermissionInArray } from '@utils';
@@ -68,12 +72,59 @@ const EditHierarchyBoard = () => {
     useState<SelectedCalendarCategoryRow[]>([]);
 
   const { setIsLoading } = useContext(LoadingContext);
+  const {
+    setHasUnsavedChanges,
+    pendingGlobalNavigationHref,
+    setPendingGlobalNavigationHref,
+  } = useContext(GlobalStateContext);
 
   const router = useRouter();
   const { showToast } = useToast();
   const showErrorToast = useErrorToast();
 
   const [isTyping, setIsTyping] = useState<boolean>(false);
+  const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+  const [pendingNavigationHref, setPendingNavigationHref] = useState<
+    string | null
+  >(null);
+  const navigateAfterSaveRef = useRef<string | null>(null);
+
+  const hasUnsavedChanges = selectedHierarchiesToUpdate.length > 0;
+
+  useEffect(() => {
+    setHasUnsavedChanges(hasUnsavedChanges);
+    return () => setHasUnsavedChanges(false);
+  }, [hasUnsavedChanges, setHasUnsavedChanges]);
+
+  useEffect(() => {
+    if (pendingGlobalNavigationHref !== null) {
+      setPendingNavigationHref(pendingGlobalNavigationHref);
+      setPendingGlobalNavigationHref(null);
+      setShowUnsavedModal(true);
+    }
+  }, [pendingGlobalNavigationHref, setPendingGlobalNavigationHref]);
+
+  const handleNavigate = useCallback(
+    (href: string) => {
+      if (hasUnsavedChanges) {
+        setPendingNavigationHref(href);
+        setShowUnsavedModal(true);
+      } else {
+        router.push(href);
+      }
+    },
+    [hasUnsavedChanges, router],
+  );
+
+  const handleConfirmLeave = useCallback(() => {
+    setShowUnsavedModal(false);
+    setSelectedHierarchiesToUpdate([]);
+    setHasUnsavedChanges(false);
+    if (pendingNavigationHref) {
+      router.push(pendingNavigationHref);
+      setPendingNavigationHref(null);
+    }
+  }, [pendingNavigationHref, router, setHasUnsavedChanges]);
 
   // Hooks
   useCreationDataCommon({
@@ -245,6 +296,13 @@ const EditHierarchyBoard = () => {
     }
   };
 
+  const handleConfirmSaveAndLeave = () => {
+    navigateAfterSaveRef.current = pendingNavigationHref;
+    setShowUnsavedModal(false);
+    setPendingNavigationHref(null);
+    handleConfirmUpdateCalendarCategoryHierarchy();
+  };
+
   const handleUpdateCalendarCategoryHierarchyList = async ({
     items,
     itemsToDelete,
@@ -271,10 +329,15 @@ const EditHierarchyBoard = () => {
     {
       onSuccess: async () => {
         setSelectedHierarchiesToUpdate([]);
+        setHasUnsavedChanges(false);
         showToast({
           description: SUCCESS_UPDATE_MESSAGE,
         });
-        router.push(pageRouters.CALENDAR_CATEGORY_MANAGEMENT.href);
+        const targetHref = navigateAfterSaveRef.current;
+        navigateAfterSaveRef.current = null;
+        router.push(
+          targetHref || pageRouters.CALENDAR_CATEGORY_MANAGEMENT.href,
+        );
       },
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_UPDATE_MESSAGE);
@@ -294,21 +357,23 @@ const EditHierarchyBoard = () => {
               業務カテゴリー設定
             </p>
             <div className="flex gap-[6px] bg-white w-fit p-[6px] rounded-[20px]">
-              <Link href={pageRouters.CATEGORY_MANAGEMENT.href}>
-                <Button
-                  variant="outline"
-                  className={`w-[140px] !p-0 text-xs h-[28px] !font-bold !text-[#77858F] !bg-[#EBF1F7] border-none !rounded-[20px]`}>
-                  社内共通カテゴリー
-                </Button>
-              </Link>
+              <Button
+                variant="outline"
+                className={`w-[140px] !p-0 text-xs h-[28px] !font-bold !text-[#77858F] !bg-[#EBF1F7] border-none !rounded-[20px]`}
+                onClick={() =>
+                  handleNavigate(pageRouters.CATEGORY_MANAGEMENT.href)
+                }>
+                社内共通カテゴリー
+              </Button>
 
-              <Link href={pageRouters.TEAM_CATEGORY_MANAGEMENT.href}>
-                <Button
-                  variant="outline"
-                  className={`w-[140px] !p-0 text-xs h-[28px] !font-bold !text-[#77858F] !bg-[#EBF1F7] border-none !rounded-[20px]`}>
-                  チームカテゴリー
-                </Button>
-              </Link>
+              <Button
+                variant="outline"
+                className={`w-[140px] !p-0 text-xs h-[28px] !font-bold !text-[#77858F] !bg-[#EBF1F7] border-none !rounded-[20px]`}
+                onClick={() =>
+                  handleNavigate(pageRouters.TEAM_CATEGORY_MANAGEMENT.href)
+                }>
+                チームカテゴリー
+              </Button>
 
               {session?.user.permissions &&
                 hasPermissionInArray(
@@ -349,16 +414,14 @@ const EditHierarchyBoard = () => {
         </div>
 
         <div className="flex justify-end gap-3 items-center">
-          <Link href={pageRouters.CALENDAR_CATEGORY_MANAGEMENT.href}>
-            <Button
-              variant="outline"
-              className="w-[100px] !p-0 !h-[34px]"
-              onClick={() => {
-                setSelectedHierarchiesToUpdate([]);
-              }}>
-              キャンセル
-            </Button>
-          </Link>
+          <Button
+            variant="outline"
+            className="w-[100px] !p-0 !h-[34px]"
+            onClick={() =>
+              handleNavigate(pageRouters.CALENDAR_CATEGORY_MANAGEMENT.href)
+            }>
+            キャンセル
+          </Button>
           <Button
             variant="primary"
             className="w-[100px] !p-0 !h-[34px] border-none"
@@ -383,6 +446,13 @@ const EditHierarchyBoard = () => {
           />
         )}
       </div>
+
+      <WarningCloseTaskModal
+        open={showUnsavedModal}
+        onConfirm={handleConfirmSaveAndLeave}
+        onClose={handleConfirmLeave}
+        onCloseByIcon={() => setShowUnsavedModal(false)}
+      />
     </div>
   );
 };

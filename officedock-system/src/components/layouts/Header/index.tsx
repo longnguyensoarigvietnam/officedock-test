@@ -188,8 +188,12 @@ const Header = ({ className }: HeaderProps) => {
     useState<boolean>(false);
 
   const { setIsLoading } = useContext(LoadingContext);
-  const { isChatFilesUploading, cancelUploadChatFiles } =
-    useContext(GlobalStateContext);
+  const {
+    isChatFilesUploading,
+    cancelUploadChatFiles,
+    hasUnsavedChanges,
+    setPendingGlobalNavigationHref,
+  } = useContext(GlobalStateContext);
   const [pendingPageChange, setPendingPageChange] = useState<string | null>(
     null,
   );
@@ -1094,6 +1098,13 @@ const Header = ({ className }: HeaderProps) => {
                                 className={`px-4 py-2 hover:bg-[#7D8A94] hover:cursor-pointer rounded-md ${pathname == item.href && 'bg-[#7D8A94]'}`}
                                 onClick={() => {
                                   if (item.disable) return;
+                                  if (hasUnsavedChanges) {
+                                    setPendingGlobalNavigationHref(
+                                      item.href as string,
+                                    );
+                                    close();
+                                    return;
+                                  }
                                   if (isChatFilesUploading) {
                                     setPendingPageChange(item.href as string);
                                     setShowWarningChatUploadingModal(true);
@@ -1121,6 +1132,11 @@ const Header = ({ className }: HeaderProps) => {
                               <div
                                 key={item.name}
                                 onClick={() => {
+                                  if (hasUnsavedChanges) {
+                                    setPendingGlobalNavigationHref('');
+                                    close();
+                                    return;
+                                  }
                                   if (isChatFilesUploading) {
                                     setPendingPageChange('');
                                     setShowWarningChatUploadingModal(true);
@@ -1180,6 +1196,13 @@ const Header = ({ className }: HeaderProps) => {
                                     key={item.name}
                                     className={`flex px-4 py-2 hover:bg-[#7D8A94] hover:cursor-pointer rounded-md ${pathname.includes(item.href) && 'bg-[#7D8A94]'}`}
                                     onClick={() => {
+                                      if (hasUnsavedChanges) {
+                                        setPendingGlobalNavigationHref(
+                                          item.href as string,
+                                        );
+                                        close();
+                                        return;
+                                      }
                                       if (isChatFilesUploading) {
                                         setPendingPageChange(
                                           item.href as string,
