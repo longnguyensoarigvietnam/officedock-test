@@ -119,10 +119,14 @@ class RolePermissionSerializer(serializers.ModelSerializer):
             screen_name, action = name.rsplit("_", 1)
             permissions[screen_name][action] = result
 
-        # Return formatted result using list comprehension
+        # Return formatted result in order of Screens enum
         data = []
         has_get_skill_map = False
-        for screen, actions in permissions.items():
+        for screen_enum in Screens:
+            screen = screen_enum.value
+            if screen not in permissions:
+                continue
+            actions = permissions[screen]
             # TEAM_DAILY_REPORT: special case - if permission is ALLOW_EDIT (編集可), map to ONLY_VIEW (閲覧のみ)
             if screen == Screens.TEAM_DAILY_REPORT.value:
                 permission = self._find_permission(

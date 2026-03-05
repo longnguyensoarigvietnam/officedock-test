@@ -1,9 +1,8 @@
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from faker import Faker
 
 from companies.models import Company
-from users.models import Role, User
+from users.models import Role, User, Profile
 from users.constants import RoleTypes
 from common.utils import get_username_alias
 
@@ -12,7 +11,6 @@ class Command(BaseCommand):
     help = "Seed fake data into Admin"
 
     def handle(self, *args, **kwargs):
-        fake = Faker()
         email = settings.ADMIN_EMAIL
         password = settings.ADMIN_PASSWORD
 
@@ -22,7 +20,7 @@ class Command(BaseCommand):
             # This does create company data in the database
             # But it will not be used in querying company data
             company_data = {
-                "name": fake.company(),
+                "name": "運用者の会社",
             }
             company, _ = Company.all_objects.update_or_create(
                 pk=0, defaults=company_data
@@ -35,6 +33,12 @@ class Command(BaseCommand):
                 email=email,
                 password=password,
                 username_alias=username_alias,
+            )
+            # Seed admin profile
+            Profile.objects.create(
+                full_name="運用者",
+                user=user,
+                company=company,
             )
             user.roles.set(
                 [Role.get_role(RoleTypes.OPERATION_ADMIN.value)],

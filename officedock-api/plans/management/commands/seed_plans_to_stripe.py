@@ -18,9 +18,14 @@ class Command(BaseCommand):
                 currency="jpy",
                 interval="month",
             )
-            Plan.objects.filter(name=plan["name"]).update(
-                stripe_product_id=stripe_product.id,
-                stripe_price_id=stripe_price.id,
+            Plan.objects.update_or_create(
+                name=plan["name"],
+                defaults={
+                    "monthly_fee": plan["monthly_fee"],
+                    "stripe_product_id": stripe_product.id,
+                    "stripe_price_id": stripe_price.id,
+                    "exchangeable_amount": plan["exchangeable_amount"],
+                },
             )
 
         self.stdout.write(
