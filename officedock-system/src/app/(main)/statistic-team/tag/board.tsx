@@ -138,8 +138,13 @@ const StatisticTeamTagBoard = () => {
               avatarUrl: member?.avatar || '',
             })),
           );
+          // TODO: Remove this after testing
+          // setOrderingOptions({
+          //   tag_ids: optionsTagList,
+          //   user_ids: [],
+          // });
           setOrderingOptions({
-            tag_ids: optionsTagList,
+            tag_ids: [],
             user_ids: [],
           });
 
@@ -420,6 +425,7 @@ const StatisticTeamTagBoard = () => {
       setDataMediumCalendar(undefined);
     }
     setSelectedOrganization(data);
+
     setSelectedLarge({
       label: '-',
       value: '',
@@ -455,8 +461,19 @@ const StatisticTeamTagBoard = () => {
           avatarUrl: member?.avatar || '',
         })),
       );
+      if (largeCategories.length > 0) {
+        setSelectedLarge({
+          label: largeCategories[0].label,
+          value: largeCategories[0].value,
+        });
+      }
+      // TODO: Remove this after testing
+      // setOrderingOptions({
+      //   tag_ids: optionsTagList,
+      //   user_ids: [],
+      // });
       setOrderingOptions({
-        tag_ids: optionsTagList,
+        tag_ids: [],
         user_ids: [],
       });
 

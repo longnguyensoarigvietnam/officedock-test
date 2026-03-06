@@ -361,15 +361,24 @@ const StatisticTagBoard = () => {
             label: item.name,
             value: item.id,
           }));
+          if (mainItem.statisticCategories.length > 0) {
+            setSelectedLarge({
+              label: mainItem.statisticCategories[0].LARGE.name,
+              value: mainItem.statisticCategories[0].LARGE.id,
+            });
+          }
           setTagsOptions(optionsTagList);
-          setSelectedTags(optionsTagList);
+          // TODO: Remove this after testing
+          // setSelectedTags(optionsTagList);
 
           return {
             label: mainItem.name,
             value: mainItem.id,
           };
         })();
+
         setSelectedOrganization(result);
+        // handleSelectLarge(result);
         setListOptionsOrganization([
           ...data.myStatistics.map((org) => ({
             value: org.id || '',
@@ -423,10 +432,17 @@ const StatisticTagBoard = () => {
         value: item.id,
       }));
       setCurrentPage(1);
+      if (largeCategories.length > 0) {
+        setSelectedLarge({
+          label: largeCategories[0].label,
+          value: largeCategories[0].value,
+        });
+      }
 
       setSelectedTags([]);
       setTagsOptions(optionsTagList);
-      setSelectedTags(optionsTagList);
+      // TODO: Remove this after testing
+      // setSelectedTags(optionsTagList);
       // If organization is all team then return here
       if (data?.value === ALL_TEAM_STATISTIC) {
         setLargeOptions([]);
