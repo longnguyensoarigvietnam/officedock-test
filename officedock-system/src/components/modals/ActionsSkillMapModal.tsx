@@ -23,6 +23,7 @@ import Dropdown from '@components/common/Dropdown';
 import RadioButton from '@components/common/RadioButton';
 import CategoryStepRaw from '@components/skillMap/CategoryStepRaw';
 import ErrorMessage from '@components/common/ErrorMessage';
+import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
 
 import useOrganizationStatisticCategories from '@hooks/useOrganizationStatisticCategories';
 
@@ -553,7 +554,27 @@ const ActionsSkillMapModal = forwardRef<
       }
     };
 
+    const [showWarningCloseModal, setShowWarningCloseModal] = useState(false);
+
+    const isEditWithChanges =
+      action === ActionsEvent.EDIT && isFormTouched;
+
     const handleCloseModal = () => {
+      if (isEditWithChanges) {
+        setShowWarningCloseModal(true);
+        return;
+      }
+      onClose();
+    };
+
+    const handleConfirmSaveAndClose = () => {
+      setShowWarningCloseModal(false);
+      handleSubmit(onSubmitData)();
+    };
+
+    const handleConfirmCloseWithoutSave = () => {
+      setShowWarningCloseModal(false);
+      reset();
       onClose();
     };
 
@@ -1130,10 +1151,7 @@ const ActionsSkillMapModal = forwardRef<
               className="mt-1 w-3 h-[14px] hover:cursor-pointer"
               src="/icons/drawer-close-white.svg"
               name="Close icon"
-              onClick={() => {
-                reset();
-                onClose();
-              }}
+              onClick={handleCloseModal}
             />
           </div>
         </header>
@@ -1218,7 +1236,7 @@ const ActionsSkillMapModal = forwardRef<
                 <Button
                   variant="outline"
                   type="button"
-                  onClick={onClose}
+                  onClick={handleCloseModal}
                   className="w-[86px] h-[36px] !text-[13px] !px-2">
                   キャンセル
                 </Button>
@@ -1296,6 +1314,12 @@ const ActionsSkillMapModal = forwardRef<
             </div>
           )}
         </form>
+        <WarningCloseTaskModal
+          open={showWarningCloseModal}
+          onConfirm={handleConfirmSaveAndClose}
+          onClose={handleConfirmCloseWithoutSave}
+          onCloseByIcon={() => setShowWarningCloseModal(false)}
+        />
       </Drawer>
     );
   },
