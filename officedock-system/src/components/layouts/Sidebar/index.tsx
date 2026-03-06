@@ -103,6 +103,8 @@ const Sidebar = ({ className }: Props) => {
     setTotalNotifications,
     cancelUploadChatFiles,
     setLastVisitedByTab,
+    hasUnsavedChanges,
+    setPendingGlobalNavigationHref,
   } = useContext(GlobalStateContext);
   const { dashboardUnreadMessages } = useDashboardUnreadMessages();
   const [showWarningChatUploadingModal, setShowWarningChatUploadingModal] =
@@ -603,6 +605,10 @@ const Sidebar = ({ className }: Props) => {
                               className={`group cursor-pointer flex items-center gap-2 py-4 px-3 leading-6 rounded-l-md ${item.current && !memberSelected && !tagSelected ? 'bg-[#E6F3FB] menu-item' : 'hover:mr-2 hover:rounded-r-md hover:bg-[#FFFFFF33]'}`}
                               onClick={() => {
                                 if (isHasTerm) return;
+                                if (hasUnsavedChanges) {
+                                  setPendingGlobalNavigationHref(item.href);
+                                  return;
+                                }
                                 if (isChatFilesUploading) {
                                   setPendingPageChange(item.href);
                                   setPendingNavigationType(
@@ -709,6 +715,10 @@ const Sidebar = ({ className }: Props) => {
                             className={`group cursor-pointer flex items-center gap-2 py-4 px-3 leading-6 rounded-l-md ${memberOption.current && !memberSelected && !tagSelected ? 'bg-[#E6F3FB] menu-item' : 'hover:mr-2 hover:rounded-r-md hover:bg-[#FFFFFF33]'}`}
                             onClick={() => {
                               if (isHasTerm) return;
+                              if (hasUnsavedChanges) {
+                                setPendingGlobalNavigationHref(memberOption.href);
+                                return;
+                              }
                               if (isChatFilesUploading) {
                                 setPendingPageChange(memberOption.href);
                                 setPendingNavigationType(
@@ -818,6 +828,10 @@ const Sidebar = ({ className }: Props) => {
                               className={`group cursor-pointer flex items-center gap-2 py-4 px-3 leading-6 rounded-l-md ${item.current && !memberSelected && !tagSelected ? 'bg-[#E6F3FB] menu-item' : 'hover:mr-2 hover:rounded-r-md hover:bg-[#FFFFFF33]'}`}
                               onClick={() => {
                                 if (isHasTerm) return;
+                                if (hasUnsavedChanges) {
+                                  setPendingGlobalNavigationHref(item.href);
+                                  return;
+                                }
                                 if (isChatFilesUploading) {
                                   setPendingPageChange(item.href);
                                   setPendingNavigationType(
@@ -926,6 +940,10 @@ const Sidebar = ({ className }: Props) => {
                             className={`group cursor-pointer flex items-center gap-2 py-4 px-3 leading-6 rounded-l-md ${memberOption.current && !memberSelected && !tagSelected ? 'bg-[#E6F3FB] menu-item' : 'hover:mr-2 hover:rounded-r-md hover:bg-[#FFFFFF33]'}`}
                             onClick={() => {
                               if (isHasTerm) return;
+                              if (hasUnsavedChanges) {
+                                setPendingGlobalNavigationHref(memberOption.href);
+                                return;
+                              }
                               if (isChatFilesUploading) {
                                 setPendingPageChange(memberOption.href);
                                 setPendingNavigationType(
