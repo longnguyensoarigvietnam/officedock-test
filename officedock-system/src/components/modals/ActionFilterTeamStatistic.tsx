@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import ImageRound from '@components/common/ImageRound';
 
@@ -28,6 +28,11 @@ const ActionFilterStatisticTeam = ({
   tagsOptions,
 }: ActionTaskFilterProp) => {
   const boxListRef = useRef<HTMLDivElement | null>(null);
+  const [forceCloseKey, setForceCloseKey] = useState(0);
+
+  const handleMouseLeave = useCallback(() => {
+    setForceCloseKey((prev) => prev + 1);
+  }, []);
 
   const {
     orderingOptions,
@@ -177,7 +182,9 @@ const ActionFilterStatisticTeam = ({
 
   return (
     <>
-      <div className="w-full pt-[10px] pl-5 pr-[10px] pb-5 bg-white rounded-lg shadow-common p-1 flex flex-col gap-1 text-sm">
+      <div
+        onMouseLeave={handleMouseLeave}
+        className="w-full pt-[10px] pl-5 pr-[10px] pb-5 bg-white rounded-lg shadow-common p-1 flex flex-col gap-1 text-sm">
         <div className="text-xs font-medium text-[#77858F] flex justify-between items-center">
           <span>絞り込み</span>
           <div className="flex items-center gap-x-[10px]">
@@ -211,6 +218,7 @@ const ActionFilterStatisticTeam = ({
                 options={dataOptionsUserIds}
                 selectedOptions={watch('userIds') ?? []}
                 customLabel="メンバー"
+                forceClose={forceCloseKey}
                 onChange={(selected) => {
                   let updatedUserIds = [];
                   const currentUserIds = getValues('userIds') || [];
@@ -240,6 +248,7 @@ const ActionFilterStatisticTeam = ({
               options={dataOptionsTagIds}
               selectedOptions={watch('tagIds') ?? []}
               customLabel="タグ"
+              forceClose={forceCloseKey}
               onChange={(selected) => {
                 let updatedTagIds = [];
                 const currentTagIds = getValues('tagIds') || [];

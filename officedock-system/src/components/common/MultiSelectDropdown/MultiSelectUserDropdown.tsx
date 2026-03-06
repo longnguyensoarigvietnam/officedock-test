@@ -30,6 +30,7 @@ type Props = {
   placeholder?: string;
   searchOption?: boolean;
   selectedOptions?: OptionDropdownType[];
+  forceClose?: number;
   onChange?: (value: OptionDropdownType) => void;
 };
 const MultiSelectUserDropdown = ({
@@ -48,6 +49,7 @@ const MultiSelectUserDropdown = ({
   valueClassName,
   optionClassName,
   selectedOptions,
+  forceClose,
   onChange,
 }: Props) => {
   const [selected, setSelected] = useState<OptionDropdownType[] | undefined>(
@@ -61,6 +63,8 @@ const MultiSelectUserDropdown = ({
     isShow: false,
   });
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const dropdownOptionsRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (selectedOptions && selectedOptions.length > 0) {
       setSelected(selectedOptions);
@@ -71,6 +75,12 @@ const MultiSelectUserDropdown = ({
   const handleOptionClick = (option: OptionDropdownType) => {
     onChange && onChange(option);
   };
+  useEffect(() => {
+    if (forceClose) {
+      setIsOpen(false);
+    }
+  }, [forceClose]);
+
   const calculatePosition = () => {
     if (dropdownRef.current) {
       const rect = dropdownRef.current.getBoundingClientRect();
@@ -94,8 +104,30 @@ const MultiSelectUserDropdown = ({
       });
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownOptionsRef.current &&
+        !dropdownOptionsRef.current.contains(event.target as Node) &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('click', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [isOpen]);
   const renderOptions = () => (
     <div
+      ref={dropdownOptionsRef}
       className={`absolute mt-1 z-50 max-h-60 overflow-y-auto overflow-x-hidden rounded bg-white text-base shadow-lg ring-1 ring-black ring-opacity-5 ${optionClassName}`}
       style={{
         top: position.top,
@@ -212,14 +244,6 @@ const MultiSelectUserDropdown = ({
         </div>
       )}
 
-      {isOpen &&
-        ReactDOM.createPortal(
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setIsOpen(false)}
-          />,
-          document.body,
-        )}
       {isOpen && ReactDOM.createPortal(renderOptions(), document.body)}
       {error && (
         <ErrorMessage error={error} className="mt-2 text-sm text-red-600" />

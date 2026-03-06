@@ -31,6 +31,7 @@ type Props = {
   searchOption?: boolean;
   selectedOptions?: OptionDropdownType[];
   noDataClass?: string;
+  forceClose?: number;
   onChange?: (value: OptionDropdownType) => void;
 };
 const MultiSelectDropdown = ({
@@ -51,6 +52,7 @@ const MultiSelectDropdown = ({
   optionClassName,
   selectedOptions,
   noDataClass,
+  forceClose,
   onChange,
 }: Props) => {
   const [selected, setSelected] = useState<OptionDropdownType[] | undefined>(
@@ -71,6 +73,12 @@ const MultiSelectDropdown = ({
   const handleOptionClick = (option: OptionDropdownType) => {
     onChange && onChange(option);
   };
+
+  useEffect(() => {
+    if (forceClose) {
+      setIsOpen(false);
+    }
+  }, [forceClose]);
 
   useEffect(() => {
     const handleMouseDownOutside = (event: MouseEvent) => {
