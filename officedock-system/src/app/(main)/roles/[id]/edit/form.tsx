@@ -224,17 +224,6 @@ const EditRoleForm = () => {
     <div>
       <div className="flex justify-between items-center w-full mb-[30px]">
         <div className="flex gap-5 items-center">
-          <Link
-            href={pageRouters.ROLES_MANAGEMENT.href}
-            className="flex items-center hover:cursor-pointer">
-            <div className="ml-[6px] flex justify-between p-[3px] rounded-full bg-white border-b">
-              <ImageRound
-                name="Filter extend icon"
-                src={'/icons/arrow-down.svg'}
-                className={`w-4 h-4 hover:cursor-pointer rotate-90`}
-              />
-            </div>
-          </Link>
           <p className="text-black font-medium text-[26px] leading-[1]">
             権限管理
           </p>
@@ -253,6 +242,17 @@ const EditRoleForm = () => {
             onClick={handleConfirmEditRole}>
             保存
           </Button>
+          <Link
+            href={pageRouters.ROLES_MANAGEMENT.href}
+            className="flex items-center hover:cursor-pointer hover:opacity-60">
+            <div className="ml-[6px] flex justify-between p-[3px] rounded-full bg-white border-b">
+              <ImageRound
+                name="Filter extend icon"
+                src={'/icons/arrow-down.svg'}
+                className={`w-4 h-4 hover:cursor-pointer -rotate-90`}
+              />
+            </div>
+          </Link>
         </div>
       </div>
       <form

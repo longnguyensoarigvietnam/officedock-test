@@ -64,35 +64,35 @@ const DetailRoleTable = () => {
   return (
     <div>
       <div className="flex items-center justify-between w-full mb-[30px]">
-        <div className="flex items-center justify-start gap-5 w-full">
+        <p className="text-black font-medium text-[26px] leading-[1]">
+          権限管理
+        </p>
+        <div className="flex items-center justify-end gap-2">
+          {!dataRoleDetail?.deletedAt &&
+            !dataRoleDetail?.systemRole &&
+            session?.user.permissions &&
+            hasPermissionInArray(
+              session.user.permissions,
+              PermissionsSystem.ROLE_UPDATE,
+            ) && (
+              <Link href={pageRouters.EDIT_ROLE.href(`${params.id}`)}>
+                <Button variant="primary" className="w-[100px] !p-0 !h-[34px]">
+                  編集
+                </Button>
+              </Link>
+            )}
           <Link
             href={pageRouters.ROLES_MANAGEMENT.href}
-            className="flex items-center hover:cursor-pointer">
+            className="flex items-center hover:cursor-pointer hover:opacity-60">
             <div className="ml-[6px] flex justify-between p-[3px] rounded-full bg-white border-b">
               <ImageRound
                 name="Filter extend icon"
                 src={'/icons/arrow-down.svg'}
-                className={`w-4 h-4 hover:cursor-pointer rotate-90`}
+                className={`w-4 h-4 hover:cursor-pointer -rotate-90`}
               />
             </div>
           </Link>
-          <p className="text-black font-medium text-[26px] leading-[1]">
-            権限管理
-          </p>
         </div>
-        {!dataRoleDetail?.deletedAt &&
-          !dataRoleDetail?.systemRole &&
-          session?.user.permissions &&
-          hasPermissionInArray(
-            session.user.permissions,
-            PermissionsSystem.ROLE_UPDATE,
-          ) && (
-            <Link href={pageRouters.EDIT_ROLE.href(`${params.id}`)}>
-              <Button variant="primary" className="w-[100px] !p-0 !h-[34px]">
-                編集
-              </Button>
-            </Link>
-          )}
       </div>
       <div
         className="bg-[#F8FAFC] rounded-[30px] p-[30px]"

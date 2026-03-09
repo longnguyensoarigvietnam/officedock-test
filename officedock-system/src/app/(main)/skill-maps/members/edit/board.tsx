@@ -1,12 +1,19 @@
 'use client';
-import React, { Fragment, useContext, useState } from 'react';
+import React, {
+  Fragment,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AxiosError } from 'axios';
 import { useMutation } from 'react-query';
-import Link from 'next/link';
 
 import Dropdown from '@components/common/Dropdown';
 import Button from '@components/common/Button';
+import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
 
 import {
   ManageSkillMapsRequest,
@@ -30,6 +37,7 @@ import {
 import { ALL_TEAMS_OPTION } from '@constants';
 
 import { LoadingContext } from '@providers/LoadingProvider';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { useToast } from '@providers/ToastProvider';
 
 import { EditSkillMapByMemberForm } from './form';
@@ -38,6 +46,11 @@ import api from '@base/api';
 
 const EditSkillMapByMemberBoard = () => {
   const { setIsLoading } = useContext(LoadingContext);
+  const {
+    setHasUnsavedChanges,
+    pendingGlobalNavigationHref,
+    setPendingGlobalNavigationHref,
+  } = useContext(GlobalStateContext);
   const { showToast } = useToast();
   const showErrorToast = useErrorToast();
   const router = useRouter();
@@ -69,6 +82,56 @@ const EditSkillMapByMemberBoard = () => {
   const [organizationList, setOrganizationList] = useState<
     OptionDropdownType[]
   >([]);
+
+  const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+  const [pendingNavigationHref, setPendingNavigationHref] = useState<
+    string | null
+  >(null);
+  const navigateAfterSaveRef = useRef<string | null>(null);
+
+  const hasUnsavedChanges = selectedSkillByUserToUpdate.length > 0;
+
+  useEffect(() => {
+    setHasUnsavedChanges(hasUnsavedChanges);
+    return () => setHasUnsavedChanges(false);
+  }, [hasUnsavedChanges, setHasUnsavedChanges]);
+
+  useEffect(() => {
+    if (pendingGlobalNavigationHref !== null) {
+      setPendingNavigationHref(pendingGlobalNavigationHref);
+      setPendingGlobalNavigationHref(null);
+      setShowUnsavedModal(true);
+    }
+  }, [pendingGlobalNavigationHref, setPendingGlobalNavigationHref]);
+
+  const handleNavigate = useCallback(
+    (href: string) => {
+      if (hasUnsavedChanges) {
+        setPendingNavigationHref(href);
+        setShowUnsavedModal(true);
+      } else {
+        router.push(href);
+      }
+    },
+    [hasUnsavedChanges, router],
+  );
+
+  const handleConfirmLeave = useCallback(() => {
+    setShowUnsavedModal(false);
+    setSelectedSkillByUserToUpdate([]);
+    setHasUnsavedChanges(false);
+    if (pendingNavigationHref) {
+      router.push(pendingNavigationHref);
+      setPendingNavigationHref(null);
+    }
+  }, [pendingNavigationHref, router, setHasUnsavedChanges]);
+
+  const handleConfirmSaveAndLeave = () => {
+    navigateAfterSaveRef.current = pendingNavigationHref;
+    setShowUnsavedModal(false);
+    setPendingNavigationHref(null);
+    handleConfirmUpdateSkillMapByUsers();
+  };
 
   // Fetch skill map by members
   useSkillMapByMembers({
@@ -155,11 +218,17 @@ const EditSkillMapByMemberBoard = () => {
     handleUpdateSkillMapByUsers,
     {
       onSuccess: async () => {
+        setSelectedSkillByUserToUpdate([]);
+        setHasUnsavedChanges(false);
         showToast({
           description: SUCCESS_UPDATE_MESSAGE,
         });
-        setSelectedSkillByUserToUpdate([]);
-        router.push(`${pageRouters.SKILL_MAPS_MEMBERS_MANAGEMENT.href}${orgIdParam ? `?orgId=${orgIdParam}` : ''}`);
+        const targetHref = navigateAfterSaveRef.current;
+        navigateAfterSaveRef.current = null;
+        router.push(
+          targetHref ||
+            `${pageRouters.SKILL_MAPS_MEMBERS_MANAGEMENT.href}${orgIdParam ? `?orgId=${orgIdParam}` : ''}`,
+        );
       },
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_UPDATE_MESSAGE);
@@ -191,13 +260,14 @@ const EditSkillMapByMemberBoard = () => {
             スキルマップ設定
           </p>
           <div className="flex gap-[6px] bg-white w-fit p-[6px] rounded-[20px]">
-            <Link href={pageRouters.SKILL_MAPS_MANAGEMENT.href}>
-              <Button
-                variant="outline"
-                className={`w-[120px] !p-0 text-xs h-[28px] !font-bold !text-[#77858F] !bg-[#EBF1F7] border-none !rounded-[20px]`}>
-                スキル編集
-              </Button>
-            </Link>
+            <Button
+              variant="outline"
+              className={`w-[120px] !p-0 text-xs h-[28px] !font-bold !text-[#77858F] !bg-[#EBF1F7] border-none !rounded-[20px]`}
+              onClick={() =>
+                handleNavigate(pageRouters.SKILL_MAPS_MANAGEMENT.href)
+              }>
+              スキル編集
+            </Button>
             <Button
               variant="primary"
               className={`w-[120px] !p-0 text-xs h-[28px] !font-bold text-white border-none !rounded-[20px]`}>
@@ -226,11 +296,16 @@ const EditSkillMapByMemberBoard = () => {
             }}
           />
           <div className="flex justify-center gap-[10px] items-center">
-            <Link href={`${pageRouters.SKILL_MAPS_MEMBERS_MANAGEMENT.href}${orgIdParam ? `?orgId=${orgIdParam}` : ''}`}>
-              <Button variant="outline" className="w-[100px] !p-0 !h-[34px]">
-                キャンセル
-              </Button>
-            </Link>
+            <Button
+              variant="outline"
+              className="w-[100px] !p-0 !h-[34px]"
+              onClick={() =>
+                handleNavigate(
+                  `${pageRouters.SKILL_MAPS_MEMBERS_MANAGEMENT.href}${orgIdParam ? `?orgId=${orgIdParam}` : ''}`,
+                )
+              }>
+              キャンセル
+            </Button>
             <Button
               variant="primary"
               className="w-[100px] !p-0 !h-[34px] !border-none"
@@ -256,6 +331,13 @@ const EditSkillMapByMemberBoard = () => {
             );
           })}
       </div>
+
+      <WarningCloseTaskModal
+        open={showUnsavedModal}
+        onConfirm={handleConfirmSaveAndLeave}
+        onClose={handleConfirmLeave}
+        onCloseByIcon={() => setShowUnsavedModal(false)}
+      />
     </Fragment>
   );
 };
