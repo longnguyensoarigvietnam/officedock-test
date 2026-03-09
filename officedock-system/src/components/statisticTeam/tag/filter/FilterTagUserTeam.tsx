@@ -59,7 +59,7 @@ const FilterTagUserTeam = ({ className, classNameData }: Props) => {
                 leave="transition ease-in duration-150"
                 leaveFrom="opacity-100 translate-y-0"
                 leaveTo="opacity-0 translate-y-1">
-                <PopoverPanel className="absolute left-[30px] top-[-5px] z-[1] w-[400px] transform">
+                <PopoverPanel className="absolute left-[65px] top-[45px] z-[1] w-[400px] transform">
                   <FilterDataUserTeam open={open} close={close} />
                 </PopoverPanel>
               </Transition>

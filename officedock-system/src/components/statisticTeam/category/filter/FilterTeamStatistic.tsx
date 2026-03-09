@@ -72,7 +72,7 @@ const FilterTeamStatistic = ({
                 leave="transition ease-in duration-150"
                 leaveFrom="opacity-100 translate-y-0"
                 leaveTo="opacity-0 translate-y-1">
-                <PopoverPanel className="absolute left-[30px] top-[-5px] z-[1] w-[400px] transform">
+                <PopoverPanel className="absolute left-[50px] top-[60px] z-[1] w-[400px] transform">
                   <ActionFilterStatisticTeam
                     tagsOptions={tagsOptions}
                     handleClose={close}
