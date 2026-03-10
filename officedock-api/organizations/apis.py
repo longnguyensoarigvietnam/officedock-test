@@ -768,7 +768,8 @@ class OrganizationCategoryHierarchyViewSet(
         # Subquery: earliest created_at for each large category
         large_subquery = (
             qs.filter(
-                large_statistic_category=OuterRef("large_statistic_category")
+                organization=OuterRef("organization"),
+                large_statistic_category=OuterRef("large_statistic_category"),
             )
             .order_by("created_at")
             .values("created_at")[:1]
@@ -777,8 +778,21 @@ class OrganizationCategoryHierarchyViewSet(
         # Subquery: earliest created_at for each large + medium category
         large_medium_subquery = (
             qs.filter(
+                organization=OuterRef("organization"),
                 large_statistic_category=OuterRef("large_statistic_category"),
                 medium_statistic_category=OuterRef("medium_statistic_category"),
+            )
+            .order_by("created_at")
+            .values("created_at")[:1]
+        )
+
+        # Subquery: earliest created_at for each large + medium + small category
+        large_medium_small_subquery = (
+            qs.filter(
+                organization=OuterRef("organization"),
+                large_statistic_category=OuterRef("large_statistic_category"),
+                medium_statistic_category=OuterRef("medium_statistic_category"),
+                small_statistic_category=OuterRef("small_statistic_category"),
             )
             .order_by("created_at")
             .values("created_at")[:1]
@@ -788,11 +802,17 @@ class OrganizationCategoryHierarchyViewSet(
             qs.annotate(
                 large_created_at=Subquery(large_subquery),
                 large_medium_created_at=Subquery(large_medium_subquery),
+                large_medium_small_created_at=Subquery(
+                    large_medium_small_subquery
+                ),
             )
             .order_by(
+                "index",
                 "large_created_at",
                 "large_medium_created_at",
+                "large_medium_small_created_at",
                 "created_at",
+                "id",
             )
             .distinct()
         )
@@ -914,6 +934,33 @@ class OrganizationCategoryHierarchyViewSet(
         data_to_create = serializer_data.pop("items", [])
         items_to_delete = serializer_data.pop("items_to_delete", [])
 
+        # Cache StatisticCategory instances within this request to reduce
+        # repeated get_or_create queries when the same uuid/name appears
+        # across multiple items.
+        statistic_category_cache = {}
+
+        def get_cached_stat_category(stat_obj, org):
+            if not stat_obj:
+                return None
+
+            stat_uuid = stat_obj.get("uuid")
+            stat_name = (stat_obj.get("name") or "").strip()
+            cache_key = (
+                str(stat_uuid) if stat_uuid else None,
+                stat_name.lower(),
+                org.id if org else None,
+            )
+            if cache_key in statistic_category_cache:
+                return statistic_category_cache[cache_key]
+
+            instance = self._get_statistic_category_instance(
+                stat_obj,
+                company,
+                org,
+            )
+            statistic_category_cache[cache_key] = instance
+            return instance
+
         if data_to_create:
             for item in data_to_create:
                 input_large = item.pop("large_statistic_category", None)
@@ -928,26 +975,14 @@ class OrganizationCategoryHierarchyViewSet(
                     "organization_statistic_category", None
                 )
 
-                large_statistic_category = (
-                    self._get_statistic_category_instance(
-                        input_large,
-                        company,
-                        organization,
-                    )
+                large_statistic_category = get_cached_stat_category(
+                    input_large, organization
                 )
-                medium_statistic_category = (
-                    self._get_statistic_category_instance(
-                        input_medium,
-                        company,
-                        organization,
-                    )
+                medium_statistic_category = get_cached_stat_category(
+                    input_medium, organization
                 )
-                small_statistic_category = (
-                    self._get_statistic_category_instance(
-                        input_small,
-                        company,
-                        organization,
-                    )
+                small_statistic_category = get_cached_stat_category(
+                    input_small, organization
                 )
                 color = item.get("color", None)
                 deleted_type = item.get("deleted_type", None)
@@ -1105,6 +1140,7 @@ class OrganizationCategoryHierarchyViewSet(
                     uuid=obj.get("uuid"),
                     defaults={
                         "name": obj.get("name"),
+                        "team": org,
                     },
                 )
             except Exception:
@@ -1113,11 +1149,12 @@ class OrganizationCategoryHierarchyViewSet(
                 large_statistic_category = StatisticCategory.objects.create(
                     company=company,
                     name=obj.get("name"),
+                    team=org,
                 )
 
-            if created:
-                large_statistic_category.team = org
-                large_statistic_category.save(update_fields=["team"])
+            if not created and large_statistic_category.team is not None:
+                large_statistic_category.name = obj.get("name")
+                large_statistic_category.save(update_fields=["name"])
 
         return large_statistic_category
 
