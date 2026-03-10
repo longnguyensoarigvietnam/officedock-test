@@ -370,13 +370,13 @@ const TaskCard = ({
         setIsHovering(false);
         setIsShowAction(false);
       }
-    }, 1100);
+    }, 750);
   };
   useEffect(() => {
     if (isModalShow) {
       setTimeout(() => {
         setIsHovering(false);
-      }, 1000);
+      }, 750);
     }
   }, [isModalShow]);
 
