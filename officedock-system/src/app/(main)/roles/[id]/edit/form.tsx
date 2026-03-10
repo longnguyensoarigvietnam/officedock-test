@@ -240,12 +240,6 @@ const EditRoleForm = () => {
             onClick={handleConfirmEditRole}>
             保存
           </Button>
-          <Button
-            variant="outline"
-            className="flex items-center w-[100px] !h-[34px] hover:cursor-pointer hover:opacity-60"
-            onClick={() => router.push(pageRouters.ROLES_MANAGEMENT.href)}>
-            戻る
-          </Button>
         </div>
       </div>
       <form
