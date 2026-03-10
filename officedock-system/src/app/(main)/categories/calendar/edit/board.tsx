@@ -417,9 +417,10 @@ const EditHierarchyBoard = () => {
           <Button
             variant="outline"
             className="w-[100px] !p-0 !h-[34px]"
-            onClick={() =>
-              handleNavigate(pageRouters.CALENDAR_CATEGORY_MANAGEMENT.href)
-            }>
+            onClick={() => {
+              setHasUnsavedChanges(false);
+              router.push(pageRouters.CALENDAR_CATEGORY_MANAGEMENT.href);
+            }}>
             キャンセル
           </Button>
           <Button

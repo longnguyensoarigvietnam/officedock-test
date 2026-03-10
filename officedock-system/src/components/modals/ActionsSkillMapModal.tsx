@@ -556,8 +556,7 @@ const ActionsSkillMapModal = forwardRef<
 
     const [showWarningCloseModal, setShowWarningCloseModal] = useState(false);
 
-    const isEditWithChanges =
-      action === ActionsEvent.EDIT && isFormTouched;
+    const isEditWithChanges = action === ActionsEvent.EDIT && isFormTouched;
 
     const handleCloseModal = () => {
       if (isEditWithChanges) {
@@ -1236,7 +1235,10 @@ const ActionsSkillMapModal = forwardRef<
                 <Button
                   variant="outline"
                   type="button"
-                  onClick={handleCloseModal}
+                  onClick={() => {
+                    setIsFormTouched(false);
+                    onClose();
+                  }}
                   className="w-[86px] h-[36px] !text-[13px] !px-2">
                   キャンセル
                 </Button>
