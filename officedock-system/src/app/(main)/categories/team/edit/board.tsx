@@ -274,9 +274,7 @@ const EditHierarchyForm = () => {
         });
         const targetHref = navigateAfterSaveRef.current;
         navigateAfterSaveRef.current = null;
-        router.push(
-          targetHref || pageRouters.TEAM_CATEGORY_MANAGEMENT.href,
-        );
+        router.push(targetHref || pageRouters.TEAM_CATEGORY_MANAGEMENT.href);
       },
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_UPDATE_MESSAGE);
@@ -555,9 +553,10 @@ const EditHierarchyForm = () => {
             <Button
               variant="outline"
               className="w-[100px] !p-0 !h-[34px]"
-              onClick={() =>
-                handleNavigate(pageRouters.TEAM_CATEGORY_MANAGEMENT.href)
-              }>
+              onClick={() => {
+                setHasUnsavedChanges(false);
+                router.push(pageRouters.TEAM_CATEGORY_MANAGEMENT.href);
+              }}>
               キャンセル
             </Button>
             <Button

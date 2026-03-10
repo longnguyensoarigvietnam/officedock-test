@@ -299,11 +299,12 @@ const EditSkillMapByMemberBoard = () => {
             <Button
               variant="outline"
               className="w-[100px] !p-0 !h-[34px]"
-              onClick={() =>
-                handleNavigate(
+              onClick={() => {
+                setHasUnsavedChanges(false);
+                router.push(
                   `${pageRouters.SKILL_MAPS_MEMBERS_MANAGEMENT.href}${orgIdParam ? `?orgId=${orgIdParam}` : ''}`,
-                )
-              }>
+                );
+              }}>
               キャンセル
             </Button>
             <Button
