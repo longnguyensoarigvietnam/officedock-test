@@ -31,7 +31,7 @@ const DetailRoleTable = () => {
   const { showToast } = useToast();
   const { setIsLoading } = useContext(LoadingContext);
   const { dataRoleDetail, setDataRoleDetail } = useContext(RoleStateContext);
-  const { roleDetail } = useRoleDetail({
+  const { roleDetail, isFetchingRoleDetail } = useRoleDetail({
     roleId: Number(params.id),
     onError: (error: AxiosError) => {
       if (error.response?.status === ServerStatusCode.NOT_FOUND) {
@@ -67,7 +67,8 @@ const DetailRoleTable = () => {
           権限管理
         </p>
         <div className="flex items-center justify-end gap-2">
-          {!dataRoleDetail?.deletedAt &&
+          {!isFetchingRoleDetail &&
+            !dataRoleDetail?.deletedAt &&
             !dataRoleDetail?.systemRole &&
             session?.user.permissions &&
             hasPermissionInArray(
