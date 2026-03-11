@@ -2,6 +2,7 @@
 import { useMutation } from 'react-query';
 import React, {
   Fragment,
+  useCallback,
   useContext,
   useEffect,
   useRef,
@@ -21,6 +22,7 @@ import { OrganizationSkillDetail } from './organization-skill-detail';
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
 import ConfirmHiddenModal from '@components/modals/ConfirmHiddenModal';
+import WarningCloseTaskModal from '@components/modals/WarningCloseTaskModal';
 
 import { apiRouters, pageRouters } from '@constants/routers';
 import {
@@ -44,6 +46,7 @@ import {
 import { ALL_TEAMS_OPTION, NO_SETTING } from '@constants';
 
 import { LoadingContext } from '@providers/LoadingProvider';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import { useToast } from '@providers/ToastProvider';
 
 import {
@@ -68,10 +71,59 @@ import api from '@base/api';
 
 const ListSkillsMap = () => {
   const { setIsLoading } = useContext(LoadingContext);
+  const {
+    setHasUnsavedChanges,
+    pendingGlobalNavigationHref,
+    setPendingGlobalNavigationHref,
+  } = useContext(GlobalStateContext);
   const showErrorToast = useErrorToast();
   const { data: session } = useSessionCache();
   const { showToast } = useToast();
   const modalRef = useRef<ActionsSkillMapModalRef>(null);
+
+  const [isSkillMapFormTouched, setIsSkillMapFormTouched] = useState(false);
+  const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+  const [pendingNavigationHref, setPendingNavigationHref] = useState<
+    string | null
+  >(null);
+
+  const isModalOpenWithChanges = isSkillMapFormTouched;
+
+  useEffect(() => {
+    setHasUnsavedChanges(isModalOpenWithChanges);
+    return () => setHasUnsavedChanges(false);
+  }, [isModalOpenWithChanges, setHasUnsavedChanges]);
+
+  useEffect(() => {
+    if (pendingGlobalNavigationHref !== null) {
+      const href = pendingGlobalNavigationHref;
+      setPendingGlobalNavigationHref(null);
+      const doCheck = async () => {
+        const isValid = await modalRef.current?.triggerValidation();
+        if (isValid) {
+          setPendingNavigationHref(href);
+          setShowUnsavedModal(true);
+        }
+      };
+      doCheck();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingGlobalNavigationHref, setPendingGlobalNavigationHref]);
+
+  const handleConfirmLeave = useCallback(() => {
+    setShowUnsavedModal(false);
+    setIsSkillMapFormTouched(false);
+    setHasUnsavedChanges(false);
+    setOpenSkillMapActionsModal(false);
+    setSelectedSkillMapToUpdate(null);
+    setSkillMapEditDetail(null);
+    handleRemoveParam();
+    if (pendingNavigationHref) {
+      router.push(pendingNavigationHref);
+      setPendingNavigationHref(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingNavigationHref, setHasUnsavedChanges]);
 
   // Router
   const searchParams = useSearchParams();
@@ -209,27 +261,27 @@ const ListSkillsMap = () => {
       skillLevels:
         step?.skillLevels && step?.skillLevels.length > 0
           ? step.skillLevels.map((level, index) => ({
-            level: `レベル${index + 1}`,
-            items:
-              level.items.length > 0
-                ? level.items
-                  .filter((item) => item.value)
-                  .map((item) => item.value)
-                : [],
-            lookBackType: level?.lookBackType
-              ? String(level?.lookBackType.value)
-              : null,
-            lookBackInterval: level?.lookBackInterval
-              ? Number(level?.lookBackInterval)
-              : null,
-            measureCount: level?.measureCount
-              ? Number(level?.measureCount)
-              : null,
-            measureTime: level?.measureTime
-              ? Number(level?.measureTime)
-              : null,
-            organization: Number(organizationParam) || 0,
-          }))
+              level: `レベル${index + 1}`,
+              items:
+                level.items.length > 0
+                  ? level.items
+                      .filter((item) => item.value)
+                      .map((item) => item.value)
+                  : [],
+              lookBackType: level?.lookBackType
+                ? String(level?.lookBackType.value)
+                : null,
+              lookBackInterval: level?.lookBackInterval
+                ? Number(level?.lookBackInterval)
+                : null,
+              measureCount: level?.measureCount
+                ? Number(level?.measureCount)
+                : null,
+              measureTime: level?.measureTime
+                ? Number(level?.measureTime)
+                : null,
+              organization: Number(organizationParam) || 0,
+            }))
           : [],
       categoryIds: step.rawCategories.map((cate) => ({
         largeStatisticCategoryId:
@@ -275,32 +327,32 @@ const ListSkillsMap = () => {
       skillLevels:
         step?.skillLevels && step?.skillLevels.length > 0
           ? step.skillLevels.map((level, index) => ({
-            level: `レベル${index + 1}`,
-            items:
-              level.items.length > 0
-                ? level.items
-                  .filter((item) => item.value)
-                  .map((item) => item.value)
-                : [],
-            lookBackType: level?.lookBackType
-              ? String(level?.lookBackType.value)
-              : null,
-            lookBackInterval: level?.lookBackInterval
-              ? Number(level?.lookBackInterval)
-              : null,
-            measureCount: level?.measureCount
-              ? Number(level?.measureCount)
-              : null,
-            measureTime: level?.measureTime
-              ? Number(level?.measureTime)
-              : null,
-            skillLevelId: level?.skillLevelId
-              ? Number(level.skillLevelId)
-              : null,
-            organization: level?.organization
-              ? Number(level?.organization)
-              : 0,
-          }))
+              level: `レベル${index + 1}`,
+              items:
+                level.items.length > 0
+                  ? level.items
+                      .filter((item) => item.value)
+                      .map((item) => item.value)
+                  : [],
+              lookBackType: level?.lookBackType
+                ? String(level?.lookBackType.value)
+                : null,
+              lookBackInterval: level?.lookBackInterval
+                ? Number(level?.lookBackInterval)
+                : null,
+              measureCount: level?.measureCount
+                ? Number(level?.measureCount)
+                : null,
+              measureTime: level?.measureTime
+                ? Number(level?.measureTime)
+                : null,
+              skillLevelId: level?.skillLevelId
+                ? Number(level.skillLevelId)
+                : null,
+              organization: level?.organization
+                ? Number(level?.organization)
+                : 0,
+            }))
           : [],
       categoryIds: step.rawCategories.map((cate) => ({
         largeStatisticCategoryId:
@@ -682,6 +734,7 @@ const ListSkillsMap = () => {
             open={openSkillMapActionsModal}
             skillMapEditDetail={skillMapEditDetail}
             onClose={() => {
+              setIsSkillMapFormTouched(false);
               setOpenSkillMapActionsModal(false);
               setSelectedSkillMapToUpdate(null);
               setSkillMapEditDetail(null);
@@ -689,8 +742,19 @@ const ListSkillsMap = () => {
             }}
             onCreate={handleConfirmCreateSkillMap}
             onEdit={handleConfirmEditSkillMap}
+            onFormTouchedChange={setIsSkillMapFormTouched}
           />
         )}
+
+      <WarningCloseTaskModal
+        open={showUnsavedModal}
+        onConfirm={handleConfirmLeave}
+        onClose={handleConfirmLeave}
+        onCloseByIcon={() => {
+          setShowUnsavedModal(false);
+          setPendingNavigationHref(null);
+        }}
+      />
     </Fragment>
   );
 };

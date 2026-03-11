@@ -200,7 +200,21 @@ const KanbanBoardTask = () => {
     setDataTaskEditKanban,
     setIsInteracting,
   } = useContext(TaskContext);
-  const { isExtendCalendar, expanded } = useContext(GlobalStateContext);
+  const {
+    isExtendCalendar,
+    expanded,
+    setHasUnsavedChanges,
+    pendingGlobalNavigationHref,
+    setPendingGlobalNavigationHref,
+  } = useContext(GlobalStateContext);
+
+  const [isTaskFormTouched, setIsTaskFormTouched] = useState<boolean>(false);
+  const [validationTrigger, setValidationTrigger] = useState<number>(0);
+  const [pendingNavigationHref, setPendingNavigationHref] = useState<
+    string | null
+  >(null);
+  const [showUnsavedNavModal, setShowUnsavedNavModal] =
+    useState<boolean>(false);
 
   const searchParams = useSearchParams();
   const params = new URLSearchParams(searchParams);
@@ -307,6 +321,50 @@ const KanbanBoardTask = () => {
   // Every time the call fails, the state will be reversed to the previous state so that the kanban board can be re-rendered.
   const [resetInitialColumnsData, setResetInitialColumnsData] =
     useState<boolean>(true);
+
+  useEffect(() => {
+    if (showEditTaskModal && isTaskFormTouched) {
+      setHasUnsavedChanges(true);
+    } else {
+      setHasUnsavedChanges(false);
+    }
+    return () => setHasUnsavedChanges(false);
+  }, [showEditTaskModal, isTaskFormTouched, setHasUnsavedChanges]);
+
+  useEffect(() => {
+    if (pendingGlobalNavigationHref !== null && showEditTaskModal && isTaskFormTouched) {
+      setPendingNavigationHref(pendingGlobalNavigationHref);
+      setPendingGlobalNavigationHref(null);
+      setValidationTrigger((prev) => prev + 1);
+    }
+  }, [pendingGlobalNavigationHref, showEditTaskModal, isTaskFormTouched, setPendingGlobalNavigationHref]);
+
+  const handleTaskValidationResult = useCallback(
+    (isValid: boolean) => {
+      if (isValid && pendingNavigationHref) {
+        setShowUnsavedNavModal(true);
+      }
+    },
+    [pendingNavigationHref],
+  );
+
+  const handleConfirmLeaveNav = useCallback(() => {
+    setShowUnsavedNavModal(false);
+    setShowEditTaskModal(false);
+    setIsTaskFormTouched(false);
+    setHasUnsavedChanges(false);
+    setColumnId('');
+    handleRemoveParam();
+    setDataTaskEdit(null);
+    setIsLoading(false);
+    resetFunctions.resetDataCategoryOptions?.();
+    resetFunctions.reset?.();
+    if (pendingNavigationHref) {
+      router.push(pendingNavigationHref);
+      setPendingNavigationHref(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingNavigationHref, router, setHasUnsavedChanges, resetFunctions]);
 
   // Cache task Archive
   const { removeTaskFromCache, updateTaskInCache } =
@@ -3647,6 +3705,7 @@ const KanbanBoardTask = () => {
                   orgUserList={creationDataCommonData?.organizations}
                   errorPerson={dataErrorTask}
                   onClose={() => {
+                    setIsTaskFormTouched(false);
                     setShowEditTaskModal(false);
                     setColumnId('');
                     handleRemoveParam();
@@ -3688,6 +3747,9 @@ const KanbanBoardTask = () => {
                     setCloseAction(action);
                     setOpenWarningCloseModal(true);
                   }}
+                  onFormTouchedChange={setIsTaskFormTouched}
+                  externalValidationTrigger={validationTrigger}
+                  onValidationResult={handleTaskValidationResult}
                 />
               )}
 
@@ -3862,6 +3924,15 @@ const KanbanBoardTask = () => {
           </div>
         </div>
       )}
+      <WarningCloseTaskModal
+        open={showUnsavedNavModal}
+        onConfirm={handleConfirmLeaveNav}
+        onClose={handleConfirmLeaveNav}
+        onCloseByIcon={() => {
+          setShowUnsavedNavModal(false);
+          setPendingNavigationHref(null);
+        }}
+      />
     </>
   );
 };

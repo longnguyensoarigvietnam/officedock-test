@@ -1,5 +1,5 @@
 'use client';
-import { Fragment, useContext, useEffect, useState } from 'react';
+import { Fragment, useCallback, useContext, useEffect, useState } from 'react';
 import lodash from 'lodash';
 import { signOut } from 'next-auth/react';
 import {
@@ -192,6 +192,8 @@ const Header = ({ className }: HeaderProps) => {
     isChatFilesUploading,
     cancelUploadChatFiles,
     hasUnsavedChanges,
+    setHasUnsavedChanges,
+    pendingGlobalNavigationHref,
     setPendingGlobalNavigationHref,
   } = useContext(GlobalStateContext);
   const [pendingPageChange, setPendingPageChange] = useState<string | null>(
@@ -202,10 +204,70 @@ const Header = ({ className }: HeaderProps) => {
   const [actionsEventMessage, setActionsEventMessage] = useState<string>('');
   const [openWarningCloseModal, setOpenWarningCloseModal] =
     useState<boolean>(false);
+  const [isTaskFormTouched, setIsTaskFormTouched] = useState<boolean>(false);
+  const [validationTrigger, setValidationTrigger] = useState<number>(0);
+  const [pendingNavigationHref, setPendingNavigationHref] = useState<
+    string | null
+  >(null);
+  const [showUnsavedNavModal, setShowUnsavedNavModal] =
+    useState<boolean>(false);
+
+  useEffect(() => {
+    if (isShowModalTask && isTaskFormTouched) {
+      setHasUnsavedChanges(true);
+    } else {
+      setHasUnsavedChanges(false);
+    }
+    return () => setHasUnsavedChanges(false);
+  }, [isShowModalTask, isTaskFormTouched, setHasUnsavedChanges]);
+
+  useEffect(() => {
+    if (
+      pendingGlobalNavigationHref !== null &&
+      isShowModalTask &&
+      isTaskFormTouched
+    ) {
+      setPendingNavigationHref(pendingGlobalNavigationHref);
+      setPendingGlobalNavigationHref(null);
+      setValidationTrigger((prev) => prev + 1);
+    }
+  }, [
+    pendingGlobalNavigationHref,
+    isShowModalTask,
+    isTaskFormTouched,
+    setPendingGlobalNavigationHref,
+  ]);
+
+  const handleTaskValidationResult = useCallback(
+    (isValid: boolean) => {
+      if (isValid && pendingNavigationHref) {
+        setShowUnsavedNavModal(true);
+      }
+    },
+    [pendingNavigationHref],
+  );
   const [resetFunctions, setResetFunctions] = useState<{
     resetDataCategoryOptions?: () => void;
     reset?: () => void;
   }>({});
+
+  const handleConfirmLeaveNav = useCallback(() => {
+    setShowUnsavedNavModal(false);
+    setShowModalTask(false);
+    setIsTaskFormTouched(false);
+    setHasUnsavedChanges(false);
+    handleRemoveParam();
+    setDataTaskEdit(null);
+    setIsLoading(false);
+    resetFunctions.resetDataCategoryOptions?.();
+    resetFunctions.reset?.();
+    if (pendingNavigationHref) {
+      router.push(pendingNavigationHref);
+      setPendingNavigationHref(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingNavigationHref, setHasUnsavedChanges, resetFunctions]);
+
   const [pendingTaskData, setPendingTaskData] = useState<TaskFormData | null>();
   const [closeAction, setCloseAction] = useState<ActionTask | null>();
   const [openViewProfileModal, setOpenViewProfileModal] =
@@ -1054,7 +1116,18 @@ const Header = ({ className }: HeaderProps) => {
         <div className="flex gap-8 justify-between w-full">
           <div className="flex flex-grow items-center gap-8">
             <ImageRound
-              onClick={() => router.push(pageRouters.MY_PAGE.href)}
+              onClick={() => {
+                if (isShowModalTask && isTaskFormTouched) {
+                  setPendingNavigationHref(pageRouters.MY_PAGE.href);
+                  setValidationTrigger((prev) => prev + 1);
+                  return;
+                }
+                if (hasUnsavedChanges) {
+                  setPendingGlobalNavigationHref(pageRouters.MY_PAGE.href);
+                  return;
+                }
+                router.push(pageRouters.MY_PAGE.href);
+              }}
               className="h-[50px] w-48 object-fill hover:cursor-pointer"
               src="/images/logo-full.svg"
               name="Logo full"
@@ -1277,6 +1350,7 @@ const Header = ({ className }: HeaderProps) => {
           columnId={`${StatusValueTask.NOT_STARTED}`}
           action={actionType || ActionTask.CREATE}
           onClose={() => {
+            setIsTaskFormTouched(false);
             handleRemoveParam();
           }}
           onWarning={({
@@ -1312,6 +1386,9 @@ const Header = ({ className }: HeaderProps) => {
           onDelete={() => {
             setOpenConfirmDeleteModal(true);
           }}
+          onFormTouchedChange={setIsTaskFormTouched}
+          externalValidationTrigger={validationTrigger}
+          onValidationResult={handleTaskValidationResult}
         />
       )}
       {openWarningCloseModal && (
@@ -1337,6 +1414,15 @@ const Header = ({ className }: HeaderProps) => {
           }}
         />
       )}
+      <WarningCloseTaskModal
+        open={showUnsavedNavModal}
+        onConfirm={handleConfirmLeaveNav}
+        onClose={handleConfirmLeaveNav}
+        onCloseByIcon={() => {
+          setShowUnsavedNavModal(false);
+          setPendingNavigationHref(null);
+        }}
+      />
       {openCreateEventModal && (
         <ActionsEventModal
           open={openCreateEventModal}
