@@ -44,6 +44,7 @@ const useRoleDetail = ({
     data: roleDetail,
     refetch: refetchRoleDetail,
     isFetched: isFetchedRoleDetail,
+    isFetching: isFetchingRoleDetail,
   } = useQuery({
     queryKey: ['getRoleDetail'],
     queryFn: getRoleDetail,
@@ -62,7 +63,12 @@ const useRoleDetail = ({
     },
   });
 
-  return { roleDetail, refetchRoleDetail, isFetchedRoleDetail };
+  return {
+    roleDetail,
+    refetchRoleDetail,
+    isFetchedRoleDetail,
+    isFetchingRoleDetail,
+  };
 };
 
 export default useRoleDetail;
