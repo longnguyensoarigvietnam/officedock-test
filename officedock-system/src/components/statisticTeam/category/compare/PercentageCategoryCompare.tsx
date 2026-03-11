@@ -371,6 +371,7 @@ const PercentageTeamCategoryCompare = ({
                     <div className="min-h-[280px] mt-[10px] flex justify-center">
                       {selectedOrganization?.value == ALL_TEAM_STATISTIC ? (
                         <PercentageBarCompare
+                          showNoDataText
                           data={dataChartLarge}
                           startDate={startDate}
                           endDate={endDate}
@@ -393,6 +394,7 @@ const PercentageTeamCategoryCompare = ({
                         />
                       ) : (
                         <PercentageBarCompareTeam
+                          showNoDataText
                           data={dataChartLarge}
                           startDate={startDate}
                           endDate={endDate}
@@ -447,6 +449,7 @@ const PercentageTeamCategoryCompare = ({
                     />
                     <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompareTeam
+                        showNoDataText={selectedLarge?.value !== ''}
                         data={dataChartMedium}
                         startDate={startDate}
                         endDate={endDate}
@@ -500,6 +503,7 @@ const PercentageTeamCategoryCompare = ({
                     />
                     <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompareTeam
+                        showNoDataText={selectedMedium?.value !== ''}
                         isLast
                         data={dataChartSmall}
                         startDate={startDate}

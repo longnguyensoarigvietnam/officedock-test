@@ -389,6 +389,16 @@ const StatisticTagBoard = () => {
         ]);
       }
     },
+    onSettled: () => {
+      setIsLoadingLarge(true);
+      setIsLoadingMedium(true);
+      setIsLoadingOrganization(true);
+      if (isCheckCompare) {
+        setIsLoadingLargeCompare(true);
+        setIsLoadingMediumCompare(true);
+        setIsLoadingOrganizationCompare(true);
+      }
+    },
   });
 
   // Handle Choose organization

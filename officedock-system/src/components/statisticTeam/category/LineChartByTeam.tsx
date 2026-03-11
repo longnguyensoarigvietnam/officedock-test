@@ -1760,6 +1760,13 @@ const LineChartByTeam = ({
             selectedOrganization?.value != ALL_TEAM_STATISTIC) ||
           (!isFetchingStatisticTeamDockAllTeamLineChartTaskDurationsList &&
             selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
+            lineChartData?.datasets.length === 0 ? (
+              <div className="flex items-center justify-center h-[380px]">
+                <span className="text-sm text-[#77858F]">
+                  データがありません
+                </span>
+              </div>
+            ) : (
             <div
               style={{ position: 'relative' }}
               className={`h-[380px] ${expanded && 'w-[calc(100%_-_10px)]'}`}>
@@ -1782,6 +1789,7 @@ const LineChartByTeam = ({
                 style={{ position: 'absolute', opacity: 0 }}
               />
             </div>
+            )
           ) : (
             <RowSkeleton
               numberOfRows={1}

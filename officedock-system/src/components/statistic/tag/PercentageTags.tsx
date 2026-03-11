@@ -535,7 +535,13 @@ const PercentageTags = ({
                           }
                         />
                       ) : (
-                        <div className="w-[220px] h-[220px]  rounded-full bg-[#EBF1F7]"></div>
+                        <div className="w-[220px] h-[220px] rounded-full bg-[#EBF1F7] flex items-center justify-center">
+                          {selectedOrganization?.value !== '' && (
+                            <span className="text-sm text-[#77858F]">
+                              データがありません
+                            </span>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -593,7 +599,13 @@ const PercentageTags = ({
                           handleClickChart={(_data: OptionDropdownType) => {}}
                         />
                       ) : (
-                        <div className="w-[220px] h-[220px]  rounded-full bg-[#EBF1F7]"></div>
+                        <div className="w-[220px] h-[220px] rounded-full bg-[#EBF1F7] flex items-center justify-center">
+                          {selectedLarge?.value !== '' && (
+                            <span className="text-sm text-[#77858F]">
+                              データがありません
+                            </span>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -654,7 +666,13 @@ const PercentageTags = ({
                           }
                         />
                       ) : (
-                        <div className="w-[220px] h-[220px]  rounded-full bg-[#EBF1F7]"></div>
+                        <div className="w-[220px] h-[220px] rounded-full bg-[#EBF1F7] flex items-center justify-center">
+                          {selectedMedium?.value !== '' && (
+                            <span className="text-sm text-[#77858F]">
+                              データがありません
+                            </span>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -716,7 +734,13 @@ const PercentageTags = ({
                           }
                         />
                       ) : (
-                        <div className="w-[220px] h-[220px]  rounded-full bg-[#EBF1F7]"></div>
+                        <div className="w-[220px] h-[220px] rounded-full bg-[#EBF1F7] flex items-center justify-center">
+                          {selectedSmall?.value !== '' && (
+                            <span className="text-sm text-[#77858F]">
+                              データがありません
+                            </span>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>

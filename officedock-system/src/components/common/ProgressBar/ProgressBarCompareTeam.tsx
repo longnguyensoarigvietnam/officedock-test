@@ -27,6 +27,7 @@ interface Props {
   onActionHover?: () => void;
   handleClickTooltip: (id: number | null, isCompare: boolean) => void;
   handleClickChart: (data: OptionDropdownType) => void;
+  showNoDataText?: boolean;
 }
 
 const PercentageBarCompareTeam = ({
@@ -46,6 +47,7 @@ const PercentageBarCompareTeam = ({
   hasHover,
   onActionHover,
   handleClickChart,
+  showNoDataText = false,
 }: Props) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -316,7 +318,11 @@ const PercentageBarCompareTeam = ({
                 </div>
               ))
             ) : (
-              <div className="w-full h-full bg-[#EBF1F7] px-5"></div>
+              <div className="w-full h-full bg-[#EBF1F7] flex items-center justify-center rounded-[4px]">
+                {showNoDataText && (
+                  <span className="text-sm text-[#77858F]">データがありません</span>
+                )}
+              </div>
             )}
           </div>
         </>
@@ -580,7 +586,11 @@ const PercentageBarCompareTeam = ({
                 </div>
               ))
             ) : (
-              <div className="w-full h-full bg-[#EBF1F7]"></div>
+              <div className="w-full h-full bg-[#EBF1F7] flex items-center justify-center rounded-[4px]">
+                {showNoDataText && (
+                  <span className="text-sm text-[#77858F]">データがありません</span>
+                )}
+              </div>
             )}
           </div>
           <div className={`mt-[14px] ${!isTag && 'flex justify-between'}`}>

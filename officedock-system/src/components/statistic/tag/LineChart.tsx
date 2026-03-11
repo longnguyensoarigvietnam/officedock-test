@@ -1051,6 +1051,10 @@ const LineChart = ({
               numberOfRows={1}
               className={`!h-[395px] w-[calc(100%_-_60px)] mx-auto`}
             />
+          ) : lineChartData?.datasets.length === 0 ? (
+            <div className="flex items-center justify-center h-[380px]">
+              <span className="text-sm text-[#77858F]">データがありません</span>
+            </div>
           ) : (
             <div
               style={{ position: 'relative' }}

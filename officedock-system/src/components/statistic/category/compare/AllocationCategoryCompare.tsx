@@ -265,30 +265,9 @@ const AllocationCategoryCompare = memo(
               main:
                 smallMainCategories.length > 0
                   ? {
-                    id: -1,
-                    label: 'その他',
-                    value: smallMainCategoriesValue,
-                    color:
-                      (selectedLargeCategoryColor &&
-                        lightenColor(
-                          selectedLargeCategoryColor,
-                          smallMainCategoriesValue,
-                        )) ||
-                      (selectedLargeCompareCategoryColor &&
-                        lightenColor(
-                          selectedLargeCompareCategoryColor,
-                          smallMainCategoriesValue,
-                        )) ||
-                      getRandomColor(),
-                    duration: totalDurationsForStatistic(
-                      smallMainCategories.map((item) => item.duration),
-                    ),
-                    optionData: smallMainCategories
-                      .flatMap((item) => item.optionData)
-                      .slice(0, 3),
-                    mergedItems: smallMainCategories.map((item) => ({
-                      ...item,
-                      id: item.id as number,
+                      id: -1,
+                      label: 'その他',
+                      value: smallMainCategoriesValue,
                       color:
                         (selectedLargeCategoryColor &&
                           lightenColor(
@@ -301,50 +280,71 @@ const AllocationCategoryCompare = memo(
                             smallMainCategoriesValue,
                           )) ||
                         getRandomColor(),
-                    })),
-                  }
+                      duration: totalDurationsForStatistic(
+                        smallMainCategories.map((item) => item.duration),
+                      ),
+                      optionData: smallMainCategories
+                        .flatMap((item) => item.optionData)
+                        .slice(0, 3),
+                      mergedItems: smallMainCategories.map((item) => ({
+                        ...item,
+                        id: item.id as number,
+                        color:
+                          (selectedLargeCategoryColor &&
+                            lightenColor(
+                              selectedLargeCategoryColor,
+                              smallMainCategoriesValue,
+                            )) ||
+                          (selectedLargeCompareCategoryColor &&
+                            lightenColor(
+                              selectedLargeCompareCategoryColor,
+                              smallMainCategoriesValue,
+                            )) ||
+                          getRandomColor(),
+                      })),
+                    }
                   : null,
               compare:
                 smallCompareCategories.length > 0
                   ? {
-                    id: -1,
-                    label: 'その他',
-                    value: smallCompareCategoriesValue,
-                    color:
-                      (selectedLargeCategoryColor &&
-                        lightenColor(
-                          selectedLargeCategoryColor,
-                          smallMainCategoriesValue,
-                        )) ||
-                      (selectedLargeCompareCategoryColor &&
-                        lightenColor(
-                          selectedLargeCompareCategoryColor,
-                          smallMainCategoriesValue,
-                        )) ||
-                      getRandomColor(),
-                    duration: totalDurationsForStatistic(
-                      smallCompareCategories.map((item) => item.duration),
-                    ),
-                    optionData: smallCompareCategories
-                      .flatMap((item) => item.optionData)
-                      .slice(0, 3),
-                    mergedItems: smallCompareCategories.map((item) => ({
-                      ...item,
-                      id: item.id as number,
+                      id: -1,
+                      label: 'その他',
+                      value: smallCompareCategoriesValue,
                       color:
                         (selectedLargeCategoryColor &&
                           lightenColor(
                             selectedLargeCategoryColor,
-                            smallCompareCategoriesValue,
+                            smallMainCategoriesValue,
                           )) ||
                         (selectedLargeCompareCategoryColor &&
                           lightenColor(
                             selectedLargeCompareCategoryColor,
-                            smallCompareCategoriesValue,
+                            smallMainCategoriesValue,
                           )) ||
                         getRandomColor(),
-                    })),
-                  }
+                      duration: totalDurationsForStatistic(
+                        smallCompareCategories.map((item) => item.duration),
+                      ),
+                      optionData: smallCompareCategories
+                        .flatMap((item) => item.optionData)
+                        .slice(0, 3),
+                      mergedItems: smallCompareCategories.map((item) => ({
+                        ...item,
+                        id: item.id as number,
+                        color:
+                          (selectedLargeCategoryColor &&
+                            lightenColor(
+                              selectedLargeCategoryColor,
+                              smallCompareCategoriesValue,
+                            )) ||
+                          (selectedLargeCompareCategoryColor &&
+                            lightenColor(
+                              selectedLargeCompareCategoryColor,
+                              smallCompareCategoriesValue,
+                            )) ||
+                          getRandomColor(),
+                      })),
+                    }
                   : null,
             });
           }
@@ -425,11 +425,11 @@ const AllocationCategoryCompare = memo(
               optionData:
                 item.organizationId == SUB_TEAMS
                   ? item?.subTeams
-                    ?.slice(0, 3)
-                    .map((team) => team?.organizationName || '') || []
+                      ?.slice(0, 3)
+                      .map((team) => team?.organizationName || '') || []
                   : item?.data
-                    ?.slice(0, 3)
-                    .map((category) => category?.categoryName || '') || [],
+                      ?.slice(0, 3)
+                      .map((category) => category?.categoryName || '') || [],
             };
 
             mergedMap.set(`${item.organizationId}`, {
@@ -451,11 +451,11 @@ const AllocationCategoryCompare = memo(
               optionData:
                 compareItem.organizationId == SUB_TEAMS
                   ? compareItem?.subTeams
-                    ?.slice(0, 3)
-                    .map((team) => team?.organizationName || '') || []
+                      ?.slice(0, 3)
+                      .map((team) => team?.organizationName || '') || []
                   : compareItem?.data
-                    ?.slice(0, 3)
-                    .map((category) => category?.categoryName || '') || [],
+                      ?.slice(0, 3)
+                      .map((category) => category?.categoryName || '') || [],
             };
 
             if (mergedMap.has(`${compareItem.organizationId}`)) {
@@ -692,8 +692,9 @@ const AllocationCategoryCompare = memo(
             <ImageRound
               src="/icons/extend-calendar.svg"
               name="Extend calendar"
-              className={`!w-[14px] !h-[14px] hover:cursor-pointer ${isExtendData ? '-rotate-90' : 'rotate-90'
-                }`}
+              className={`!w-[14px] !h-[14px] hover:cursor-pointer ${
+                isExtendData ? '-rotate-90' : 'rotate-90'
+              }`}
               onClick={() => {
                 setIsExtendData(!isExtendData);
               }}
@@ -779,6 +780,10 @@ const AllocationCategoryCompare = memo(
 
                       {isLoadingOrganizationCompare || isLoadingOrganization ? (
                         <AllocationSkeleton />
+                      ) : progressDataPairsLarge.length === 0 ? (
+                        <div className="flex items-center justify-center h-[100px]">
+                          <span className="text-sm text-[#77858F]">データがありません</span>
+                        </div>
                       ) : (
                         <div className="mt-5 flex flex-col gap-4">
                           {progressDataPairsLarge.map((pair, index) => {
@@ -1015,6 +1020,10 @@ const AllocationCategoryCompare = memo(
                       </div>
                       {isLoadingLargeCompare || isLoadingLarge ? (
                         <AllocationSkeleton />
+                      ) : progressDataPairsMedium.length === 0 && selectedLarge?.value !== '' ? (
+                        <div className="flex items-center justify-center h-[100px]">
+                          <span className="text-sm text-[#77858F]">データがありません</span>
+                        </div>
                       ) : (
                         <div className="mt-5 flex flex-col gap-4">
                           {progressDataPairsMedium.map((pair, index) => {
@@ -1230,6 +1239,10 @@ const AllocationCategoryCompare = memo(
                       </div>
                       {isLoadingMediumCompare || isLoadingMedium ? (
                         <AllocationSkeleton />
+                      ) : progressDataPairsSmall.length === 0 && selectedMedium?.value !== '' ? (
+                        <div className="flex items-center justify-center h-[100px]">
+                          <span className="text-sm text-[#77858F]">データがありません</span>
+                        </div>
                       ) : (
                         <div className="mt-5 flex flex-col gap-4">
                           {progressDataPairsSmall.map((pair, index) => {
