@@ -96,6 +96,8 @@ import {
 
 import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
+import { useToast } from '@providers/ToastProvider';
+
 export type ActionTaskModalProps = {
   open: boolean;
   dataTask?: Task | null;
@@ -112,6 +114,9 @@ export type ActionTaskModalProps = {
   onEdit?: (values: TaskFormData) => void;
   onCopy?: (values: TaskFormData) => void;
   setDataErrorTask?: Dispatch<SetStateAction<TaskErrorPerson | undefined>>;
+  onFormTouchedChange?: (touched: boolean) => void;
+  externalValidationTrigger?: number;
+  onValidationResult?: (isValid: boolean) => void;
 };
 
 const ActionsTaskModal = ({
@@ -128,7 +133,11 @@ const ActionsTaskModal = ({
   onCopy,
   onDelete,
   onWarning,
+  onFormTouchedChange,
+  externalValidationTrigger,
+  onValidationResult,
 }: ActionTaskModalProps) => {
+  const { showToast } = useToast();
   const [minDatePlans, setMinDatePlans] = useState<{
     [key: number]: Date | null;
   }>({});
@@ -182,6 +191,19 @@ const ActionsTaskModal = ({
   const [showDeadlineTimeSetting, setShowDeadlineTimeSetting] =
     useState<boolean>(false);
   const [isFormTouched, setIsFormTouched] = useState<boolean>(false);
+
+  useEffect(() => {
+    onFormTouchedChange?.(isFormTouched);
+  }, [isFormTouched, onFormTouchedChange]);
+
+  useEffect(() => {
+    if (externalValidationTrigger && externalValidationTrigger > 0) {
+      trigger().then((isValid) => {
+        onValidationResult?.(isValid);
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [externalValidationTrigger]);
 
   const [dataOptionsTagIds, setDataOptionsTagIds] = useState<
     OptionDropdownType[]

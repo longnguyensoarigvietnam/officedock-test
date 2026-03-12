@@ -82,6 +82,7 @@ export type ActionsSkillMapModalRef = {
   setServerErrors: (error: any) => void;
   getFormValues: () => SkillMapFormData;
   resetForm: () => void;
+  triggerValidation: () => Promise<boolean>;
 };
 
 export type ActionsSkillMapModalProps = {
@@ -92,6 +93,7 @@ export type ActionsSkillMapModalProps = {
   onClose: () => void;
   onCreate?: (values: SkillMapFormData) => void;
   onEdit?: (values: SkillMapFormData) => void;
+  onFormTouchedChange?: (touched: boolean) => void;
 };
 
 type StepField = keyof StepFormDataDetail;
@@ -109,6 +111,7 @@ const ActionsSkillMapModal = forwardRef<
       onCreate,
       onClose,
       onEdit,
+      onFormTouchedChange,
     },
     ref,
   ) => {
@@ -123,6 +126,10 @@ const ActionsSkillMapModal = forwardRef<
     const [dataOrganizationCategories, setDataOrganizationCategories] =
       useState<CategoryStructure[]>([]);
     const [isFormTouched, setIsFormTouched] = useState<boolean>(false);
+
+    useEffect(() => {
+      onFormTouchedChange?.(isFormTouched);
+    }, [isFormTouched, onFormTouchedChange]);
 
     const [dataOptionsCategorySmall, setDataOptionsCategorySmall] = useState<{
       step1: OptionDropdownType[][];
@@ -201,6 +208,7 @@ const ActionsSkillMapModal = forwardRef<
       register,
       watch,
       handleSubmit,
+      trigger,
       reset,
       setError,
       clearErrors,
@@ -289,6 +297,16 @@ const ActionsSkillMapModal = forwardRef<
       },
       getFormValues: () => getValues(),
       resetForm: () => reset(),
+      triggerValidation: async () => {
+        const isValid = await trigger();
+        if (!isValid) {
+          showToast({
+            variant: 'error',
+            description: '必須項目を入力してください',
+          });
+        }
+        return isValid;
+      },
     }));
 
     useEffect(() => {
@@ -556,14 +574,20 @@ const ActionsSkillMapModal = forwardRef<
 
     const [showWarningCloseModal, setShowWarningCloseModal] = useState(false);
 
-    const isEditWithChanges = action === ActionsEvent.EDIT && isFormTouched;
-
-    const handleCloseModal = () => {
-      if (isEditWithChanges) {
-        setShowWarningCloseModal(true);
+    const handleCloseModal = async () => {
+      if (!isFormTouched) {
+        onClose();
         return;
       }
-      onClose();
+      const isValid = await trigger();
+      if (!isValid) {
+        showToast({
+          variant: 'error',
+          description: '必須項目を入力してください',
+        });
+        return;
+      }
+      setShowWarningCloseModal(true);
     };
 
     const handleConfirmSaveAndClose = () => {
@@ -1155,7 +1179,12 @@ const ActionsSkillMapModal = forwardRef<
           </div>
         </header>
         <form
-          onSubmit={handleSubmit(onSubmitData)}
+          onSubmit={handleSubmit(onSubmitData, () => {
+            showToast({
+              variant: 'error',
+              description: '必須項目を入力してください',
+            });
+          })}
           className="px-9 pb-9 !h-[calc(100vh_-_130px)] overflow-y-auto flex flex-col gap-10">
           <header className="sticky z-[100] top-[0px] pt-10 gap-2 bg-white">
             <div className="flex rounded-[20px] font-medium bg-[#EBF1F7] mb-8 p-[6px]">
@@ -1171,8 +1200,18 @@ const ActionsSkillMapModal = forwardRef<
                   <Button
                     key={step.label}
                     type="button"
-                    onClick={() => {
+                    onClick={async () => {
                       if (isDisabled) return;
+                      if (isFormTouched && stepNumber !== currentStep) {
+                        const isValid = await trigger();
+                        if (!isValid) {
+                          showToast({
+                            variant: 'error',
+                            description: '必須項目を入力してください',
+                          });
+                          return;
+                        }
+                      }
                       setCurrentStep(stepNumber);
                     }}
                     disabled={isDisabled}
