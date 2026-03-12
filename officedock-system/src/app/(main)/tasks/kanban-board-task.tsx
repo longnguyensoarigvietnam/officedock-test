@@ -339,13 +339,21 @@ const KanbanBoardTask = () => {
     }
   }, [pendingGlobalNavigationHref, showEditTaskModal, isTaskFormTouched, setPendingGlobalNavigationHref]);
 
+  const pendingNavAfterSaveRef = useRef<string | null>(null);
+
   const handleTaskValidationResult = useCallback(
-    (isValid: boolean) => {
+    (isValid: boolean, formData?: TaskFormData) => {
       if (isValid && pendingNavigationHref) {
+        if (formData) {
+          setPendingTaskData(formData);
+          setCloseAction(
+            (actionType as ActionTask) || ActionTask.CREATE,
+          );
+        }
         setShowUnsavedNavModal(true);
       }
     },
-    [pendingNavigationHref],
+    [pendingNavigationHref, actionType],
   );
 
   const handleConfirmLeaveNav = useCallback(() => {
@@ -365,6 +373,24 @@ const KanbanBoardTask = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingNavigationHref, router, setHasUnsavedChanges, resetFunctions]);
+
+  const handleConfirmSaveAndLeaveNav = useCallback(() => {
+    setShowUnsavedNavModal(false);
+    setIsTaskFormTouched(false);
+    setHasUnsavedChanges(false);
+    pendingNavAfterSaveRef.current = pendingNavigationHref;
+    if (pendingTaskData) {
+      if (closeAction === ActionTask.EDIT) {
+        handleConfirmEditTask(pendingTaskData);
+      } else if (
+        closeAction === ActionTask.CREATE ||
+        closeAction === ActionTask.COPY
+      ) {
+        handleConfirmCreateTask(pendingTaskData);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingNavigationHref, pendingTaskData, closeAction, setHasUnsavedChanges]);
 
   // Cache task Archive
   const { removeTaskFromCache, updateTaskInCache } =
@@ -2213,6 +2239,11 @@ const KanbanBoardTask = () => {
       setDataTaskEdit(null);
       setOpenConfirmDragModalForm(false);
       setDataConfirmRewardForm(null);
+      if (pendingNavAfterSaveRef.current) {
+        router.push(pendingNavAfterSaveRef.current);
+        pendingNavAfterSaveRef.current = null;
+        setPendingNavigationHref(null);
+      }
     },
     onError: ({
       response,
@@ -2233,6 +2264,7 @@ const KanbanBoardTask = () => {
           description: ERROR_UPDATE_MESSAGE,
         });
       }
+      pendingNavAfterSaveRef.current = null;
     },
     onSettled: () => {
       setTimeout(() => {
@@ -2855,6 +2887,11 @@ const KanbanBoardTask = () => {
         setDataTaskEdit(null);
         setShowEditTaskModal(false);
         setColumnId('');
+        if (pendingNavAfterSaveRef.current) {
+          router.push(pendingNavAfterSaveRef.current);
+          pendingNavAfterSaveRef.current = null;
+          setPendingNavigationHref(null);
+        }
       },
       onError: (error: AxiosError<any>) => {
         if (error.response?.data.taskSchedules) {
@@ -2867,6 +2904,7 @@ const KanbanBoardTask = () => {
         } else {
           showErrorToast(error, ERROR_CREATE_MESSAGE);
         }
+        pendingNavAfterSaveRef.current = null;
       },
       onSettled: () => {
         setPeopleDefaultId(`${session?.user.id}`);
@@ -3926,7 +3964,7 @@ const KanbanBoardTask = () => {
       )}
       <WarningCloseTaskModal
         open={showUnsavedNavModal}
-        onConfirm={handleConfirmLeaveNav}
+        onConfirm={handleConfirmSaveAndLeaveNav}
         onClose={handleConfirmLeaveNav}
         onCloseByIcon={() => {
           setShowUnsavedNavModal(false);

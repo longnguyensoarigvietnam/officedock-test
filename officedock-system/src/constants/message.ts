@@ -68,6 +68,8 @@ export const REQUIRED_CATEGORY_NAME = 'この項目は空にできません。';
 export const PLEASE_FILL_IN_STEP_2 = 'STEP2のスキルも登録してください。';
 export const ERROR_LONG_FIELD_MESSAGE =
   'この項目が255文字より長くならないようにしてください。';
+export const PLEASE_FILL_IN_STEP_REQUIRED_MESSAGE =
+  '必須項目を入力してください。';
 
 // Success message
 export const SUCCESS_SENT_MAIL_MESSAGE = 'メール送信に成功しました。';

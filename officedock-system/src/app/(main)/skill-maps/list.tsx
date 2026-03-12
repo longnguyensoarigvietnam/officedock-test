@@ -81,6 +81,23 @@ const ListSkillsMap = () => {
   const { showToast } = useToast();
   const modalRef = useRef<ActionsSkillMapModalRef>(null);
 
+  // Router
+  const searchParams = useSearchParams();
+  const params = new URLSearchParams(searchParams);
+  const router = useRouter();
+  const [skillIdParam, setSkillIdParam] = useState<string | null>(
+    searchParams.get('skillId'),
+  );
+  const [actionTypeParam, setActionTypeParam] = useState<string | null>(
+    searchParams.get('action'),
+  );
+  const [currentStepParam, setCurrentStepParam] = useState<string | null>(
+    searchParams.get('step'),
+  );
+  const [organizationParam, setOrganizationParam] = useState<string | null>(
+    searchParams.get('organization'),
+  );
+
   const [isSkillMapFormTouched, setIsSkillMapFormTouched] = useState(false);
   const [showUnsavedModal, setShowUnsavedModal] = useState(false);
   const [pendingNavigationHref, setPendingNavigationHref] = useState<
@@ -110,6 +127,8 @@ const ListSkillsMap = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingGlobalNavigationHref, setPendingGlobalNavigationHref]);
 
+  const pendingNavAfterSaveRef = useRef<string | null>(null);
+
   const handleConfirmLeave = useCallback(() => {
     setShowUnsavedModal(false);
     setIsSkillMapFormTouched(false);
@@ -125,22 +144,21 @@ const ListSkillsMap = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingNavigationHref, setHasUnsavedChanges]);
 
-  // Router
-  const searchParams = useSearchParams();
-  const params = new URLSearchParams(searchParams);
-  const router = useRouter();
-  const [skillIdParam, setSkillIdParam] = useState<string | null>(
-    searchParams.get('skillId'),
-  );
-  const [actionTypeParam, setActionTypeParam] = useState<string | null>(
-    searchParams.get('action'),
-  );
-  const [currentStepParam, setCurrentStepParam] = useState<string | null>(
-    searchParams.get('step'),
-  );
-  const [organizationParam, setOrganizationParam] = useState<string | null>(
-    searchParams.get('organization'),
-  );
+  const handleConfirmSaveAndLeave = useCallback(() => {
+    setShowUnsavedModal(false);
+    setIsSkillMapFormTouched(false);
+    setHasUnsavedChanges(false);
+    pendingNavAfterSaveRef.current = pendingNavigationHref;
+    const formValues = modalRef.current?.getFormValues();
+    if (formValues) {
+      if (actionTypeParam === ActionsModal.EDIT) {
+        handleConfirmEditSkillMap(formValues);
+      } else if (actionTypeParam === ActionsModal.CREATE) {
+        handleConfirmCreateSkillMap(formValues);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingNavigationHref, actionTypeParam, setHasUnsavedChanges]);
 
   // Set ID skill for delete
   const [selectedSkillToDelete, setSelectedSkillToDelete] =
@@ -441,11 +459,16 @@ const ListSkillsMap = () => {
         setOpenSkillMapActionsModal(false);
         handleRemoveParam();
         refetchOrganizationSkillList();
+        if (pendingNavAfterSaveRef.current) {
+          router.push(pendingNavAfterSaveRef.current);
+          pendingNavAfterSaveRef.current = null;
+          setPendingNavigationHref(null);
+        }
       },
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_CREATE_MESSAGE);
-
         modalRef.current?.setServerErrors(error);
+        pendingNavAfterSaveRef.current = null;
       },
       onSettled: () => {
         setIsLoading(false);
@@ -498,9 +521,15 @@ const ListSkillsMap = () => {
         setSkillMapEditDetail(null);
         handleRemoveParam();
         refetchOrganizationSkillList();
+        if (pendingNavAfterSaveRef.current) {
+          router.push(pendingNavAfterSaveRef.current);
+          pendingNavAfterSaveRef.current = null;
+          setPendingNavigationHref(null);
+        }
       },
       onError: (error: AxiosError<any>) => {
         showErrorToast(error, ERROR_UPDATE_MESSAGE);
+        pendingNavAfterSaveRef.current = null;
       },
       onSettled: () => {
         setIsLoading(false);
@@ -748,7 +777,7 @@ const ListSkillsMap = () => {
 
       <WarningCloseTaskModal
         open={showUnsavedModal}
-        onConfirm={handleConfirmLeave}
+        onConfirm={handleConfirmSaveAndLeave}
         onClose={handleConfirmLeave}
         onCloseByIcon={() => {
           setShowUnsavedModal(false);

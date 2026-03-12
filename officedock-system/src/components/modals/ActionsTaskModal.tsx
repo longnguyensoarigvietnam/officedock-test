@@ -16,6 +16,7 @@ import {
   useWatch,
 } from 'react-hook-form';
 import { useSessionCache } from '@providers/SessionCacheProvider';
+import { useToast } from '@providers/ToastProvider';
 
 import {
   DragDropContext,
@@ -43,6 +44,7 @@ import {
   END_DATE_WRONG_SELECTED,
   ERROR_LONG_FIELD_MESSAGE,
   ORGANIZATION_REQUIRED_MESSAGE,
+  PLEASE_FILL_IN_STEP_REQUIRED_MESSAGE,
   START_DATE_REQUIRED_SELECTED,
   STATUS_REQUIRED_MESSAGE,
   TITLE_TASK_REQUIRED_MESSAGE,
@@ -114,7 +116,7 @@ export type ActionTaskModalProps = {
   setDataErrorTask?: Dispatch<SetStateAction<TaskErrorPerson | undefined>>;
   onFormTouchedChange?: (touched: boolean) => void;
   externalValidationTrigger?: number;
-  onValidationResult?: (isValid: boolean) => void;
+  onValidationResult?: (isValid: boolean, formData?: TaskFormData) => void;
 };
 
 const ActionsTaskModal = ({
@@ -139,6 +141,7 @@ const ActionsTaskModal = ({
     [key: number]: Date | null;
   }>({});
   const { data: session } = useSessionCache();
+  const { showToast } = useToast();
 
   const modalRef = useRef<HTMLFormElement | null>(null);
 
@@ -196,7 +199,31 @@ const ActionsTaskModal = ({
   useEffect(() => {
     if (externalValidationTrigger && externalValidationTrigger > 0) {
       trigger().then((isValid) => {
-        onValidationResult?.(isValid);
+        if (isValid) {
+          const taskData = getValues();
+          const filteredTagIds = (getValues('tagIds') || []).filter(
+            (item): item is OptionDropdownType => item !== undefined,
+          );
+          onValidationResult?.(isValid, {
+            ...taskData,
+            todoList: todoList,
+            tagIds: filteredTagIds,
+            oldIdStatus: `${dataTask?.status?.id}`,
+            deadlineRemindType: isShowFieldRemind
+              ? taskData.deadlineRemindType
+              : null,
+            deadlineRemindCountdown: isShowFieldRemind
+              ? taskData.deadlineRemindCountdown
+              : null,
+            showDeadlineTime: Boolean(watch('deadlineTime')),
+          });
+        } else {
+          showToast({
+            variant: 'error',
+            description: PLEASE_FILL_IN_STEP_REQUIRED_MESSAGE,
+          });
+          onValidationResult?.(isValid);
+        }
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

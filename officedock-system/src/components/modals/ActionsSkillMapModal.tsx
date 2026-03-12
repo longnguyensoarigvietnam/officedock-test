@@ -49,6 +49,7 @@ import {
   ERROR_LONG_FIELD_MESSAGE,
   ERROR_UPDATE_MESSAGE,
   LEVEL_NUMBER_REQUIRED_MESSAGE,
+  PLEASE_FILL_IN_STEP_REQUIRED_MESSAGE,
   SKILL_NAME_REQUIRED_MESSAGE,
 } from '@constants/message';
 
@@ -302,7 +303,7 @@ const ActionsSkillMapModal = forwardRef<
         if (!isValid) {
           showToast({
             variant: 'error',
-            description: '必須項目を入力してください',
+            description: PLEASE_FILL_IN_STEP_REQUIRED_MESSAGE,
           });
         }
         return isValid;
@@ -583,7 +584,7 @@ const ActionsSkillMapModal = forwardRef<
       if (!isValid) {
         showToast({
           variant: 'error',
-          description: '必須項目を入力してください',
+          description: PLEASE_FILL_IN_STEP_REQUIRED_MESSAGE,
         });
         return;
       }
@@ -1182,7 +1183,7 @@ const ActionsSkillMapModal = forwardRef<
           onSubmit={handleSubmit(onSubmitData, () => {
             showToast({
               variant: 'error',
-              description: '必須項目を入力してください',
+              description: PLEASE_FILL_IN_STEP_REQUIRED_MESSAGE,
             });
           })}
           className="px-9 pb-9 !h-[calc(100vh_-_130px)] overflow-y-auto flex flex-col gap-10">
@@ -1207,7 +1208,7 @@ const ActionsSkillMapModal = forwardRef<
                         if (!isValid) {
                           showToast({
                             variant: 'error',
-                            description: '必須項目を入力してください',
+                            description: PLEASE_FILL_IN_STEP_REQUIRED_MESSAGE,
                           });
                           return;
                         }
