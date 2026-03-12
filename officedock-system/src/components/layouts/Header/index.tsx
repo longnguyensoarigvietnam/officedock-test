@@ -1,5 +1,12 @@
 'use client';
-import { Fragment, useCallback, useContext, useEffect, useState } from 'react';
+import {
+  Fragment,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import lodash from 'lodash';
 import { signOut } from 'next-auth/react';
 import {
@@ -157,6 +164,32 @@ const Header = ({ className }: HeaderProps) => {
     id: number;
     title: string;
   }>();
+  const [pendingTaskData, setPendingTaskData] = useState<TaskFormData | null>();
+  const [closeAction, setCloseAction] = useState<ActionTask | null>();
+  const [openViewProfileModal, setOpenViewProfileModal] =
+    useState<boolean>(false);
+  const [openEditProfileModal, setOpenEditProfileModal] =
+    useState<boolean>(false);
+  const [openErrorUploadFileModal, setOpenErrorUploadFileModal] =
+    useState(false);
+  const [openConfirmDragModalForm, setOpenConfirmDragModalForm] =
+    useState(false);
+  const [dataConfirmRewardForm, setDataConfirmRewardForm] =
+    useState<TaskFormData | null>(null);
+  const [openRewardModal, setOpenRewardModal] = useState(false);
+  const [dataRewardSkill, setDataRewardSkill] =
+    useState<WebSocketMessageData>();
+
+  // Error messages
+  const [editProfileErrorMessages, setEditProfileErrorMessages] = useState<{
+    password?: string;
+    fullName?: string;
+  }>({
+    password: '',
+    fullName: '',
+  });
+
+  const { showToast } = useToast();
 
   // Event
   const [dataEventEdit, setDataEventEditLocal] = useState<EventEditFormData>();
@@ -238,13 +271,21 @@ const Header = ({ className }: HeaderProps) => {
     setPendingGlobalNavigationHref,
   ]);
 
+  const pendingNavAfterSaveRef = useRef<string | null>(null);
+
   const handleTaskValidationResult = useCallback(
-    (isValid: boolean) => {
+    (isValid: boolean, formData?: TaskFormData) => {
       if (isValid && pendingNavigationHref) {
+        if (formData) {
+          setPendingTaskData(formData);
+          setCloseAction(
+            (actionType as ActionTask) || ActionTask.CREATE,
+          );
+        }
         setShowUnsavedNavModal(true);
       }
     },
-    [pendingNavigationHref],
+    [pendingNavigationHref, actionType],
   );
   const [resetFunctions, setResetFunctions] = useState<{
     resetDataCategoryOptions?: () => void;
@@ -268,32 +309,17 @@ const Header = ({ className }: HeaderProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingNavigationHref, setHasUnsavedChanges, resetFunctions]);
 
-  const [pendingTaskData, setPendingTaskData] = useState<TaskFormData | null>();
-  const [closeAction, setCloseAction] = useState<ActionTask | null>();
-  const [openViewProfileModal, setOpenViewProfileModal] =
-    useState<boolean>(false);
-  const [openEditProfileModal, setOpenEditProfileModal] =
-    useState<boolean>(false);
-  const [openErrorUploadFileModal, setOpenErrorUploadFileModal] =
-    useState(false);
-  const [openConfirmDragModalForm, setOpenConfirmDragModalForm] =
-    useState(false);
-  const [dataConfirmRewardForm, setDataConfirmRewardForm] =
-    useState<TaskFormData | null>(null);
-  const [openRewardModal, setOpenRewardModal] = useState(false);
-  const [dataRewardSkill, setDataRewardSkill] =
-    useState<WebSocketMessageData>();
+  const handleConfirmSaveAndLeaveNav = useCallback(() => {
+    setShowUnsavedNavModal(false);
+    setIsTaskFormTouched(false);
+    setHasUnsavedChanges(false);
+    pendingNavAfterSaveRef.current = pendingNavigationHref;
+    if (pendingTaskData && closeAction === ActionTask.EDIT) {
+      handleConfirmEditTask(pendingTaskData);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingNavigationHref, pendingTaskData, closeAction, setHasUnsavedChanges]);
 
-  // Error messages
-  const [editProfileErrorMessages, setEditProfileErrorMessages] = useState<{
-    password?: string;
-    fullName?: string;
-  }>({
-    password: '',
-    fullName: '',
-  });
-
-  const { showToast } = useToast();
   const { authenticatedUser } = useAuthenticatedUser({});
   const COMPANY_SETTING_ITEMS = SYSTEM_PERMISSIONS_MENU.filter((menu) => {
     if (menu.name == pageRouters.ACTUAL_DURATIONS_MANAGEMENT.name) {
@@ -491,11 +517,17 @@ const Header = ({ className }: HeaderProps) => {
       setOpenWarningDeadlineModal(false);
       setOpenConfirmDragModalForm(false);
       setDataConfirmRewardForm(null);
+      if (pendingNavAfterSaveRef.current) {
+        router.push(pendingNavAfterSaveRef.current);
+        pendingNavAfterSaveRef.current = null;
+        setPendingNavigationHref(null);
+      }
     },
     onError: (error: AxiosError<any>) => {
       if (error.response?.data.taskSchedules) {
         showErrorToast(error, ERROR_MESSAGE_OVERLAP_TASK);
       } else showErrorToast(error, ERROR_UPDATE_MESSAGE);
+      pendingNavAfterSaveRef.current = null;
     },
     onSettled: () => {
       setTimeout(() => {
@@ -1416,7 +1448,7 @@ const Header = ({ className }: HeaderProps) => {
       )}
       <WarningCloseTaskModal
         open={showUnsavedNavModal}
-        onConfirm={handleConfirmLeaveNav}
+        onConfirm={handleConfirmSaveAndLeaveNav}
         onClose={handleConfirmLeaveNav}
         onCloseByIcon={() => {
           setShowUnsavedNavModal(false);
