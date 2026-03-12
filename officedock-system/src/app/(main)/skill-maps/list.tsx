@@ -104,29 +104,6 @@ const ListSkillsMap = () => {
     string | null
   >(null);
 
-  const isModalOpenWithChanges = isSkillMapFormTouched;
-
-  useEffect(() => {
-    setHasUnsavedChanges(isModalOpenWithChanges);
-    return () => setHasUnsavedChanges(false);
-  }, [isModalOpenWithChanges, setHasUnsavedChanges]);
-
-  useEffect(() => {
-    if (pendingGlobalNavigationHref !== null) {
-      const href = pendingGlobalNavigationHref;
-      setPendingGlobalNavigationHref(null);
-      const doCheck = async () => {
-        const isValid = await modalRef.current?.triggerValidation();
-        if (isValid) {
-          setPendingNavigationHref(href);
-          setShowUnsavedModal(true);
-        }
-      };
-      doCheck();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pendingGlobalNavigationHref, setPendingGlobalNavigationHref]);
-
   const pendingNavAfterSaveRef = useRef<string | null>(null);
 
   const handleConfirmLeave = useCallback(() => {
@@ -193,6 +170,38 @@ const ListSkillsMap = () => {
   const [skillMapEditDetail, setSkillMapEditDetail] = useState<
     OrganizationSkillMapDetail[] | null
   >([]);
+
+  useEffect(() => {
+    setHasUnsavedChanges(openSkillMapActionsModal);
+    return () => setHasUnsavedChanges(false);
+  }, [openSkillMapActionsModal, setHasUnsavedChanges]);
+
+  useEffect(() => {
+    if (pendingGlobalNavigationHref !== null) {
+      const href = pendingGlobalNavigationHref;
+      setPendingGlobalNavigationHref(null);
+
+      if (!isSkillMapFormTouched) {
+        setOpenSkillMapActionsModal(false);
+        setHasUnsavedChanges(false);
+        setSelectedSkillMapToUpdate(null);
+        setSkillMapEditDetail(null);
+        handleRemoveParam();
+        router.push(href);
+        return;
+      }
+
+      const doCheck = async () => {
+        const isValid = await modalRef.current?.triggerValidation();
+        if (isValid) {
+          setPendingNavigationHref(href);
+          setShowUnsavedModal(true);
+        }
+      };
+      doCheck();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingGlobalNavigationHref, setPendingGlobalNavigationHref]);
 
   // Get organization skills
   const { organizationSkillList, refetchOrganizationSkillList } =

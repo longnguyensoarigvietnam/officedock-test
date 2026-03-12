@@ -361,6 +361,7 @@ const KanbanBoardTask = () => {
     setShowEditTaskModal(false);
     setIsTaskFormTouched(false);
     setHasUnsavedChanges(false);
+    setValidationTrigger(0);
     setColumnId('');
     handleRemoveParam();
     setDataTaskEdit(null);
@@ -378,6 +379,7 @@ const KanbanBoardTask = () => {
     setShowUnsavedNavModal(false);
     setIsTaskFormTouched(false);
     setHasUnsavedChanges(false);
+    setValidationTrigger(0);
     pendingNavAfterSaveRef.current = pendingNavigationHref;
     if (pendingTaskData) {
       if (closeAction === ActionTask.EDIT) {
@@ -3744,6 +3746,8 @@ const KanbanBoardTask = () => {
                   errorPerson={dataErrorTask}
                   onClose={() => {
                     setIsTaskFormTouched(false);
+                    setValidationTrigger(0);
+                    setPendingNavigationHref(null);
                     setShowEditTaskModal(false);
                     setColumnId('');
                     handleRemoveParam();

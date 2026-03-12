@@ -297,6 +297,7 @@ const Header = ({ className }: HeaderProps) => {
     setShowModalTask(false);
     setIsTaskFormTouched(false);
     setHasUnsavedChanges(false);
+    setValidationTrigger(0);
     handleRemoveParam();
     setDataTaskEdit(null);
     setIsLoading(false);
@@ -313,6 +314,7 @@ const Header = ({ className }: HeaderProps) => {
     setShowUnsavedNavModal(false);
     setIsTaskFormTouched(false);
     setHasUnsavedChanges(false);
+    setValidationTrigger(0);
     pendingNavAfterSaveRef.current = pendingNavigationHref;
     if (pendingTaskData && closeAction === ActionTask.EDIT) {
       handleConfirmEditTask(pendingTaskData);
@@ -1383,6 +1385,8 @@ const Header = ({ className }: HeaderProps) => {
           action={actionType || ActionTask.CREATE}
           onClose={() => {
             setIsTaskFormTouched(false);
+            setValidationTrigger(0);
+            setPendingNavigationHref(null);
             handleRemoveParam();
           }}
           onWarning={({
