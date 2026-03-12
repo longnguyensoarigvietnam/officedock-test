@@ -96,8 +96,6 @@ import {
 
 import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 
-import { useToast } from '@providers/ToastProvider';
-
 export type ActionTaskModalProps = {
   open: boolean;
   dataTask?: Task | null;
@@ -137,7 +135,6 @@ const ActionsTaskModal = ({
   externalValidationTrigger,
   onValidationResult,
 }: ActionTaskModalProps) => {
-  const { showToast } = useToast();
   const [minDatePlans, setMinDatePlans] = useState<{
     [key: number]: Date | null;
   }>({});
