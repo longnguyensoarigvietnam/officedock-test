@@ -208,7 +208,6 @@ const ActionsSkillMapModal = forwardRef<
     const {
       register,
       watch,
-      handleSubmit,
       trigger,
       reset,
       setError,
@@ -220,6 +219,64 @@ const ActionsSkillMapModal = forwardRef<
     } = useForm<SkillMapFormData>({
       mode: 'onSubmit',
     });
+
+    const validateForSave = async (): Promise<boolean> => {
+      let highestFilledStep = 0;
+      for (let step = 1; step <= 3; step++) {
+        const stepName = getValues(`step${step}.name` as any);
+        if (typeof stepName === 'string' && stepName.trim()) {
+          highestFilledStep = step;
+        }
+      }
+      if (highestFilledStep === 0) return true;
+
+      let hasGap = false;
+      for (let step = 1; step <= highestFilledStep; step++) {
+        const stepName = getValues(`step${step}.name` as any);
+        if (!stepName || !(typeof stepName === 'string' && stepName.trim())) {
+          hasGap = true;
+        }
+      }
+
+      const fieldsToValidate: string[] = [];
+      for (let step = 1; step <= highestFilledStep; step++) {
+        fieldsToValidate.push(`step${step}.name`);
+        for (let lvlIdx = 0; lvlIdx < 3; lvlIdx++) {
+          const condition = conditionByMap[step]?.[lvlIdx];
+          switch (condition) {
+            case LevelUpConditionBy.NUMBER_OF_TIMES:
+              fieldsToValidate.push(
+                `step${step}.skillLevels.${lvlIdx}.measureCount`,
+              );
+              break;
+            case LevelUpConditionBy.MEASUREMENT_TIME:
+              fieldsToValidate.push(
+                `step${step}.skillLevels.${lvlIdx}.measureTime`,
+              );
+              break;
+            case LevelUpConditionBy.PERIOD:
+              fieldsToValidate.push(
+                `step${step}.skillLevels.${lvlIdx}.lookBackInterval`,
+                `step${step}.skillLevels.${lvlIdx}.lookBackType`,
+              );
+              break;
+          }
+        }
+      }
+      const isValid = await trigger(fieldsToValidate as any);
+
+      let hasCategoryError = false;
+      const data = getValues();
+      for (let step = 1; step <= highestFilledStep; step++) {
+        const stepKey = `step${step}` as keyof SkillMapFormData;
+        if (!validateStepCategories(stepKey, data[stepKey])) {
+          hasCategoryError = true;
+        }
+      }
+
+      return isValid && !hasGap && !hasCategoryError;
+    };
+
     const defaultValues = useMemo<SkillMapFormData>(() => {
       const baseStep = (stepName: string): StepFormDataDetail => ({
         skillId: 0,
@@ -299,7 +356,7 @@ const ActionsSkillMapModal = forwardRef<
       getFormValues: () => getValues(),
       resetForm: () => reset(),
       triggerValidation: async () => {
-        const isValid = await trigger();
+        const isValid = await validateForSave();
         if (!isValid) {
           showToast({
             variant: 'error',
@@ -462,93 +519,103 @@ const ActionsSkillMapModal = forwardRef<
         });
       },
     });
-    // Submit form data
-    const onSubmitData: SubmitHandler<SkillMapFormData> = async (data) => {
-      // Validate duplicate category
-      const checkDuplicates = (stepData: StepFormDataDetail | null) => {
-        if (!stepData) return [];
+    const checkDuplicates = (stepData: StepFormDataDetail | null) => {
+      if (!stepData) return [];
 
-        const rawCategories = stepData.rawCategories || [];
-        const duplicates: number[] = [];
+      const rawCategories = stepData.rawCategories || [];
+      const duplicates: number[] = [];
 
-        rawCategories.forEach((item, idx, arr) => {
-          const isEmptyAll =
-            !item.LARGE?.value && !item.MEDIUM?.value && !item.SMALL?.value;
+      rawCategories.forEach((item, idx, arr) => {
+        const isEmptyAll =
+          !item.LARGE?.value && !item.MEDIUM?.value && !item.SMALL?.value;
 
-          if (isEmptyAll) return;
-          const currentKey = `${item.LARGE?.value}-${item.MEDIUM?.value}-${item.SMALL?.value}`;
-          for (let j = 0; j < arr.length; j++) {
-            if (j === idx) continue;
-            const compareKey = `${arr[j].LARGE?.value}-${arr[j].MEDIUM?.value}-${arr[j].SMALL?.value}`;
-            if (currentKey && currentKey === compareKey) {
-              duplicates.push(idx);
-              break;
-            }
+        if (isEmptyAll) return;
+        const currentKey = `${item.LARGE?.value}-${item.MEDIUM?.value}-${item.SMALL?.value}`;
+        for (let j = 0; j < arr.length; j++) {
+          if (j === idx) continue;
+          const compareKey = `${arr[j].LARGE?.value}-${arr[j].MEDIUM?.value}-${arr[j].SMALL?.value}`;
+          if (currentKey && currentKey === compareKey) {
+            duplicates.push(idx);
+            break;
           }
-        });
+        }
+      });
 
-        return duplicates;
-      };
-      // Validate complete full information category with raw
-      const checkIncompleteFields = (
-        rawCategories: RawCategoryItem[] | undefined | null,
-      ): number[] => {
-        if (!Array.isArray(rawCategories)) return [];
+      return duplicates;
+    };
 
-        const inCompletes: number[] = [];
+    const checkIncompleteFields = (
+      rawCategories: RawCategoryItem[] | undefined | null,
+    ): number[] => {
+      if (!Array.isArray(rawCategories)) return [];
 
-        rawCategories.forEach((item, idx) => {
-          const large = item.LARGE?.value;
-          const medium = item.MEDIUM?.value;
-          const small = item.SMALL?.value;
+      const inCompletes: number[] = [];
 
-          const filledCount = [large, medium, small].filter(Boolean).length;
+      rawCategories.forEach((item, idx) => {
+        const large = item.LARGE?.value;
+        const medium = item.MEDIUM?.value;
+        const small = item.SMALL?.value;
 
-          if (filledCount > 0 && filledCount < 3) {
-            inCompletes.push(idx);
-          }
-        });
+        const filledCount = [large, medium, small].filter(Boolean).length;
 
-        return inCompletes;
-      };
+        if (filledCount > 0 && filledCount < 3) {
+          inCompletes.push(idx);
+        }
+      });
 
-      const steps = ['step1', 'step2', 'step3'] as const;
+      return inCompletes;
+    };
+
+    const validateStepCategories = (
+      stepKey: string,
+      stepData: StepFormDataDetail | null,
+    ): boolean => {
+      const rawCategories = stepData?.rawCategories || [];
+      const duplicates = checkDuplicates(stepData);
+      const inCompletes = checkIncompleteFields(rawCategories);
       let hasError = false;
 
-      for (const stepKey of steps) {
-        const stepData = data[stepKey];
-        const rawCategories = stepData?.rawCategories || [];
-        const duplicates = checkDuplicates(data[stepKey]);
-        const inCompletes = checkIncompleteFields(rawCategories);
-
-        if (duplicates.length > 0) {
-          hasError = true;
-          duplicates.forEach((idx) => {
-            [
-              EventWorkCategory.LARGE,
-              EventWorkCategory.MEDIUM,
-              EventWorkCategory.SMALL,
-            ].forEach((size) => {
-              setError(`${stepKey}.rawCategories.${idx}.${size}` as any, {
-                type: 'duplicate',
-                message: 'duplicate',
-              });
-            });
-          });
-        }
-        inCompletes.forEach((idx) => {
-          hasError = true;
+      if (duplicates.length > 0) {
+        hasError = true;
+        duplicates.forEach((idx) => {
           [
             EventWorkCategory.LARGE,
             EventWorkCategory.MEDIUM,
             EventWorkCategory.SMALL,
           ].forEach((size) => {
             setError(`${stepKey}.rawCategories.${idx}.${size}` as any, {
-              type: 'incomplete',
-              message: 'incomplete',
+              type: 'duplicate',
+              message: 'duplicate',
             });
           });
         });
+      }
+      inCompletes.forEach((idx) => {
+        hasError = true;
+        [
+          EventWorkCategory.LARGE,
+          EventWorkCategory.MEDIUM,
+          EventWorkCategory.SMALL,
+        ].forEach((size) => {
+          setError(`${stepKey}.rawCategories.${idx}.${size}` as any, {
+            type: 'incomplete',
+            message: 'incomplete',
+          });
+        });
+      });
+
+      return !hasError;
+    };
+
+    // Submit form data
+    const onSubmitData: SubmitHandler<SkillMapFormData> = async (data) => {
+      const steps = ['step1', 'step2', 'step3'] as const;
+      let hasError = false;
+
+      for (const stepKey of steps) {
+        if (!validateStepCategories(stepKey, data[stepKey])) {
+          hasError = true;
+        }
       }
 
       if (hasError) {
@@ -580,7 +647,7 @@ const ActionsSkillMapModal = forwardRef<
         onClose();
         return;
       }
-      const isValid = await trigger();
+      const isValid = await validateForSave();
       if (!isValid) {
         showToast({
           variant: 'error',
@@ -593,7 +660,7 @@ const ActionsSkillMapModal = forwardRef<
 
     const handleConfirmSaveAndClose = () => {
       setShowWarningCloseModal(false);
-      handleSubmit(onSubmitData)();
+      onSubmitData(getValues());
     };
 
     const handleConfirmCloseWithoutSave = () => {
@@ -1180,12 +1247,18 @@ const ActionsSkillMapModal = forwardRef<
           </div>
         </header>
         <form
-          onSubmit={handleSubmit(onSubmitData, () => {
-            showToast({
-              variant: 'error',
-              description: PLEASE_FILL_IN_STEP_REQUIRED_MESSAGE,
-            });
-          })}
+          onSubmit={async (e) => {
+            e.preventDefault();
+            const isValid = await validateForSave();
+            if (isValid) {
+              onSubmitData(getValues());
+            } else {
+              showToast({
+                variant: 'error',
+                description: PLEASE_FILL_IN_STEP_REQUIRED_MESSAGE,
+              });
+            }
+          }}
           className="px-9 pb-9 !h-[calc(100vh_-_130px)] overflow-y-auto flex flex-col gap-10">
           <header className="sticky z-[100] top-[0px] pt-10 gap-2 bg-white">
             <div className="flex rounded-[20px] font-medium bg-[#EBF1F7] mb-8 p-[6px]">
@@ -1204,13 +1277,74 @@ const ActionsSkillMapModal = forwardRef<
                     onClick={async () => {
                       if (isDisabled) return;
                       if (isFormTouched && stepNumber !== currentStep) {
-                        const isValid = await trigger();
-                        if (!isValid) {
-                          showToast({
-                            variant: 'error',
-                            description: PLEASE_FILL_IN_STEP_REQUIRED_MESSAGE,
-                          });
-                          return;
+                        const stepKey = currentStep as 1 | 2 | 3;
+                        const currentStepName = getValues(
+                          getStepField(stepKey, 'name'),
+                        );
+                        if (currentStepName?.trim()) {
+                          const fieldsToValidate: string[] = [
+                            getStepField(stepKey, 'name'),
+                          ];
+                          for (let lvlIdx = 0; lvlIdx < 3; lvlIdx++) {
+                            const condition = getCondition(
+                              currentStep,
+                              lvlIdx,
+                            );
+                            const lvl = lvlIdx as 1 | 2 | 3;
+                            switch (condition) {
+                              case LevelUpConditionBy.NUMBER_OF_TIMES:
+                                fieldsToValidate.push(
+                                  getSkillLevelField(
+                                    stepKey,
+                                    lvl,
+                                    'measureCount',
+                                  ),
+                                );
+                                break;
+                              case LevelUpConditionBy.MEASUREMENT_TIME:
+                                fieldsToValidate.push(
+                                  getSkillLevelField(
+                                    stepKey,
+                                    lvl,
+                                    'measureTime',
+                                  ),
+                                );
+                                break;
+                              case LevelUpConditionBy.PERIOD:
+                                fieldsToValidate.push(
+                                  getSkillLevelField(
+                                    stepKey,
+                                    lvl,
+                                    'lookBackInterval',
+                                  ),
+                                  getSkillLevelField(
+                                    stepKey,
+                                    lvl,
+                                    'lookBackType',
+                                  ),
+                                );
+                                break;
+                            }
+                          }
+                          const isValid = await trigger(
+                            fieldsToValidate as any,
+                          );
+                          const stepData = getValues(
+                            `step${currentStep}` as any,
+                          );
+                          const isCategoryValid =
+                            validateStepCategories(
+                              `step${currentStep}`,
+                              stepData,
+                            );
+                          if (!isValid || !isCategoryValid) {
+                            showToast({
+                              variant: 'error',
+                              description:
+                                PLEASE_FILL_IN_STEP_REQUIRED_MESSAGE,
+                            });
+                            return;
+                          }
                         }
                       }
                       setCurrentStep(stepNumber);
