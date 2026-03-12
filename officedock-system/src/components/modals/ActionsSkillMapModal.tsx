@@ -220,11 +220,36 @@ const ActionsSkillMapModal = forwardRef<
       mode: 'onSubmit',
     });
 
+    const isStepHasData = (step: number): boolean => {
+      const stepKey = `step${step}` as keyof SkillMapFormData;
+      const stepData = getValues(stepKey);
+      if (!stepData) return false;
+      const hasName =
+        typeof stepData.name === 'string' && !!stepData.name.trim();
+      const hasDescription =
+        typeof stepData.description === 'string' &&
+        !!stepData.description.trim();
+      const hasCategories =
+        Array.isArray(stepData.rawCategories) &&
+        stepData.rawCategories.some(
+          (item) => item.LARGE?.value || item.MEDIUM?.value || item.SMALL?.value,
+        );
+      const hasSkillLevels =
+        Array.isArray(stepData.skillLevels) &&
+        stepData.skillLevels.some(
+          (lvl) =>
+            !!lvl.measureCount ||
+            !!lvl.measureTime ||
+            !!lvl.lookBackInterval ||
+            (lvl.items && lvl.items.some((i) => i.value?.trim())),
+        );
+      return hasName || hasDescription || hasCategories || hasSkillLevels;
+    };
+
     const validateForSave = async (): Promise<boolean> => {
       let highestFilledStep = 0;
       for (let step = 1; step <= 3; step++) {
-        const stepName = getValues(`step${step}.name` as any);
-        if (typeof stepName === 'string' && stepName.trim()) {
+        if (isStepHasData(step)) {
           highestFilledStep = step;
         }
       }
@@ -232,8 +257,7 @@ const ActionsSkillMapModal = forwardRef<
 
       let hasGap = false;
       for (let step = 1; step <= highestFilledStep; step++) {
-        const stepName = getValues(`step${step}.name` as any);
-        if (!stepName || !(typeof stepName === 'string' && stepName.trim())) {
+        if (!isStepHasData(step)) {
           hasGap = true;
         }
       }
@@ -1278,10 +1302,7 @@ const ActionsSkillMapModal = forwardRef<
                       if (isDisabled) return;
                       if (isFormTouched && stepNumber !== currentStep) {
                         const stepKey = currentStep as 1 | 2 | 3;
-                        const currentStepName = getValues(
-                          getStepField(stepKey, 'name'),
-                        );
-                        if (currentStepName?.trim()) {
+                        if (isStepHasData(currentStep)) {
                           const fieldsToValidate: string[] = [
                             getStepField(stepKey, 'name'),
                           ];

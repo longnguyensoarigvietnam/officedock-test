@@ -67,16 +67,17 @@ const DetailRoleTable = () => {
           権限管理
         </p>
         <div className="flex items-center justify-end gap-2">
-          {!isFetchingRoleDetail &&
-            !dataRoleDetail?.deletedAt &&
-            !dataRoleDetail?.systemRole &&
-            session?.user.permissions &&
+          {session?.user.permissions &&
             hasPermissionInArray(
               session.user.permissions,
               PermissionsSystem.ROLE_UPDATE,
-            ) && (
-              <Link href={pageRouters.EDIT_ROLE.href(`${params.id}`)}>
-                <Button variant="primary" className="w-[100px] !p-0 !h-[34px]">
+            ) &&
+            !isFetchingRoleDetail &&
+            !dataRoleDetail?.deletedAt && (
+              <Link
+                href={pageRouters.EDIT_ROLE.href(`${params.id}`)}
+                className={`${dataRoleDetail?.systemRole ? '!hidden' : '!block'} hidden`}>
+                <Button variant="primary" className="w-[100px]  !p-0 !h-[34px]">
                   編集
                 </Button>
               </Link>
