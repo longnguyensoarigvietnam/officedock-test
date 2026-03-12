@@ -278,9 +278,7 @@ const Header = ({ className }: HeaderProps) => {
       if (isValid && pendingNavigationHref) {
         if (formData) {
           setPendingTaskData(formData);
-          setCloseAction(
-            (actionType as ActionTask) || ActionTask.CREATE,
-          );
+          setCloseAction((actionType as ActionTask) || ActionTask.CREATE);
         }
         setShowUnsavedNavModal(true);
       }
@@ -320,7 +318,12 @@ const Header = ({ className }: HeaderProps) => {
       handleConfirmEditTask(pendingTaskData);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pendingNavigationHref, pendingTaskData, closeAction, setHasUnsavedChanges]);
+  }, [
+    pendingNavigationHref,
+    pendingTaskData,
+    closeAction,
+    setHasUnsavedChanges,
+  ]);
 
   const { authenticatedUser } = useAuthenticatedUser({});
   const COMPANY_SETTING_ITEMS = SYSTEM_PERMISSIONS_MENU.filter((menu) => {
@@ -482,6 +485,9 @@ const Header = ({ className }: HeaderProps) => {
     paramsURL.delete('event');
     paramsURL.delete('type');
     paramsURL.delete('action');
+    paramsURL.delete('skillId');
+    paramsURL.delete('step');
+    paramsURL.delete('organization');
     router.replace(`?${paramsURL.toString()}`);
   };
 
@@ -1205,6 +1211,14 @@ const Header = ({ className }: HeaderProps) => {
                                 className={`px-4 py-2 hover:bg-[#7D8A94] hover:cursor-pointer rounded-md ${pathname == item.href && 'bg-[#7D8A94]'}`}
                                 onClick={() => {
                                   if (item.disable) return;
+                                  if (isShowModalTask && isTaskFormTouched) {
+                                    setPendingNavigationHref(
+                                      item.href as string,
+                                    );
+                                    setValidationTrigger((prev) => prev + 1);
+                                    close();
+                                    return;
+                                  }
                                   if (hasUnsavedChanges) {
                                     setPendingGlobalNavigationHref(
                                       item.href as string,
@@ -1239,6 +1253,12 @@ const Header = ({ className }: HeaderProps) => {
                               <div
                                 key={item.name}
                                 onClick={() => {
+                                  if (isShowModalTask && isTaskFormTouched) {
+                                    setPendingNavigationHref('');
+                                    setValidationTrigger((prev) => prev + 1);
+                                    close();
+                                    return;
+                                  }
                                   if (hasUnsavedChanges) {
                                     setPendingGlobalNavigationHref('');
                                     close();
@@ -1303,6 +1323,19 @@ const Header = ({ className }: HeaderProps) => {
                                     key={item.name}
                                     className={`flex px-4 py-2 hover:bg-[#7D8A94] hover:cursor-pointer rounded-md ${pathname.includes(item.href) && 'bg-[#7D8A94]'}`}
                                     onClick={() => {
+                                      if (
+                                        isShowModalTask &&
+                                        isTaskFormTouched
+                                      ) {
+                                        setPendingNavigationHref(
+                                          item.href as string,
+                                        );
+                                        setValidationTrigger(
+                                          (prev) => prev + 1,
+                                        );
+                                        close();
+                                        return;
+                                      }
                                       if (hasUnsavedChanges) {
                                         setPendingGlobalNavigationHref(
                                           item.href as string,

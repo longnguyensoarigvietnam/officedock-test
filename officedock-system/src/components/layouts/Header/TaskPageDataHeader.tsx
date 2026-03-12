@@ -964,6 +964,19 @@ const TaskPageDataHeader = () => {
                     (element) => element.value === taskSelected?.value,
                   );
                   if (parseInt(String(taskSelected.value)) && itemFind) {
+                    const currentTaskParam = searchParams.get('task');
+                    const currentEventParam = searchParams.get('event');
+                    const currentAction = searchParams.get('action');
+                    const isSameModalAlreadyOpen =
+                      currentAction === ActionTask.EDIT &&
+                      ((taskSelected.type === ItemStartType.SCHEDULE &&
+                        currentEventParam ===
+                          `${taskSelected.value}`.replace('event', '')) ||
+                        (taskSelected.type !== ItemStartType.SCHEDULE &&
+                          currentTaskParam === `${taskSelected.value}`));
+
+                    if (isSameModalAlreadyOpen) return;
+
                     if (hasUnsavedChanges) {
                       let pendingUrl: string;
                       if (taskSelected.type === ItemStartType.SCHEDULE) {
