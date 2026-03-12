@@ -1,5 +1,5 @@
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { memo, useContext, useEffect, useState } from 'react';
+import { memo, useCallback, useContext, useEffect, useState } from 'react';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import { useMutation, useQueryClient } from 'react-query';
@@ -42,6 +42,7 @@ import {
 import { WebSocketMessageDataOverTime } from '@interfaces/chat';
 import { TaskContext } from '@providers/TaskProvider';
 import { hasPermissionInArray } from '@utils';
+import { GlobalStateContext } from '@providers/GlobalStateProvider';
 import {
   combineDateAndTime,
   convertDateString,
@@ -74,6 +75,8 @@ const TaskPageDataHeader = () => {
 
   const { data: session } = useSessionCache();
   const showErrorToast = useErrorToast();
+  const { hasUnsavedChanges, setPendingGlobalNavigationHref } =
+    useContext(GlobalStateContext);
 
   const router = useRouter();
 
@@ -450,6 +453,42 @@ const TaskPageDataHeader = () => {
     params.set('type', ItemStartType.SCHEDULE);
     router.push(`?${params.toString()}`);
   };
+
+  const buildTaskParamUrl = useCallback(
+    ({
+      id,
+      action,
+      type = ItemStartType.TASK,
+    }: {
+      id: string | null;
+      action: string;
+      type: string;
+    }) => {
+      const p = new URLSearchParams(searchParams);
+      if (id) p.set('task', id);
+      p.delete('event');
+      p.delete('action');
+      p.delete('type');
+      p.set('action', action);
+      p.set('type', type);
+      return `?${p.toString()}`;
+    },
+    [searchParams],
+  );
+
+  const buildEventParamUrl = useCallback(
+    ({ id, action }: { id: string | null; action: string }) => {
+      const p = new URLSearchParams(searchParams);
+      if (id) p.set('event', id);
+      p.delete('task');
+      p.delete('action');
+      p.delete('type');
+      p.set('action', action);
+      p.set('type', ItemStartType.SCHEDULE);
+      return `?${p.toString()}`;
+    },
+    [searchParams],
+  );
 
   const handleConfirmStartNewTask = async () => {
     taskSelectedToStart &&
@@ -925,6 +964,25 @@ const TaskPageDataHeader = () => {
                     (element) => element.value === taskSelected?.value,
                   );
                   if (parseInt(String(taskSelected.value)) && itemFind) {
+                    if (hasUnsavedChanges) {
+                      let pendingUrl: string;
+                      if (taskSelected.type === ItemStartType.SCHEDULE) {
+                        pendingUrl = buildEventParamUrl({
+                          id: `${taskSelected.value}`.replace('event', ''),
+                          action: ActionTask.EDIT,
+                        });
+                      } else {
+                        pendingUrl = buildTaskParamUrl({
+                          id: `${taskSelected.value}`,
+                          action: ActionTask.EDIT,
+                          type: itemFind.isMyRoutine
+                            ? ItemStartType.FIXED_TASK
+                            : ItemStartType.TASK,
+                        });
+                      }
+                      setPendingGlobalNavigationHref(pendingUrl);
+                      return;
+                    }
                     if (taskSelected.type === ItemStartType.SCHEDULE) {
                       handleSetEventParam({
                         id: `${taskSelected.value}`.replace('event', ''),
