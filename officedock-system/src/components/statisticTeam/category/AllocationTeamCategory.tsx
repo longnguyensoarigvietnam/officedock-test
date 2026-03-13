@@ -261,7 +261,7 @@ const AllocationTeamCategory = memo(
 
       setTimeout(() => {
         setIsShowModal(true);
-      }, 1000);
+      }, 0);
     };
 
     const handleScroll = () => {
@@ -429,6 +429,7 @@ const AllocationTeamCategory = memo(
                                   handleClickTooltip={() => {}}
                                   organizationId={item.organizationId}
                                   handleClickChart={() => {}}
+                                  tooltipDelay={0}
                                   {...item}
                                 />
                               ))

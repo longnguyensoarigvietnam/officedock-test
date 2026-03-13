@@ -206,7 +206,7 @@ const ProgressBarTeamTagCompare = ({
                 // If it really gets out of the whole container
                 hoverTimeoutRef.current = setTimeout(() => {
                   setHovering(false);
-                }, 1000);
+                }, 0);
               }}
               onMouseEnter={() => {
                 onActionHover && onActionHover();
@@ -248,7 +248,7 @@ const ProgressBarTeamTagCompare = ({
                 // Exit the chart area → hide the tooltip
                 hoverTimeoutRef.current = setTimeout(() => {
                   setHovering(false);
-                }, 1000);
+                }, 0);
               }}
               className={`absolute -top-[25%] ${isLast ? 'right-[100%]' : 'left-[100%]'} ${isHovering ? 'block' : 'hidden'} w-[288px] rounded-[14px] py-5 bg-white  pointer-events-auto transition-opacity duration-300 shadow-lg z-10`}>
               {item.id != -1 ? (
@@ -404,7 +404,7 @@ const ProgressBarTeamTagCompare = ({
                 // If it really gets out of the whole container
                 hoverTimeoutCompareRef.current = setTimeout(() => {
                   setCompareHovering(false);
-                }, 1000);
+                }, 0);
               }}
               onMouseEnter={() => {
                 onActionHover && onActionHover();
@@ -447,7 +447,7 @@ const ProgressBarTeamTagCompare = ({
                   // Exit the chart area → hide the tooltip
                   hoverTimeoutCompareRef.current = setTimeout(() => {
                     setHovering(false);
-                  }, 1000);
+                  }, 0);
                 }}
                 className={`absolute -top-[25%] ${isLast ? 'right-[100%]' : 'left-[100%]'} w-[250px] ${isCompareHovering ? 'block' : 'hidden'} rounded-[14px] py-5 bg-white pointer-events-auto transition-opacity duration-300 shadow-lg z-10`}>
                 {itemCompare.id != -1 ? (

@@ -28,6 +28,7 @@ interface Props {
   handleClickTooltip: (id: number | null, isCompare: boolean) => void;
   handleClickChart: (data: OptionDropdownType) => void;
   showNoDataText?: boolean;
+  tooltipDelay?: number;
 }
 
 const PercentageBarCompareTeam = ({
@@ -48,6 +49,7 @@ const PercentageBarCompareTeam = ({
   onActionHover,
   handleClickChart,
   showNoDataText = false,
+  tooltipDelay = 1000,
 }: Props) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -99,7 +101,7 @@ const PercentageBarCompareTeam = ({
               // If it really gets out of the whole container
               hoverTimeoutRef.current = setTimeout(() => {
                 setHoverIndex(null);
-              }, 1000);
+              }, tooltipDelay);
             }}
             onMouseEnter={() => {
               onActionHover && onActionHover();
@@ -164,7 +166,7 @@ const PercentageBarCompareTeam = ({
                       // Exit the chart area → hide the tooltip
                       hoverTimeoutRef.current = setTimeout(() => {
                         setHoverIndex(null);
-                      }, 1000);
+                      }, tooltipDelay);
                     }}
                     className={`absolute top-0 ${isLast ? 'right-[100%]' : 'left-[100%]'}  w-[288px]  rounded-md py-5 bg-white ${hoverIndex === index ? 'block' : 'hidden'}  pointer-events-auto transition-opacity duration-300 shadow-lg z-10`}>
                     {item.mergedItems.length > 0 ? (
@@ -339,7 +341,7 @@ const PercentageBarCompareTeam = ({
               // If it really gets out of the whole container
               hoverTimeoutCompareRef.current = setTimeout(() => {
                 setHoverIndexCompare(null);
-              }, 1000);
+              }, tooltipDelay);
             }}
             onMouseEnter={() => {
               setHoverIndex(null);
@@ -407,7 +409,7 @@ const PercentageBarCompareTeam = ({
                       // Exit the chart area → hide the tooltip
                       hoverTimeoutCompareRef.current = setTimeout(() => {
                         setHoverIndexCompare(null);
-                      }, 1000);
+                      }, tooltipDelay);
                     }}
                     className={`absolute top-0 ${isLast ? 'right-[100%]' : 'left-[100%]'}  w-[288px]  rounded-md py-5 bg-white ${hoverIndexCompare === index ? 'block' : 'hidden'}  pointer-events-auto transition-opacity duration-300 shadow-lg z-10`}>
                     {item.mergedItems.length > 0 ? (

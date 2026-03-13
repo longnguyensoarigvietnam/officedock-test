@@ -461,6 +461,7 @@ const PercentageCategoryTeam = ({
                           isAllTeamOption={
                             selectedOrganization?.value == ALL_TEAM_STATISTIC
                           }
+                          tooltipDelay={0}
                         />
                       ) : (
                         <div className="w-[280px] h-[280px]  rounded-full bg-[#EBF1F7] flex items-center justify-center">
@@ -524,6 +525,7 @@ const PercentageCategoryTeam = ({
                           handleClickChart={(data: OptionDropdownType) => {
                             handleSelectMedium(data);
                           }}
+                          tooltipDelay={0}
                         />
                       ) : (
                         <div className="w-[280px] h-[280px] rounded-full bg-[#EBF1F7] flex items-center justify-center">
@@ -591,6 +593,7 @@ const PercentageCategoryTeam = ({
                           onActionHover={() =>
                             setHasHover(EventWorkCategory.SMALL)
                           }
+                          tooltipDelay={0}
                         />
                       ) : (
                         <div className="w-[280px] h-[280px]  rounded-full bg-[#EBF1F7] flex items-center justify-center">

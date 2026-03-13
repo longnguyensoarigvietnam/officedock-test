@@ -155,7 +155,7 @@ const ProgressBarTeamTagStatistic = ({
                 clearTimeout(hoverTimeoutRef.current);
               hoverTimeoutRef.current = setTimeout(() => {
                 onDeactivate && onDeactivate(id as number);
-              }, 1000);
+              }, 0);
             }}
             className="h-full transition-all duration-500 rounded-[4px]"
             style={{
@@ -187,7 +187,7 @@ const ProgressBarTeamTagStatistic = ({
               // Exit the chart area → hide the tooltip
               hoverTimeoutRef.current = setTimeout(() => {
                 setHovering(false);
-              }, 1000);
+              }, 0);
             }}
             className={`absolute -top-[25%]  ${isLast ? 'right-[100%]' : 'left-[100%]'} w-[288px] rounded-md py-5 bg-white ${isHovering ? 'block' : 'hidden'} pointer-events-auto transition-opacity duration-300 shadow-lg z-10`}>
             {id != -1 ? (
