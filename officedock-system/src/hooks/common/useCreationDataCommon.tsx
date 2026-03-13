@@ -112,10 +112,6 @@ const useCreationDataCommon = ({
                     : NO_SETTING_CATEGORY;
 
                 const updatedMedium: MediumCategory[] = [
-                  {
-                    MEDIUM: NO_SETTING_CATEGORY,
-                    SMALL: [NO_SETTING_CATEGORY],
-                  },
                   ...(category.MEDIUM || []).map(
                     (mediumItem): MediumCategory => {
                       const updatedMediumValue =
@@ -124,13 +120,13 @@ const useCreationDataCommon = ({
                           : NO_SETTING_CATEGORY;
 
                       const updatedSmall: SmallCategory[] = [
-                        NO_SETTING_CATEGORY,
                         ...(mediumItem.SMALL || []).map(
                           (smallItem): SmallCategory =>
                             smallItem && smallItem.id != null
                               ? smallItem
                               : NO_SETTING_CATEGORY,
                         ),
+                        NO_SETTING_CATEGORY,
                       ];
 
                       return {
@@ -139,6 +135,10 @@ const useCreationDataCommon = ({
                       };
                     },
                   ),
+                  {
+                    MEDIUM: NO_SETTING_CATEGORY,
+                    SMALL: [NO_SETTING_CATEGORY],
+                  },
                 ];
 
                 // remove duplicate MEDIUM by id
@@ -207,7 +207,7 @@ const useCreationDataCommon = ({
 
                   const updatedSmall: SmallCategory[] = hasNoSettingSmall
                     ? updatedSmallRaw
-                    : [NO_SETTING_CATEGORY, ...updatedSmallRaw];
+                    : [...updatedSmallRaw, NO_SETTING_CATEGORY];
 
                   return {
                     MEDIUM: updatedMediumValue,
@@ -222,11 +222,11 @@ const useCreationDataCommon = ({
 
               if (!hasNoSettingMedium) {
                 updatedMedium = [
+                  ...updatedMedium,
                   {
                     MEDIUM: NO_SETTING_CATEGORY,
                     SMALL: [NO_SETTING_CATEGORY],
                   },
-                  ...updatedMedium,
                 ];
               }
             } else {
@@ -297,7 +297,7 @@ const useCreationDataCommon = ({
 
                   const updatedSmall: SmallCategory[] = hasNoSettingSmall
                     ? updatedSmallRaw
-                    : [NO_SETTING_CATEGORY, ...updatedSmallRaw];
+                    : [...updatedSmallRaw, NO_SETTING_CATEGORY];
 
                   return {
                     MEDIUM: updatedMediumValue,
@@ -312,11 +312,11 @@ const useCreationDataCommon = ({
 
               if (!hasNoSettingMedium) {
                 updatedMedium = [
+                  ...updatedMedium,
                   {
                     MEDIUM: NO_SETTING_CATEGORY,
                     SMALL: [NO_SETTING_CATEGORY],
                   },
-                  ...updatedMedium,
                 ];
               }
             } else {
