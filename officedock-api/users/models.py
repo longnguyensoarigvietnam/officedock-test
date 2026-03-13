@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.db.models import Q
+from django.utils import timezone
 
 from rest_framework.exceptions import ValidationError
 from base.models import BaseModel
@@ -476,6 +477,30 @@ class TransactionHistory(BaseModel):
     company = models.ForeignKey(
         "companies.Company",
         related_name="transaction_histories",
+        on_delete=models.CASCADE,
+    )
+
+
+class UserCoinLot(BaseModel):
+    """
+    User coin lots with expiration.
+
+    Coin expires at end-of-month after 6 months from granted month (JST),
+    and is consumed FIFO by nearest expiration.
+    """
+
+    amount_remaining = models.IntegerField(default=0)
+    granted_at = models.DateTimeField(default=timezone.now)
+    expires_at = models.DateTimeField(db_index=True)
+
+    user = models.ForeignKey(
+        User,
+        related_name="coin_lots",
+        on_delete=models.CASCADE,
+    )
+    company = models.ForeignKey(
+        "companies.Company",
+        related_name="user_coin_lots",
         on_delete=models.CASCADE,
     )
 

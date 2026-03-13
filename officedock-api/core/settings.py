@@ -197,6 +197,8 @@ COMPANY_CONTRACT_RETENTION_MONTHS = int(
 )
 CLOSING_DATE = int(os.getenv("CLOSING_DATE", 31))
 EDITABLE_AFTER_CLOSING = int(os.getenv("EDITABLE_AFTER_CLOSING", 10))
+TARGET_TASK_COMPLETED = int(os.getenv("TARGET_TASK_COMPLETED", 3))
+MONTHLY_COIN_EXPIRATION = int(os.getenv("MONTHLY_COIN_EXPIRATION", 6))
 
 # Get REDIS_URL from environment variable or install directly
 REDIS_URL = os.getenv("REDIS_URL", None)

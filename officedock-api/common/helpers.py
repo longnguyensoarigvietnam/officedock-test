@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db.models import (
     F,
     Q,
@@ -473,7 +474,17 @@ def get_balances_of_user(user):
     """
     Get current balances of user
     """
-    return UserBalanceSerializer(user.get_balances()).data
+    from users.utils import (
+        get_current_completed_task,
+        get_total_coin_expire_this_month,
+    )
+
+    data = UserBalanceSerializer(user.get_balances()).data
+    data["remaining_task_completed"] = max(
+        settings.TARGET_TASK_COMPLETED - get_current_completed_task(user), 0
+    )
+    data["total_coin_expire"] = get_total_coin_expire_this_month(user)
+    return data
 
 
 def get_unanswered_count(user):
