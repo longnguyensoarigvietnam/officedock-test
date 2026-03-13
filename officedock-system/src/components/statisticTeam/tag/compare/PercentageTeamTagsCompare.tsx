@@ -435,6 +435,7 @@ const PercentageTeamTagsCompare = ({
                     <div className="min-h-[280px] mt-[10px] flex justify-centers">
                       <PercentageBarCompareTeam
                         isTag
+                        showNoDataText
                         data={dataChartLarge}
                         startDate={startDate}
                         endDate={endDate}
@@ -490,6 +491,7 @@ const PercentageTeamTagsCompare = ({
                     <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompareTeam
                         isTag
+                        showNoDataText={selectedLarge?.value !== ''}
                         hasHover={hasHover != EventWorkCategory.MEDIUM}
                         onActionHover={() =>
                           setHasHover(EventWorkCategory.MEDIUM)
@@ -548,6 +550,7 @@ const PercentageTeamTagsCompare = ({
                     <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompareTeam
                         isTag
+                        showNoDataText={selectedMedium?.value !== ''}
                         hasHover={hasHover != EventWorkCategory.SMALL}
                         onActionHover={() =>
                           setHasHover(EventWorkCategory.SMALL)
@@ -607,6 +610,7 @@ const PercentageTeamTagsCompare = ({
                       <PercentageBarCompareTeam
                         isTag
                         isLast
+                        showNoDataText={selectedSmall?.value !== ''}
                         hasHover={hasHover != EventWorkCategory.CATEGORY}
                         onActionHover={() =>
                           setHasHover(EventWorkCategory.CATEGORY)

@@ -574,7 +574,13 @@ const PercentageCategory = ({
                               }}
                             />
                           ) : (
-                            <div className="w-[280px] h-[280px]  rounded-full bg-[#EBF1F7]"></div>
+                            <div className="w-[280px] h-[280px] rounded-full bg-[#EBF1F7] flex items-center justify-center">
+                              {selectedOrganization?.value !== '' && (
+                                <span className="text-sm text-[#77858F]">
+                                  データがありません
+                                </span>
+                              )}
+                            </div>
                           )}
                         </>
                       )}
@@ -654,7 +660,13 @@ const PercentageCategory = ({
                               }}
                             />
                           ) : (
-                            <div className="w-[280px] h-[280px] ml-5 rounded-full bg-[#EBF1F7]"></div>
+                            <div className="w-[280px] h-[280px] ml-5 rounded-full bg-[#EBF1F7] flex items-center justify-center">
+                              {selectedLarge?.value !== '' && (
+                                <span className="text-sm text-[#77858F]">
+                                  データがありません
+                                </span>
+                              )}
+                            </div>
                           )}
                         </>
                       )}
@@ -736,7 +748,13 @@ const PercentageCategory = ({
                               isClickTooltip
                             />
                           ) : (
-                            <div className="w-[280px] h-[280px]  rounded-full bg-[#EBF1F7]"></div>
+                            <div className="w-[280px] h-[280px] rounded-full bg-[#EBF1F7] flex items-center justify-center">
+                              {selectedMedium?.value !== '' && (
+                                <span className="text-sm text-[#77858F]">
+                                  データがありません
+                                </span>
+                              )}
+                            </div>
                           )}
                         </>
                       )}

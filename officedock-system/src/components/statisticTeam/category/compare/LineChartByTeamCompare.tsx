@@ -2552,29 +2552,35 @@ const LineChartByTeamCompare = ({
           (!isFetchingStatisticTeamDockAllTeamLineChartTaskDurationsList &&
             !isFetchingStatisticTeamDockAllTeamLineChartTaskDurationsListCompare &&
             selectedOrganization?.value == ALL_TEAM_STATISTIC) ? (
-            <div
-              style={{ position: 'relative' }}
-              className={`h-[380px] ${expanded && 'w-[calc(100%_-_10px)]'}`}>
-              <Line
-                key={standardDateLabels.join('-') + compareDateLabels.join('-')}
-                ref={chartRef}
-                data={{
-                  datasets: lineChartData?.datasets || [],
-                  labels: lineChartData?.labels.length
-                    ? lineChartData?.labels
-                    : getStatisticMilestones(
-                        `${formatDateToYMD(startDate)}`,
-                        `${formatDateToYMD(endDate || '')}`,
-                        lineChartViewBy?.value as StatisticViewOptions,
-                      ),
-                }}
-                options={options}
-              />
+            lineChartData?.datasets.length === 0 ? (
+              <div className="flex items-center justify-center h-[380px]">
+                <span className="text-sm text-[#77858F]">データがありません</span>
+              </div>
+            ) : (
               <div
-                ref={tooltipRef}
-                style={{ position: 'absolute', opacity: 0 }}
-              />
-            </div>
+                style={{ position: 'relative' }}
+                className={`h-[380px] ${expanded && 'w-[calc(100%_-_10px)]'}`}>
+                <Line
+                  key={standardDateLabels.join('-') + compareDateLabels.join('-')}
+                  ref={chartRef}
+                  data={{
+                    datasets: lineChartData?.datasets || [],
+                    labels: lineChartData?.labels.length
+                      ? lineChartData?.labels
+                      : getStatisticMilestones(
+                          `${formatDateToYMD(startDate)}`,
+                          `${formatDateToYMD(endDate || '')}`,
+                          lineChartViewBy?.value as StatisticViewOptions,
+                        ),
+                  }}
+                  options={options}
+                />
+                <div
+                  ref={tooltipRef}
+                  style={{ position: 'absolute', opacity: 0 }}
+                />
+              </div>
+            )
           ) : (
             <RowSkeleton
               numberOfRows={1}

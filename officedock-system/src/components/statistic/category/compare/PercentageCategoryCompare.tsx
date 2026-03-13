@@ -508,6 +508,7 @@ const PercentageCategoryCompare = ({
                     </div>
                     <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompare
+                        showNoDataText
                         data={dataChartLarge}
                         startDate={startDate}
                         endDate={endDate}
@@ -585,6 +586,7 @@ const PercentageCategoryCompare = ({
                     </div>
                     <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompare
+                        showNoDataText={selectedLarge?.value !== ''}
                         data={dataChartMedium}
                         startDate={startDate}
                         endDate={endDate}
@@ -654,6 +656,7 @@ const PercentageCategoryCompare = ({
                     </div>
                     <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompare
+                        showNoDataText={selectedMedium?.value !== ''}
                         isLast
                         data={dataChartSmall}
                         startDate={startDate}

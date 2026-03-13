@@ -407,87 +407,105 @@ const AllocationTeamCategory = memo(
                       ) : (
                         <div className="flex flex-col gap-4">
                           {selectedOrganization?.value == ALL_TEAM_STATISTIC &&
-                            progressDataLargeAllTeam.length > 0 &&
-                            progressDataLargeAllTeam.map((item, index) => (
-                              <ProgressBarStatistic
-                                key={index}
-                                isAllTeam={
-                                  selectedOrganization?.value ==
-                                  ALL_TEAM_STATISTIC
-                                }
-                                isActive={activeBarLargeId === item.id}
-                                onActivate={(id: number) => {
-                                  setActiveBarSmallId(null);
-                                  setActiveBarMediumId(null);
-                                  setActiveBarLargeId(id);
-                                }}
-                                onDeactivate={(id: number) => {
-                                  if (activeBarLargeId === id)
-                                    setActiveBarLargeId(null);
-                                }}
-                                classProgressClass="h-[20px] rounded-[4px]"
-                                handleClickTooltip={() => {}}
-                                organizationId={item.organizationId}
-                                handleClickChart={() => {}}
-                                {...item}
-                              />
-                            ))}
-
-                          {progressDataLarge.length > 0 &&
-                            selectedOrganization?.value != ALL_TEAM_STATISTIC &&
-                            progressDataLarge.map((item, index) => (
-                              <ProgressBarTeamStatistic
-                                key={index}
-                                classProgressClass="h-[20px] rounded-[4px]"
-                                handleClickChart={(
-                                  data: OptionDropdownType,
-                                ) => {
-                                  if (
-                                    data.value &&
-                                    data.value != selectedLarge?.value
-                                  ) {
-                                    handleSelectLarge(data);
+                          progressDataLargeAllTeam.length > 0
+                            ? progressDataLargeAllTeam.map((item, index) => (
+                                <ProgressBarStatistic
+                                  key={index}
+                                  isAllTeam={
+                                    selectedOrganization?.value ==
+                                    ALL_TEAM_STATISTIC
                                   }
-                                }}
-                                hasHover={!!activeBarLargeId}
-                                isActive={activeBarLargeId === item.id}
-                                onActivate={(id: number) => {
-                                  setActiveBarSmallId(null);
-                                  setActiveBarMediumId(null);
-                                  setActiveBarLargeId(id);
-                                }}
-                                onDeactivate={(id: number) => {
-                                  if (activeBarLargeId === id)
+                                  isActive={activeBarLargeId === item.id}
+                                  onActivate={(id: number) => {
+                                    setActiveBarSmallId(null);
+                                    setActiveBarMediumId(null);
+                                    setActiveBarLargeId(id);
+                                  }}
+                                  onDeactivate={(id: number) => {
+                                    if (activeBarLargeId === id)
+                                      setActiveBarLargeId(null);
+                                  }}
+                                  classProgressClass="h-[20px] rounded-[4px]"
+                                  handleClickTooltip={() => {}}
+                                  organizationId={item.organizationId}
+                                  handleClickChart={() => {}}
+                                  {...item}
+                                />
+                              ))
+                            : selectedOrganization?.value ==
+                                ALL_TEAM_STATISTIC &&
+                              progressDataLargeAllTeam.length === 0 ? (
+                              <div className="flex items-center justify-center h-[100px]">
+                                <span className="text-sm text-[#77858F]">
+                                  データがありません
+                                </span>
+                              </div>
+                            ) : null}
+
+                          {selectedOrganization?.value != ALL_TEAM_STATISTIC &&
+                          progressDataLarge.length > 0
+                            ? progressDataLarge.map((item, index) => (
+                                <ProgressBarTeamStatistic
+                                  key={index}
+                                  classProgressClass="h-[20px] rounded-[4px]"
+                                  handleClickChart={(
+                                    data: OptionDropdownType,
+                                  ) => {
+                                    if (
+                                      data.value &&
+                                      data.value != selectedLarge?.value
+                                    ) {
+                                      handleSelectLarge(data);
+                                    }
+                                  }}
+                                  hasHover={!!activeBarLargeId}
+                                  isActive={activeBarLargeId === item.id}
+                                  onActivate={(id: number) => {
+                                    setActiveBarSmallId(null);
+                                    setActiveBarMediumId(null);
+                                    setActiveBarLargeId(id);
+                                  }}
+                                  onDeactivate={(id: number) => {
+                                    if (activeBarLargeId === id)
+                                      setActiveBarLargeId(null);
+                                  }}
+                                  onDeactivateUser={() => {
                                     setActiveBarLargeId(null);
-                                }}
-                                onDeactivateUser={() => {
-                                  setActiveBarLargeId(null);
-                                }}
-                                handleClickTooltip={({
-                                  userId,
-                                  categoryId,
-                                  userDuration,
-                                  organizationId,
-                                }: {
-                                  userId: number;
-                                  categoryId: number;
-                                  userDuration: string;
-                                  organizationId?: string;
-                                }) => {
-                                  handleClickTooltip({
-                                    id: categoryId,
+                                  }}
+                                  handleClickTooltip={({
                                     userId,
-                                    type: EventWorkCategory.ALL,
+                                    categoryId,
                                     userDuration,
                                     organizationId,
-                                  });
-                                }}
-                                startDate={startDate}
-                                endDate={endDate}
-                                organizationId={item.organizationId}
-                                {...item}
-                              />
-                            ))}
+                                  }: {
+                                    userId: number;
+                                    categoryId: number;
+                                    userDuration: string;
+                                    organizationId?: string;
+                                  }) => {
+                                    handleClickTooltip({
+                                      id: categoryId,
+                                      userId,
+                                      type: EventWorkCategory.ALL,
+                                      userDuration,
+                                      organizationId,
+                                    });
+                                  }}
+                                  startDate={startDate}
+                                  endDate={endDate}
+                                  organizationId={item.organizationId}
+                                  {...item}
+                                />
+                              ))
+                            : selectedOrganization?.value !=
+                                ALL_TEAM_STATISTIC &&
+                              progressDataLarge.length === 0 ? (
+                              <div className="flex items-center justify-center h-[100px]">
+                                <span className="text-sm text-[#77858F]">
+                                  データがありません
+                                </span>
+                              </div>
+                            ) : null}
                         </div>
                       )}
                     </div>
@@ -532,7 +550,7 @@ const AllocationTeamCategory = memo(
                         </div>
                       ) : (
                         <div className="flex flex-col gap-4">
-                          {progressDataMedium.length > 0 &&
+                          {progressDataMedium.length > 0 ? (
                             progressDataMedium.map((item, index) => (
                               <ProgressBarTeamStatistic
                                 key={index}
@@ -581,7 +599,14 @@ const AllocationTeamCategory = memo(
                                 }}
                                 {...item}
                               />
-                            ))}
+                            ))
+                          ) : selectedLarge?.value !== '' ? (
+                            <div className="flex items-center justify-center h-[100px]">
+                              <span className="text-sm text-[#77858F]">
+                                データがありません
+                              </span>
+                            </div>
+                          ) : null}
                         </div>
                       )}
                     </div>
@@ -630,7 +655,7 @@ const AllocationTeamCategory = memo(
                         </div>
                       ) : (
                         <div className="flex flex-col gap-4">
-                          {progressDataSmall.length > 0 &&
+                          {progressDataSmall.length > 0 ? (
                             progressDataSmall.map((item, index) => (
                               <ProgressBarTeamStatistic
                                 key={index}
@@ -670,7 +695,14 @@ const AllocationTeamCategory = memo(
                                 }}
                                 {...item}
                               />
-                            ))}
+                            ))
+                          ) : selectedMedium?.value !== '' ? (
+                            <div className="flex items-center justify-center h-[100px]">
+                              <span className="text-sm text-[#77858F]">
+                                データがありません
+                              </span>
+                            </div>
+                          ) : null}
                         </div>
                       )}
                     </div>

@@ -974,6 +974,10 @@ const StackedAreaChart = ({
               numberOfRows={1}
               className={`!h-[380px] w-[calc(100%_-_60px)] mx-auto`}
             />
+          ) : dataChart.length === 0 || (dataChart.length === 1 && !dataChart[0].name) ? (
+            <div className="flex items-center justify-center h-[380px]">
+              <span className="text-sm text-[#77858F]">データがありません</span>
+            </div>
           ) : (
             <div className="relative officedock-area-chart">
               <Chart

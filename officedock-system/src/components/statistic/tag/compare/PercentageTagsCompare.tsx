@@ -384,6 +384,7 @@ const PercentageTagsCompare = ({
                     </div>
                     <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompare
+                        showNoDataText
                         isTag
                         isAllTeamOption={
                           selectedOrganization?.value == ALL_TEAM_STATISTIC
@@ -443,6 +444,7 @@ const PercentageTagsCompare = ({
                     />
                     <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompare
+                        showNoDataText={selectedLarge?.value !== ''}
                         isTag
                         data={dataChartMedium}
                         startDate={startDate}
@@ -501,6 +503,7 @@ const PercentageTagsCompare = ({
                     />
                     <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompare
+                        showNoDataText={selectedMedium?.value !== ''}
                         isTag
                         data={dataChartSmall}
                         startDate={startDate}
@@ -559,6 +562,7 @@ const PercentageTagsCompare = ({
                     />
                     <div className="min-h-[280px] mt-[10px] flex justify-center">
                       <PercentageBarCompare
+                        showNoDataText={selectedSmall?.value !== ''}
                         isTag
                         isLast
                         data={dataChartCategory}

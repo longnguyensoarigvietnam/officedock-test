@@ -621,6 +621,10 @@ const AllocationTagTeamCompare = memo(
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-[6px]" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                         </div>
+                      ) : progressDataPairsLarge.length === 0 ? (
+                        <div className="flex items-center justify-center h-[100px]">
+                          <span className="text-sm text-[#77858F]">データがありません</span>
+                        </div>
                       ) : (
                         <div className="mt-5 flex flex-col gap-4">
                           {selectedOrganization?.value == ALL_TEAM_STATISTIC &&
@@ -890,6 +894,10 @@ const AllocationTagTeamCompare = memo(
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-[6px]" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                         </div>
+                      ) : progressDataPairsMedium.length === 0 && selectedLarge?.value !== '' ? (
+                        <div className="flex items-center justify-center h-[100px]">
+                          <span className="text-sm text-[#77858F]">データがありません</span>
+                        </div>
                       ) : (
                         <div className="mt-5 flex flex-col gap-4">
                           {progressDataPairsMedium.map((item, index) => {
@@ -1021,6 +1029,10 @@ const AllocationTagTeamCompare = memo(
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-8" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-[6px]" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
+                        </div>
+                      ) : progressDataPairsSmall.length === 0 && selectedMedium?.value !== '' ? (
+                        <div className="flex items-center justify-center h-[100px]">
+                          <span className="text-sm text-[#77858F]">データがありません</span>
                         </div>
                       ) : (
                         <div className="mt-5 flex flex-col gap-4">
@@ -1171,6 +1183,10 @@ const AllocationTagTeamCompare = memo(
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-8" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-[6px]" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
+                        </div>
+                      ) : progressDataPairsCategory.length === 0 && selectedSmall?.value !== '' ? (
+                        <div className="flex items-center justify-center h-[100px]">
+                          <span className="text-sm text-[#77858F]">データがありません</span>
                         </div>
                       ) : (
                         <div className="mt-5 flex flex-col gap-4">

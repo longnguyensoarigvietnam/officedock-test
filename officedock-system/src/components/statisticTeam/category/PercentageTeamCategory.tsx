@@ -463,7 +463,11 @@ const PercentageCategoryTeam = ({
                           }
                         />
                       ) : (
-                        <div className="w-[280px] h-[280px]  rounded-full bg-[#EBF1F7]"></div>
+                        <div className="w-[280px] h-[280px]  rounded-full bg-[#EBF1F7] flex items-center justify-center">
+                          <span className="text-sm text-[#77858F]">
+                            データがありません
+                          </span>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -522,7 +526,13 @@ const PercentageCategoryTeam = ({
                           }}
                         />
                       ) : (
-                        <div className="w-[280px] h-[280px] rounded-full bg-[#EBF1F7]"></div>
+                        <div className="w-[280px] h-[280px] rounded-full bg-[#EBF1F7] flex items-center justify-center">
+                          {selectedLarge?.value !== '' && (
+                            <span className="text-sm text-[#77858F]">
+                              データがありません
+                            </span>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -583,7 +593,13 @@ const PercentageCategoryTeam = ({
                           }
                         />
                       ) : (
-                        <div className="w-[280px] h-[280px]  rounded-full bg-[#EBF1F7]"></div>
+                        <div className="w-[280px] h-[280px]  rounded-full bg-[#EBF1F7] flex items-center justify-center">
+                          {selectedMedium?.value !== '' && (
+                            <span className="text-sm text-[#77858F]">
+                              データがありません
+                            </span>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>

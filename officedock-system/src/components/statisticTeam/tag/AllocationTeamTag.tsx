@@ -417,6 +417,12 @@ const AllocationTeamTag = memo(
                                 {...item}
                               />
                             ))}
+                          {((selectedOrganization?.value == ALL_TEAM_STATISTIC && progressDataAllTeam.length === 0) ||
+                            (selectedOrganization?.value != ALL_TEAM_STATISTIC && progressDataLarge.length === 0)) && (
+                            <div className="flex items-center justify-center h-[100px]">
+                              <span className="text-sm text-[#77858F]">データがありません</span>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -458,7 +464,7 @@ const AllocationTeamTag = memo(
                         </div>
                       ) : (
                         <div className="flex flex-col gap-4">
-                          {progressDataMedium.length > 0 &&
+                          {progressDataMedium.length > 0 ? (
                             progressDataMedium.map((item, index) => (
                               <ProgressBarTeamTagStatistic
                                 key={index}
@@ -496,7 +502,12 @@ const AllocationTeamTag = memo(
                                 ) => {}}
                                 {...item}
                               />
-                            ))}
+                            ))
+                          ) : selectedLarge?.value !== '' ? (
+                            <div className="flex items-center justify-center h-[100px]">
+                              <span className="text-sm text-[#77858F]">データがありません</span>
+                            </div>
+                          ) : null}
                         </div>
                       )}
                     </div>
@@ -542,7 +553,7 @@ const AllocationTeamTag = memo(
                         </div>
                       ) : (
                         <div className="flex flex-col gap-4">
-                          {progressDataSmall.length > 0 &&
+                          {progressDataSmall.length > 0 ? (
                             progressDataSmall.map((item, index) => (
                               <ProgressBarTeamTagStatistic
                                 key={index}
@@ -579,7 +590,12 @@ const AllocationTeamTag = memo(
                                 }}
                                 {...item}
                               />
-                            ))}
+                            ))
+                          ) : selectedMedium?.value !== '' ? (
+                            <div className="flex items-center justify-center h-[100px]">
+                              <span className="text-sm text-[#77858F]">データがありません</span>
+                            </div>
+                          ) : null}
                         </div>
                       )}
                     </div>
@@ -625,7 +641,7 @@ const AllocationTeamTag = memo(
                         </div>
                       ) : (
                         <div className="flex flex-col gap-4">
-                          {progressDataCategory.length > 0 &&
+                          {progressDataCategory.length > 0 ? (
                             progressDataCategory.map((item, index) => (
                               <ProgressBarTeamTagStatistic
                                 key={index}
@@ -662,7 +678,12 @@ const AllocationTeamTag = memo(
                                 }}
                                 {...item}
                               />
-                            ))}
+                            ))
+                          ) : selectedSmall?.value !== '' ? (
+                            <div className="flex items-center justify-center h-[100px]">
+                              <span className="text-sm text-[#77858F]">データがありません</span>
+                            </div>
+                          ) : null}
                         </div>
                       )}
                     </div>

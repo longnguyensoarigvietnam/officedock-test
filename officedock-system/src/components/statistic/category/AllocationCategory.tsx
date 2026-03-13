@@ -305,7 +305,7 @@ const AllocationCategory = memo(
                         </div>
                       ) : (
                         <div className="flex flex-col gap-4">
-                          {progressDataLarge.length > 0 &&
+                          {progressDataLarge.length > 0 ? (
                             progressDataLarge.map((item, index) => (
                               <ProgressBarStatistic
                                 key={index}
@@ -347,7 +347,12 @@ const AllocationCategory = memo(
                                 }}
                                 {...item}
                               />
-                            ))}
+                            ))
+                          ) : (
+                            <div className="flex items-center justify-center h-[100px]">
+                              <span className="text-sm text-[#77858F]">データがありません</span>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -394,7 +399,7 @@ const AllocationCategory = memo(
                         </div>
                       ) : (
                         <div className="flex flex-col gap-4">
-                          {progressDataMedium.length > 0 &&
+                          {progressDataMedium.length > 0 ? (
                             progressDataMedium.map((item, index) => (
                               <ProgressBarStatistic
                                 key={index}
@@ -427,7 +432,12 @@ const AllocationCategory = memo(
                                 }}
                                 {...item}
                               />
-                            ))}
+                            ))
+                          ) : selectedLarge?.value !== '' ? (
+                            <div className="flex items-center justify-center h-[100px]">
+                              <span className="text-sm text-[#77858F]">データがありません</span>
+                            </div>
+                          ) : null}
                         </div>
                       )}
                     </div>
@@ -476,7 +486,7 @@ const AllocationCategory = memo(
                         </div>
                       ) : (
                         <div className="flex flex-col gap-4">
-                          {progressDataSmall.length > 0 &&
+                          {progressDataSmall.length > 0 ? (
                             progressDataSmall.map((item, index) => (
                               <ProgressBarStatistic
                                 key={index}
@@ -500,7 +510,12 @@ const AllocationCategory = memo(
                                 }}
                                 {...item}
                               />
-                            ))}
+                            ))
+                          ) : selectedMedium?.value !== '' ? (
+                            <div className="flex items-center justify-center h-[100px]">
+                              <span className="text-sm text-[#77858F]">データがありません</span>
+                            </div>
+                          ) : null}
                         </div>
                       )}
                     </div>

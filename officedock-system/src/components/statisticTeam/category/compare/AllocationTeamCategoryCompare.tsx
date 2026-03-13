@@ -602,6 +602,10 @@ const AllocationTeamCategoryCompare = memo(
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                         </div>
+                      ) : (selectedOrganization?.value == ALL_TEAM_STATISTIC ? progressDataAllTeam.length === 0 : progressDataLarge.length === 0) ? (
+                        <div className="flex items-center justify-center h-[100px]">
+                          <span className="text-sm text-[#77858F]">データがありません</span>
+                        </div>
                       ) : (
                         <div className="flex flex-col gap-4">
                           <div className="mt-8 my-4">
@@ -867,6 +871,10 @@ const AllocationTeamCategoryCompare = memo(
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                         </div>
+                      ) : progressDataMedium.length === 0 && selectedLarge?.value !== '' ? (
+                        <div className="flex items-center justify-center h-[100px]">
+                          <span className="text-sm text-[#77858F]">データがありません</span>
+                        </div>
                       ) : (
                         <div className="flex flex-col gap-4">
                           <div className="mt-8 my-4">
@@ -1018,6 +1026,10 @@ const AllocationTeamCategoryCompare = memo(
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
+                        </div>
+                      ) : progressDataSmall.length === 0 && selectedMedium?.value !== '' ? (
+                        <div className="flex items-center justify-center h-[100px]">
+                          <span className="text-sm text-[#77858F]">データがありません</span>
                         </div>
                       ) : (
                         <div className="flex flex-col gap-4">
