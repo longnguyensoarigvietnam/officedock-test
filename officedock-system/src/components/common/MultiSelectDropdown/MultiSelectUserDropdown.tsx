@@ -1,6 +1,5 @@
 'use client';
 import { ReactNode, useEffect, useRef, useState } from 'react';
-import ReactDOM from 'react-dom';
 import Image from 'next/image';
 
 import ErrorMessage from '../ErrorMessage';
@@ -56,12 +55,6 @@ const MultiSelectUserDropdown = ({
     selectedOptions || [],
   );
   const [isOpen, setIsOpen] = useState(false);
-  const [position, setPosition] = useState({
-    top: 0,
-    left: 0,
-    width: 0,
-    isShow: false,
-  });
   const dropdownRef = useRef<HTMLDivElement>(null);
   const dropdownOptionsRef = useRef<HTMLDivElement>(null);
 
@@ -80,30 +73,6 @@ const MultiSelectUserDropdown = ({
       setIsOpen(false);
     }
   }, [forceClose]);
-
-  const calculatePosition = () => {
-    if (dropdownRef.current) {
-      const rect = dropdownRef.current.getBoundingClientRect();
-      setPosition({
-        top: rect.bottom,
-        left: rect.left,
-        width: rect.width,
-        isShow: true,
-      });
-    }
-  };
-  useEffect(() => {
-    if (isOpen) {
-      calculatePosition();
-    } else {
-      setPosition({
-        top: 0,
-        left: 0,
-        width: 0,
-        isShow: false,
-      });
-    }
-  }, [isOpen]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -128,14 +97,7 @@ const MultiSelectUserDropdown = ({
   const renderOptions = () => (
     <div
       ref={dropdownOptionsRef}
-      className={`absolute mt-1 z-50 max-h-60 overflow-y-auto overflow-x-hidden rounded bg-white text-base shadow-lg ring-1 ring-black ring-opacity-5 ${optionClassName}`}
-      style={{
-        top: position.top,
-        left: position.left,
-        width: position.width,
-        position: 'fixed',
-        display: position.isShow ? 'block' : 'none',
-      }}>
+      className={`multi-select-user-dropdown-options absolute top-8 w-full left-0 mt-1 z-50 max-h-60 overflow-y-auto overflow-x-hidden rounded bg-white text-base shadow-lg ring-1 ring-black ring-opacity-5 ${optionClassName}`}>
       {isLoading ? (
         <Spinner className="!h-fit py-3" />
       ) : options?.length ? (
@@ -202,7 +164,7 @@ const MultiSelectUserDropdown = ({
             if (disabled) {
               setIsOpen(false);
             } else {
-              setIsOpen(true);
+              setIsOpen(!isOpen);
             }
           }}
           className={`w-[14px] h-[14px]  hover:cursor-pointer relative top-[2px]`}
@@ -216,7 +178,7 @@ const MultiSelectUserDropdown = ({
             if (disabled) {
               setIsOpen(false);
             } else {
-              setIsOpen(true);
+              setIsOpen(!isOpen);
             }
           }}>
           <div className="h-full">
@@ -244,7 +206,7 @@ const MultiSelectUserDropdown = ({
         </div>
       )}
 
-      {isOpen && ReactDOM.createPortal(renderOptions(), document.body)}
+      {isOpen && renderOptions()}
       {error && (
         <ErrorMessage error={error} className="mt-2 text-sm text-red-600" />
       )}

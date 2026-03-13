@@ -23,21 +23,34 @@ const FilterTeamStatistic = ({
 }: Props) => {
   const {
     orderingOptions,
+    orderingPreviewOptions,
     tagsOptions,
     listMemberTeam,
     allLabelUser,
     allLabelTag,
-    firstThreeTag,
     isLoadingOrganization,
     isLoadingLarge,
     isLoadingMedium,
     isLoadingOrganizationCompare,
     isLoadingLargeCompare,
     isLoadingMediumCompare,
-    remainingCountTag,
     removeTag,
     removeUser,
   } = useContext(StatisticTeamStateContext);
+
+  const previewUserLabels =
+    orderingPreviewOptions?.user_ids && orderingPreviewOptions.user_ids.length
+      ? orderingPreviewOptions.user_ids
+      : allLabelUser;
+
+  const previewTagLabels =
+    orderingPreviewOptions?.tag_ids && orderingPreviewOptions.tag_ids.length
+      ? orderingPreviewOptions.tag_ids
+      : allLabelTag;
+
+  const previewFirstThreeTag = previewTagLabels.slice(0, 3);
+  const previewRemainingCountTag =
+    previewTagLabels.length - previewFirstThreeTag.length;
 
   return (
     <div className={`flex items-center gap-2  ${className}`}>
@@ -55,7 +68,9 @@ const FilterTeamStatistic = ({
                   />
                   {isFilterMember &&
                     orderingOptions?.user_ids.length == 0 &&
-                    orderingOptions?.tag_ids.length == 0 && (
+                    orderingOptions?.tag_ids.length == 0 &&
+                    previewTagLabels.length == 0 &&
+                    previewUserLabels.length == 0 && (
                       <span>メンバーとタグの絞り込み</span>
                     )}
                   {!isFilterMember && orderingOptions?.tag_ids.length == 0 && (
@@ -89,7 +104,7 @@ const FilterTeamStatistic = ({
         <div className={`flex gap-2 flex-wrap  ${classNameData} `}>
           <>
             {isFilterMember &&
-              allLabelUser.map((item, index) => {
+              previewUserLabels.map((item, index) => {
                 return (
                   <div key={item.value} className="flex gap-[6px] items-center">
                     {index === 0 && (
@@ -126,7 +141,7 @@ const FilterTeamStatistic = ({
               })}
           </>
           <>
-            {firstThreeTag.map((item, index) => {
+            {previewFirstThreeTag.map((item, index) => {
               return (
                 <div key={item.value} className="flex gap-[6px] items-center">
                   {index === 0 && (
@@ -161,9 +176,9 @@ const FilterTeamStatistic = ({
                 </div>
               );
             })}
-            {allLabelTag.length > 3 && (
+            {previewTagLabels.length > 3 && (
               <p className="pr-[10px] h-6 flex items-center flex-wrap justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
-                +{remainingCountTag}
+                +{previewRemainingCountTag}
               </p>
             )}
           </>
