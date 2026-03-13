@@ -513,7 +513,7 @@ class StatisticViewSet(BaseAPIViewSet):
         type_cat = TaskCategoryTypes.LARGE.value
         if large_category_id:
             type_cat = TaskCategoryTypes.MEDIUM.value
-        elif medium_category_id:
+        if medium_category_id:
             type_cat = TaskCategoryTypes.SMALL.value
 
         for index, (start, end) in enumerate(ranges):

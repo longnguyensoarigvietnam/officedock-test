@@ -284,6 +284,8 @@ def aggregate_durations(
             "deleted_type",
             "organization_id",
             "large_statistic_category_id",
+            "medium_statistic_category_id",
+            "small_statistic_category_id",
             "color",
             "id",
         )
@@ -291,13 +293,20 @@ def aggregate_durations(
             "deleted_type",
             "organization_id",
             "large_statistic_category_id",
+            "medium_statistic_category_id",
+            "small_statistic_category_id",
             "color",
             "id",
         )
     )
     # Map organization-category pairs to their metadata for fast lookup
     org_cat_map = {
-        (oc["organization_id"], oc["large_statistic_category_id"]): oc
+        (
+            oc["organization_id"],
+            oc["large_statistic_category_id"],
+            oc["medium_statistic_category_id"],
+            oc["small_statistic_category_id"],
+        ): oc
         for oc in org_cats
     }
 
@@ -346,6 +355,8 @@ def aggregate_durations(
         org_cat_key = (
             organization.id,
             large_category.id if large_category else None,
+            medium_category.id if medium_category else None,
+            small_category.id if small_category else None,
         )
         if (
             not large_category_id
@@ -1235,6 +1246,12 @@ def normalize_percentages(items, percent_field="percent", id_field="id"):
         else:
             item[percent_field] = 0  # keep 0% unchanged
 
+    # TODO: Handle sorting items by percent
+    # sorted_items = sorted(
+    #     items,
+    #     key=lambda x: x[percent_field],
+    #     reverse=True
+    # )
     return items
 
 

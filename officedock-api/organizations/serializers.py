@@ -3,6 +3,8 @@ from django.db.models import (
     Case,
     CharField,
     Q,
+    OuterRef,
+    Subquery,
     Value,
     When,
 )
@@ -533,12 +535,80 @@ class OrganizationDetailSerializer(OrganizationSerializer):
         """
         Get and organize statistic categories for the given organization
         """
-        statistic_categories = (
-            obj.organizations_statistic_categories.all().order_by("index")
-        )
+        statistic_categories = obj.organizations_statistic_categories.all()
+        # If not prefetched by the ViewSet, apply the same annotate/order
+        # logic to keep output consistent and avoid N+1 patterns elsewhere.
+        if "organizations_statistic_categories" not in getattr(
+            obj, "_prefetched_objects_cache", {}
+        ):
+            statistic_categories = statistic_categories.select_related(
+                "large_statistic_category",
+                "medium_statistic_category",
+                "small_statistic_category",
+            )
+            statistic_categories = self._annotate_and_sort_stat_categories(
+                statistic_categories
+            )
         return StatisticCategoryStructionSerializer(
             statistic_categories, many=True
         ).data
+
+    def _annotate_and_sort_stat_categories(self, qs):
+        """
+        Annotate subqueries to sort by hierarchy: large -> medium -> individual
+        """
+
+        # Subquery: earliest created_at for each large category
+        large_subquery = (
+            qs.filter(
+                organization=OuterRef("organization"),
+                large_statistic_category=OuterRef("large_statistic_category"),
+            )
+            .order_by("created_at")
+            .values("created_at")[:1]
+        )
+
+        # Subquery: earliest created_at for each large + medium category
+        large_medium_subquery = (
+            qs.filter(
+                organization=OuterRef("organization"),
+                large_statistic_category=OuterRef("large_statistic_category"),
+                medium_statistic_category=OuterRef("medium_statistic_category"),
+            )
+            .order_by("created_at")
+            .values("created_at")[:1]
+        )
+
+        # Subquery: earliest created_at for each large + medium + small category
+        large_medium_small_subquery = (
+            qs.filter(
+                organization=OuterRef("organization"),
+                large_statistic_category=OuterRef("large_statistic_category"),
+                medium_statistic_category=OuterRef("medium_statistic_category"),
+                small_statistic_category=OuterRef("small_statistic_category"),
+            )
+            .order_by("created_at")
+            .values("created_at")[:1]
+        )
+
+        return (
+            qs.annotate(
+                large_created_at=Subquery(large_subquery),
+                large_medium_created_at=Subquery(large_medium_subquery),
+                large_medium_small_created_at=Subquery(
+                    large_medium_small_subquery
+                ),
+            )
+            .order_by(
+                "index",
+                "large_created_at",
+                "large_medium_created_at",
+                "large_medium_small_created_at",
+                "created_at",
+                "id",
+            )
+            .distinct()
+        )
 
 
 class OrganizationStatisticCategoriesSerializer(OrganizationDetailSerializer):

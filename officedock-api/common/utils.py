@@ -411,7 +411,7 @@ def transform_statistic_categories(statistic_categories):
     """
     Transform flat list of statistic categories into a nested hierarchy:
     large → medium → small, with default placeholders for null values.
-    Handles duplicates by ID properly and ensures '未設定' categories are shown first.
+    Handles duplicates by ID properly and ensures '未設定' categories are shown last.
     """
     LARGE = ScheduleCategoryTypes.LARGE.value
     MEDIUM = ScheduleCategoryTypes.MEDIUM.value
@@ -495,13 +495,13 @@ def transform_statistic_categories(statistic_categories):
             return (0, 0, "")
         deleted_flag = 1 if is_deleted(item) else 0
         name = str(item.get("name") or "")
-        none_flag = 0 if name == NONE_CATEGORY else 1
-        return (deleted_flag, none_flag, name)
+        none_flag = 1 if name == NONE_CATEGORY else 0
+        return (none_flag, deleted_flag)
 
     result = []
     for large_id, large_data in sorted(
         large_dict.items(),
-        key=lambda x: (0 if x[0] == "None" else 1, *sort_key(x[1][LARGE])),
+        key=lambda x: sort_key(x[1][LARGE]),
     ):
         medium_list = []
         medium_items = list(large_data[MEDIUM].values())
