@@ -417,6 +417,7 @@ const PercentageTeamCategoryCompare = ({
                               );
                             handleSelectLarge(data);
                           }}
+                          tooltipDelay={0}
                         />
                       )}
                     </div>

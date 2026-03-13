@@ -462,6 +462,7 @@ const PercentageTeamTagsCompare = ({
                             isCompare,
                           );
                         }}
+                        tooltipDelay={0}
                       />
                     </div>
                   </div>
@@ -517,6 +518,7 @@ const PercentageTeamTagsCompare = ({
                             isCompare,
                           );
                         }}
+                        tooltipDelay={0}
                       />
                     </div>
                   </div>
@@ -576,6 +578,7 @@ const PercentageTeamTagsCompare = ({
                             isCompare,
                           );
                         }}
+                        tooltipDelay={0}
                       />
                     </div>
                   </div>
@@ -636,6 +639,7 @@ const PercentageTeamTagsCompare = ({
                             isCompare,
                           );
                         }}
+                        tooltipDelay={0}
                       />
                     </div>
                   </div>

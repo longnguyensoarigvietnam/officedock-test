@@ -532,6 +532,7 @@ const PercentageTeamTags = ({
                             handleClickTooltip(id, EventWorkCategory.ALL);
                           }}
                           handleClickChart={(_data: OptionDropdownType) => {}}
+                          tooltipDelay={0}
                         />
                       ) : (
                         <div className="w-[220px] h-[220px] rounded-full bg-[#EBF1F7] flex items-center justify-center">
@@ -599,6 +600,7 @@ const PercentageTeamTags = ({
                             handleClickTooltip(id, EventWorkCategory.LARGE);
                           }}
                           handleClickChart={(_data: OptionDropdownType) => {}}
+                          tooltipDelay={0}
                         />
                       ) : (
                         <div className="w-[220px] h-[220px] rounded-full bg-[#EBF1F7] flex items-center justify-center">
@@ -669,6 +671,7 @@ const PercentageTeamTags = ({
                             handleClickTooltip(id, EventWorkCategory.MEDIUM);
                           }}
                           isClickTooltip
+                          tooltipDelay={0}
                         />
                       ) : (
                         <div className="w-[220px] h-[220px] rounded-full bg-[#EBF1F7] flex items-center justify-center">
@@ -740,6 +743,7 @@ const PercentageTeamTags = ({
                             handleClickTooltip(id, EventWorkCategory.SMALL);
                           }}
                           isClickTooltip
+                          tooltipDelay={0}
                         />
                       ) : (
                         <div className="w-[220px] h-[220px] rounded-full bg-[#EBF1F7] flex items-center justify-center">

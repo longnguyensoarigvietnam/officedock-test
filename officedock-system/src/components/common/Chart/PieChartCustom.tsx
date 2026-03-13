@@ -113,6 +113,7 @@ interface PieChartProps {
   handleClickTooltip?: (id: number | null, organizationId?: string) => void;
   handleClickChart?: (data: OptionDropdownType) => void;
   isGradient?: boolean;
+  tooltipDelay?: number;
 }
 
 interface TooltipData {
@@ -141,6 +142,7 @@ const PieChartCustom = ({
   handleClickChart,
   handleClickTooltip,
   isGradient = true,
+  tooltipDelay = 1000,
 }: PieChartProps) => {
   const defaultColors = [
     'rgba(255, 99, 132, 0.8)',
@@ -308,7 +310,7 @@ const PieChartCustom = ({
           hoverTimeoutRef.current = setTimeout(() => {
             setIsHovered(false);
             setTooltipData(null);
-          }, 1000);
+          }, tooltipDelay);
         }}
         onMouseEnter={() => {
           onActionHover && onActionHover();
@@ -378,7 +380,7 @@ const PieChartCustom = ({
               hoverTimeoutRef.current = setTimeout(() => {
                 setIsHovered(false);
                 setTooltipData(null);
-              }, 1000);
+              }, tooltipDelay);
             }}
             isTeam={isTeam && !isAllTeamOption}
             tooltipData={tooltipData}

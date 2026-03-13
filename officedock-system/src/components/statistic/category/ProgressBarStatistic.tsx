@@ -39,6 +39,7 @@ interface ProgressBarProps {
   handleClickTooltip: (id: number | null, organizationId?: string) => void;
   handleClickChart?: (data: OptionDropdownType) => void;
   onDeactivate?: (id: number) => void;
+  tooltipDelay?: number;
 }
 
 const ProgressBarStatistic = ({
@@ -65,6 +66,7 @@ const ProgressBarStatistic = ({
   handleClickTooltip,
   handleClickChart,
   onDeactivate,
+  tooltipDelay = 1000,
 }: ProgressBarProps) => {
   const percentage = Math.round(Math.min((value / maxValue) * 100, 100));
 
@@ -105,7 +107,7 @@ const ProgressBarStatistic = ({
                 clearTimeout(hoverTimeoutRef.current);
               hoverTimeoutRef.current = setTimeout(() => {
                 onDeactivate && onDeactivate(id as number);
-              }, 1000);
+              }, tooltipDelay);
             }}
             onMouseEnter={() => {
               if (hoverTimeoutRef.current) {
@@ -143,7 +145,7 @@ const ProgressBarStatistic = ({
                   clearTimeout(hoverTimeoutRef.current);
                 hoverTimeoutRef.current = setTimeout(() => {
                   onDeactivate && onDeactivate(id as number);
-                }, 1000);
+                }, tooltipDelay);
               }}
               className={`absolute -top-[25%] ${isLast ? 'right-[100%]' : 'left-[100%]'} w-[288px] rounded-[14px] py-5 bg-white ${isHovering ? 'block' : 'hidden'}  pointer-events-auto transition-opacity duration-300 shadow-lg z-10`}>
               {id != -1 ? (

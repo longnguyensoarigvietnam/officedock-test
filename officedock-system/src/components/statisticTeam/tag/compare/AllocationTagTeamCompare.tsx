@@ -455,7 +455,7 @@ const AllocationTagTeamCompare = memo(
 
       setTimeout(() => {
         setIsShowModal(true);
-      }, 1000);
+      }, 0);
     };
 
     const handleScroll = () => {
@@ -686,6 +686,7 @@ const AllocationTagTeamCompare = memo(
                                       pair.main?.organizationId ||
                                       pair.compare?.organizationId
                                     }
+                                    tooltipDelay={0}
                                   />
                                   <ProgressBarStatistic
                                     key={index}
@@ -738,6 +739,7 @@ const AllocationTagTeamCompare = memo(
                                       pair.main?.organizationId ||
                                       pair.compare?.organizationId
                                     }
+                                    tooltipDelay={0}
                                   />
                                 </div>
                               );
