@@ -869,7 +869,13 @@ const DailyReportBoard = () => {
           organizationKey && dataOrganizationCategories
             ? dataOrganizationCategories[organizationKey]
             : undefined;
-        const optionData = [...getLargeCategories(organizationCategory ?? [])];
+        const optionData = [
+          {
+            label: NO_SETTING,
+            value: NO_SETTING,
+          },
+          ...getLargeCategories(organizationCategory ?? []),
+        ];
         const isParent = info.row.depth === 0;
         if (!isParent) return;
 
