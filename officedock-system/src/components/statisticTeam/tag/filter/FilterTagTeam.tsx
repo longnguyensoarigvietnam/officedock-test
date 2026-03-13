@@ -18,6 +18,7 @@ type Props = {
 const FilterTagTeam = ({ className }: Props) => {
   const {
     orderingOptions,
+    orderingPreviewOptions,
     isLoadingLarge,
     isLoadingMedium,
     isLoadingOrganization,
@@ -28,6 +29,11 @@ const FilterTagTeam = ({ className }: Props) => {
     isLoadingSmallCompare,
     removeTag,
   } = useContext(StatisticTeamTagsStateContext);
+
+  const previewTagLabels =
+    orderingPreviewOptions?.tag_ids && orderingPreviewOptions.tag_ids.length
+      ? orderingPreviewOptions.tag_ids
+      : orderingOptions?.tag_ids || [];
   return (
     <div className={`flex items-center gap-2 ${className}`}>
       <div className="flex-shrink-0 h-fit relative ">
@@ -66,7 +72,7 @@ const FilterTagTeam = ({ className }: Props) => {
       </div>
       <div>
         <div className="flex gap-2 flex-wrap max-w-[450px]">
-          {orderingOptions?.tag_ids.map((item) => {
+          {previewTagLabels.map((item) => {
             return (
               <div
                 key={item.value}

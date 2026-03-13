@@ -103,7 +103,7 @@ const MultiSelectDropdown = ({
     <div
       ref={dropdownOptionsRef}
       onClick={(e) => e.stopPropagation()}
-      className={`absolute top-8 w-full left-0 mt-1 z-50 max-h-60 overflow-y-auto overflow-x-hidden rounded-[6px] bg-white text-base shadow-lg ring-1 ring-black ring-opacity-5 ${optionClassName}`}>
+      className={`multi-select-dropdown-options absolute top-8 w-full left-0 mt-1 z-50 max-h-60 overflow-y-auto overflow-x-hidden rounded-[6px] bg-white text-base shadow-lg ring-1 ring-black ring-opacity-5 ${optionClassName}`}>
       {isLoading ? (
         <Spinner className="!h-fit py-3" />
       ) : options?.length ? (

@@ -1,4 +1,11 @@
-import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useForm } from 'react-hook-form';
 import ImageRound from '@components/common/ImageRound';
 
@@ -29,6 +36,9 @@ const ActionFilterStatisticTeam = ({
 }: ActionTaskFilterProp) => {
   const boxListRef = useRef<HTMLDivElement | null>(null);
   const [forceCloseKey, setForceCloseKey] = useState(0);
+  const actionRef = useRef<
+    'none' | 'confirm' | 'cancel' | 'ignore' | 'outside'
+  >('none');
 
   const handleMouseLeave = useCallback(() => {
     setForceCloseKey((prev) => prev + 1);
@@ -36,9 +46,11 @@ const ActionFilterStatisticTeam = ({
 
   const {
     orderingOptions,
+    orderingPreviewOptions,
     isCheckCompare,
     isHasLoading,
     setOrderingOptions,
+    setOrderingPreviewOptions,
     setIsLoadingLarge,
     setIsLoadingMedium,
     setIsLoadingOrganization,
@@ -74,17 +86,17 @@ const ActionFilterStatisticTeam = ({
       userIds: [],
     };
 
-    if (orderingOptions) {
-      if (orderingOptions.tag_ids) {
-        value.tagIds = orderingOptions.tag_ids.map((tag) => {
+    if (orderingPreviewOptions) {
+      if (orderingPreviewOptions.tag_ids) {
+        value.tagIds = orderingPreviewOptions.tag_ids.map((tag) => {
           return {
             value: tag.value,
             label: tag.label,
           };
         });
       }
-      if (orderingOptions.user_ids) {
-        value.userIds = orderingOptions.user_ids.map((tag) => {
+      if (orderingPreviewOptions.user_ids) {
+        value.userIds = orderingPreviewOptions.user_ids.map((tag) => {
           return {
             value: tag.value,
             label: tag.label,
@@ -95,7 +107,7 @@ const ActionFilterStatisticTeam = ({
       }
     }
     return value;
-  }, [orderingOptions]);
+  }, [orderingPreviewOptions]);
 
   useEffect(() => {
     reset(defaultValues);
@@ -121,19 +133,6 @@ const ActionFilterStatisticTeam = ({
     }
   }, [listMemberTeam]);
 
-  useEffect(() => {
-    const handleClickOutside = (event: any) => {
-      if (boxListRef.current && !boxListRef.current.contains(event.target)) {
-        handleClose();
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [handleClose]);
-
   const isSameOrdering = (
     prev: {
       tag_ids: OptionDropdownType[];
@@ -149,7 +148,7 @@ const ActionFilterStatisticTeam = ({
     );
   };
 
-  const handleSearch = () => {
+  const applyFilter = () => {
     const newOptions = {
       tag_ids: getValues('tagIds'),
       user_ids: getValues('userIds'),
@@ -164,25 +163,66 @@ const ActionFilterStatisticTeam = ({
         setIsLoadingMediumCompare(true);
         setIsLoadingOrganizationCompare(true);
       }
-      setOrderingOptions({
-        tag_ids: getValues('tagIds'),
-        user_ids: getValues('userIds'),
-      });
+      setOrderingPreviewOptions(newOptions);
+      setOrderingOptions(newOptions);
     }
+  };
 
+  const handleSearch = () => {
+    actionRef.current = 'confirm';
+    applyFilter();
     handleClose();
   };
 
   const handleReset = () => {
-    setOrderingOptions({
+    const clearedOptions = {
       tag_ids: [],
       user_ids: [],
+    };
+    reset({
+      tagIds: [],
+      userIds: [],
+    });
+    setOrderingPreviewOptions(clearedOptions);
+  };
+
+  const updatePreviewUserIds = (nextUserIds: OptionDropdownType[]) => {
+    const base = orderingPreviewOptions ||
+      orderingOptions || {
+        tag_ids: [],
+        user_ids: [],
+      };
+    setOrderingPreviewOptions({
+      tag_ids: base.tag_ids || [],
+      user_ids: nextUserIds,
     });
   };
+
+  const updatePreviewTagIds = (nextTagIds: OptionDropdownType[]) => {
+    const base = orderingPreviewOptions ||
+      orderingOptions || {
+        tag_ids: [],
+        user_ids: [],
+      };
+    setOrderingPreviewOptions({
+      tag_ids: nextTagIds,
+      user_ids: base.user_ids || [],
+    });
+  };
+
+  useEffect(() => {
+    return () => {
+      if (actionRef.current === 'none' || actionRef.current === 'outside') {
+        applyFilter();
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>
       <div
+        ref={boxListRef}
         onMouseLeave={handleMouseLeave}
         className="w-full pt-[10px] pl-5 pr-[10px] pb-5 bg-white rounded-lg shadow-common p-1 flex flex-col gap-1 text-sm">
         <div className="text-xs font-medium text-[#77858F] flex justify-between items-center">
@@ -195,7 +235,11 @@ const ActionFilterStatisticTeam = ({
               style={{
                 padding: '5px',
               }}
-              onClick={() => handleClose()}
+              onClick={() => {
+                actionRef.current = 'cancel';
+                setOrderingPreviewOptions(orderingOptions);
+                handleClose();
+              }}
               className={`rounded-full cursor-pointer w-6 h-6 bg-[#E3EAED]`}>
               <ImageRound
                 src={`/icons/close-black.svg`}
@@ -233,6 +277,7 @@ const ActionFilterStatisticTeam = ({
                     );
                   }
                   setValue('userIds', updatedUserIds);
+                  updatePreviewUserIds(updatedUserIds);
                 }}
               />
             </div>
@@ -263,12 +308,20 @@ const ActionFilterStatisticTeam = ({
                   );
                 }
                 setValue('tagIds', updatedTagIds);
+                updatePreviewTagIds(updatedTagIds);
               }}
             />
           </div>
         </div>
         <div className="flex justify-center gap-[10px] mt-4 ">
-          <Button variant="outline" onClick={handleClose} className="h-9">
+          <Button
+            variant="outline"
+            onClick={() => {
+              actionRef.current = 'cancel';
+              setOrderingPreviewOptions(orderingOptions);
+              handleClose();
+            }}
+            className="h-9">
             キャンセル
           </Button>
           <Button

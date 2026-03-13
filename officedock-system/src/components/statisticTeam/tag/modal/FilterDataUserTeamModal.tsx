@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, useRef } from 'react';
 
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import Checkbox from '@components/common/Checkbox';
@@ -18,6 +18,8 @@ type Props = {
 const FilterDataUserTeam = ({ open, close }: Props) => {
   const {
     orderingOptions,
+    orderingPreviewOptions,
+    setOrderingPreviewOptions,
     listMemberTeam,
     isCheckCompare,
     isHasLoading,
@@ -38,6 +40,7 @@ const FilterDataUserTeam = ({ open, close }: Props) => {
   const [selectedOption, setSelectedOption] = useState<OptionDropdownType[]>(
     [],
   );
+  const modalRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (listMemberTeam) {
@@ -55,28 +58,40 @@ const FilterDataUserTeam = ({ open, close }: Props) => {
   }, [listMemberTeam]);
 
   useEffect(() => {
-    if (orderingOptions) {
+    if (orderingPreviewOptions && orderingPreviewOptions.user_ids) {
+      setSelectedOption(orderingPreviewOptions.user_ids);
+    } else if (orderingOptions) {
       setSelectedOption(orderingOptions.user_ids);
+    } else {
+      setSelectedOption([]);
     }
-  }, [orderingOptions, open]);
+  }, [orderingOptions, orderingPreviewOptions, open]);
 
   const handleChangeUser = (selected: OptionDropdownType) => {
     const foundItemIndex = selectedOption.findIndex(
       (tag) => tag.value == selected.value,
     );
+    let newSelected: OptionDropdownType[] = [];
     if (foundItemIndex == -1) {
-      setSelectedOption([...selectedOption, selected]);
+      newSelected = [...selectedOption, selected];
     } else {
-      setSelectedOption(
-        selectedOption.filter((op) => op.value != selected.value),
-      );
+      newSelected = selectedOption.filter((op) => op.value != selected.value);
     }
+    setSelectedOption(newSelected);
+    setOrderingPreviewOptions((prev) => ({
+      user_ids: newSelected,
+      tag_ids: prev?.tag_ids || orderingOptions?.tag_ids || [],
+    }));
   };
 
   const handleReset = () => {
     setSelectedOption([]);
+    setOrderingPreviewOptions((prev) => ({
+      user_ids: [],
+      tag_ids: prev?.tag_ids || orderingOptions?.tag_ids || [],
+    }));
   };
-  const handleSearch = () => {
+  const commitFilter = () => {
     setOrderingOptions((prev) => {
       const prevUserIds = prev?.user_ids || [];
 
@@ -107,12 +122,38 @@ const FilterDataUserTeam = ({ open, close }: Props) => {
         user_ids: selectedOption,
       };
     });
+  };
+
+  const handleSearch = () => {
+    commitFilter();
 
     close();
   };
 
+  useEffect(() => {
+    if (!open) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node | null;
+      if (!target || !modalRef.current) return;
+
+      if (!modalRef.current.contains(target)) {
+        commitFilter();
+        close();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, commitFilter]);
+
   return (
-    <div className="w-full pt-[10px]  pb-5 bg-white rounded-[14px] shadow-common p-1 flex flex-col gap-1 text-sm">
+    <div
+      ref={modalRef}
+      className="w-full pt-[10px]  pb-5 bg-white rounded-[14px] shadow-common p-1 flex flex-col gap-1 text-sm">
       <div className="text-xs pl-5 pr-[10px] font-medium text-[#77858F] flex justify-between items-center">
         <span>メンバーの絞り込み</span>
         <div className="flex items-center gap-x-[10px]">
@@ -123,7 +164,10 @@ const FilterDataUserTeam = ({ open, close }: Props) => {
             style={{
               padding: '5px',
             }}
-            onClick={close}
+            onClick={() => {
+              setOrderingPreviewOptions(orderingOptions);
+              close();
+            }}
             className={`rounded-full cursor-pointer w-6 h-6 bg-[#E3EAED]`}>
             <ImageRound
               src={`/icons/close-black.svg`}
@@ -182,7 +226,13 @@ const FilterDataUserTeam = ({ open, close }: Props) => {
         </div>
       </div>
       <div className="flex justify-center gap-[10px] mt-4 ">
-        <Button variant="outline" onClick={close} className="h-9">
+        <Button
+          variant="outline"
+          onClick={() => {
+            setOrderingPreviewOptions(orderingOptions);
+            close();
+          }}
+          className="h-9">
           キャンセル
         </Button>
         <Button onClick={handleSearch} className="h-9" disabled={isHasLoading}>

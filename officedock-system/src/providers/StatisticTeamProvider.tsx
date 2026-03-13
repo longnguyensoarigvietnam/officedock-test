@@ -67,6 +67,16 @@ interface ContextValue {
       user_ids: OptionDropdownType[];
     } | null>
   >;
+  orderingPreviewOptions: {
+    tag_ids: OptionDropdownType[];
+    user_ids: OptionDropdownType[];
+  } | null;
+  setOrderingPreviewOptions: Dispatch<
+    SetStateAction<{
+      tag_ids: OptionDropdownType[];
+      user_ids: OptionDropdownType[];
+    } | null>
+  >;
   setTagsOptions: Dispatch<SetStateAction<OptionDropdownType[]>>;
   setSmallOptions: Dispatch<SetStateAction<OptionDropdownType[]>>;
   setMediumOptions: Dispatch<SetStateAction<OptionDropdownType[]>>;
@@ -229,6 +239,8 @@ const defaultValue: ContextValue = {
   setCurrentPage: () => {},
   orderingOptions: null,
   setOrderingOptions: () => {},
+  orderingPreviewOptions: null,
+  setOrderingPreviewOptions: () => {},
   remainingCountUser: 0,
   remainingCountTag: 0,
   firstThreeUser: [],
@@ -360,6 +372,10 @@ export const StatisticTeamStateProvider = ({
     tag_ids: OptionDropdownType[];
     user_ids: OptionDropdownType[];
   } | null>(null);
+  const [orderingPreviewOptions, setOrderingPreviewOptions] = useState<{
+    tag_ids: OptionDropdownType[];
+    user_ids: OptionDropdownType[];
+  } | null>(null);
 
   // Data Date calendar compare
   const [endDateCompare, setEndDateCompare] = useState<Date | null>(new Date());
@@ -384,7 +400,6 @@ export const StatisticTeamStateProvider = ({
       label: StatisticViewLabels.WEEK,
     });
 
-  // Value data
   const allLabelUser =
     orderingOptions && orderingOptions.user_ids ? orderingOptions.user_ids : [];
 
@@ -462,6 +477,10 @@ export const StatisticTeamStateProvider = ({
   }, [isHasLoading, setIsHasLoadingSkeleton]);
 
   useEffect(() => {
+    setOrderingPreviewOptions(orderingOptions);
+  }, [orderingOptions]);
+
+  useEffect(() => {
     return () => {
       setIsHasLoadingSkeleton(false);
     };
@@ -520,6 +539,8 @@ export const StatisticTeamStateProvider = ({
     setTagsOptions,
     orderingOptions,
     setOrderingOptions,
+    orderingPreviewOptions,
+    setOrderingPreviewOptions,
 
     totalDurationTask,
     setTotalDurationTask,

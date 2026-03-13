@@ -65,6 +65,16 @@ interface ContextValue {
       user_ids: OptionDropdownType[];
     } | null>
   >;
+  orderingPreviewOptions: {
+    tag_ids: OptionDropdownType[];
+    user_ids: OptionDropdownType[];
+  } | null;
+  setOrderingPreviewOptions: Dispatch<
+    SetStateAction<{
+      tag_ids: OptionDropdownType[];
+      user_ids: OptionDropdownType[];
+    } | null>
+  >;
 
   setTotalDurationCategory: Dispatch<SetStateAction<string>>;
   setTotalDurationCategoryCompare: Dispatch<SetStateAction<string>>;
@@ -242,6 +252,8 @@ const defaultValue: ContextValue = {
   setCurrentPage: () => {},
   orderingOptions: null,
   setOrderingOptions: () => {},
+  orderingPreviewOptions: null,
+  setOrderingPreviewOptions: () => {},
   remainingCountUser: 0,
   firstThreeUser: [],
   allLabelUser: [],
@@ -382,6 +394,10 @@ export const StatisticTeamTagsStateProvider = ({
     tag_ids: OptionDropdownType[];
     user_ids: OptionDropdownType[];
   } | null>(null);
+  const [orderingPreviewOptions, setOrderingPreviewOptions] = useState<{
+    tag_ids: OptionDropdownType[];
+    user_ids: OptionDropdownType[];
+  } | null>(null);
 
   // Member
   const [listMemberTeam, setListMemberTeam] = useState<
@@ -400,7 +416,6 @@ export const StatisticTeamTagsStateProvider = ({
       label: StatisticViewLabels.WEEK,
     });
 
-  // Value data
   const allLabelUser =
     orderingOptions && orderingOptions.user_ids ? orderingOptions.user_ids : [];
 
@@ -485,6 +500,10 @@ export const StatisticTeamTagsStateProvider = ({
     selectedOrganization?.type === OrganizationStatisticType.CALENDAR;
 
   useEffect(() => {
+    setOrderingPreviewOptions(orderingOptions);
+  }, [orderingOptions]);
+
+  useEffect(() => {
     setIsHasLoadingSkeleton(isHasLoading);
   }, [isHasLoading, setIsHasLoadingSkeleton]);
 
@@ -549,6 +568,8 @@ export const StatisticTeamTagsStateProvider = ({
 
     orderingOptions,
     setOrderingOptions,
+    orderingPreviewOptions,
+    setOrderingPreviewOptions,
 
     isSkeletonTagTeamTask,
     setIsSkeletonTagTeamTask,

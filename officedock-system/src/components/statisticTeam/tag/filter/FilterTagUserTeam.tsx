@@ -20,7 +20,7 @@ type Props = {
 const FilterTagUserTeam = ({ className, classNameData }: Props) => {
   const {
     orderingOptions,
-    allLabelUser,
+    orderingPreviewOptions,
     isLoadingOrganization,
     isLoadingLarge,
     isLoadingMedium,
@@ -30,6 +30,11 @@ const FilterTagUserTeam = ({ className, classNameData }: Props) => {
 
     removeUser,
   } = useContext(StatisticTeamTagsStateContext);
+
+  const previewUserLabels =
+    orderingPreviewOptions?.user_ids && orderingPreviewOptions.user_ids.length
+      ? orderingPreviewOptions.user_ids
+      : orderingOptions?.user_ids || [];
 
   return (
     <div className={`flex items-center  gap-2  ${className}`}>
@@ -45,9 +50,10 @@ const FilterTagUserTeam = ({ className, classNameData }: Props) => {
                     name="Filter icon"
                     className="w-[14px] h-[14px] ml-2"
                   />
-                  {orderingOptions?.user_ids.length == 0 && (
-                    <span>メンバーの絞り込み</span>
-                  )}
+                  {orderingOptions?.user_ids.length == 0 &&
+                    previewUserLabels.length == 0 && (
+                      <span>メンバーの絞り込み</span>
+                    )}
                 </PopoverButton>
               </div>
               <Transition
@@ -70,7 +76,7 @@ const FilterTagUserTeam = ({ className, classNameData }: Props) => {
       <div className=" flex-grow flex">
         <div className={`flex gap-2 flex-wrap  ${classNameData} `}>
           <>
-            {allLabelUser.map((item, index) => {
+            {previewUserLabels.map((item, index) => {
               return (
                 <div key={item.value} className="flex gap-[6px] items-center">
                   {index === 0 && (

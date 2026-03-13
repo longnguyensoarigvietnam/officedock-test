@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect, useRef } from 'react';
 
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
@@ -21,6 +21,8 @@ const FilterDataTeamModal = ({ open, close }: Props) => {
     isCheckCompare,
     orderingOptions,
     setOrderingOptions,
+    orderingPreviewOptions,
+    setOrderingPreviewOptions,
     setIsLoadingOrganizationCompare,
     setIsLoadingLargeCompare,
     setIsLoadingMediumCompare,
@@ -34,31 +36,44 @@ const FilterDataTeamModal = ({ open, close }: Props) => {
   const [selectedOption, setSelectedOption] = useState<OptionDropdownType[]>(
     [],
   );
+  const modalRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (orderingOptions) {
+    if (orderingPreviewOptions && orderingPreviewOptions.tag_ids) {
+      setSelectedOption(orderingPreviewOptions.tag_ids);
+    } else if (orderingOptions) {
       setSelectedOption(orderingOptions.tag_ids);
+    } else {
+      setSelectedOption([]);
     }
-  }, [orderingOptions, open]);
+  }, [orderingOptions, orderingPreviewOptions, open]);
 
   const handleChangeTag = (selected: OptionDropdownType) => {
     const foundItemIndex = selectedOption.findIndex(
       (tag) => tag.value == selected.value,
     );
+    let newSelected: OptionDropdownType[] = [];
     if (foundItemIndex == -1) {
-      setSelectedOption([...selectedOption, selected]);
+      newSelected = [...selectedOption, selected];
     } else {
-      setSelectedOption(
-        selectedOption.filter((op) => op.value != selected.value),
-      );
+      newSelected = selectedOption.filter((op) => op.value != selected.value);
     }
+    setSelectedOption(newSelected);
+    setOrderingPreviewOptions((prev) => ({
+      tag_ids: newSelected,
+      user_ids: prev?.user_ids || orderingOptions?.user_ids || [],
+    }));
   };
 
   const handleReset = () => {
     setSelectedOption([]);
+    setOrderingPreviewOptions((prev) => ({
+      tag_ids: [],
+      user_ids: prev?.user_ids || orderingOptions?.user_ids || [],
+    }));
   };
 
-  const handleSearch = () => {
+  const commitFilter = () => {
     setOrderingOptions((prev) => {
       const prevTagIds = prev?.tag_ids || [];
 
@@ -89,12 +104,37 @@ const FilterDataTeamModal = ({ open, close }: Props) => {
         user_ids: prev?.user_ids || [],
       };
     });
+  };
 
+  const handleSearch = () => {
+    commitFilter();
     close();
   };
 
+  useEffect(() => {
+    if (!open) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node | null;
+      if (!target || !modalRef.current) return;
+
+      if (!modalRef.current.contains(target)) {
+        commitFilter();
+        close();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, commitFilter]);
+
   return (
-    <div className="w-full pt-[10px]  pb-5 bg-white rounded-[14px] shadow-common p-1 flex flex-col gap-1 text-sm">
+    <div
+      ref={modalRef}
+      className="w-full pt-[10px]  pb-5 bg-white rounded-[14px] shadow-common p-1 flex flex-col gap-1 text-sm">
       <div className="text-xs pl-5 pr-[10px] font-medium text-[#77858F] flex justify-between items-center">
         <span>集計対象のタグを選択</span>
         <div className="flex items-center gap-x-[10px]">
@@ -105,7 +145,10 @@ const FilterDataTeamModal = ({ open, close }: Props) => {
             style={{
               padding: '5px',
             }}
-            onClick={close}
+            onClick={() => {
+              setOrderingPreviewOptions(orderingOptions);
+              close();
+            }}
             className={`rounded-full cursor-pointer w-6 h-6 bg-[#E3EAED]`}>
             <ImageRound
               src={`/icons/close-black.svg`}
@@ -158,7 +201,13 @@ const FilterDataTeamModal = ({ open, close }: Props) => {
         </div>
       </div>
       <div className="flex justify-center gap-[10px] mt-4 ">
-        <Button variant="outline" onClick={close} className="h-9">
+        <Button
+          variant="outline"
+          onClick={() => {
+            setOrderingPreviewOptions(orderingOptions);
+            close();
+          }}
+          className="h-9">
           キャンセル
         </Button>
         <Button onClick={handleSearch} className="h-9" disabled={isHasLoading}>
