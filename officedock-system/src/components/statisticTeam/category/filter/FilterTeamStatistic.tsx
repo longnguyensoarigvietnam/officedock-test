@@ -39,14 +39,10 @@ const FilterTeamStatistic = ({
   } = useContext(StatisticTeamStateContext);
 
   const previewUserLabels =
-    orderingPreviewOptions?.user_ids && orderingPreviewOptions.user_ids.length
-      ? orderingPreviewOptions.user_ids
-      : allLabelUser;
+    orderingPreviewOptions?.user_ids ?? allLabelUser;
 
   const previewTagLabels =
-    orderingPreviewOptions?.tag_ids && orderingPreviewOptions.tag_ids.length
-      ? orderingPreviewOptions.tag_ids
-      : allLabelTag;
+    orderingPreviewOptions?.tag_ids ?? allLabelTag;
 
   const previewFirstThreeTag = previewTagLabels.slice(0, 3);
   const previewRemainingCountTag =
