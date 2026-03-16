@@ -31,9 +31,7 @@ const FilterTagTeam = ({ className }: Props) => {
   } = useContext(StatisticTeamTagsStateContext);
 
   const previewTagLabels =
-    orderingPreviewOptions?.tag_ids && orderingPreviewOptions.tag_ids.length
-      ? orderingPreviewOptions.tag_ids
-      : orderingOptions?.tag_ids || [];
+    orderingPreviewOptions?.tag_ids ?? orderingOptions?.tag_ids ?? [];
   return (
     <div className={`flex items-center gap-2 ${className}`}>
       <div className="flex-shrink-0 h-fit relative ">
