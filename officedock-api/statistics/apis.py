@@ -163,6 +163,13 @@ class StatisticViewSet(BaseAPIViewSet):
         start_of_day = datetime.combine(from_date, time.min)
         end_of_day = datetime.combine(end_date, time.max)
         calendar_org = user.company.get_calendar_organization()
+
+        # If it's tag page but no tag ids provided, return empty result directly to avoid unnecessary query
+        if is_tag_page and not tag_ids_param:
+            return self.response_ok(
+                {"results": [], "total_duration": DEFAULT_TIME}
+            )
+
         if user_id:
             user = get_object_or_404(User, id=user_id)
         if organization_ids_param == ALL_TEAM:
