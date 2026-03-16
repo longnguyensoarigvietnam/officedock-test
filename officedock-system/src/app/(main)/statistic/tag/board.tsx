@@ -366,6 +366,28 @@ const StatisticTagBoard = () => {
               label: mainItem.statisticCategories[0].LARGE.name,
               value: mainItem.statisticCategories[0].LARGE.id,
             });
+
+            const largeCategory = mainItem?.statisticCategories.find(
+              (stat) =>
+                stat.LARGE.id === mainItem.statisticCategories[0].LARGE.id,
+            );
+
+            if (largeCategory) {
+              const mediumCategories = largeCategory.MEDIUM.map((medium) => ({
+                value: medium.MEDIUM?.id || '',
+                label: medium.MEDIUM?.name || '',
+              }));
+
+              setMediumOptions([
+                {
+                  label: '-',
+                  value: '',
+                },
+                ...removeDuplicateOptions(mediumCategories),
+              ]);
+            } else {
+              setMediumOptions([]);
+            }
           }
           setTagsOptions(optionsTagList);
           // TODO: Remove this after testing
@@ -447,6 +469,27 @@ const StatisticTagBoard = () => {
           label: largeCategories[0].label,
           value: largeCategories[0].value,
         });
+        const largeCategory = organization?.statisticCategories.find(
+          (stat) =>
+            stat.LARGE.id === organization.statisticCategories[0].LARGE.id,
+        );
+
+        if (largeCategory) {
+          const mediumCategories = largeCategory.MEDIUM.map((medium) => ({
+            value: medium.MEDIUM?.id || '',
+            label: medium.MEDIUM?.name || '',
+          }));
+
+          setMediumOptions([
+            {
+              label: '-',
+              value: '',
+            },
+            ...removeDuplicateOptions(mediumCategories),
+          ]);
+        } else {
+          setMediumOptions([]);
+        }
       }
 
       setSelectedTags([]);
@@ -468,7 +511,6 @@ const StatisticTagBoard = () => {
     } else {
       setLargeOptions([]);
     }
-    setMediumOptions([]);
   };
   // Handle Choose LARGE
   const handleSelectLarge = (data: OptionDropdownType) => {

@@ -101,15 +101,13 @@ const StatisticTeamTagBoard = () => {
   };
 
   const organizationId = searchParams.get('organization');
+  const organizationIdFromUrl =
+    organizationId === 'null' ? undefined : organizationId || undefined;
 
   const { creationDataCommonData } = useCreationDataCommon({
-    organizationId: selectedOrganizationSideBar
-      ? selectedOrganizationSideBar?.value
-        ? (selectedOrganizationSideBar?.value as string)
-        : undefined
-      : organizationId == 'null'
-        ? undefined
-        : organizationId || undefined,
+    organizationId: organizationIdFromUrl
+      ? organizationIdFromUrl
+      : (selectedOrganizationSideBar?.value as string),
     options: {
       get_organization_for_team_statistic: true,
     },
@@ -127,6 +125,34 @@ const StatisticTeamTagBoard = () => {
             label: item.name,
             value: item.id,
           }));
+
+          if (mainItem.statisticCategories.length > 0) {
+            setSelectedLarge({
+              label: mainItem.statisticCategories[0].LARGE.name,
+              value: mainItem.statisticCategories[0].LARGE.id,
+            });
+            const largeCategory = mainItem?.statisticCategories.find(
+              (stat) =>
+                stat.LARGE.id === mainItem.statisticCategories[0].LARGE.id,
+            );
+
+            if (largeCategory) {
+              const mediumCategories = largeCategory.MEDIUM.map((medium) => ({
+                value: medium.MEDIUM?.id || '',
+                label: medium.MEDIUM?.name || '',
+              }));
+
+              setMediumOptions([
+                {
+                  label: '-',
+                  value: '',
+                },
+                ...removeDuplicateOptions(mediumCategories),
+              ]);
+            } else {
+              setMediumOptions([]);
+            }
+          }
 
           setTagsOptions(optionsTagList);
 
@@ -425,11 +451,12 @@ const StatisticTeamTagBoard = () => {
       setDataMediumCalendar(undefined);
     }
     setSelectedOrganization(data);
-
-    setSelectedLarge({
-      label: '-',
-      value: '',
-    });
+    if (data?.value === ALL_TEAM_STATISTIC) {
+      setSelectedLarge({
+        label: '-',
+        value: '',
+      });
+    }
     setSelectedMedium({
       label: '-',
       value: '',
@@ -466,6 +493,26 @@ const StatisticTeamTagBoard = () => {
           label: largeCategories[0].label,
           value: largeCategories[0].value,
         });
+        const largeCategory = organization?.statisticCategories.find(
+          (stat) => stat.LARGE.id === largeCategories[0].value,
+        );
+
+        if (largeCategory) {
+          const mediumCategories = largeCategory.MEDIUM.map((medium) => ({
+            value: medium.MEDIUM?.id || '',
+            label: medium.MEDIUM?.name || '',
+          }));
+
+          setMediumOptions([
+            {
+              label: '-',
+              value: '',
+            },
+            ...removeDuplicateOptions(mediumCategories),
+          ]);
+        } else {
+          setMediumOptions([]);
+        }
       }
       // TODO: Remove this after testing
       // setOrderingOptions({
@@ -493,7 +540,6 @@ const StatisticTeamTagBoard = () => {
     } else {
       setLargeOptions([]);
     }
-    setMediumOptions([]);
   };
 
   // Handle Choose LARGE
@@ -525,6 +571,7 @@ const StatisticTeamTagBoard = () => {
     const largeCategory = organization?.statisticCategories.find(
       (stat) => stat.LARGE.id === data.value,
     );
+
     if (largeCategory) {
       const mediumCategories = largeCategory.MEDIUM.map((medium) => ({
         value: medium.MEDIUM?.id || '',
