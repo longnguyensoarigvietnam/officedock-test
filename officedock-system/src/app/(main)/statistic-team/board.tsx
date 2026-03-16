@@ -365,14 +365,13 @@ const StatisticTeamBoard = () => {
       },
     });
 
+  const organizationIdFromUrl =
+    organizationId === 'null' ? undefined : organizationId || undefined;
+
   const { creationDataCommonData } = useCreationDataCommon({
-    organizationId: selectedOrganizationSideBar
-      ? selectedOrganizationSideBar?.value
-        ? (selectedOrganizationSideBar?.value as string)
-        : undefined
-      : organizationId == 'null'
-        ? undefined
-        : organizationId || undefined,
+    organizationId: selectedOrganizationSideBar?.value
+      ? (selectedOrganizationSideBar.value as string)
+      : organizationIdFromUrl,
     options: {
       get_organization_for_team_statistic: true,
     },
