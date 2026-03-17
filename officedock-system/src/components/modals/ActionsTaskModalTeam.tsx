@@ -555,11 +555,10 @@ const ActionsTaskModalTeam = ({
     const selectedLargeCategoryOption = dataOrganizationCategories.find(
       (category) => category.LARGE.id == watch('categories.LARGE.value'),
     );
-
     const selectedMediumCategoryOption =
       selectedLargeCategoryOption?.MEDIUM.find(
         (category) => category.MEDIUM.id == watch('categories.MEDIUM.value'),
-      );
+      );    
 
     const initialSmallCategory: OptionDropdownType[] = [];
     if (selectedMediumCategoryOption) {
@@ -741,7 +740,6 @@ const ActionsTaskModalTeam = ({
           value: org.id as number,
         })) || [],
       );
-
       const mainItem =
         data.organizationCategories.find(
           (item) => String(item.id) === String(organizationValue),
