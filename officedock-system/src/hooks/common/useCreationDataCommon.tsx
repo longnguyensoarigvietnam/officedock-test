@@ -119,15 +119,23 @@ const useCreationDataCommon = ({
                           ? mediumItem.MEDIUM
                           : NO_SETTING_CATEGORY;
 
-                      const updatedSmall: SmallCategory[] = [
+                      const updatedSmallRaw: SmallCategory[] = [
                         ...(mediumItem.SMALL || []).map(
                           (smallItem): SmallCategory =>
                             smallItem && smallItem.id != null
                               ? smallItem
                               : NO_SETTING_CATEGORY,
                         ),
-                        NO_SETTING_CATEGORY,
                       ];
+
+                      const updatedSmall = Array.from(
+                        new Map(
+                          [...updatedSmallRaw, NO_SETTING_CATEGORY].map((s) => [
+                            String(s.id),
+                            s,
+                          ]),
+                        ).values(),
+                      );
 
                       return {
                         MEDIUM: updatedMediumValue,
@@ -141,14 +149,36 @@ const useCreationDataCommon = ({
                   },
                 ];
 
-                // remove duplicate MEDIUM by id
+                // remove duplicate MEDIUM by id (merge SMALL instead of overriding)
                 const uniqueUpdatedMedium = Array.from(
-                  new Map(
-                    updatedMedium.map((medium) => [
-                      medium.MEDIUM?.id ?? NO_SETTING_CATEGORY,
-                      medium,
-                    ]),
-                  ).values(),
+                  updatedMedium
+                    .reduce<Map<string, MediumCategory>>((acc, medium) => {
+                      const key = String(
+                        medium.MEDIUM?.id ?? NO_SETTING_CATEGORY.id,
+                      );
+                      const existing = acc.get(key);
+
+                      if (!existing) {
+                        acc.set(key, medium);
+                        return acc;
+                      }
+
+                      const mergedSmall = Array.from(
+                        new Map(
+                          [...(existing.SMALL || []), ...(medium.SMALL || [])].map(
+                            (s) => [String(s.id), s],
+                          ),
+                        ).values(),
+                      );
+
+                      acc.set(key, {
+                        ...existing,
+                        SMALL: mergedSmall,
+                      });
+
+                      return acc;
+                    }, new Map())
+                    .values(),
                 );
 
                 return {
