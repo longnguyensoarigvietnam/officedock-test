@@ -88,6 +88,17 @@ const ActionsTemplateModal = ({
 
   const modalRef = useRef<HTMLFormElement | null>(null);
 
+  const orderNoSettingLast = (options: OptionDropdownType[]) => {
+    if (!options?.length) return options;
+    const normalOptions = options.filter(
+      (opt) => `${opt?.value}` !== `${NO_SETTING}`,
+    );
+    const noSettingOptions = options.filter(
+      (opt) => `${opt?.value}` === `${NO_SETTING}`,
+    );
+    return [...normalOptions, ...noSettingOptions];
+  };
+
   const [todoList, setTodoList] = useState<TodoItem[]>([]);
   const textareaRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
 
@@ -820,8 +831,8 @@ const ActionsTemplateModal = ({
                         classNameOption="!text-sm"
                         classNameError="!text-xs"
                         disabled={isCheckActionPermission}
-                        options={removeDuplicateOptions(
-                          dataOptionsCategoryLarge,
+                        options={orderNoSettingLast(
+                          removeDuplicateOptions(dataOptionsCategoryLarge),
                         )}
                         selectedOption={dataOptionsCategoryLarge.find(
                           (element) => element.value === value?.value,
@@ -860,8 +871,8 @@ const ActionsTemplateModal = ({
                             classNameOption="!text-sm"
                             classNameError="!text-xs"
                             disabled={isCheckActionPermission}
-                            options={removeDuplicateOptions(
-                              dataOptionsCategoryMedium,
+                            options={orderNoSettingLast(
+                              removeDuplicateOptions(dataOptionsCategoryMedium),
                             )}
                             selectedOption={dataOptionsCategoryMedium.find(
                               (element) => element.value === value?.value,
@@ -896,8 +907,8 @@ const ActionsTemplateModal = ({
                           classNameOption="!text-sm"
                           classNameError="!text-xs"
                           disabled={isCheckActionPermission}
-                          options={removeDuplicateOptions(
-                            dataOptionsCategorySmall,
+                          options={orderNoSettingLast(
+                            removeDuplicateOptions(dataOptionsCategorySmall),
                           )}
                           selectedOption={dataOptionsCategorySmall.find(
                             (element) => element.value === value?.value,
