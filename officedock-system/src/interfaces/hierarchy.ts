@@ -12,18 +12,21 @@ export interface StatisticCategory {
     id: number;
     name: string;
     uuid: string;
+    team?: number | null;
     isHidden?: boolean;
   };
   mediumStatisticCategory: {
     id: number;
     name: string;
     uuid: string;
+    team?: number | null;
     isHidden?: boolean;
   };
   smallStatisticCategory: {
     id: number;
     name: string;
     uuid: string;
+    team?: number | null;
     isHidden?: boolean;
   };
   index?: number;
@@ -47,12 +50,14 @@ export interface CalendarCategory {
     id: number;
     name: string;
     uuid: string;
+    team?: number | null;
     isHidden?: boolean;
   };
   mediumStatisticCategory: {
     id: number;
     name: string;
     uuid: string;
+    team?: number | null;
     isHidden?: boolean;
   };
   color: string;
@@ -184,9 +189,9 @@ export interface CalendarHierarchyCategoryUpdatePayload {
   }[];
 }
 export interface CalendarCategoryInfo {
-  id: number,
-  color: string | null,
-  isHidden: boolean,
-  name: string,
-  type: StatisticCategoryType
+  id: number;
+  color: string | null;
+  isHidden: boolean;
+  name: string;
+  type: StatisticCategoryType;
 }
