@@ -552,11 +552,16 @@ export enum StatisticChartType {
 }
 export enum TimeOptionsType {
   YESTERDAY = '昨日',
-  WEEK = '1週間',
-  MONTH = '1ヶ月',
-  HALF_YEAR = '6ヶ月',
-  YEAR = '1年',
+  WEEK = '先週',
+  MONTH = '先月',
+  HALF_YEAR = '過去半年',
+  YEAR = '昨年',
   MORE = 'カスタム',
+}
+export enum TimeCompareOptionsType {
+  PREVIOUS_PERIOD = '前の期間',
+  PREVIOUS_YEAR = '前年',
+  CUSTOM = 'カスタム',
 }
 export enum TaskRepetitiveType {
   ONCE = '繰り返さない',

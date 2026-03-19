@@ -4,11 +4,11 @@ import Button from '@components/common/Button';
 import Checkbox from '@components/common/Checkbox';
 import MultiDatePickerCustom from '@components/common/DatePicker/MultiDatePickerCustom';
 import ImageRound from '@components/common/ImageRound';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
-import { TimeOptionsType } from '@constants/enums';
+import { TimeCompareOptionsType, TimeOptionsType } from '@constants/enums';
 import {
   formatShowDateJapanese,
-  getDaysFromTimeOption,
   handleSetStartDateAfter,
   handleSetStartDateBefore,
 } from '@utils/date';
@@ -51,14 +51,31 @@ function StatisticCalendar() {
   const [isTypeTime, setIsTypeTime] = useState<TimeOptionsType>(
     TimeOptionsType.MONTH,
   );
-  const [isDisableCalendar, setIsDisableCalendar] = useState(true);
 
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [isEndButtonClicked, setIsEndButtonClicked] = useState(false);
   const [isStartButtonClicked, setIsStartButtonClicked] = useState(false);
 
-  const [dataStartDate, setDataStartDate] = useState(new Date());
-  const [dataEndDate, setDataEndDate] = useState<Date | null>(null);
+  const [dataStartDate, setDataStartDate] = useState(() => {
+    const today = new Date();
+    const currentMonth = today.getMonth(); // 0-11
+    const currentYear = today.getFullYear();
+    const lastMonthIndexRaw = currentMonth - 1;
+    const lastMonthYear = currentYear + Math.floor(lastMonthIndexRaw / 12);
+    const lastMonthIndex = ((lastMonthIndexRaw % 12) + 12) % 12;
+
+    return new Date(lastMonthYear, lastMonthIndex, 1);
+  });
+  const [dataEndDate, setDataEndDate] = useState<Date | null>(() => {
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    const lastMonthIndexRaw = currentMonth - 1;
+    const lastMonthYear = currentYear + Math.floor(lastMonthIndexRaw / 12);
+    const lastMonthIndex = ((lastMonthIndexRaw % 12) + 12) % 12;
+
+    return new Date(lastMonthYear, lastMonthIndex + 1, 0);
+  });
   const [isDataCheckCompare, setIsDataCheckCompare] = useState(false);
   const [isErrorData, setIsErrorData] = useState({
     start: false,
@@ -69,20 +86,23 @@ function StatisticCalendar() {
     end: false,
   });
 
+  const [compareMode, setCompareMode] = useState<TimeCompareOptionsType>(
+    TimeCompareOptionsType.PREVIOUS_PERIOD,
+  );
+
   // Compare
 
   const [dataStartDateCompare, setDataStartDateCompare] = useState(new Date());
   const [dataEndDateCompare, setDataEndDateCompare] = useState<Date | null>(
     null,
   );
-  const [isDisableCalendarCompare, setIsDisableCalendarCompare] =
-    useState(true);
 
   const [isEndButtonClickedCompare, setIsEndButtonClickedCompare] =
     useState(false);
   const [isStartButtonClickedCompare, setIsStartButtonClickedCompare] =
     useState(false);
 
+  // Sync: prefer saved context values; otherwise use component defaults (previous month)
   useEffect(() => {
     if (startDate) {
       setDataStartDate(startDate);
@@ -146,76 +166,92 @@ function StatisticCalendar() {
       start: false,
       end: false,
     });
-    if (!dataEndDate) {
-      setDataEndDate(new Date());
-    }
-    const dataResource = dataEndDate || new Date();
 
-    if (!dataResource) return;
-
-    const newStartDate: Date = new Date(dataResource);
+    const today = new Date();
+    let newStartDate: Date;
+    let newEndDate: Date;
 
     switch (option) {
       case TimeOptionsType.YESTERDAY: {
-        const today = new Date();
-
-        newStartDate.setTime(today.getTime());
-
-        setIsDisableCalendar(true);
-        setDataEndDate(new Date());
-
-        if (isCheckCompare) {
-          setIsDisableCalendarCompare(true);
-        }
+        // Yesterday
+        const yesterday = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate() - 1,
+        );
+        newStartDate = yesterday;
+        newEndDate = yesterday;
         break;
       }
       case TimeOptionsType.WEEK: {
-        const days = getDaysFromTimeOption(option, dataResource, true);
-        newStartDate.setDate(newStartDate.getDate() - days + 1);
-        setIsDisableCalendar(true);
-        if (isCheckCompare) {
-          setIsDisableCalendarCompare(true);
-        }
+        const current = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate(),
+        );
+        const day = current.getDay(); // 0: Sun ... 6: Sat
+        const offsetToMonday = (day + 6) % 7;
+        const startOfThisWeek = new Date(current);
+        startOfThisWeek.setDate(current.getDate() - offsetToMonday);
+
+        const startOfLastWeek = new Date(startOfThisWeek);
+        startOfLastWeek.setDate(startOfThisWeek.getDate() - 7);
+
+        const endOfLastWeek = new Date(startOfThisWeek);
+        endOfLastWeek.setDate(startOfThisWeek.getDate() - 1);
+
+        newStartDate = startOfLastWeek;
+        newEndDate = endOfLastWeek;
+
         break;
       }
 
       case TimeOptionsType.MONTH: {
-        const days = getDaysFromTimeOption(option, dataResource, true);
+        // Previous month: from the 1st to the last day
+        const currentMonth = today.getMonth(); // 0-11
+        const currentYear = today.getFullYear();
+        const lastMonthIndex = currentMonth - 1;
+        const lastMonthYear =
+          lastMonthIndex < 0 ? currentYear - 1 : currentYear;
+        const normalizedLastMonthIndex =
+          lastMonthIndex < 0 ? 11 : lastMonthIndex;
 
-        newStartDate.setDate(newStartDate.getDate() - days + 1);
-        setIsDisableCalendar(true);
-        if (isCheckCompare) {
-          setIsDisableCalendarCompare(true);
-        }
+        newStartDate = new Date(lastMonthYear, normalizedLastMonthIndex, 1);
+        newEndDate = new Date(lastMonthYear, normalizedLastMonthIndex + 1, 0); // day 0 of next month = last day of last month
         break;
       }
 
       case TimeOptionsType.HALF_YEAR: {
-        const days = getDaysFromTimeOption(option, dataResource, true);
-        newStartDate.setDate(newStartDate.getDate() - days + 1);
-        setIsDisableCalendar(true);
-        if (isCheckCompare) {
-          setIsDisableCalendarCompare(true);
-        }
+        const currentMonth = today.getMonth(); // 0-11
+        const currentYear = today.getFullYear();
+
+        const endMonthIndexRaw = currentMonth - 1;
+        const endMonthYear = currentYear + Math.floor(endMonthIndexRaw / 12);
+        const endMonthIndex = ((endMonthIndexRaw % 12) + 12) % 12;
+
+        const startMonthIndexRaw = endMonthIndexRaw - 5;
+        const startMonthYear =
+          currentYear + Math.floor(startMonthIndexRaw / 12);
+        const startMonthIndex = ((startMonthIndexRaw % 12) + 12) % 12;
+
+        newStartDate = new Date(startMonthYear, startMonthIndex, 1);
+        newEndDate = new Date(endMonthYear, endMonthIndex + 1, 0);
+
         break;
       }
 
       case TimeOptionsType.YEAR: {
-        const days = getDaysFromTimeOption(option, dataResource, true);
-        newStartDate.setDate(newStartDate.getDate() - days + 1);
-        setIsDisableCalendar(true);
-        if (isCheckCompare) {
-          setIsDisableCalendarCompare(true);
-        }
+        const lastYear = today.getFullYear() - 1;
+        newStartDate = new Date(lastYear, 0, 1);
+        newEndDate = new Date(lastYear, 11, 31);
+
         break;
       }
 
       case TimeOptionsType.MORE:
-        setIsDisableCalendar(true);
         setIsEndButtonClicked(false);
         setIsStartButtonClicked(false);
         if (isDataCheckCompare) {
-          setIsDisableCalendarCompare(true);
           setIsEndButtonClickedCompare(false);
           setIsStartButtonClickedCompare(false);
         }
@@ -226,33 +262,90 @@ function StatisticCalendar() {
     }
 
     setDataStartDate(newStartDate);
+    setDataEndDate(newEndDate);
 
     if (isDataCheckCompare) {
-      setIsErrorDataCompare({
-        start: false,
-        end: false,
-      });
-      const dataStartCompareLast = handleSetStartDateBefore(
-        option,
-        newStartDate,
-      ) as Date;
-      setDataStartDateCompare(dataStartCompareLast);
-      if (option == TimeOptionsType.YESTERDAY) {
-        setDataEndDateCompare(dataStartCompareLast);
-      } else {
-        if (!dataEndDateCompare) {
-          setDataEndDateCompare(new Date());
-        } else {
-          setDataEndDateCompare(
-            handleSetStartDateBefore(option, dataEndDate || new Date()) as Date,
-          );
-        }
+      if (compareMode === TimeCompareOptionsType.PREVIOUS_PERIOD) {
+        const compareStart = handleSetStartDateBefore(
+          option,
+          newStartDate,
+        ) as Date;
+        const compareEnd = handleSetStartDateBefore(option, newEndDate) as Date;
+        setIsErrorDataCompare({ start: false, end: false });
+        setDataStartDateCompare(compareStart);
+        setDataEndDateCompare(compareEnd);
+      } else if (compareMode === TimeCompareOptionsType.PREVIOUS_YEAR) {
+        const compareStart = new Date(newStartDate);
+        compareStart.setFullYear(compareStart.getFullYear() - 1);
+        const compareEnd = new Date(newEndDate);
+        compareEnd.setFullYear(compareEnd.getFullYear() - 1);
+        setIsErrorDataCompare({ start: false, end: false });
+        setDataStartDateCompare(compareStart);
+        setDataEndDateCompare(compareEnd);
       }
+    }
+  };
+
+  const handleChangeCompareMode = (mode: TimeCompareOptionsType) => {
+    setCompareMode(mode);
+
+    if (!isDataCheckCompare) return;
+    if (!dataStartDate || !dataEndDate) return;
+
+    const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+    if (mode === TimeCompareOptionsType.CUSTOM) {
+      return;
+    }
+
+    setIsErrorDataCompare({
+      start: false,
+      end: false,
+    });
+
+    if (mode === TimeCompareOptionsType.PREVIOUS_PERIOD) {
+      if (isTypeTime === TimeOptionsType.MORE) {
+        const diffDays =
+          Math.floor(
+            (dataEndDate.getTime() - dataStartDate.getTime()) / MS_PER_DAY,
+          ) + 1;
+
+        const compareStart = new Date(dataStartDate);
+        compareStart.setDate(compareStart.getDate() - diffDays);
+
+        const compareEnd = new Date(dataEndDate);
+        compareEnd.setDate(compareEnd.getDate() - diffDays);
+
+        setDataStartDateCompare(compareStart);
+        setDataEndDateCompare(compareEnd);
+      } else {
+        const compareStart = handleSetStartDateBefore(
+          isTypeTime,
+          dataStartDate,
+        ) as Date;
+        const compareEnd = handleSetStartDateBefore(
+          isTypeTime,
+          dataEndDate,
+        ) as Date;
+        setDataStartDateCompare(compareStart);
+        setDataEndDateCompare(compareEnd);
+      }
+    } else if (mode === TimeCompareOptionsType.PREVIOUS_YEAR) {
+      const compareStart = new Date(dataStartDate);
+      compareStart.setFullYear(compareStart.getFullYear() - 1);
+      const compareEnd = new Date(dataEndDate);
+      compareEnd.setFullYear(compareEnd.getFullYear() - 1);
+      setDataStartDateCompare(compareStart);
+      setDataEndDateCompare(compareEnd);
     }
   };
 
   // Change data time calendar
   const handleChangeCalendar = (startDate: Date, endDate: Date | null) => {
+    if (isTypeTime !== TimeOptionsType.MORE) {
+      setIsTypeTime(TimeOptionsType.MORE);
+    }
+
     setDataStartDate(startDate);
     if (startDate) {
       setIsErrorData({
@@ -324,19 +417,26 @@ function StatisticCalendar() {
     startDate: Date,
     endDate: Date | null,
   ) => {
-    setDataStartDateCompare(startDate);
-    if (startDate) {
-      setIsErrorDataCompare({
-        ...isErrorData,
-        start: false,
-      });
+    if (compareMode !== TimeCompareOptionsType.CUSTOM) {
+      setCompareMode(TimeCompareOptionsType.CUSTOM);
+      setDataStartDateCompare(startDate);
+      setDataEndDateCompare(null);
+    } else {
+      setDataStartDateCompare(startDate);
+      setDataEndDateCompare(endDate);
     }
-    setDataEndDateCompare(endDate);
+
+    if (startDate) {
+      setIsErrorDataCompare((prev) => ({
+        ...prev,
+        start: false,
+      }));
+    }
     if (endDate) {
-      setIsErrorDataCompare({
-        ...isErrorData,
+      setIsErrorDataCompare((prev) => ({
+        ...prev,
         end: false,
-      });
+      }));
     }
   };
 
@@ -427,6 +527,53 @@ function StatisticCalendar() {
   };
 
   const handlePrevCalendar = () => {
+    if (isTypeTime === TimeOptionsType.YEAR) {
+      const currentYear = dataStartDate.getFullYear();
+      const prevYear = currentYear - 1;
+      const newStart = new Date(prevYear, 0, 1);
+      const newEnd = new Date(prevYear, 11, 31);
+
+      setDataStartDate(newStart);
+      setDataEndDate(newEnd);
+
+      if (isDataCheckCompare && dataStartDateCompare && dataEndDateCompare) {
+        const compareYear = dataStartDateCompare.getFullYear() - 1;
+        const compareStart = new Date(compareYear, 0, 1);
+        const compareEnd = new Date(compareYear, 11, 31);
+        setDataStartDateCompare(compareStart);
+        setDataEndDateCompare(compareEnd);
+      }
+      return;
+    }
+
+    if (isTypeTime === TimeOptionsType.MONTH) {
+      const currentYear = dataStartDate.getFullYear();
+      const currentMonth = dataStartDate.getMonth(); // 0-11
+      const prevMonthIndexRaw = currentMonth - 1;
+      const prevMonthYear = currentYear + Math.floor(prevMonthIndexRaw / 12);
+      const prevMonthIndex = ((prevMonthIndexRaw % 12) + 12) % 12;
+
+      const newStart = new Date(prevMonthYear, prevMonthIndex, 1);
+      const newEnd = new Date(prevMonthYear, prevMonthIndex + 1, 0);
+
+      setDataStartDate(newStart);
+      setDataEndDate(newEnd);
+
+      if (isDataCheckCompare && dataStartDateCompare && dataEndDateCompare) {
+        const cYear = dataStartDateCompare.getFullYear();
+        const cMonth = dataStartDateCompare.getMonth();
+        const cPrevMonthIndexRaw = cMonth - 1;
+        const cPrevMonthYear = cYear + Math.floor(cPrevMonthIndexRaw / 12);
+        const cPrevMonthIndex = ((cPrevMonthIndexRaw % 12) + 12) % 12;
+
+        const compareStart = new Date(cPrevMonthYear, cPrevMonthIndex, 1);
+        const compareEnd = new Date(cPrevMonthYear, cPrevMonthIndex + 1, 0);
+        setDataStartDateCompare(compareStart);
+        setDataEndDateCompare(compareEnd);
+      }
+      return;
+    }
+
     const dataPrevDateStart = handleSetStartDateBefore(
       isTypeTime,
       dataStartDate,
@@ -449,7 +596,7 @@ function StatisticCalendar() {
           isTypeTime,
           dataEndDateCompare,
         );
-        setDataEndDate(dataPrevDateEndCompare as Date);
+        setDataEndDateCompare(dataPrevDateEndCompare as Date);
       }
     }
   };
@@ -457,42 +604,95 @@ function StatisticCalendar() {
     setIsLoadingLarge(true);
     setIsLoadingMedium(true);
     setIsLoadingOrganization(true);
-    const dataPrevDateStart = handleSetStartDateBefore(
-      isTypeTime,
-      dataStartDate,
-    );
-    setDataStartDate(dataPrevDateStart as Date);
-    setStartDate(dataPrevDateStart as Date);
+    let newStart: Date = dataStartDate;
+    let newEnd: Date | null = dataEndDate;
 
-    if (dataEndDate) {
-      const dataPrevDateEnd = handleSetStartDateBefore(isTypeTime, dataEndDate);
-      setDataEndDate(dataPrevDateEnd as Date);
-      setEndDate(dataPrevDateEnd as Date);
+    if (isTypeTime === TimeOptionsType.YEAR) {
+      const currentYear = dataStartDate.getFullYear();
+      const prevYear = currentYear - 1;
+      newStart = new Date(prevYear, 0, 1);
+      newEnd = new Date(prevYear, 11, 31);
+    } else if (isTypeTime === TimeOptionsType.MONTH) {
+      const currentYear = dataStartDate.getFullYear();
+      const currentMonth = dataStartDate.getMonth();
+      const prevMonthIndexRaw = currentMonth - 1;
+      const prevMonthYear = currentYear + Math.floor(prevMonthIndexRaw / 12);
+      const prevMonthIndex = ((prevMonthIndexRaw % 12) + 12) % 12;
+
+      newStart = new Date(prevMonthYear, prevMonthIndex, 1);
+      newEnd = new Date(prevMonthYear, prevMonthIndex + 1, 0);
+    } else {
+      const dataPrevDateStart = handleSetStartDateBefore(
+        isTypeTime,
+        dataStartDate,
+      );
+      newStart = dataPrevDateStart as Date;
+
+      if (dataEndDate) {
+        const dataPrevDateEnd = handleSetStartDateBefore(
+          isTypeTime,
+          dataEndDate,
+        );
+        newEnd = dataPrevDateEnd as Date;
+      }
     }
+
+    setDataStartDate(newStart);
+    setStartDate(newStart);
+    if (newEnd) {
+      setDataEndDate(newEnd);
+      setEndDate(newEnd);
+    }
+
     if (isDataCheckCompare) {
       setIsLoadingLargeCompare(true);
       setIsLoadingMediumCompare(true);
       setIsLoadingOrganizationCompare(true);
-      const dataPrevDateStartCompare = handleSetStartDateBefore(
-        isTypeTime,
-        dataStartDateCompare,
-      );
-      setDataStartDateCompare(dataPrevDateStartCompare as Date);
-      setStartDateCompare(dataPrevDateStartCompare as Date);
 
-      if (dataEndDateCompare) {
-        const dataPrevDateEndCompare = handleSetStartDateBefore(
+      let newCompareStart: Date = dataStartDateCompare;
+      let newCompareEnd: Date | null = dataEndDateCompare;
+
+      if (isTypeTime === TimeOptionsType.YEAR) {
+        const compareYear = dataStartDateCompare.getFullYear() - 1;
+        newCompareStart = new Date(compareYear, 0, 1);
+        newCompareEnd = new Date(compareYear, 11, 31);
+      } else if (isTypeTime === TimeOptionsType.MONTH) {
+        const cYear = dataStartDateCompare.getFullYear();
+        const cMonth = dataStartDateCompare.getMonth();
+        const cPrevMonthIndexRaw = cMonth - 1;
+        const cPrevMonthYear = cYear + Math.floor(cPrevMonthIndexRaw / 12);
+        const cPrevMonthIndex = ((cPrevMonthIndexRaw % 12) + 12) % 12;
+
+        newCompareStart = new Date(cPrevMonthYear, cPrevMonthIndex, 1);
+        newCompareEnd = new Date(cPrevMonthYear, cPrevMonthIndex + 1, 0);
+      } else {
+        const dataPrevDateStartCompare = handleSetStartDateBefore(
           isTypeTime,
-          dataEndDateCompare,
+          dataStartDateCompare,
         );
-        setDataEndDate(dataPrevDateEndCompare as Date);
-        setEndDateCompare(dataPrevDateEndCompare as Date);
+        newCompareStart = dataPrevDateStartCompare as Date;
+
+        if (dataEndDateCompare) {
+          const dataPrevDateEndCompare = handleSetStartDateBefore(
+            isTypeTime,
+            dataEndDateCompare,
+          );
+          newCompareEnd = dataPrevDateEndCompare as Date;
+        }
       }
+
+      setDataStartDateCompare(newCompareStart);
+      setStartDateCompare(newCompareStart);
+      if (newCompareEnd) {
+        setDataEndDateCompare(newCompareEnd);
+        setEndDateCompare(newCompareEnd);
+      }
+
       const enableViews = getCompareLineChartEnableViews(
-        dataStartDate,
-        dataEndDate as Date,
-        dataStartDateCompare,
-        dataEndDateCompare as Date,
+        newStart,
+        newEnd as Date,
+        newCompareStart,
+        newCompareEnd as Date,
       ) as string[];
       if (enableViews.length > 0) {
         setLineChartViewBy({
@@ -507,8 +707,8 @@ function StatisticCalendar() {
       }
     } else {
       const enableViews = getLineChartEnableViews(
-        dataStartDate,
-        dataEndDate as Date,
+        newStart,
+        newEnd as Date,
       ) as string[];
       if (enableViews.length > 0) {
         setLineChartViewBy({
@@ -525,6 +725,53 @@ function StatisticCalendar() {
   };
 
   const handleNextCalendar = () => {
+    if (isTypeTime === TimeOptionsType.YEAR) {
+      const currentYear = dataStartDate.getFullYear();
+      const nextYear = currentYear + 1;
+      const newStart = new Date(nextYear, 0, 1);
+      const newEnd = new Date(nextYear, 11, 31);
+
+      setDataStartDate(newStart);
+      setDataEndDate(newEnd);
+
+      if (isDataCheckCompare && dataStartDateCompare && dataEndDateCompare) {
+        const compareYear = dataStartDateCompare.getFullYear() + 1;
+        const compareStart = new Date(compareYear, 0, 1);
+        const compareEnd = new Date(compareYear, 11, 31);
+        setDataStartDateCompare(compareStart);
+        setDataEndDateCompare(compareEnd);
+      }
+      return;
+    }
+
+    if (isTypeTime === TimeOptionsType.MONTH) {
+      const currentYear = dataStartDate.getFullYear();
+      const currentMonth = dataStartDate.getMonth();
+      const nextMonthIndexRaw = currentMonth + 1;
+      const nextMonthYear = currentYear + Math.floor(nextMonthIndexRaw / 12);
+      const nextMonthIndex = ((nextMonthIndexRaw % 12) + 12) % 12;
+
+      const newStart = new Date(nextMonthYear, nextMonthIndex, 1);
+      const newEnd = new Date(nextMonthYear, nextMonthIndex + 1, 0);
+
+      setDataStartDate(newStart);
+      setDataEndDate(newEnd);
+
+      if (isDataCheckCompare && dataStartDateCompare && dataEndDateCompare) {
+        const cYear = dataStartDateCompare.getFullYear();
+        const cMonth = dataStartDateCompare.getMonth();
+        const cNextMonthIndexRaw = cMonth + 1;
+        const cNextMonthYear = cYear + Math.floor(cNextMonthIndexRaw / 12);
+        const cNextMonthIndex = ((cNextMonthIndexRaw % 12) + 12) % 12;
+
+        const compareStart = new Date(cNextMonthYear, cNextMonthIndex, 1);
+        const compareEnd = new Date(cNextMonthYear, cNextMonthIndex + 1, 0);
+        setDataStartDateCompare(compareStart);
+        setDataEndDateCompare(compareEnd);
+      }
+      return;
+    }
+
     const dataPrevDateStart = handleSetStartDateAfter(
       isTypeTime,
       dataStartDate,
@@ -548,7 +795,7 @@ function StatisticCalendar() {
           isTypeTime,
           dataEndDateCompare,
         );
-        setDataEndDate(dataPrevDateEndCompare as Date);
+        setDataEndDateCompare(dataPrevDateEndCompare as Date);
       }
     }
   };
@@ -557,43 +804,95 @@ function StatisticCalendar() {
     setIsLoadingLarge(true);
     setIsLoadingMedium(true);
     setIsLoadingOrganization(true);
-    const dataPrevDateStart = handleSetStartDateAfter(
-      isTypeTime,
-      dataStartDate,
-    );
+    let newStart: Date = dataStartDate;
+    let newEnd: Date | null = dataEndDate;
 
-    setDataStartDate(dataPrevDateStart as Date);
-    setStartDate(dataPrevDateStart as Date);
+    if (isTypeTime === TimeOptionsType.YEAR) {
+      const currentYear = dataStartDate.getFullYear();
+      const nextYear = currentYear + 1;
+      newStart = new Date(nextYear, 0, 1);
+      newEnd = new Date(nextYear, 11, 31);
+    } else if (isTypeTime === TimeOptionsType.MONTH) {
+      const currentYear = dataStartDate.getFullYear();
+      const currentMonth = dataStartDate.getMonth();
+      const nextMonthIndexRaw = currentMonth + 1;
+      const nextMonthYear = currentYear + Math.floor(nextMonthIndexRaw / 12);
+      const nextMonthIndex = ((nextMonthIndexRaw % 12) + 12) % 12;
 
-    if (dataEndDate) {
-      const dataPrevDateEnd = handleSetStartDateAfter(isTypeTime, dataEndDate);
-      setDataEndDate(dataPrevDateEnd as Date);
-      setEndDate(dataPrevDateEnd as Date);
+      newStart = new Date(nextMonthYear, nextMonthIndex, 1);
+      newEnd = new Date(nextMonthYear, nextMonthIndex + 1, 0);
+    } else {
+      const dataPrevDateStart = handleSetStartDateAfter(
+        isTypeTime,
+        dataStartDate,
+      );
+      newStart = dataPrevDateStart as Date;
+
+      if (dataEndDate) {
+        const dataPrevDateEnd = handleSetStartDateAfter(
+          isTypeTime,
+          dataEndDate,
+        );
+        newEnd = dataPrevDateEnd as Date;
+      }
     }
+
+    setDataStartDate(newStart);
+    setStartDate(newStart);
+    if (newEnd) {
+      setDataEndDate(newEnd);
+      setEndDate(newEnd);
+    }
+
     if (isDataCheckCompare) {
       setIsLoadingLargeCompare(true);
       setIsLoadingMediumCompare(true);
       setIsLoadingOrganizationCompare(true);
-      const dataPrevDateStartCompare = handleSetStartDateAfter(
-        isTypeTime,
-        dataStartDateCompare,
-      );
-      setDataStartDateCompare(dataPrevDateStartCompare as Date);
-      setStartDateCompare(dataPrevDateStartCompare as Date);
 
-      if (dataEndDateCompare) {
-        const dataPrevDateEndCompare = handleSetStartDateAfter(
+      let newCompareStart: Date = dataStartDateCompare;
+      let newCompareEnd: Date | null = dataEndDateCompare;
+
+      if (isTypeTime === TimeOptionsType.YEAR) {
+        const compareYear = dataStartDateCompare.getFullYear() + 1;
+        newCompareStart = new Date(compareYear, 0, 1);
+        newCompareEnd = new Date(compareYear, 11, 31);
+      } else if (isTypeTime === TimeOptionsType.MONTH) {
+        const cYear = dataStartDateCompare.getFullYear();
+        const cMonth = dataStartDateCompare.getMonth();
+        const cNextMonthIndexRaw = cMonth + 1;
+        const cNextMonthYear = cYear + Math.floor(cNextMonthIndexRaw / 12);
+        const cNextMonthIndex = ((cNextMonthIndexRaw % 12) + 12) % 12;
+
+        newCompareStart = new Date(cNextMonthYear, cNextMonthIndex, 1);
+        newCompareEnd = new Date(cNextMonthYear, cNextMonthIndex + 1, 0);
+      } else {
+        const dataPrevDateStartCompare = handleSetStartDateAfter(
           isTypeTime,
-          dataEndDateCompare,
+          dataStartDateCompare,
         );
-        setDataEndDate(dataPrevDateEndCompare as Date);
-        setEndDateCompare(dataPrevDateEndCompare as Date);
+        newCompareStart = dataPrevDateStartCompare as Date;
+
+        if (dataEndDateCompare) {
+          const dataPrevDateEndCompare = handleSetStartDateAfter(
+            isTypeTime,
+            dataEndDateCompare,
+          );
+          newCompareEnd = dataPrevDateEndCompare as Date;
+        }
       }
+
+      setDataStartDateCompare(newCompareStart);
+      setStartDateCompare(newCompareStart);
+      if (newCompareEnd) {
+        setDataEndDateCompare(newCompareEnd);
+        setEndDateCompare(newCompareEnd);
+      }
+
       const enableViews = getCompareLineChartEnableViews(
-        dataStartDate,
-        dataEndDate as Date,
-        dataStartDateCompare,
-        dataEndDateCompare as Date,
+        newStart,
+        newEnd as Date,
+        newCompareStart,
+        newCompareEnd as Date,
       ) as string[];
       if (enableViews.length > 0) {
         setLineChartViewBy({
@@ -608,8 +907,8 @@ function StatisticCalendar() {
       }
     } else {
       const enableViews = getLineChartEnableViews(
-        dataStartDate,
-        dataEndDate as Date,
+        newStart,
+        newEnd as Date,
       ) as string[];
       if (enableViews.length > 0) {
         setLineChartViewBy({
@@ -667,14 +966,14 @@ function StatisticCalendar() {
               return;
             setIsOpenModal(!isOpenModal);
           }}
-          className="w-fit h-fit min-h-[34px] cursor-pointer flex flex-col gap-[6px]  px-3 py-2 border border-[#77858F] bg-white rounded-md  ">
-          <div className="flex items-center gap-[10px] h-5">
-            <div className="text-xs font-medium text-primary px-[14px] h-[18px] flex items-center  bg-[#EBF1F7] rounded-sm">
+          className="w-fit h-fit min-h-[34px] cursor-pointer flex flex-col gap-[6px] py-2  px-3  border border-[#77858F] bg-white rounded-md  ">
+          <div className="grid grid-cols-[max-content_1fr] gap-x-[10px] gap-y-[6px]">
+            <div className="text-xs font-medium text-primary px-[14px] h-[18px] inline-flex items-center justify-center bg-[#EBF1F7] rounded-sm self-center">
               {isTypeTime}
             </div>
             <div className="text-[13px] text-black font-normal flex items-center gap-[6px]">
               <span>{startDate && formatShowDateJapanese(startDate)}</span>
-              <div className="h-[34px] flex items-center text-[#77858F]">
+              <div className="h-[20px] flex items-center text-[#77858F]">
                 〜
               </div>
               <span>{endDate && formatShowDateJapanese(endDate)}</span>
@@ -686,32 +985,33 @@ function StatisticCalendar() {
                 />
               </div>
             </div>
+            {isCheckCompare && (
+              <>
+                <div className="text-xs font-medium text-[#E95062] px-[14px] h-[18px] inline-flex items-center justify-center bg-[#F9EAEA] rounded-sm self-center">
+                  {compareMode}
+                </div>
+                <div className="text-[13px] text-black font-normal flex items-center gap-[6px]">
+                  <span>
+                    {startDateCompare &&
+                      formatShowDateJapanese(startDateCompare)}
+                  </span>
+                  <div className="h-[20px] flex items-center text-[#77858F]">
+                    〜
+                  </div>
+                  <span>
+                    {endDateCompare && formatShowDateJapanese(endDateCompare)}
+                  </span>
+                  <div className="w-fit h-full flex items-center">
+                    <ImageRound
+                      className={`w-[14px] h-[14px]  hover:cursor-pointer relative top-[2px]`}
+                      name="Calendar icon"
+                      src={`/icons/calendar-time.svg`}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
           </div>
-          {isCheckCompare && (
-            <div className="flex items-center gap-[10px] h-5">
-              <div className="text-xs font-medium text-[#E95062] px-[14px] flex items-center  bg-[#F9EAEA] rounded-sm">
-                {isTypeTime}
-              </div>
-              <div className="text-[13px] text-black font-normal flex items-center gap-[6px]">
-                <span>
-                  {startDateCompare && formatShowDateJapanese(startDateCompare)}
-                </span>
-                <div className="h-[34px] flex items-center text-[#77858F]">
-                  〜
-                </div>
-                <span>
-                  {endDateCompare && formatShowDateJapanese(endDateCompare)}
-                </span>
-                <div className="w-fit h-full flex items-center">
-                  <ImageRound
-                    className={`w-[14px] h-[14px]  hover:cursor-pointer relative top-[2px]`}
-                    name="Calendar icon"
-                    src={`/icons/calendar-time.svg`}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
         </div>
         <div
           ref={buttonNext}
@@ -769,7 +1069,9 @@ function StatisticCalendar() {
               <div>
                 <div
                   onClick={() => {
-                    setIsDisableCalendar(false);
+                    if (isTypeTime !== TimeOptionsType.MORE) {
+                      return;
+                    }
                     setIsEndButtonClickedCompare(false);
 
                     setIsStartButtonClicked(true);
@@ -786,7 +1088,9 @@ function StatisticCalendar() {
                 </div>
                 <div
                   onClick={() => {
-                    setIsDisableCalendar(false);
+                    if (isTypeTime !== TimeOptionsType.MORE) {
+                      return;
+                    }
                     setIsStartButtonClicked(false);
 
                     setIsEndButtonClicked(true);
@@ -803,6 +1107,13 @@ function StatisticCalendar() {
                     isChecked={isDataCheckCompare}
                     onChange={(e) => {
                       if (e) {
+                        if (isTypeTime !== TimeOptionsType.MORE) {
+                          setCompareMode(
+                            TimeCompareOptionsType.PREVIOUS_PERIOD,
+                          );
+                        } else {
+                          setCompareMode(TimeCompareOptionsType.CUSTOM);
+                        }
                         setIsErrorDataCompare({
                           start: false,
                           end: false,
@@ -818,6 +1129,8 @@ function StatisticCalendar() {
                             dataEndDate,
                           );
                           setDataEndDateCompare(dateEnd as Date);
+                        } else {
+                          setDataEndDateCompare(null);
                         }
                       }
 
@@ -835,6 +1148,7 @@ function StatisticCalendar() {
                       キャンセル
                     </Button>
                     <Button
+                      disabled={!dataStartDate || !dataEndDate}
                       onClick={handleSaveCalendar}
                       className="!py-0 !px-0 w-[100px] h-9 rounded-md text-[13px] font-medium">
                       適応
@@ -847,21 +1161,26 @@ function StatisticCalendar() {
             </div>
             <div className="flex-1  multi-date-custom">
               <MultiDatePickerCustom
-                isTypeTime={isTypeTime}
+                isTypeTime={TimeOptionsType.MORE}
                 initialStartDate={dataStartDate}
                 initialEndDate={dataEndDate}
-                isDisable={isDisableCalendar}
-                isEndButtonClicked={isEndButtonClicked}
-                isStartButtonClicked={isStartButtonClicked}
+                isEndButtonClicked={
+                  isTypeTime === TimeOptionsType.MORE
+                    ? isEndButtonClicked
+                    : false
+                }
+                isStartButtonClicked={
+                  isTypeTime === TimeOptionsType.MORE
+                    ? isStartButtonClicked
+                    : true
+                }
                 resetEndClick={() => {
-                  setIsDisableCalendar(true);
                   setIsEndButtonClicked(false);
                 }}
                 clickStartButton={() => {
                   setIsStartButtonClicked(true);
                 }}
                 resetStartClick={() => {
-                  setIsDisableCalendar(true);
                   setIsStartButtonClicked(false);
                 }}
                 clickEndButton={() => {
@@ -884,7 +1203,9 @@ function StatisticCalendar() {
                 <div>
                   <div
                     onClick={() => {
-                      setIsDisableCalendarCompare(false);
+                      if (compareMode !== TimeCompareOptionsType.CUSTOM) {
+                        return;
+                      }
                       setIsStartButtonClickedCompare(true);
                     }}
                     className="gap-3 flex items-center mt-[6px]">
@@ -900,7 +1221,9 @@ function StatisticCalendar() {
                   </div>
                   <div
                     onClick={() => {
-                      setIsDisableCalendarCompare(false);
+                      if (compareMode !== TimeCompareOptionsType.CUSTOM) {
+                        return;
+                      }
                       setIsEndButtonClickedCompare(true);
                     }}
                     className="gap-3 flex items-center mt-[6px]">
@@ -911,8 +1234,76 @@ function StatisticCalendar() {
                         formatShowDateJapanese(dataEndDateCompare)}
                     </div>
                   </div>
-                  <div className="mt-[30px] h-8"></div>
-                  <div className="flex gap-[10px] mt-[30px]">
+                  <div className="mt-[14px] space-y-2">
+                    <DynamicTooltip
+                      content="終了日を選択すると比較できます"
+                      placement="top"
+                      disabled={!!(dataStartDate && dataEndDate)}>
+                      <div className="inline-block">
+                        <Checkbox
+                          id="compare-mode-previous-period"
+                          disable={
+                            compareMode ===
+                              TimeCompareOptionsType.PREVIOUS_PERIOD ||
+                            !dataStartDate ||
+                            !dataEndDate
+                          }
+                          label={TimeCompareOptionsType.PREVIOUS_PERIOD}
+                          isChecked={
+                            compareMode ===
+                            TimeCompareOptionsType.PREVIOUS_PERIOD
+                          }
+                          onChange={() =>
+                            handleChangeCompareMode(
+                              TimeCompareOptionsType.PREVIOUS_PERIOD,
+                            )
+                          }
+                          classSize="!w-4 !h-4 !opacity-100"
+                          classLabel="text-xs mt-1"
+                        />
+                      </div>
+                    </DynamicTooltip>
+                    <DynamicTooltip
+                      content="終了日を選択すると比較できます"
+                      placement="top"
+                      disabled={!!(dataStartDate && dataEndDate)}>
+                      <div className="inline-block">
+                        <Checkbox
+                          id="compare-mode-previous-year"
+                          label={TimeCompareOptionsType.PREVIOUS_YEAR}
+                          disable={
+                            compareMode ===
+                              TimeCompareOptionsType.PREVIOUS_YEAR ||
+                            !dataStartDate ||
+                            !dataEndDate
+                          }
+                          isChecked={
+                            compareMode === TimeCompareOptionsType.PREVIOUS_YEAR
+                          }
+                          onChange={() =>
+                            handleChangeCompareMode(
+                              TimeCompareOptionsType.PREVIOUS_YEAR,
+                            )
+                          }
+                          classSize="!w-4 !h-4 !opacity-100"
+                          classLabel="text-xs mt-1"
+                        />
+                      </div>
+                    </DynamicTooltip>
+                    <Checkbox
+                      id="compare-mode-custom"
+                      disable={compareMode === TimeCompareOptionsType.CUSTOM}
+                      label={TimeCompareOptionsType.CUSTOM}
+                      isChecked={compareMode === TimeCompareOptionsType.CUSTOM}
+                      onChange={() =>
+                        handleChangeCompareMode(TimeCompareOptionsType.CUSTOM)
+                      }
+                      classSize="!w-4 !h-4 !opacity-100"
+                      classLabel="text-xs mt-1"
+                    />
+                  </div>
+                  <div className="mt-[10px] h-8"></div>
+                  <div className="flex gap-[10px]">
                     <Button
                       variant="outline"
                       onClick={handleReset}
@@ -920,6 +1311,12 @@ function StatisticCalendar() {
                       キャンセル
                     </Button>
                     <Button
+                      disabled={
+                        !dataStartDate ||
+                        !dataEndDate ||
+                        !dataStartDateCompare ||
+                        !dataEndDateCompare
+                      }
                       onClick={handleSaveCalendarCompare}
                       className="!py-0 !px-0 w-[100px] h-9 rounded-md text-[13px] font-medium">
                       適応
@@ -930,19 +1327,24 @@ function StatisticCalendar() {
               <div className="flex-1 multi-date-compare">
                 <MultiDatePickerCustom
                   isCalendarCompare
-                  isTypeTime={isTypeTime}
+                  isTypeTime={TimeOptionsType.MORE}
                   initialStartDate={dataStartDateCompare}
                   initialEndDate={dataEndDateCompare}
-                  isDisable={isDisableCalendarCompare}
-                  isEndButtonClicked={isEndButtonClickedCompare}
-                  isStartButtonClicked={isStartButtonClickedCompare}
+                  isDisable={false}
+                  isEndButtonClicked={
+                    compareMode === TimeCompareOptionsType.CUSTOM
+                      ? isEndButtonClickedCompare
+                      : false
+                  }
+                  isStartButtonClicked={
+                    compareMode === TimeCompareOptionsType.CUSTOM
+                      ? isStartButtonClickedCompare
+                      : true
+                  }
                   resetEndClick={() => {
-                    setIsDisableCalendarCompare(true);
-
                     setIsEndButtonClickedCompare(false);
                   }}
                   resetStartClick={() => {
-                    setIsDisableCalendarCompare(true);
                     setIsStartButtonClickedCompare(false);
                   }}
                   clickStartButton={() => {

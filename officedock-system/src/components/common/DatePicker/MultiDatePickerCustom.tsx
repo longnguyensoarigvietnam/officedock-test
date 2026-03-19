@@ -4,7 +4,7 @@ import DatePickerUI from 'react-datepicker';
 import type { ReactDatePickerProps } from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { ja } from 'date-fns/locale';
-import { addDays, format, isSaturday, isSunday } from 'date-fns';
+import { addDays, format, isSaturday, isSunday, startOfDay } from 'date-fns';
 import { isHoliday } from 'japanese-holidays';
 
 import ImageRound from '../ImageRound';
@@ -72,12 +72,13 @@ const MultiDatePickerCustom = ({
   const errorClasses = error ? 'border-danger' : 'border-gray-200';
 
   const dayClassName = (date: Date) => {
-    if (initialStartDate && initialEndDate) {
-      const endDate = new Date(initialEndDate);
-      endDate.setDate(endDate.getDate() - 1);
-      const startDate = new Date(initialStartDate);
-      startDate.setDate(startDate.getDate());
-      if (date > startDate && date < endDate)
+    // Use current selected range (state), not initial props.
+    // This prevents stale highlight when parent hasn't synced initial* props yet.
+    if (startDate && endDate) {
+      const d = startOfDay(date);
+      const s = startOfDay(startDate);
+      const e = startOfDay(endDate);
+      if (d > s && d < e)
         return isCalendarCompare ? 'highlighted-compare' : 'highlighted-date';
     }
     if (isHoliday(date)) return 'holiday';
