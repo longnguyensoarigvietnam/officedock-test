@@ -300,15 +300,21 @@ def aggregate_durations(
         )
     )
     # Map organization-category pairs to their metadata for fast lookup
-    org_cat_map = {
-        (
-            oc["organization_id"],
-            oc["large_statistic_category_id"],
-            oc["medium_statistic_category_id"],
-            oc["small_statistic_category_id"],
-        ): oc
-        for oc in org_cats
-    }
+    org_cat_map = {}
+    for oc in org_cats:
+        org_id = oc["organization_id"]
+        large_id = oc["large_statistic_category_id"]
+        medium_id = oc["medium_statistic_category_id"]
+        small_id = oc["small_statistic_category_id"]
+
+        # full
+        org_cat_map[(org_id, large_id, medium_id, small_id)] = oc
+
+        # medium fallback
+        org_cat_map.setdefault((org_id, large_id, medium_id, None), oc)
+
+        # large fallback
+        org_cat_map.setdefault((org_id, large_id, None, None), oc)
 
     # 6. Merge task/schedule durations and preload the first category of each object (task or schedule) for later use
     combined = []
