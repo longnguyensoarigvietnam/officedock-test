@@ -72,6 +72,9 @@ const Checkbox = ({
           htmlFor={id}
           className={`font-medium text-black hover:cursor-pointer ${classLabel}`}
           onClick={(e: React.MouseEvent<HTMLLabelElement>) => {
+            if (disable) {
+              return;
+            }
             e.preventDefault(); // optional: prevent double toggling
             setChecked((prev) => !prev);
             onChange?.(!checked);

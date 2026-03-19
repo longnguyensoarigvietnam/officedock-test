@@ -122,10 +122,37 @@
 }
 
 .multi-date .react-datepicker__day--selected,
-.multi-date .react-datepicker__day--in-range,
+.multi-date .react-datepicker__day--range-start,
+.multi-date .react-datepicker__day--range-end,
 .multi-date .react-datepicker__day--today {
   background-color: theme('colors.button') !important;
   color: white !important;
+}
+.multi-date .react-datepicker__day--keyboard-selected {
+  background-color: transparent !important;
+  color: theme('colors.gray.700') !important;
+}
+.multi-date
+  .react-datepicker__day--keyboard-selected.react-datepicker__day--selected,
+.multi-date
+  .react-datepicker__day--keyboard-selected.react-datepicker__day--range-start,
+.multi-date
+  .react-datepicker__day--keyboard-selected.react-datepicker__day--range-end,
+.multi-date .react-datepicker__day--keyboard-selected.react-datepicker__day--today {
+  background-color: theme('colors.button') !important;
+  color: white !important;
+}
+.multi-date .react-datepicker__day--in-range {
+  background-color: rgba(60, 171, 243, 0.3) !important;
+  color: black !important;
+}
+/* Ensure range endpoints stay "selected" even if also marked in-range */
+.multi-date .react-datepicker__day--in-range.react-datepicker__day--range-start,
+.multi-date .react-datepicker__day--in-range.react-datepicker__day--range-end,
+.multi-date .react-datepicker__day--in-range.react-datepicker__day--selected {
+  background-color: theme('colors.button') !important;
+  color: white !important;
+  border-radius: 9999px !important;
 }
 .multi-date-compare .multi-date .react-datepicker__day--selected,
 .multi-date-compare .multi-date .react-datepicker__day--in-range,
@@ -144,8 +171,13 @@
 }
 
 .multi-date .react-datepicker__day--selected,
-.multi-date .react-datepicker__day--in-range {
+.multi-date .react-datepicker__day--range-start,
+.multi-date .react-datepicker__day--range-end {
   border-radius: 9999px;
+  opacity: 1 !important;
+}
+.multi-date .react-datepicker__day--in-range {
+  border-radius: 0 !important;
   opacity: 1 !important;
 }
 
