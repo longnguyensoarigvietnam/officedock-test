@@ -13,7 +13,6 @@ import { usePathname } from 'next/navigation';
 import { OptionDropdownType } from '@interfaces/common';
 import { TagTableRowDetail, TeamDockMergedTable } from '@interfaces/statistic';
 
-import { getAdjustedStartDateDefault } from '@utils/date';
 import {
   OrganizationStatisticType,
   StatisticViewLabels,

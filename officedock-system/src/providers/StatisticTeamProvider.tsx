@@ -16,8 +16,6 @@ import {
   TeamDockMergedTable,
 } from '@interfaces/statistic';
 
-import { getAdjustedStartDateDefault } from '@utils/date';
-
 import {
   OrganizationStatisticType,
   StatisticViewLabels,

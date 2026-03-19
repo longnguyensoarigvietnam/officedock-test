@@ -323,93 +323,74 @@ const TableComponent = ({
     type: string;
     rowInfo: CalendarCategoryRow;
   }) => {
+    const mapRowToUpdatePayload = (row: CalendarCategoryRow) => {
+      return {
+        organizationStatisticCategoryId: row.id,
+        largeStatisticCategory:
+          row.large.label == '' || isUUID(row.large.label as string)
+            ? null
+            : {
+                name: row.large.label as string,
+                uuid: row.large.value as string,
+              },
+        mediumStatisticCategory:
+          row.medium.label == '' || isUUID(row.medium.label as string)
+            ? null
+            : {
+                name: row.medium.label as string,
+                uuid: row.medium.value as string,
+              },
+        color: row.color,
+        deletedType: row && getDeletedCalendarCategoryTypeFromRow(row),
+      };
+    };
+
+    const updatedRowInfo = (() => {
+      const newCategory = {
+        label: variables.name || variables.uuid,
+        value: variables.uuid,
+        showBy: AddCategoryHierarchyType.INPUT,
+      };
+      if (variables.type == HierarchyType.LARGE) {
+        return { ...variables.rowInfo, large: newCategory };
+      }
+      return { ...variables.rowInfo, medium: newCategory };
+    })();
+
+    const matchedRows = hierarchyDetail.statisticCategories
+      .filter((row) => {
+        if (variables.type == HierarchyType.LARGE) {
+          return row.large.value === variables.uuid;
+        }
+        return (
+          row.large.value === variables.rowInfo.large.value &&
+          row.medium.value === variables.uuid
+        );
+      })
+      .map((row) => {
+        if (variables.type == HierarchyType.LARGE) {
+          return { ...row, large: updatedRowInfo.large };
+        }
+        return { ...row, medium: updatedRowInfo.medium };
+      });
+
     setSelectedHierarchiesToUpdate((prev) => {
       const updatedHierarchiesToUpdate = [...prev];
+      const rowsToUpdate = matchedRows.length ? matchedRows : [updatedRowInfo];
+      const updatedPayloads = rowsToUpdate.map(mapRowToUpdatePayload);
 
-      const existingIndex = updatedHierarchiesToUpdate.findIndex(
-        (item) => item.organizationStatisticCategoryId === variables.rowInfo.id,
-      );
-
-      let newEntry: any = {};
-      if (variables.type == HierarchyType.LARGE) {
-        newEntry = {
-          organizationStatisticCategoryId: variables.rowInfo.id,
-          largeStatisticCategory:
-            variables.name == ''
-              ? null
-              : {
-                name: variables.name as string,
-                uuid: variables.uuid as string,
-              },
-          mediumStatisticCategory:
-            variables.rowInfo.medium.label == '' ||
-              isUUID(variables.rowInfo.medium.label as string)
-              ? null
-              : {
-                name: variables.rowInfo.medium.label as string,
-                uuid: variables.rowInfo.medium.value as string,
-              },
-          color: variables.rowInfo.color,
-          deletedType:
-            variables.rowInfo &&
-            getDeletedCalendarCategoryTypeFromRow(variables.rowInfo),
-        };
-      } else if (variables.type == HierarchyType.MEDIUM) {
-        newEntry = {
-          organizationStatisticCategoryId: variables.rowInfo.id,
-          largeStatisticCategory:
-            variables.rowInfo.large.label == '' ||
-              isUUID(variables.rowInfo.large.label as string)
-              ? null
-              : {
-                name: variables.rowInfo.large.label as string,
-                uuid: variables.rowInfo.large.value as string,
-              },
-          mediumStatisticCategory:
-            variables.name == ''
-              ? null
-              : {
-                name: variables.name as string,
-                uuid: variables.uuid as string,
-              },
-          color: variables.rowInfo.color,
-          deletedType:
-            variables.rowInfo &&
-            getDeletedCalendarCategoryTypeFromRow(variables.rowInfo),
-        };
-      } else {
-        newEntry = {
-          organizationStatisticCategoryId: variables.rowInfo.id,
-          largeStatisticCategory:
-            variables.rowInfo.large.label == '' ||
-              isUUID(variables.rowInfo.large.label as string)
-              ? null
-              : {
-                name: variables.rowInfo.large.label as string,
-                uuid: variables.rowInfo.large.value as string,
-              },
-          mediumStatisticCategory:
-            variables.rowInfo.medium.label == '' ||
-              isUUID(variables.rowInfo.medium.label as string)
-              ? null
-              : {
-                name: variables.rowInfo.medium.label as string,
-                uuid: variables.rowInfo.medium.value as string,
-              },
-          color: variables.rowInfo.color,
-          deletedType:
-            variables.rowInfo &&
-            getDeletedCalendarCategoryTypeFromRow(variables.rowInfo),
-        };
-      }
-
-      if (existingIndex !== -1) {
-        // If it exists, replace it
-        updatedHierarchiesToUpdate[existingIndex] = newEntry;
-      } else {
-        // Otherwise, add it
-        updatedHierarchiesToUpdate.push(newEntry);
-      }
+      updatedPayloads.forEach((newEntry) => {
+        const existingIndex = updatedHierarchiesToUpdate.findIndex(
+          (item) =>
+            item.organizationStatisticCategoryId ===
+            newEntry.organizationStatisticCategoryId,
+        );
+        if (existingIndex !== -1) {
+          updatedHierarchiesToUpdate[existingIndex] = newEntry;
+        } else {
+          updatedHierarchiesToUpdate.push(newEntry);
+        }
+      });
 
       return updatedHierarchiesToUpdate;
     });
@@ -418,7 +399,7 @@ const TableComponent = ({
       if (variables.type == HierarchyType.LARGE) {
         updatedHierarchyDetail.statisticCategories =
           updatedHierarchyDetail.statisticCategories.map((hierarchy) =>
-            hierarchy.id == variables.rowInfo.id
+            hierarchy.large.value === variables.uuid
               ? {
                 ...hierarchy,
                 large: {
@@ -433,8 +414,8 @@ const TableComponent = ({
         updatedHierarchyDetail.statisticCategories =
           updatedHierarchyDetail.statisticCategories.map((hierarchy) =>
             variables.rowInfo &&
-              hierarchy.id == variables.rowInfo.id &&
-              hierarchy.large.value === variables.rowInfo.large.value
+              hierarchy.large.value === variables.rowInfo.large.value &&
+              hierarchy.medium.value === variables.uuid
               ? {
                 ...hierarchy,
                 medium: {

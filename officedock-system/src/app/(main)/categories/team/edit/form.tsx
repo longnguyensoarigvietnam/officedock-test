@@ -466,9 +466,6 @@ const TableComponent = ({
       if (org.id !== hierarchyList.id) return org;
 
       const updatedCategories = org.statisticCategories.map((hierarchy) => {
-        if (!variables.rowInfo || hierarchy.id !== variables.rowInfo.id)
-          return hierarchy;
-
         const newCategory = {
           label: variables.name || variables.uuid,
           value: variables.uuid,
@@ -476,9 +473,12 @@ const TableComponent = ({
         };
 
         if (variables.type === HierarchyType.LARGE) {
-          return { ...hierarchy, large: newCategory };
+          if (hierarchy.large.value === variables.uuid) {
+            return { ...hierarchy, large: newCategory };
+          }
+          return hierarchy;
         } else if (variables.type === HierarchyType.MEDIUM) {
-          if (hierarchy.large.value === variables.rowInfo.large.value) {
+          if (hierarchy.medium.value === variables.uuid) {
             return { ...hierarchy, medium: newCategory };
           }
         } else {
@@ -486,7 +486,9 @@ const TableComponent = ({
             hierarchy.large.value === variables.rowInfo.large.value &&
             hierarchy.medium.value === variables.rowInfo.medium.value
           ) {
-            return { ...hierarchy, small: newCategory };
+            if (hierarchy.small.value === variables.uuid) {
+              return { ...hierarchy, small: newCategory };
+            }
           }
         }
 
@@ -497,6 +499,37 @@ const TableComponent = ({
     });
   };
 
+  const mapRowToUpdatePayload = (row: OrganizationCategoryRow) => {
+    return {
+      organizationStatisticCategoryId: row.id,
+      organizationId: hierarchyList.id as number,
+      largeStatisticCategory:
+        row.large.label == '' || isUUID(row.large.label as string)
+          ? null
+          : {
+              name: row.large.label as string,
+              uuid: row.large.value as string,
+            },
+      mediumStatisticCategory:
+        row.medium.label == '' || isUUID(row.medium.label as string)
+          ? null
+          : {
+              name: row.medium.label as string,
+              uuid: row.medium.value as string,
+            },
+      smallStatisticCategory:
+        row.small.label == '' || isUUID(row.small.label as string)
+          ? null
+          : {
+              name: row.small.label as string,
+              uuid: row.small.value as string,
+            },
+      color: row.color,
+      skillIds: row.skills.map((skill) => Number(skill.value)),
+      deletedType: row && getDeletedTypeFromRow(row),
+    };
+  };
+
   // Set category when onBlur triggers
   const handleChangeCategoryByInput = (variables: {
     name: string;
@@ -504,125 +537,63 @@ const TableComponent = ({
     type: string;
     rowInfo: OrganizationCategoryRow;
   }) => {
+    const updatedRowInfo = (() => {
+      const newCategory = {
+        label: variables.name || variables.uuid,
+        value: variables.uuid,
+        showBy: AddCategoryHierarchyType.INPUT,
+      };
+
+      if (variables.type === HierarchyType.LARGE) {
+        return { ...variables.rowInfo, large: newCategory };
+      }
+      if (variables.type === HierarchyType.MEDIUM) {
+        return { ...variables.rowInfo, medium: newCategory };
+      }
+      return { ...variables.rowInfo, small: newCategory };
+    })();
+
+    const matchedRows = hierarchyList.statisticCategories
+      .filter((row) => {
+        if (variables.type === HierarchyType.LARGE) {
+          return row.large.value === variables.uuid;
+        }
+        if (variables.type === HierarchyType.MEDIUM) {
+          return row.medium.value === variables.uuid;
+        }
+        return (
+          row.large.value === variables.rowInfo.large.value &&
+          row.medium.value === variables.rowInfo.medium.value &&
+          row.small.value === variables.uuid
+        );
+      })
+      .map((row) => {
+        if (variables.type === HierarchyType.LARGE) {
+          return { ...row, large: updatedRowInfo.large };
+        }
+        if (variables.type === HierarchyType.MEDIUM) {
+          return { ...row, medium: updatedRowInfo.medium };
+        }
+        return { ...row, small: updatedRowInfo.small };
+      });
+
     setSelectedHierarchiesToUpdate((prev) => {
       const updatedHierarchiesToUpdate = [...prev];
+      const rowsToUpdate = matchedRows.length ? matchedRows : [updatedRowInfo];
+      const updatedPayloads = rowsToUpdate.map(mapRowToUpdatePayload);
 
-      const existingIndex = updatedHierarchiesToUpdate.findIndex(
-        (item) => item.organizationStatisticCategoryId === variables.rowInfo.id,
-      );
-
-      let newEntry: any = {};
-      if (variables.type == HierarchyType.LARGE) {
-        newEntry = {
-          organizationStatisticCategoryId: variables.rowInfo.id,
-          organizationId: hierarchyList.id as number,
-          largeStatisticCategory:
-            variables.name == ''
-              ? null
-              : {
-                name: variables.name as string,
-                uuid: variables.uuid as string,
-              },
-          mediumStatisticCategory:
-            variables.rowInfo.medium.label == '' ||
-              isUUID(variables.rowInfo.medium.label as string)
-              ? null
-              : {
-                name: variables.rowInfo.medium.label as string,
-                uuid: variables.rowInfo.medium.value as string,
-              },
-          smallStatisticCategory:
-            variables.rowInfo.small.label == '' ||
-              isUUID(variables.rowInfo.small.label as string)
-              ? null
-              : {
-                name: variables.rowInfo.small.label as string,
-                uuid: variables.rowInfo.small.value as string,
-              },
-          color: variables.rowInfo.color,
-          skillIds: variables.rowInfo.skills.map((skill: OptionDropdownType) =>
-            Number(skill.value),
-          ),
-          deletedType:
-            variables.rowInfo && getDeletedTypeFromRow(variables.rowInfo),
-        };
-      } else if (variables.type == HierarchyType.MEDIUM) {
-        newEntry = {
-          organizationStatisticCategoryId: variables.rowInfo.id,
-          organizationId: hierarchyList.id as number,
-          largeStatisticCategory:
-            variables.rowInfo.large.label == '' ||
-              isUUID(variables.rowInfo.large.label as string)
-              ? null
-              : {
-                name: variables.rowInfo.large.label as string,
-                uuid: variables.rowInfo.large.value as string,
-              },
-          mediumStatisticCategory:
-            variables.name == ''
-              ? null
-              : {
-                name: variables.name as string,
-                uuid: variables.uuid as string,
-              },
-          smallStatisticCategory:
-            variables.rowInfo.small.label == '' ||
-              isUUID(variables.rowInfo.small.label as string)
-              ? null
-              : {
-                name: variables.rowInfo.small.label as string,
-                uuid: variables.rowInfo.small.value as string,
-              },
-          color: variables.rowInfo.color,
-          skillIds: variables.rowInfo.skills.map((skill: OptionDropdownType) =>
-            Number(skill.value),
-          ),
-          deletedType:
-            variables.rowInfo && getDeletedTypeFromRow(variables.rowInfo),
-        };
-      } else {
-        newEntry = {
-          organizationStatisticCategoryId: variables.rowInfo.id,
-          organizationId: hierarchyList.id as number,
-          largeStatisticCategory:
-            variables.rowInfo.large.label == '' ||
-              isUUID(variables.rowInfo.large.label as string)
-              ? null
-              : {
-                name: variables.rowInfo.large.label as string,
-                uuid: variables.rowInfo.large.value as string,
-              },
-          mediumStatisticCategory:
-            variables.rowInfo.medium.label == '' ||
-              isUUID(variables.rowInfo.medium.label as string)
-              ? null
-              : {
-                name: variables.rowInfo.medium.label as string,
-                uuid: variables.rowInfo.medium.value as string,
-              },
-          smallStatisticCategory:
-            variables.name == ''
-              ? null
-              : {
-                name: variables.name as string,
-                uuid: variables.uuid as string,
-              },
-          color: variables.rowInfo.color,
-          skillIds: variables.rowInfo.skills.map((skill: OptionDropdownType) =>
-            Number(skill.value),
-          ),
-          deletedType:
-            variables.rowInfo && getDeletedTypeFromRow(variables.rowInfo),
-        };
-      }
-
-      if (existingIndex !== -1) {
-        // If it exists, replace it
-        updatedHierarchiesToUpdate[existingIndex] = newEntry;
-      } else {
-        // Otherwise, add it
-        updatedHierarchiesToUpdate.push(newEntry);
-      }
+      updatedPayloads.forEach((newEntry) => {
+        const existingIndex = updatedHierarchiesToUpdate.findIndex(
+          (item) =>
+            item.organizationStatisticCategoryId ===
+            newEntry.organizationStatisticCategoryId,
+        );
+        if (existingIndex !== -1) {
+          updatedHierarchiesToUpdate[existingIndex] = newEntry;
+        } else {
+          updatedHierarchiesToUpdate.push(newEntry);
+        }
+      });
 
       return updatedHierarchiesToUpdate;
     });
