@@ -178,7 +178,6 @@ const ProgressBarTeamTagStatistic = ({
               const nextEl = e.relatedTarget as HTMLElement | null;
               const container = containerRef.current;
 
-              // 🔍 If the next element is NOT in the container → it means it's really out
               if (!container || (nextEl && container.contains(nextEl))) {
                 // Still in the chart area → DO NOT turn off the tooltip
                 return;
@@ -428,7 +427,6 @@ const ProgressBarTeamTagStatistic = ({
                   const nextEl = e.relatedTarget as HTMLElement | null;
                   const container = containerUserRef.current;
 
-                  // 🔍 If the next element is NOT in the container → it means it's really out
                   if (!container || (nextEl && container.contains(nextEl))) {
                     // Still in the chart area → DO NOT turn off the tooltip
                     return;

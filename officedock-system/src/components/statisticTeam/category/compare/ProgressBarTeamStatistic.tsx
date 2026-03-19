@@ -200,24 +200,24 @@ const ProgressBarTeamStatisticCompare = ({
             </div>
           </div>
           <div
+            ref={containerRef}
+            onMouseLeave={() => {
+              // If it really gets out of the whole container
+              hoverTimeoutRef.current = setTimeout(() => {
+                setHovering(false);
+              }, 0);
+            }}
+            onMouseEnter={() => {
+              onActionHover && onActionHover();
+              if (hoverTimeoutRef.current)
+                clearTimeout(hoverTimeoutRef.current);
+              setCompareHovering(false);
+              setHoverUserCompareIndex(null);
+              setHoverIndex(null);
+              setHovering(true);
+            }}
             className={`group w-full relative h-4 bg-[#EBF1F7] ${classProgressClass}`}>
             <div
-              ref={containerRef}
-              onMouseLeave={() => {
-                // If it really gets out of the whole container
-                hoverTimeoutRef.current = setTimeout(() => {
-                  setHovering(false);
-                }, 0);
-              }}
-              onMouseEnter={() => {
-                onActionHover && onActionHover();
-                if (hoverTimeoutRef.current)
-                  clearTimeout(hoverTimeoutRef.current);
-                setCompareHovering(false);
-                setHoverUserCompareIndex(null);
-                setHoverIndex(null);
-                setHovering(true);
-              }}
               className="h-full transition-all duration-500 rounded-[4px]"
               style={{
                 width: `${item.value}%`,
@@ -229,7 +229,8 @@ const ProgressBarTeamStatisticCompare = ({
                     label: item.label,
                     value: item.id || '',
                   });
-              }}></div>
+              }}
+            />
             {item && item.value > 0 && (
               <div
                 onMouseEnter={() => {
@@ -240,7 +241,6 @@ const ProgressBarTeamStatisticCompare = ({
                   const nextEl = e.relatedTarget as HTMLElement | null;
                   const container = containerRef.current;
 
-                  // 🔍 If the next element is NOT in the container → it means it's really out
                   if (!container || (nextEl && container.contains(nextEl))) {
                     // Still in the chart area → DO NOT turn off the tooltip
                     return;
@@ -403,25 +403,25 @@ const ProgressBarTeamStatisticCompare = ({
         {/* Item Compare */}
         <div className="mt-[6px]">
           <div
+            ref={containerCompareRef}
+            onMouseLeave={() => {
+              // If it really gets out of the whole container
+              hoverTimeoutCompareRef.current = setTimeout(() => {
+                setCompareHovering(false);
+              }, 0);
+            }}
+            onMouseEnter={() => {
+              onActionHover && onActionHover();
+
+              if (hoverTimeoutCompareRef.current)
+                clearTimeout(hoverTimeoutCompareRef.current);
+              setHovering(false);
+              setHoverUserCompareIndex(null);
+              setHoverIndex(null);
+              setCompareHovering(true);
+            }}
             className={`group w-full relative h-4 bg-[#EBF1F7] ${classProgressClass}`}>
             <div
-              ref={containerCompareRef}
-              onMouseLeave={() => {
-                // If it really gets out of the whole container
-                hoverTimeoutCompareRef.current = setTimeout(() => {
-                  setCompareHovering(false);
-                }, 0);
-              }}
-              onMouseEnter={() => {
-                onActionHover && onActionHover();
-
-                if (hoverTimeoutCompareRef.current)
-                  clearTimeout(hoverTimeoutCompareRef.current);
-                setHovering(false);
-                setHoverUserCompareIndex(null);
-                setHoverIndex(null);
-                setCompareHovering(true);
-              }}
               className="h-full transition-all duration-500 rounded-[4px]"
               style={{
                 width: `${itemCompare?.value}%`,
@@ -433,7 +433,8 @@ const ProgressBarTeamStatisticCompare = ({
                     label: itemCompare?.label || '',
                     value: itemCompare?.id || '',
                   });
-              }}></div>
+              }}
+            />
             {itemCompare && itemCompare.value > 0 && (
               <div
                 onMouseEnter={() => {
@@ -444,7 +445,6 @@ const ProgressBarTeamStatisticCompare = ({
                   const nextEl = e.relatedTarget as HTMLElement | null;
                   const container = containerCompareRef.current;
 
-                  // 🔍 If the next element is NOT in the container → it means it's really out
                   if (!container || (nextEl && container.contains(nextEl))) {
                     // Still in the chart area → DO NOT turn off the tooltip
                     return;
@@ -637,28 +637,29 @@ const ProgressBarTeamStatisticCompare = ({
                 </div>
               </div>
               <div
+                ref={containerUserRef}
+                onMouseLeave={() => {
+                  // If it really gets out of the whole container
+                  hoverTimeoutUserRef.current = setTimeout(() => {
+                    setHoverIndex(null);
+                  }, 1000);
+                }}
+                onMouseEnter={() => {
+                  if (hoverTimeoutUserRef.current)
+                    clearTimeout(hoverTimeoutUserRef.current);
+                  setHovering(false);
+                  setCompareHovering(false);
+                  setHoverUserCompareIndex(null);
+                  setHoverIndex(index);
+                }}
                 className={`w-full group relative h-[10px] bg-[#EBF1F7] ${classProgressUserClass}`}>
                 <div
-                  ref={containerUserRef}
-                  onMouseLeave={() => {
-                    // If it really gets out of the whole container
-                    hoverTimeoutUserRef.current = setTimeout(() => {
-                      setHoverIndex(null);
-                    }, 1000);
-                  }}
-                  onMouseEnter={() => {
-                    if (hoverTimeoutUserRef.current)
-                      clearTimeout(hoverTimeoutUserRef.current);
-                    setHovering(false);
-                    setCompareHovering(false);
-                    setHoverUserCompareIndex(null);
-                    setHoverIndex(index);
-                  }}
                   className="h-full overflow-hidden transition-all duration-500 "
                   style={{
                     width: `${itemUser.user.percent}%`,
                     backgroundColor: itemUser.user.user.avatarColor,
-                  }}></div>
+                  }}
+                />
 
                 {/*  Hover user */}
                 <div
@@ -670,7 +671,6 @@ const ProgressBarTeamStatisticCompare = ({
                     const nextEl = e.relatedTarget as HTMLElement | null;
                     const container = containerUserRef.current;
 
-                    // 🔍 If the next element is NOT in the container → it means it's really out
                     if (!container || (nextEl && container.contains(nextEl))) {
                       // Still in the chart area → DO NOT turn off the tooltip
                       return;
@@ -767,28 +767,29 @@ const ProgressBarTeamStatisticCompare = ({
             {/* user item compare */}
             <div className="mt-[6px]">
               <div
+                ref={containerUserCompareRef}
+                onMouseLeave={() => {
+                  // If it really gets out of the whole container
+                  hoverTimeoutUserCompareRef.current = setTimeout(() => {
+                    setHoverUserCompareIndex(null);
+                  }, 1000);
+                }}
+                onMouseEnter={() => {
+                  if (hoverTimeoutUserCompareRef.current)
+                    clearTimeout(hoverTimeoutUserCompareRef.current);
+                  setHovering(false);
+                  setCompareHovering(false);
+                  setHoverIndex(null);
+                  setHoverUserCompareIndex(index);
+                }}
                 className={`w-full group relative h-[10px] bg-[#EBF1F7]  ${classProgressUserClass}`}>
                 <div
-                  ref={containerUserCompareRef}
-                  onMouseLeave={() => {
-                    // If it really gets out of the whole container
-                    hoverTimeoutUserCompareRef.current = setTimeout(() => {
-                      setHoverUserCompareIndex(null);
-                    }, 1000);
-                  }}
-                  onMouseEnter={() => {
-                    if (hoverTimeoutUserCompareRef.current)
-                      clearTimeout(hoverTimeoutUserCompareRef.current);
-                    setHovering(false);
-                    setCompareHovering(false);
-                    setHoverIndex(null);
-                    setHoverUserCompareIndex(index);
-                  }}
                   className="h-full transition-all duration-500 "
                   style={{
                     width: `${itemUser.userCompare.percent}%`,
                     backgroundColor: itemUser.userCompare.user.avatarColor,
-                  }}></div>
+                  }}
+                />
                 {/*  Hover user compare */}
                 <div
                   onMouseEnter={() => {
@@ -799,7 +800,6 @@ const ProgressBarTeamStatisticCompare = ({
                     const nextEl = e.relatedTarget as HTMLElement | null;
                     const container = containerUserCompareRef.current;
 
-                    // 🔍 If the next element is NOT in the container → it means it's really out
                     if (!container || (nextEl && container.contains(nextEl))) {
                       // Still in the chart area → DO NOT turn off the tooltip
                       return;

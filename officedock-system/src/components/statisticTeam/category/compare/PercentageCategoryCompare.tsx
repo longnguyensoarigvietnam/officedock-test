@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import Dropdown from '@components/common/Dropdown';
 import ImageRound from '@components/common/ImageRound';
@@ -15,6 +15,7 @@ import {
 } from '@interfaces/statistic';
 
 import { lightenColor } from '@utils';
+import { sumDurationsChart } from '@utils/date';
 import { StatisticTeamStateContext } from '@providers/StatisticTeamProvider';
 import FilterTeamStatistic from '../filter/FilterTeamStatistic';
 import { ALL_TEAM_STATISTIC, SUB_TEAMS } from '@constants';
@@ -97,95 +98,133 @@ const PercentageTeamCategoryCompare = ({
     DataPercentCompareType[]
   >([]);
 
-  const mapCategoryData = (
-    dataCategories: StatisticCategoryInfo[],
-    colorData?: string,
-  ) => {
-    if (!dataCategories) return [];
-    const categories = dataCategories.filter((item) => item.percent > 0);
+  const mergeUsers = (
+    users?: StatisticCategoryInfo['users'],
+  ): NonNullable<StatisticCategoryInfo['users']> => {
+    if (!users || users.length === 0) return [];
 
-    const otherItems = categories.filter((item) => item.percent < 10);
-    const mainItems = categories.filter((item) => item.percent >= 10);
+    const byUserKey = new Map<string, (typeof users)[number]>();
+    users.forEach((u) => {
+      const user = u?.user;
+      if (!user?.fullName) return;
+      const key = `${user.fullName}||${user.avatar || ''}||${user.avatarColor || ''}`;
 
-    const otherItem = {
-      id: -1,
-      label: 'その他',
-      percentage: otherItems.reduce((sum, item) => sum + item.percent, 0),
-      mergedItems: otherItems.map((item) => ({
-        ...item,
-        categoryColor:
-          item.categoryColor ||
-          (colorData && lightenColor(colorData, item.percent)) ||
-          '#83919e',
-      })),
-      color: colorData || '#83919e',
-      totalDuration: '',
-      optionData: otherItems
-        .flatMap((item) =>
-          item.users?.map((user) => {
-            if (user?.user?.fullName) {
-              return {
-                label: user.user.fullName,
-                percent: item.percent,
-                avatarColor: user.user.avatarColor,
-                avatarUrl: user.user?.avatar || '',
-              };
-            }
-            return undefined;
-          }),
-        )
-        .filter(
-          (
-            item,
-          ): item is {
-            label: string;
-            percent: number;
-            avatarColor: string;
-            avatarUrl: string;
-          } => !!item,
-        ),
-    };
+      const existing = byUserKey.get(key);
+      if (!existing) {
+        byUserKey.set(key, {
+          user,
+          percent: Number(u.percent) || 0,
+          duration: u.duration,
+          tasks: u.tasks ?? [],
+        });
+        return;
+      }
 
-    const mappedMainItems = mainItems.map((item) => ({
-      id: item.categoryId,
-      label: item.categoryName,
-      percentage: item.percent,
-      color:
-        item.categoryColor ||
-        (colorData && lightenColor(colorData as string, item.percent)) ||
-        '#83919e',
-      totalDuration: item.duration,
-      optionData:
-        item.users
-          ?.map((user) => {
-            if (user?.user?.fullName) {
-              return {
-                label: user.user.fullName,
-                percent: user.percent,
-                avatarColor: user.user.avatarColor,
-                avatarUrl: user.user?.avatar || '',
-              };
-            }
-            return undefined;
-          })
+      const mergedTasks = [...(existing.tasks ?? []), ...(u.tasks ?? [])];
+      const taskMap = new Map<number, (typeof mergedTasks)[number]>();
+      mergedTasks.forEach((t) => taskMap.set(t.id, t));
+
+      byUserKey.set(key, {
+        user: existing.user,
+        percent: (Number(existing.percent) || 0) + (Number(u.percent) || 0),
+        duration: sumDurationsChart([existing.duration, u.duration]),
+        tasks: Array.from(taskMap.values()),
+      });
+    });
+
+    return Array.from(byUserKey.values());
+  };
+
+  const mapCategoryData = useCallback(
+    (dataCategories: StatisticCategoryInfo[], colorData?: string) => {
+      if (!dataCategories) return [];
+      const categories = dataCategories.filter((item) => item.percent > 0);
+
+      const otherItems = categories.filter((item) => item.percent < 10);
+      const mainItems = categories.filter((item) => item.percent >= 10);
+
+      const otherItem = {
+        id: -1,
+        label: 'その他',
+        percentage: otherItems.reduce((sum, item) => sum + item.percent, 0),
+        mergedItems: otherItems.map((item) => ({
+          ...item,
+          users: mergeUsers(item.users),
+          categoryColor:
+            item.categoryColor ||
+            (colorData && lightenColor(colorData, item.percent)) ||
+            '#83919e',
+        })),
+        color: colorData || '#83919e',
+        totalDuration: '',
+        optionData: otherItems
+          .flatMap((item) =>
+            item.users?.map((user) => {
+              if (user?.user?.fullName) {
+                return {
+                  label: user.user.fullName,
+                  percent: item.percent,
+                  avatarColor: user.user.avatarColor,
+                  avatarUrl: user.user?.avatar || '',
+                };
+              }
+              return undefined;
+            }),
+          )
           .filter(
             (
-              user,
-            ): user is {
+              item,
+            ): item is {
               label: string;
               percent: number;
               avatarColor: string;
               avatarUrl: string;
-            } => !!user,
-          ) || [],
-      mergedItems: [],
-    }));
+            } => !!item,
+          ),
+      };
 
-    return [
-      ...mappedMainItems,
-      ...(otherItem.percentage > 0 ? [otherItem] : []),
-    ];
-  };
+      const mappedMainItems = mainItems.map((item) => ({
+        id: item.categoryId,
+        label: item.categoryName,
+        percentage: item.percent,
+        color:
+          item.categoryColor ||
+          (colorData && lightenColor(colorData as string, item.percent)) ||
+          '#83919e',
+        totalDuration: item.duration,
+        optionData:
+          mergeUsers(item.users)
+            ?.map((user) => {
+              if (user?.user?.fullName) {
+                return {
+                  label: user.user.fullName,
+                  percent: user.percent,
+                  avatarColor: user.user.avatarColor,
+                  avatarUrl: user.user?.avatar || '',
+                };
+              }
+              return undefined;
+            })
+            .filter(
+              (
+                user,
+              ): user is {
+                label: string;
+                percent: number;
+                avatarColor: string;
+                avatarUrl: string;
+              } => !!user,
+            ) || [],
+        mergedItems: [],
+      }));
+
+      return [
+        ...mappedMainItems,
+        ...(otherItem.percentage > 0 ? [otherItem] : []),
+      ];
+    },
+    [],
+  );
   const mapCategoryDataWithAllTeamOption = (
     dataCategories: StatisticAllTeamInfo[],
   ) => {
@@ -241,7 +280,12 @@ const PercentageTeamCategoryCompare = ({
         ),
       );
     }
-  }, [selectedLarge?.value, selectedOrganization, statisticTeamCategoryList]);
+  }, [
+    mapCategoryData,
+    selectedLarge?.value,
+    selectedOrganization,
+    statisticTeamCategoryList,
+  ]);
 
   // Set data from category compare list
   useEffect(() => {
@@ -271,6 +315,7 @@ const PercentageTeamCategoryCompare = ({
       );
     }
   }, [
+    mapCategoryData,
     selectedLarge?.value,
     selectedOrganization,
     statisticCategoryListTeamCompare,

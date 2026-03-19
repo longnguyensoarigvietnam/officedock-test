@@ -62,52 +62,8 @@ type ProgressDataCompareItem = {
   itemCompare?: ProgressDataTypeTeam;
 };
 
-function transformAndMergeProgressData({
-  data,
-  mergeLabel = 'その他',
-  mergeColor = '#83919E',
-  threshold = 10,
-}: {
-  data: StatisticCategoryInfo[];
-  mergeLabel?: string;
-  mergeColor?: string;
-  threshold?: number;
-}): ProgressDataTypeTeam[] {
-  const progressData: ProgressDataTypeTeam[] = data.map((item) => ({
-    id: item.tagId as number,
-    label: item.tagName || '',
-    value: item.percent,
-    color: lightenColor('#2E9267' as string, item.percent) || '',
-    duration: item.duration,
-    optionData: item.users || [],
-    organizationId: String(item.organizationId),
-  }));
-
-  const mergedItems = progressData.filter((item) => item.value < threshold);
-  const mainItems = progressData.filter((item) => item.value >= threshold);
-
-  if (mergedItems.length === 0) return mainItems;
-
-  const totalMergedPercent = mergedItems.reduce(
-    (sum, item) => sum + item.value,
-    0,
-  );
-  const durations = mergedItems.map((item) => item.duration);
-
-  const totalDuration = sumDurationsChart(durations);
-
-  const mergedItem: ProgressDataTypeTeam = {
-    id: -1,
-    label: mergeLabel,
-    value: totalMergedPercent,
-    color: mergeColor,
-    duration: totalDuration,
-    optionData: mergedItems.flatMap((item) => item.optionData),
-    mergedItems,
-  };
-
-  return [...mainItems, mergedItem];
-}
+// NOTE: Compare view uses a custom merge rule (both sides < threshold),
+// so we no longer use the old per-side merge helper here.
 const buildKey = (item: ProgressDataTypeTeam, isAll: boolean) =>
   isAll ? `${item.organizationId}-${item.id}` : `${item.id}`;
 
@@ -128,97 +84,187 @@ export function buildProgressDataCompareWithMergedOthers({
   threshold?: number;
   isAllTeam?: boolean;
 }): ProgressDataCompareItem[] {
-  /* Step A – normalize & merge (<threshold) */
-  const mergedBase = transformAndMergeProgressData({
-    data:
-      baseData.length === 0
-        ? compareData.map((i) => ({
-          ...i,
-          percent: 0,
-          duration: DEFAULT_TIME_TEXT,
-          users: [],
-        }))
-        : baseData,
-    threshold,
-  });
+  const mergeUsers = (users: UserListStatisticType[]): UserListStatisticType[] => {
+    const byUserId = new Map<number, UserListStatisticType>();
 
-  const mergedCompare = transformAndMergeProgressData({
-    data:
-      compareData.length === 0
-        ? baseData.map((i) => ({
-          ...i,
-          percent: 0,
-          duration: DEFAULT_TIME_TEXT,
-          users: [],
-        }))
-        : compareData,
-    threshold,
-  });
-
-  /* Step B – get the unique “key” (id or org‑id) */
-  const allKeys = new Set<string>();
-  const collectKeys = (arr: ProgressDataTypeTeam[]) => {
-    arr.forEach((item) => {
-      allKeys.add(buildKey(item, isAllTeam));
-      if (item.id === -1 && item.mergedItems) {
-        item.mergedItems.forEach((sub) =>
-          allKeys.add(buildKey(sub, isAllTeam)),
-        );
+    users.forEach((u) => {
+      const id = u.user.id;
+      const existing = byUserId.get(id);
+      if (!existing) {
+        byUserId.set(id, {
+          user: u.user,
+          percent: Number(u.percent) || 0,
+          duration: u.duration,
+          tasks: u.tasks ?? [],
+        });
+        return;
       }
+
+      const mergedTasks = [...(existing.tasks ?? []), ...(u.tasks ?? [])];
+      const taskMap = new Map<number, (typeof mergedTasks)[number]>();
+      mergedTasks.forEach((t) => taskMap.set(t.id, t));
+
+      byUserId.set(id, {
+        user: existing.user,
+        percent: (Number(existing.percent) || 0) + (Number(u.percent) || 0),
+        duration: sumDurationsChart([existing.duration, u.duration]),
+        tasks: Array.from(taskMap.values()),
+      });
     });
+
+    return Array.from(byUserId.values());
   };
-  collectKeys(mergedBase);
-  collectKeys(mergedCompare);
 
-  /* Step C – function to find item by key */
-  const findByKey = (
-    key: string,
-    arr: ProgressDataTypeTeam[],
-  ): ProgressDataTypeTeam | undefined => {
-    const { id, orgId } = parseKey(key, isAllTeam);
-    const match = (el: ProgressDataTypeTeam) =>
-      String(el.id) == id && (!isAllTeam || el.organizationId == orgId);
+  const buildTeamItem = (
+    info: StatisticCategoryInfo | null,
+    fallback: Partial<ProgressDataTypeTeam>,
+  ): ProgressDataTypeTeam => {
+    const id = (info?.tagId as number | undefined) ?? (fallback.id as any);
+    const percent = info?.percent ?? (fallback.value ?? 0);
 
-    return (
-      arr.find(match) ||
-      arr
-        .find((d) => d.id === -1 && d.mergedItems?.some(match))
-        ?.mergedItems?.find(match)
+    return {
+      id,
+      label: info?.tagName || fallback.label || '',
+      value: percent,
+      color: lightenColor('#2E9267' as string, percent) || fallback.color || '',
+      duration: info?.duration ?? fallback.duration ?? DEFAULT_TIME_TEXT,
+      optionData: mergeUsers(info?.users ?? fallback.optionData ?? []),
+      organizationId: String(
+        info?.organizationId ?? fallback.organizationId ?? '',
+      ),
+    };
+  };
+
+  // Map by unique key (orgId-tagId for all-team, else tagId)
+  const baseMap = new Map<string, StatisticCategoryInfo>();
+  const cmpMap = new Map<string, StatisticCategoryInfo>();
+
+  baseData.forEach((info) => {
+    const k = buildKey(
+      {
+        id: info.tagId as number,
+        label: info.tagName || '',
+        value: info.percent,
+        color: '',
+        duration: info.duration,
+        optionData: info.users || [],
+        organizationId: String(info.organizationId),
+      },
+      isAllTeam,
     );
-  };
+    baseMap.set(k, info);
+  });
 
-  /* Step D – concatenate results for each key */
-  const result: ProgressDataCompareItem[] = Array.from(allKeys)
-    .map((key) => {
-      const baseItem = findByKey(key, mergedBase);
-      const cmpItem = findByKey(key, mergedCompare);
-      const { id, orgId } = parseKey(key, isAllTeam);
+  compareData.forEach((info) => {
+    const k = buildKey(
+      {
+        id: info.tagId as number,
+        label: info.tagName || '',
+        value: info.percent,
+        color: '',
+        duration: info.duration,
+        optionData: info.users || [],
+        organizationId: String(info.organizationId),
+      },
+      isAllTeam,
+    );
+    cmpMap.set(k, info);
+  });
 
-      const empty: ProgressDataTypeTeam = {
-        id,
-        label: baseItem?.label ?? cmpItem?.label ?? '',
-        value: 0,
-        color: '#ccc',
-        duration: DEFAULT_TIME_TEXT,
-        optionData: [],
-        organizationId: orgId,
-      };
+  const allKeys = new Set<string>([
+    ...Array.from(baseMap.keys()),
+    ...Array.from(cmpMap.keys()),
+  ]);
 
-      return {
-        item: baseItem ?? empty,
-        itemCompare: cmpItem ?? empty,
-      };
-    })
-    .filter(({ item, itemCompare }) => item.value > 0 || itemCompare.value > 0);
+  const mainRows: ProgressDataCompareItem[] = [];
+  const mergedBaseItems: ProgressDataTypeTeam[] = [];
+  const mergedCompareItems: ProgressDataTypeTeam[] = [];
 
-  /* Step E – move “その他” (id = -1) to the end */
-  result.sort((a, b) => {
+  allKeys.forEach((key) => {
+    const baseInfo = baseMap.get(key) ?? null;
+    const cmpInfo = cmpMap.get(key) ?? null;
+    const { id, orgId } = parseKey(key, isAllTeam);
+
+    const baseItem = buildTeamItem(baseInfo, {
+      id,
+      label: cmpInfo?.tagName || '',
+      value: 0,
+      duration: DEFAULT_TIME_TEXT,
+      optionData: [],
+      organizationId: orgId,
+    });
+    const cmpItem = buildTeamItem(cmpInfo, {
+      id,
+      label: baseInfo?.tagName || '',
+      value: 0,
+      duration: DEFAULT_TIME_TEXT,
+      optionData: [],
+      organizationId: orgId,
+    });
+
+    // New rule:
+    // - If BOTH base and compare are below threshold → merge into "その他"
+    // - Else → show as standalone row
+    if (baseItem.value < threshold && cmpItem.value < threshold) {
+      if (baseItem.value > 0) mergedBaseItems.push(baseItem);
+      if (cmpItem.value > 0) mergedCompareItems.push(cmpItem);
+      return;
+    }
+
+    if (baseItem.value > 0 || cmpItem.value > 0) {
+      mainRows.push({ item: baseItem, itemCompare: cmpItem });
+    }
+  });
+
+  // Append "その他" only if it has at least one side
+  if (mergedBaseItems.length > 0 || mergedCompareItems.length > 0) {
+    const otherBasePercent = mergedBaseItems.reduce(
+      (sum, it) => sum + it.value,
+      0,
+    );
+    const otherCmpPercent = mergedCompareItems.reduce(
+      (sum, it) => sum + it.value,
+      0,
+    );
+
+    const otherBaseDuration = sumDurationsChart(
+      mergedBaseItems.map((it) => it.duration),
+    );
+    const otherCmpDuration = sumDurationsChart(
+      mergedCompareItems.map((it) => it.duration),
+    );
+
+    const otherBase: ProgressDataTypeTeam = {
+      id: -1,
+      label: 'その他',
+      value: otherBasePercent,
+      color: '#83919E',
+      duration: otherBaseDuration,
+      optionData: mergeUsers(mergedBaseItems.flatMap((it) => it.optionData)),
+      mergedItems: mergedBaseItems,
+    };
+
+    const otherCmp: ProgressDataTypeTeam = {
+      id: -1,
+      label: 'その他',
+      value: otherCmpPercent,
+      color: '#83919E',
+      duration: otherCmpDuration,
+      optionData: mergeUsers(mergedCompareItems.flatMap((it) => it.optionData)),
+      mergedItems: mergedCompareItems,
+    };
+
+    mainRows.push({ item: otherBase, itemCompare: otherCmp });
+  }
+
+  // Move "その他" to the end
+  mainRows.sort((a, b) => {
     const aOther = a.item.id === -1;
     const bOther = b.item.id === -1;
     return aOther === bOther ? 0 : aOther ? 1 : -1;
   });
 
-  return result;
+  return mainRows;
 }
 const AllocationTagTeamCompare = memo(
   ({

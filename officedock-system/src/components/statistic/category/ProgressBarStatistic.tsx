@@ -98,24 +98,23 @@ const ProgressBarStatistic = ({
         </div>
 
         <div
+          ref={containerRef}
+          onMouseLeave={() => {
+            // leave the container completely → count 1s before turning off to avoid flicker
+            if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+            hoverTimeoutRef.current = setTimeout(() => {
+              onDeactivate && onDeactivate(id as number);
+            }, tooltipDelay);
+          }}
+          onMouseEnter={() => {
+            if (hoverTimeoutRef.current) {
+              clearTimeout(hoverTimeoutRef.current);
+              hoverTimeoutRef.current = null;
+            }
+            onActivate && onActivate(id as number);
+          }}
           className={`group w-full relative h-4 bg-[#EBF1F7] ${classProgressClass}`}>
           <div
-            ref={containerRef}
-            onMouseLeave={() => {
-              // leave the container completely → count 1s before turning off to avoid flicker
-              if (hoverTimeoutRef.current)
-                clearTimeout(hoverTimeoutRef.current);
-              hoverTimeoutRef.current = setTimeout(() => {
-                onDeactivate && onDeactivate(id as number);
-              }, tooltipDelay);
-            }}
-            onMouseEnter={() => {
-              if (hoverTimeoutRef.current) {
-                clearTimeout(hoverTimeoutRef.current);
-                hoverTimeoutRef.current = null;
-              }
-              onActivate && onActivate(id as number);
-            }}
             className="h-full transition-all duration-500 rounded-[4px]"
             style={{
               width: `${percentage}%`,
@@ -127,7 +126,8 @@ const ProgressBarStatistic = ({
                   label: label,
                   value: id || '',
                 });
-            }}></div>
+            }}
+          />
           {percentage > 0 && (
             <div
               onMouseEnter={() => {
