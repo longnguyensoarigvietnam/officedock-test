@@ -156,7 +156,6 @@ const PercentageBarCompare = ({
                       const nextEl = e.relatedTarget as HTMLElement | null;
                       const container = containerRef.current;
 
-                      // 🔍 If the next element is NOT in the container → it means it's really out
                       if (
                         !container ||
                         (nextEl && container.contains(nextEl))
@@ -299,7 +298,9 @@ const PercentageBarCompare = ({
             ) : (
               <div className="w-full h-full bg-[#EBF1F7] flex items-center justify-center rounded-[4px]">
                 {showNoDataText && (
-                  <span className="text-sm text-[#77858F]">データがありません</span>
+                  <span className="text-sm text-[#77858F]">
+                    データがありません
+                  </span>
                 )}
               </div>
             )}
@@ -373,7 +374,6 @@ const PercentageBarCompare = ({
                       const nextEl = e.relatedTarget as HTMLElement | null;
                       const container = containerCompareRef.current;
 
-                      // 🔍 If the next element is NOT in the container → it means it's really out
                       if (
                         !container ||
                         (nextEl && container.contains(nextEl))
@@ -527,7 +527,9 @@ const PercentageBarCompare = ({
             ) : (
               <div className="w-full h-full bg-[#EBF1F7] flex items-center justify-center rounded-[4px]">
                 {showNoDataText && (
-                  <span className="text-sm text-[#77858F]">データがありません</span>
+                  <span className="text-sm text-[#77858F]">
+                    データがありません
+                  </span>
                 )}
               </div>
             )}

@@ -4,8 +4,10 @@ import {
   formatShowStatisticTask,
   formatTimeToJapanese,
   getJapaneseDayName,
+  sumDurationsChart,
 } from '@utils/date';
 import { DataPercentCompareType, OptionDropdownType } from '@interfaces/common';
+import { UserListStatisticType } from '@interfaces/statistic';
 import CustomUserAvatar from '../AvatarIcon/CustomUserAvatar';
 import StatisticCompareLoading from '../SkeletonLoading/StatisticCompareLoading';
 
@@ -51,6 +53,45 @@ const PercentageBarCompareTeam = ({
   showNoDataText = false,
   tooltipDelay = 1000,
 }: Props) => {
+  const mergeUsers = (
+    users: UserListStatisticType[],
+  ): UserListStatisticType[] => {
+    const byUserKey = new Map<string, UserListStatisticType>();
+
+    users.forEach((u) => {
+      const user = u?.user;
+      if (!user?.fullName) return;
+
+      // Some APIs can return duplicate "same person" rows with different ids.
+      // Use a display-identity key to avoid duplicate rows in tooltip.
+      const key = `${user.fullName}||${user.avatar || ''}||${user.avatarColor || ''}`;
+
+      const existing = byUserKey.get(key);
+      if (!existing) {
+        byUserKey.set(key, {
+          user,
+          percent: Number(u.percent) || 0,
+          duration: u.duration,
+          tasks: u.tasks ?? [],
+        });
+        return;
+      }
+
+      const mergedTasks = [...(existing.tasks ?? []), ...(u.tasks ?? [])];
+      const taskMap = new Map<number, (typeof mergedTasks)[number]>();
+      mergedTasks.forEach((t) => taskMap.set(t.id, t));
+
+      byUserKey.set(key, {
+        user: existing.user,
+        percent: (Number(existing.percent) || 0) + (Number(u.percent) || 0),
+        duration: sumDurationsChart([existing.duration, u.duration]),
+        tasks: Array.from(taskMap.values()),
+      });
+    });
+
+    return Array.from(byUserKey.values());
+  };
+
   const containerRef = useRef<HTMLDivElement | null>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
@@ -151,13 +192,12 @@ const PercentageBarCompareTeam = ({
                         clearTimeout(hoverTimeoutRef.current);
                     }}
                     onMouseLeave={(e) => {
-                      const nextEl = e.relatedTarget as HTMLElement | null;
+                      const nextEl = e.relatedTarget;
                       const container = containerRef.current;
 
-                      // 🔍 If the next element is NOT in the container → it means it's really out
                       if (
                         !container ||
-                        (nextEl && container.contains(nextEl))
+                        (nextEl instanceof Node && container.contains(nextEl))
                       ) {
                         // Still in the chart area → DO NOT turn off the tooltip
                         return;
@@ -201,11 +241,11 @@ const PercentageBarCompareTeam = ({
                                 <div className="max-h-[250px] overflow-y-auto px-5">
                                   <ul className="mt-2">
                                     {mergeItem.users &&
-                                      mergeItem.users.map(
-                                        (itemMer, indexMerge) => {
+                                      mergeUsers(mergeItem.users).map(
+                                        (itemMer) => {
                                           return (
                                             <li
-                                              key={indexMerge}
+                                              key={`${itemMer.user.fullName}||${itemMer.user.avatar || ''}||${itemMer.user.avatarColor || ''}`}
                                               className="flex items-center justify-between mb-2">
                                               <div className="flex items-center gap-2">
                                                 <div>
@@ -322,7 +362,9 @@ const PercentageBarCompareTeam = ({
             ) : (
               <div className="w-full h-full bg-[#EBF1F7] flex items-center justify-center rounded-[4px]">
                 {showNoDataText && (
-                  <span className="text-sm text-[#77858F]">データがありません</span>
+                  <span className="text-sm text-[#77858F]">
+                    データがありません
+                  </span>
                 )}
               </div>
             )}
@@ -394,13 +436,12 @@ const PercentageBarCompareTeam = ({
                         clearTimeout(hoverTimeoutCompareRef.current);
                     }}
                     onMouseLeave={(e) => {
-                      const nextEl = e.relatedTarget as HTMLElement | null;
+                      const nextEl = e.relatedTarget;
                       const container = containerCompareRef.current;
 
-                      // 🔍 If the next element is NOT in the container → it means it's really out
                       if (
                         !container ||
-                        (nextEl && container.contains(nextEl))
+                        (nextEl instanceof Node && container.contains(nextEl))
                       ) {
                         // Still in the chart area → DO NOT turn off the tooltip
                         return;
@@ -444,61 +485,36 @@ const PercentageBarCompareTeam = ({
                                 <div className="max-h-[250px] overflow-y-auto px-5">
                                   <ul className="mt-2">
                                     {mergeItem.users &&
-                                      mergeItem.users.map((item, index) => {
-                                        return (
-                                          <li
-                                            key={index}
-                                            className="flex items-center justify-between mb-2">
-                                            <div className="flex items-center gap-2">
-                                              <div>
-                                                <CustomUserAvatar
-                                                  avatarUrl={
-                                                    item.user?.avatar || ''
-                                                  }
-                                                  avatarColor={
-                                                    item?.user.avatarColor || ''
-                                                  }
-                                                  size={30}
-                                                />
+                                      mergeUsers(mergeItem.users).map(
+                                        (item) => {
+                                          return (
+                                            <li
+                                              key={`${item.user.fullName}||${item.user.avatar || ''}||${item.user.avatarColor || ''}`}
+                                              className="flex items-center justify-between mb-2">
+                                              <div className="flex items-center gap-2">
+                                                <div>
+                                                  <CustomUserAvatar
+                                                    avatarUrl={
+                                                      item.user?.avatar || ''
+                                                    }
+                                                    avatarColor={
+                                                      item?.user.avatarColor ||
+                                                      ''
+                                                    }
+                                                    size={30}
+                                                  />
+                                                </div>
+                                                <span className="inline-block text-black  ml-3 max-w-[180px] overflow-hidden whitespace-nowrap text-ellipsis">
+                                                  {item.user.fullName}
+                                                </span>
                                               </div>
-                                              <span className="inline-block text-black  ml-3 max-w-[180px] overflow-hidden whitespace-nowrap text-ellipsis">
-                                                {item.user.fullName}
+                                              <span className="text-black">
+                                                {item.percent}%
                                               </span>
-                                            </div>
-                                            <span className="text-black">
-                                              {item.percent}%
-                                            </span>
-                                          </li>
-                                        );
-                                      })}
-                                    {mergeItem.users &&
-                                      mergeItem.users.map((item, index) => {
-                                        return (
-                                          <li
-                                            key={index}
-                                            className="flex items-center justify-between mb-2">
-                                            <div className="flex items-center gap-2">
-                                              <div>
-                                                <CustomUserAvatar
-                                                  avatarUrl={
-                                                    item.user?.avatar || ''
-                                                  }
-                                                  avatarColor={
-                                                    item?.user.avatarColor || ''
-                                                  }
-                                                  size={30}
-                                                />
-                                              </div>
-                                              <span className="inline-block text-black  ml-3 max-w-[180px] overflow-hidden whitespace-nowrap text-ellipsis">
-                                                {item.user.fullName}
-                                              </span>
-                                            </div>
-                                            <span className="text-black">
-                                              {item.percent}%
-                                            </span>
-                                          </li>
-                                        );
-                                      })}
+                                            </li>
+                                          );
+                                        },
+                                      )}
                                   </ul>
                                 </div>
 
@@ -590,7 +606,9 @@ const PercentageBarCompareTeam = ({
             ) : (
               <div className="w-full h-full bg-[#EBF1F7] flex items-center justify-center rounded-[4px]">
                 {showNoDataText && (
-                  <span className="text-sm text-[#77858F]">データがありません</span>
+                  <span className="text-sm text-[#77858F]">
+                    データがありません
+                  </span>
                 )}
               </div>
             )}
