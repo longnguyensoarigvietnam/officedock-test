@@ -167,6 +167,9 @@ _ERROR_MESSAGES = {
         "cannot_archive_role": _(
             "This role cannot be hidden because it is assigned to users."
         ),
+        "completed_task": _(
+            "You need to complete {count} more tasks this month to redeem."
+        ),
     },
     "ja": {
         "token_invalid": _("トークンは無効です。"),
@@ -278,6 +281,7 @@ _ERROR_MESSAGES = {
         "cannot_edit_schedule_task_archive": _("アーカイブ済みのタスクは、実施予定日時を修正できません。"),
         "update_over_total_users": _("ユーザー作成上限は{user_count}以上で入力してください。"),
         "cannot_archive_role": _("このロールはユーザーに割り当てられているため、非表示にできません。"),
+        "completed_task": _("今月タスクをあと{count}回完了すると交換可能です。"),
     },
 }
 

@@ -4,6 +4,7 @@ from django.conf import settings
 from django.db import transaction
 from django.db.models import Q, Prefetch
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django.utils.timezone import now
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.decorators import action
@@ -73,8 +74,9 @@ from surveys.constants import DEFAULT_CONTENT_TWEET_END_SURVEY
 from surveys.models import Survey
 
 from tweets.models import Tweet
-from users.models import User, UserBalance
-from users.constants import RoleTypes
+from users.models import User, UserBalance, UserCoinLot, TransactionHistory
+from users.constants import RoleTypes, TransactionTypes, CurrencyEnums
+from users.utils import calculate_coin_expires_at
 from tasks.models import Task, TaskDuration
 from tasks.constants import (
     TaskTypes,
@@ -656,7 +658,7 @@ class CronJobViewSet(BaseAPIViewSet):
         # 2. Iterate over all companies to handle closing logic
         self.cronjob_service.iterate_over_all_companies_to_closing(today)
 
-        # 3.
+        # 3. Handle monthly/periodic company processes
         if today.day == 1:
             # Send mail notify renewal contract
             self.cronjob_service.handle_send_email_renewal_company_contract(
@@ -672,7 +674,10 @@ class CronJobViewSet(BaseAPIViewSet):
             # Handle renewal contract
             self.cronjob_service.handle_renewal_contract(today)
 
-        # 4. Get company have status Temporary Usage and void the invoice before auto pay
+        # 4. Expire user coin lots (point validity)
+        self.cronjob_service.handle_expire_user_coin_lots(today)
+
+        # 5. Get company have status Temporary Usage and void the invoice before auto pay
         if today.day == 5:
             self.cronjob_service.handle_cancel_the_invoice_of_company_temporary_usage(
                 today
@@ -987,9 +992,142 @@ class TestingViewset(BaseAPIViewSet):
         super().__init__(*args, **kwargs)
         self.cronjob_service = CronJobService()
 
+    def _parse_fake_expire_params(self, params):
+        """
+        Parse fake expire date and company/user queryset from request params.
+        """
+        company_id = params.get("company_id")
+        user_id = params.get("user_id")
+        year = params.get("year")
+        month = params.get("month")
+        day = params.get("day")
+
+        if year and month and day:
+            today = date(int(year), int(month), int(day))
+        else:
+            today = now().date()
+
+        user_ids = None
+
+        if user_id:
+            user = self._get_user_by_email_or_id(None, user_id)
+            companies = Company.objects.filter(id=user.company_id)
+            user_ids = [user.id]
+
+        elif company_id:
+            companies = Company.objects.filter(id=company_id)
+            if not companies.exists():
+                raise ValidationError(
+                    {
+                        "detail": ERROR_MESSAGES["company_not_exists"].format(
+                            id=company_id
+                        )
+                    }
+                )
+
+        else:
+            raise ValidationError(
+                {"detail": "Either company_id or user_id must be provided"}
+            )
+
+        return today, companies, user_ids
+
+    def _get_user_by_email_or_id(self, user_email, user_id):
+        """
+        Resolve a non-operation-admin user by email or ID for testing.
+        """
+        if not user_email and not user_id:
+            raise ValidationError(
+                {"detail": "Either user_email or user_id must be provided"}
+            )
+
+        try:
+            if user_email:
+                user = User.objects.exclude(
+                    roles__name=RoleTypes.OPERATION_ADMIN.value
+                ).get(email=user_email)
+            else:
+                user = User.objects.exclude(
+                    roles__name=RoleTypes.OPERATION_ADMIN.value
+                ).get(id=user_id)
+            return user
+        except User.DoesNotExist:
+            raise NotFound(
+                {
+                    "detail": f"User not found with {'email' if user_email else 'ID'}: {user_email or user_id}"
+                }
+            )
+
+    def _parse_expires_at(self, expires_at_str):
+        """Parse expires_at from either YYYY-MM-DD or ISO datetime string."""
+        if not expires_at_str:
+            return calculate_coin_expires_at(timezone.now())
+
+        try:
+            expires_at_dt = datetime.fromisoformat(expires_at_str)
+            if expires_at_dt.tzinfo is None:
+                return timezone.make_aware(expires_at_dt)
+            return expires_at_dt
+        except ValueError:
+            try:
+                parsed_date = date.fromisoformat(expires_at_str)
+                return timezone.make_aware(
+                    datetime(
+                        parsed_date.year,
+                        parsed_date.month,
+                        parsed_date.day,
+                        23,
+                        59,
+                        59,
+                        999999,
+                    )
+                )
+            except ValueError:
+                raise ValidationError(
+                    {
+                        "detail": "Invalid expires_at format. Use YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS"
+                    }
+                )
+
     @extend_schema(
         parameters=[
             OpenApiParameter("company_id", type=int),
+            OpenApiParameter("user_id", type=int),
+            OpenApiParameter("year", type=int),
+            OpenApiParameter("month", type=int),
+            OpenApiParameter("day", type=int),
+        ]
+    )
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="simulate-expire-coins",
+    )
+    @transaction.atomic
+    def simulate_coin_expiration(self, request):
+        """
+        API endpoint to simulate coin expiration using a custom date.
+        Used only for testing in DEBUG mode.
+        """
+
+        if not settings.DEBUG:
+            raise NotFound()
+
+        today, companies, user_ids = self._parse_fake_expire_params(
+            request.query_params
+        )
+
+        # Expire user coin lots (point validity)
+        self.cronjob_service.handle_expire_user_coin_lots(
+            today, companies, user_ids=user_ids
+        )
+
+        return self.response_ok({"fake_today": today.isoformat()})
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("company_id", type=int),
+            OpenApiParameter("user_id", type=int),
             OpenApiParameter("year", type=int),
             OpenApiParameter("month", type=int),
             OpenApiParameter("day", type=int),
@@ -1011,27 +1149,9 @@ class TestingViewset(BaseAPIViewSet):
         if not settings.DEBUG:
             raise NotFound()
 
-        # 1. Get params
-        company_id = request.query_params.get("company_id")
-        year = request.query_params.get("year")
-        month = request.query_params.get("month")
-        day = request.query_params.get("day")
-        if year and month and day:
-            today = date(int(year), int(month), int(day))
-        else:
-            today = now().date()
-
-        if company_id:
-            all_companies = Company.objects.filter(id=company_id)
-
-        if not company_id or not all_companies.exists():
-            raise ValidationError(
-                {
-                    "detail": ERROR_MESSAGES["company_not_exists"].format(
-                        id=company_id
-                    )
-                }
-            )
+        today, all_companies, user_ids = self._parse_fake_expire_params(
+            request.query_params
+        )
 
         cleanup_data_service = CleanupDataService()
 
@@ -1065,7 +1185,12 @@ class TestingViewset(BaseAPIViewSet):
             # Handle renewal contract
             self.cronjob_service.handle_renewal_contract(today, all_companies)
 
-        # 4. Get company have status Temporary Usage and void the invoice before auto pay
+        # 4. Expire user coin lots (point validity)
+        self.cronjob_service.handle_expire_user_coin_lots(
+            today, all_companies, user_ids=user_ids
+        )
+
+        # 5. Get company have status Temporary Usage and void the invoice before auto pay
         if today.day == 5:
             self.cronjob_service.handle_cancel_the_invoice_of_company_temporary_usage(
                 today, all_companies
@@ -1108,13 +1233,7 @@ class TestingViewset(BaseAPIViewSet):
         coin_amount = int(request.query_params.get("coin", 0))
         pearl_amount = int(request.query_params.get("pearl", 0))
 
-        # Validate that at least one user identifier is provided
-        if not user_email and not user_id:
-            return self.response(
-                "Either user_email or user_id must be provided", status_code=400
-            )
-
-        # Validate that at least one amount is provided
+        # Validate amounts
         if coin_amount <= 0 and pearl_amount <= 0:
             return self.response(
                 "At least one of coin or pearl amount must be greater than 0",
@@ -1122,20 +1241,21 @@ class TestingViewset(BaseAPIViewSet):
             )
 
         try:
-            # Find user by email or ID
-            if user_email:
-                user = User.objects.exclude(
-                    roles__name=RoleTypes.OPERATION_ADMIN.value
-                ).get(email=user_email)
-            else:
-                user = User.objects.exclude(
-                    roles__name=RoleTypes.OPERATION_ADMIN.value
-                ).get(id=user_id)
-        except User.DoesNotExist:
-            return self.response(
-                f"User not found with {'email' if user_email else 'ID'}: {user_email or user_id}",
-                status_code=404,
+            user = self._get_user_by_email_or_id(user_email, user_id)
+        except ValidationError as e:
+            detail = (
+                e.detail.get("detail")
+                if isinstance(e.detail, dict)
+                else str(e.detail)
             )
+            return self.response(detail, status_code=400)
+        except NotFound as e:
+            detail = (
+                e.detail.get("detail")
+                if isinstance(e.detail, dict)
+                else str(e.detail)
+            )
+            return self.response(detail, status_code=404)
 
         # Track what was added
         added_points = {}
@@ -1186,6 +1306,203 @@ class TestingViewset(BaseAPIViewSet):
                     "name": user.full_name,
                 },
                 "added_points": added_points,
+                "current_balance": current_balance,
+            }
+        )
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "user_email",
+                type=str,
+                required=False,
+            ),
+            OpenApiParameter(
+                "user_id",
+                type=int,
+                required=False,
+            ),
+            OpenApiParameter(
+                "coin",
+                type=int,
+                required=True,
+            ),
+            OpenApiParameter(
+                "expires_at",
+                type=str,
+                required=False,
+                description="YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS",
+            ),
+        ]
+    )
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="seed-coin-lot",
+    )
+    @transaction.atomic
+    def seed_coin_lot(self, request):
+        """
+        Seed coin lot on user account with expiration (for coin expiration tests).
+        """
+
+        if not settings.DEBUG:
+            raise NotFound()
+
+        user_email = request.query_params.get("user_email")
+        user_id = request.query_params.get("user_id")
+        coin_amount = int(request.query_params.get("coin", 0))
+        expires_at_str = request.query_params.get("expires_at")
+
+        if coin_amount <= 0:
+            return self.response(
+                "Coin amount must be greater than 0", status_code=400
+            )
+
+        try:
+            user = self._get_user_by_email_or_id(user_email, user_id)
+        except ValidationError as e:
+            detail = (
+                e.detail.get("detail")
+                if isinstance(e.detail, dict)
+                else str(e.detail)
+            )
+            return self.response(detail, status_code=400)
+        except NotFound as e:
+            detail = (
+                e.detail.get("detail")
+                if isinstance(e.detail, dict)
+                else str(e.detail)
+            )
+            return self.response(detail, status_code=404)
+
+        try:
+            expires_at = self._parse_expires_at(expires_at_str)
+        except ValidationError as e:
+            detail = (
+                e.detail.get("detail")
+                if isinstance(e.detail, dict)
+                else str(e.detail)
+            )
+            return self.response(detail, status_code=400)
+
+        with transaction.atomic():
+            user_balance, _ = UserBalance.objects.get_or_create(
+                user=user,
+                company=user.company,
+            )
+            user_balance.coin = (user_balance.coin or 0) + coin_amount
+            user_balance.save(update_fields=["coin"])
+
+            UserCoinLot.objects.create(
+                user=user,
+                company=user.company,
+                amount_remaining=coin_amount,
+                granted_at=timezone.now(),
+                expires_at=expires_at,
+            )
+
+            TransactionHistory.objects.create(
+                currency=CurrencyEnums.COIN.value,
+                amount_used=0,
+                amount_received=coin_amount,
+                balance_after=user_balance.coin,
+                company_balance_after=user.company.coins_remaining,
+                transaction_type=TransactionTypes.OTHER.value,
+                memo=f"コインが{expires_at.strftime('%Y/%m/%d %H:%M')}に失効するテスト",
+                user=user,
+                company_id=user.company.id,
+            )
+
+        return self.response_ok(
+            {
+                "message": "Coin lot successfully seeded",
+                "user": {
+                    "id": user.id,
+                    "email": user.email,
+                    "name": user.full_name,
+                },
+                "added_points": {"coin": coin_amount},
+                "current_balance": {
+                    "coin": user_balance.coin,
+                    "pearl": user_balance.pearl if user_balance else 0,
+                },
+                "expires_at": expires_at.isoformat(),
+            }
+        )
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("user_email", type=str, required=False),
+            OpenApiParameter("user_id", type=int, required=False),
+            OpenApiParameter("coin", type=int, required=True),
+        ]
+    )
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="fake-exchange-coin",
+    )
+    @transaction.atomic
+    def fake_exchange_coin(self, request):
+        """
+        Fake exchange action: use coins as EXCHANGE transaction for testing.
+        """
+
+        if not settings.DEBUG:
+            raise NotFound()
+
+        user_email = request.query_params.get("user_email")
+        user_id = request.query_params.get("user_id")
+        coin_amount = int(request.query_params.get("coin", 0))
+
+        if coin_amount <= 0:
+            return self.response(
+                "Coin amount must be greater than 0", status_code=400
+            )
+
+        try:
+            user = self._get_user_by_email_or_id(user_email, user_id)
+        except ValidationError as e:
+            detail = (
+                e.detail.get("detail")
+                if isinstance(e.detail, dict)
+                else str(e.detail)
+            )
+            return self.response(detail, status_code=400)
+        except NotFound as e:
+            detail = (
+                e.detail.get("detail")
+                if isinstance(e.detail, dict)
+                else str(e.detail)
+            )
+            return self.response(detail, status_code=404)
+
+        try:
+            balance_after = user.use_coin(
+                coin_amount, TransactionTypes.EXCHANGE.value
+            )
+        except Exception as e:
+            return self.response(
+                f"Failed to exchange coins: {str(e)}", status_code=400
+            )
+
+        user_balance = user.balances
+        current_balance = {
+            "coin": user_balance.coin if user_balance else 0,
+            "pearl": user_balance.pearl if user_balance else 0,
+        }
+
+        return self.response_ok(
+            {
+                "message": "Fake exchange coin successful",
+                "user": {
+                    "id": user.id,
+                    "email": user.email,
+                    "name": user.full_name,
+                },
+                "used_amount": coin_amount,
+                "balance_after": balance_after,
                 "current_balance": current_balance,
             }
         )

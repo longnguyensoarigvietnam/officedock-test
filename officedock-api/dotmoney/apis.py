@@ -1,16 +1,20 @@
 import time
 
+from django.conf import settings
 from django.db import transaction
 from django.http import HttpResponseRedirect
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from base.apis import BaseAPIViewSet
-from dotmoney.service import DotMoneyService
-from users.models import User
+from base.messages import ERROR_MESSAGES
 from dotmoney.constants import DOTMONEY_EXCHANGE_PATH, ExchangeStatus
+from dotmoney.service import DotMoneyService
 from users.constants import TransactionTypes
+from users.models import User
+from users.utils import get_current_completed_task
 
 
 @extend_schema(tags=["System > DotMoney"])
@@ -141,6 +145,17 @@ class DotMoneyViewSet(BaseAPIViewSet):
 
         # Current authenticated user
         user = request.user
+
+        # Validate completed task count
+        completed_task_count = get_current_completed_task(user)
+        if completed_task_count < settings.TARGET_TASK_COMPLETED:
+            count = max(
+                settings.TARGET_TASK_COMPLETED - completed_task_count, 0
+            )
+            raise ValidationError(
+                {"detail": ERROR_MESSAGES["completed_task"].format(count=count)}
+            )
+
         user_id = user.id
         user_name = user.full_name
         balance = min(user.coin, user.exchangeable_coin)

@@ -107,6 +107,9 @@ class TransactionTypes(EnumChoices):
     PLAN_AUTO = "プラン自動付与"  # Plan Auto Grant
     PLAN_AUTO_EXPIRE = "プラン自動付与コイン失効"  # Plan Auto Grant / Coin Expiration
 
+    # Coin expiration (user lots)
+    COIN_EXPIRE = "失効"  # Expired
+
 
 class CurrencyEnums(EnumChoices):
     COIN = "COIN"

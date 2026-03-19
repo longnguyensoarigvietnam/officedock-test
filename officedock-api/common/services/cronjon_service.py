@@ -13,8 +13,9 @@ from companies.constants import (
 from companies.models import Company, CompanyTransaction
 from companies.services import CompanyService
 from plans.models import Tax
-from users.models import TransactionHistory, UserBalance
+from users.models import TransactionHistory, UserBalance, User
 from users.constants import CurrencyEnums, TransactionTypes
+from users.services.user_balance_service import UserService
 from utils.mail import PaymentMailService
 
 
@@ -238,6 +239,29 @@ class CronJobService:
                     responsible_name=company.responsible_person_name,
                     end_date=format_date(contract.end_date, style="jp_date"),
                 )
+
+    def handle_expire_user_coin_lots(
+        self, today, companies=None, user_ids=None
+    ):
+        """
+        Expire user coin lots whose expiration date has passed.
+
+        If user_ids is passed, only expire lots for listed users.
+        Otherwise it applies to all users in given companies, or all companies.
+        """
+        service = UserService()
+
+        if user_ids:
+            for user in User.objects.filter(id__in=user_ids):
+                service.expire_coin_lots(user, today)
+            return
+
+        if not companies:
+            companies = Company.objects.all()
+
+        for company in companies.prefetch_related("users"):
+            for user in company.users.all():
+                service.expire_coin_lots(user, today)
 
     def handle_renewal_contract(self, today, input_companies=None):
         """
