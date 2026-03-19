@@ -26,7 +26,7 @@ export interface OptionDropdownType {
   avatarUrl?: string;
   color?: string;
   isHidden?: boolean;
-  deletedAt?: string | Date | null
+  deletedAt?: string | Date | null;
 }
 
 export interface BasePagination<T> {
@@ -130,7 +130,7 @@ export type CreationDataCommon = {
     skills: {
       id: number;
       name: string;
-      deletedAt: string | Date | null
+      deletedAt: string | Date | null;
     }[];
   }[];
   eventLocations?: {
@@ -164,6 +164,8 @@ export type CreationDataCommon = {
     exchangeableCoin: number;
     id: number;
     pearl: number;
+    remainingTaskCompleted?: number;
+    totalCoinExpire?: number;
   };
   itemsOfUser?: ItemUser[];
   organizationsOfAllTeamStatistic?: CreationStatisticType[];

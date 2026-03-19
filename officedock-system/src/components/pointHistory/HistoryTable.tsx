@@ -14,10 +14,10 @@ import { HistoryPoint } from '@interfaces/history';
 
 import { formatShowDateJapanese } from '@utils/date';
 
-import { PointHistoryActiveTab } from '@constants/enums';
+import { PointHistoryActiveTab, TransactionType } from '@constants/enums';
 
 interface HistoryTableProps {
-  activeTab: PointHistoryActiveTab
+  activeTab: PointHistoryActiveTab;
   historyList: HistoryPoint[];
   hasNextPage: boolean | undefined;
   isFetchingNextPage: boolean;
@@ -83,6 +83,7 @@ export const HistoryTable = ({
       clearTimeout(debounceTimer);
     };
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
   return (
     <div
       style={{
@@ -145,9 +146,13 @@ export const HistoryTable = ({
                       <p>{formatShowDateJapanese(`${history.createdAt}`)}</p>
                     </div>
                     <div className="w-[1px] self-stretch bg-[#D2DBE1]"></div>
-                    <div className="w-[129px] px-5 py-[11px]">
+                    <div className="w-[129px] pl-2 pr-5 py-[11px]">
                       <p className="text-sm font-medium text-right break-all">
-                        {history.amountUsed}
+                        {history.transactionType ==
+                          TransactionType.REVOCATION_COIN &&
+                        activeTab == PointHistoryActiveTab.COIN
+                          ? `失効 ${history.amountUsed}`
+                          : history.amountUsed}
                       </p>
                     </div>
                     <div className="w-[1px] self-stretch bg-[#D2DBE1]"></div>
@@ -165,7 +170,11 @@ export const HistoryTable = ({
                     <div className="w-[1px] self-stretch bg-[#D2DBE1]"></div>
                     <div className="w-[calc(100%_-_525px)] px-5 py-[11px]">
                       <p className="text-sm break-all">
-                        {history.memo}
+                        {history.transactionType ==
+                          TransactionType.REVOCATION_COIN &&
+                        activeTab == PointHistoryActiveTab.COIN
+                          ? `有効期限切れ`
+                          : history.memo}
                       </p>
                     </div>
                   </div>

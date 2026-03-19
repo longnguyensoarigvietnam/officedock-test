@@ -720,6 +720,7 @@ export enum TransactionType {
   PLAN_AUTO_ASSIGNMENT = 'プラン自動付与',
   PLAN_AUTO_GRANTED_COIN_EXPIRATION = 'プラン自動付与コイン失効',
   POINT_EXCHANGE = 'ポイント交換',
+  REVOCATION_COIN = '失効',
 }
 export enum ExportType {
   CSV = 'csv',

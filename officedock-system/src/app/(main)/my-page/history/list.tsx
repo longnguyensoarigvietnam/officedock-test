@@ -19,6 +19,7 @@ import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
 import api from '@base/api';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 
 const HistoryListPage = () => {
   const router = useRouter();
@@ -35,6 +36,8 @@ const HistoryListPage = () => {
   const [totalPearls, setTotalPearls] = useState(0);
   const [totalCoins, setTotalCoins] = useState(0);
   const [exchangableCoins, setExchangableCoins] = useState(0);
+  const [remainingTaskCompleted, setRemainingTaskCompleted] = useState(0);
+  const [expirationCoin, setExpirationCoin] = useState(0);
 
   const queryClient = useQueryClient();
   const {
@@ -56,6 +59,10 @@ const HistoryListPage = () => {
       setTotalPearls(data?.balancesOfUser?.pearl || 0);
       setTotalCoins(data?.balancesOfUser?.coin || 0);
       setExchangableCoins(data?.balancesOfUser?.exchangeableCoin || 0);
+      setRemainingTaskCompleted(
+        data?.balancesOfUser?.remainingTaskCompleted || 0,
+      );
+      setExpirationCoin(data?.balancesOfUser?.totalCoinExpire || 0);
     },
   });
 
@@ -101,7 +108,7 @@ const HistoryListPage = () => {
             {/* Tabs */}
             <div className="w-[calc(100%_-_720px)] flex-shrink-0 flex-grow h-full flex items-center justify-center">
               <div
-                className="w-[402px] h-[383px] flex flex-col items-center justify-between bg-white rounded-3xl p-[6px] pb-[48px]"
+                className="w-[402px] min-h-[383px] flex flex-col items-center justify-between bg-white rounded-3xl p-[6px] pb-[48px]"
                 style={{
                   boxShadow: '0px 2px 15px 0px #0000001A',
                 }}>
@@ -187,24 +194,58 @@ const HistoryListPage = () => {
                     <></>
                   )}
                 </div>
+                <div className="mb-3">
+                  {activeTab == PointHistoryActiveTab.COIN ? (
+                    <div className="flex items-center gap-[10px] justify-end mt-1 pr-3">
+                      <div className="flex items-center gap-3 py-[6px] px-3 rounded-lg bg-[#EBF1F7]">
+                        <p className="text-[13px] font-normal">
+                          今月末に有効期限が切れるポイント数
+                        </p>
+                        <div className="flex items-center gap-1">
+                          <ImageRound
+                            name="Badge icon"
+                            src={'/icons/badge.svg'}
+                            className={`w-[18px] h-[18px]`}
+                          />
+                          <p className="text-base font-medium">
+                            {expirationCoin || 0}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <></>
+                  )}
+                </div>
                 <div className="flex justify-center">
-                  <Button
-                    onClick={() =>
-                      activeTab == PointHistoryActiveTab.COIN
-                        ? setIsShowDetailCompanyChangeCoin(true)
-                        : router.push(pageRouters.SHOP_ITEM.href)
-                    }
-                    variant="post"
-                    className="w-[200px] h-[46px] text-sm font-medium rounded-md"
-                    style={{ boxShadow: '0px 1px 5px 0px #00000033' }}
+                  <DynamicTooltip
+                    content="今月タスクをあと〇回完了すると交換可能です"
+                    placement="top"
                     disabled={
-                      activeTab == PointHistoryActiveTab.COIN &&
-                      (!exchangableCoins || !totalCoins)
+                      activeTab != PointHistoryActiveTab.COIN ||
+                      (remainingTaskCompleted == 0 &&
+                        activeTab == PointHistoryActiveTab.COIN)
                     }>
-                    {activeTab == PointHistoryActiveTab.COIN
-                      ? '交換する'
-                      : 'アイテムと交換する'}
-                  </Button>
+                    <Button
+                      onClick={() =>
+                        activeTab == PointHistoryActiveTab.COIN
+                          ? setIsShowDetailCompanyChangeCoin(true)
+                          : router.push(pageRouters.SHOP_ITEM.href)
+                      }
+                      variant="post"
+                      className="w-[200px] h-[46px] text-sm font-medium rounded-md"
+                      style={{ boxShadow: '0px 1px 5px 0px #00000033' }}
+                      disabled={
+                        (activeTab == PointHistoryActiveTab.COIN &&
+                          (!exchangableCoins || !totalCoins)) ||
+                        (remainingTaskCompleted > 0 &&
+                          activeTab == PointHistoryActiveTab.COIN)
+                      }>
+                      {activeTab == PointHistoryActiveTab.COIN
+                        ? '交換する'
+                        : 'アイテムと交換する'}
+                    </Button>
+                  </DynamicTooltip>
                 </div>
               </div>
             </div>
