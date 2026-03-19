@@ -269,15 +269,24 @@ class StatisticViewSet(BaseAPIViewSet):
         )
 
         # Map organization-category pairs to their metadata for fast lookup
-        org_cat_map = {
-            (
-                oc["organization_id"],
-                oc["large_statistic_category_id"],
-                oc["medium_statistic_category_id"],
-                oc["small_statistic_category_id"],
-            ): oc
-            for oc in org_cats
-        }
+        org_cat_map = {}
+        for oc in org_cats:
+            org_id = oc["organization_id"]
+            large_id = oc["large_statistic_category_id"]
+            medium_id = oc["medium_statistic_category_id"]
+            small_id = oc["small_statistic_category_id"]
+            deleted_type = oc["deleted_type"]
+
+            # full
+            org_cat_map[(org_id, large_id, medium_id, small_id)] = deleted_type
+
+            # medium fallback
+            org_cat_map.setdefault(
+                (org_id, large_id, medium_id, None), deleted_type
+            )
+
+            # large fallback
+            org_cat_map.setdefault((org_id, large_id, None, None), deleted_type)
 
         org_map = {
             org_id: {
@@ -315,10 +324,7 @@ class StatisticViewSet(BaseAPIViewSet):
                     getattr(medium_category, "id", None),
                     getattr(small_category, "id", None),
                 )
-
-                deleted_type = None
-                if key in org_cat_map:
-                    deleted_type = org_cat_map[key]["deleted_type"]
+                deleted_type = org_cat_map.get(key)
 
                 for attr, type_value in category_types:
                     if cate_obj := getattr(pref_cat, attr):
