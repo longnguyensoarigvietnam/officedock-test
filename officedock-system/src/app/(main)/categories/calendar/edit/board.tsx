@@ -166,13 +166,19 @@ const EditHierarchyBoard = () => {
         label: row.largeStatisticCategory?.name || '',
         value: row.largeStatisticCategory?.uuid || '',
         isHidden: row.largeStatisticCategory?.isHidden || false,
-        showBy: AddCategoryHierarchyType.PULLDOWN,
+        showBy:
+          row.largeStatisticCategory?.team != null
+            ? AddCategoryHierarchyType.INPUT
+            : AddCategoryHierarchyType.PULLDOWN,
       },
       medium: {
         label: row.mediumStatisticCategory?.name || '',
         value: row.mediumStatisticCategory?.uuid || '',
         isHidden: row.mediumStatisticCategory?.isHidden || false,
-        showBy: AddCategoryHierarchyType.PULLDOWN,
+        showBy:
+          row.mediumStatisticCategory?.team != null
+            ? AddCategoryHierarchyType.INPUT
+            : AddCategoryHierarchyType.PULLDOWN,
       },
       color: row.color,
       ...overrides,

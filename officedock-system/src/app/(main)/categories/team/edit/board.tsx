@@ -299,19 +299,28 @@ const EditHierarchyForm = () => {
         label: row.largeStatisticCategory?.name || '',
         value: row.largeStatisticCategory?.uuid || '',
         isHidden: row.largeStatisticCategory?.isHidden || false,
-        showBy: AddCategoryHierarchyType.PULLDOWN,
+        showBy:
+          row.largeStatisticCategory?.team != null
+            ? AddCategoryHierarchyType.INPUT
+            : AddCategoryHierarchyType.PULLDOWN,
       },
       medium: {
         label: row.mediumStatisticCategory?.name || '',
         value: row.mediumStatisticCategory?.uuid || '',
         isHidden: row.mediumStatisticCategory?.isHidden || false,
-        showBy: AddCategoryHierarchyType.PULLDOWN,
+        showBy:
+          row.mediumStatisticCategory?.team != null
+            ? AddCategoryHierarchyType.INPUT
+            : AddCategoryHierarchyType.PULLDOWN,
       },
       small: {
         label: row.smallStatisticCategory?.name || '',
         value: row.smallStatisticCategory?.uuid || '',
         isHidden: row.smallStatisticCategory?.isHidden || false,
-        showBy: AddCategoryHierarchyType.PULLDOWN,
+        showBy:
+          row.smallStatisticCategory?.team != null
+            ? AddCategoryHierarchyType.INPUT
+            : AddCategoryHierarchyType.PULLDOWN,
       },
       skills: row.skills.map((skill) => ({
         label: skill.name,
