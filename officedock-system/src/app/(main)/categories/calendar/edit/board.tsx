@@ -6,6 +6,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
   useTransition,
@@ -37,6 +38,7 @@ import { AddCategoryHierarchyType, PermissionsSystem } from '@constants/enums';
 import { apiRouters, pageRouters } from '@constants/routers';
 import {
   ERROR_COMMON_MESSAGE,
+  CATEGORY_NAME_REQUIRED_MESSAGE,
   ERROR_UPDATE_MESSAGE,
   SUCCESS_UPDATE_MESSAGE,
 } from '@constants/message';
@@ -90,6 +92,22 @@ const EditHierarchyBoard = () => {
   const navigateAfterSaveRef = useRef<string | null>(null);
 
   const hasUnsavedChanges = selectedHierarchiesToUpdate.length > 0;
+  const hasInvalidExistingInput = useMemo(() => {
+    if (!hierarchyDetail) return false;
+
+    return hierarchyDetail.statisticCategories.some((row) => {
+      // Newly added rows use `uuidv4()` so their `id` is UUID => exempt.
+      const isNewRow = isUUID(String(row.id));
+      if (isNewRow) return false;
+
+      return (
+        (row.large.showBy === AddCategoryHierarchyType.INPUT &&
+          isUUID(String(row.large.label))) ||
+        (row.medium.showBy === AddCategoryHierarchyType.INPUT &&
+          isUUID(String(row.medium.label)))
+      );
+    });
+  }, [hierarchyDetail]);
 
   useEffect(() => {
     setHasUnsavedChanges(hasUnsavedChanges);
@@ -98,22 +116,45 @@ const EditHierarchyBoard = () => {
 
   useEffect(() => {
     if (pendingGlobalNavigationHref !== null) {
+      if (hasInvalidExistingInput) {
+        showToast({
+          description: CATEGORY_NAME_REQUIRED_MESSAGE,
+          variant: 'error',
+        });
+        setPendingGlobalNavigationHref(null);
+        setPendingNavigationHref(null);
+        setShowUnsavedModal(false);
+        return;
+      }
+
       setPendingNavigationHref(pendingGlobalNavigationHref);
       setPendingGlobalNavigationHref(null);
       setShowUnsavedModal(true);
     }
-  }, [pendingGlobalNavigationHref, setPendingGlobalNavigationHref]);
+  }, [
+    pendingGlobalNavigationHref,
+    setPendingGlobalNavigationHref,
+    hasInvalidExistingInput,
+    showToast,
+  ]);
 
   const handleNavigate = useCallback(
     (href: string) => {
       if (hasUnsavedChanges) {
+        if (hasInvalidExistingInput) {
+          showToast({
+            description: CATEGORY_NAME_REQUIRED_MESSAGE,
+            variant: 'error',
+          });
+          return;
+        }
         setPendingNavigationHref(href);
         setShowUnsavedModal(true);
       } else {
         router.push(href);
       }
     },
-    [hasUnsavedChanges, router],
+    [hasInvalidExistingInput, hasUnsavedChanges, router, showToast],
   );
 
   const handleConfirmLeave = useCallback(() => {
@@ -280,6 +321,13 @@ const EditHierarchyBoard = () => {
   });
 
   const handleConfirmUpdateCalendarCategoryHierarchy = () => {
+    if (hasInvalidExistingInput) {
+      showToast({
+        description: CATEGORY_NAME_REQUIRED_MESSAGE,
+        variant: 'error',
+      });
+      return;
+    }
     const tempSelectedHierarchiesToUpdate = selectedHierarchiesToUpdate.map(
       (hierarchy) => {
         return {
@@ -303,6 +351,13 @@ const EditHierarchyBoard = () => {
   };
 
   const handleConfirmSaveAndLeave = () => {
+    if (hasInvalidExistingInput) {
+      showToast({
+        description: CATEGORY_NAME_REQUIRED_MESSAGE,
+        variant: 'error',
+      });
+      return;
+    }
     navigateAfterSaveRef.current = pendingNavigationHref;
     setShowUnsavedModal(false);
     setPendingNavigationHref(null);

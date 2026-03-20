@@ -198,9 +198,7 @@ const HistoryListPage = () => {
                   {activeTab == PointHistoryActiveTab.COIN ? (
                     <div className="flex items-center gap-[10px] justify-end mt-1 pr-3">
                       <div className="flex items-center gap-3 py-[6px] px-3 rounded-lg bg-[#EBF1F7]">
-                        <p className="text-[13px] font-normal">
-                          今月末に有効期限が切れるポイント数
-                        </p>
+                        <p className="text-[13px] font-normal">今月末失効</p>
                         <div className="flex items-center gap-1">
                           <ImageRound
                             name="Badge icon"
