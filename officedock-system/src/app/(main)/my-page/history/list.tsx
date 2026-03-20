@@ -219,7 +219,7 @@ const HistoryListPage = () => {
                 </div>
                 <div className="flex justify-center">
                   <DynamicTooltip
-                    content="今月タスクをあと〇回完了すると交換可能です"
+                    content={`今月タスクをあと${remainingTaskCompleted}回完了すると交換可能です`}
                     placement="top"
                     disabled={
                       activeTab != PointHistoryActiveTab.COIN ||
