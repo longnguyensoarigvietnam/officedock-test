@@ -7,7 +7,7 @@ from django.utils import timezone
 
 from chat.constants import WebSocketEventType
 from common.utils import send_web_socket_event
-from users.models import TaskRewardLog, User, UserCoinLot
+from users.models import User, UserCoinLot
 
 
 def reset_sort_task(user):
@@ -34,6 +34,8 @@ def get_current_completed_task(user):
     """
     Get monthly completed task count
     """
+    from tasks.models import Task
+
     now = timezone.now()
 
     # first day of month
@@ -46,10 +48,11 @@ def get_current_completed_task(user):
         day=last_day, hour=23, minute=59, second=59, microsecond=999999
     )
 
-    completed_count = TaskRewardLog.objects.filter(
-        user=user,
-        created_at__gte=month_start,
-        created_at__lte=month_end,
+    completed_count = Task.objects.filter(
+        people_in_charge=user,
+        completed_at__gte=month_start,
+        completed_at__lte=month_end,
+        deleted_at__isnull=True,
     ).count()
 
     return completed_count
