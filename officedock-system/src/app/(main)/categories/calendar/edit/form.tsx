@@ -1090,6 +1090,18 @@ const TableComponent = ({
         <tbody>
           {table.getRowModel().rows.map((row, rowIndex) => {
             const excludedMediums = getExcludedMediums(row.original);
+            // `id` is numeric for existing rows coming from API.
+            // Newly added rows use `uuidv4()` so we can skip invalid UI rules for them.
+            const isNewHierarchyRow = isUUID(String(row.original.id));
+            const isLargeInputInvalid =
+              !isNewHierarchyRow &&
+              row.original.large.showBy === AddCategoryHierarchyType.INPUT &&
+              isUUID(String(row.original.large.label));
+            const isMediumInputInvalid =
+              !isNewHierarchyRow &&
+              row.original.medium.showBy === AddCategoryHierarchyType.INPUT &&
+              isUUID(String(row.original.medium.label));
+
             const isHiddenLargeCategory = checkIsHiddenCategory({
               type: HierarchyType.LARGE,
               originalRow: row.original,
@@ -1258,10 +1270,12 @@ const TableComponent = ({
                             <input
                               key={JSON.stringify(row.original.large)}
                               type="text"
-                              className={`w-full !h-full text-sm !min-h-[34px] px-[10px] py-[6px] text-black rounded-[6px] ${row.original.large.isHidden &&
+                              className={`w-full !h-full text-sm !min-h-[34px] px-[10px] py-[6px] text-black rounded-[6px] !border-[1px] ${
+                                isLargeInputInvalid ? '!border-error' : '!border-[#D2DBE1]'
+                              } ${row.original.large.isHidden &&
                                 isHiddenList &&
                                 'opacity-50'
-                                }`}
+                                }${isLargeInputInvalid ? ' focus:outline-none focus:ring-0' : ''}`}
                               placeholder="新しいカテゴリーを入力"
                               defaultValue={
                                 !isUUID(row.original.large.label)
@@ -1415,10 +1429,12 @@ const TableComponent = ({
                               <input
                                 key={JSON.stringify(row.original.medium)}
                                 type="text"
-                                className={`w-full !h-full text-sm !min-h-[34px] px-[10px] py-[6px] text-black rounded-[6px] ${row.original.medium.isHidden &&
+                                className={`w-full !h-full text-sm !min-h-[34px] px-[10px] py-[6px] text-black rounded-[6px] !border-[1px] ${
+                                  isMediumInputInvalid ? '!border-error' : '!border-[#D2DBE1]'
+                                } ${row.original.medium.isHidden &&
                                   isHiddenList &&
                                   'opacity-50'
-                                  }`}
+                                  }${isMediumInputInvalid ? ' focus:outline-none focus:ring-0' : ''}`}
                                 placeholder="新しいカテゴリーを入力"
                                 defaultValue={
                                   !isUUID(row.original.medium.label)

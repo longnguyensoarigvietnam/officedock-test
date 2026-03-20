@@ -1810,6 +1810,22 @@ const TableComponent = ({
         <tbody>
           {table.getRowModel().rows.map((row, rowIndex) => {
             const excludedSmalls = getExcludedSmalls(row.original);
+            // `id` is numeric for existing rows coming from API.
+            // Newly added rows use `uuidv4()` so we can treat them as "new" and skip invalid UI rules.
+            const isNewHierarchyRow = isUUID(String(row.original.id));
+            const isLargeInputInvalid =
+              !isNewHierarchyRow &&
+              row.original.large.showBy === AddCategoryHierarchyType.INPUT &&
+              isUUID(String(row.original.large.label));
+            const isMediumInputInvalid =
+              !isNewHierarchyRow &&
+              row.original.medium.showBy === AddCategoryHierarchyType.INPUT &&
+              isUUID(String(row.original.medium.label));
+            const isSmallInputInvalid =
+              !isNewHierarchyRow &&
+              row.original.small.showBy === AddCategoryHierarchyType.INPUT &&
+              isUUID(String(row.original.small.label));
+
             const isHiddenLargeCategory = checkIsHiddenCategory({
               type: HierarchyType.LARGE,
               originalRow: row.original,
@@ -1891,10 +1907,12 @@ const TableComponent = ({
                             <input
                               key={JSON.stringify(row.original.large)}
                               type="text"
-                              className={`w-full !h-full text-sm !min-h-[34px] px-[10px] py-[6px] text-black rounded-[6px] ${row.original.large.isHidden &&
+                              className={`w-full !h-full text-sm !min-h-[34px] px-[10px] py-[6px] text-black rounded-[6px] !border-[1px] ${
+                                isLargeInputInvalid ? '!border-error' : '!border-[#D2DBE1]'
+                              } ${row.original.large.isHidden &&
                                 isHiddenList &&
                                 'opacity-50'
-                                }`}
+                              }${isLargeInputInvalid ? ' focus:outline-none focus:ring-0' : ''}`}
                               placeholder="新しいカテゴリーを入力"
                               defaultValue={
                                 !isUUID(row.original.large.label)
@@ -2072,10 +2090,12 @@ const TableComponent = ({
                               <input
                                 key={JSON.stringify(row.original.medium)}
                                 type="text"
-                                className={`w-full !h-full text-sm !min-h-[34px] px-[10px] py-[6px] text-black rounded-[6px] ${row.original.medium.isHidden &&
+                                className={`w-full !h-full text-sm !min-h-[34px] px-[10px] py-[6px] text-black rounded-[6px] !border-[1px] ${
+                                  isMediumInputInvalid ? '!border-error' : '!border-[#D2DBE1]'
+                                } ${row.original.medium.isHidden &&
                                   isHiddenList &&
                                   'opacity-50'
-                                  }`}
+                                  }${isMediumInputInvalid ? ' focus:outline-none focus:ring-0' : ''}`}
                                 placeholder="新しいカテゴリーを入力"
                                 defaultValue={
                                   !isUUID(row.original.medium.label)
@@ -2262,10 +2282,12 @@ const TableComponent = ({
                               <input
                                 key={JSON.stringify(row.original.small)}
                                 type="text"
-                                className={`w-full text-sm !min-h-[34px] px-[10px] py-[6px] text-black rounded-[6px] ${row.original.small.isHidden &&
+                                className={`w-full text-sm !min-h-[34px] px-[10px] py-[6px] text-black rounded-[6px] !border-[1px] ${
+                                  isSmallInputInvalid ? '!border-error' : '!border-[#D2DBE1]'
+                                } ${row.original.small.isHidden &&
                                   isHiddenList &&
                                   'opacity-50'
-                                  }`}
+                                  }${isSmallInputInvalid ? ' focus:outline-none focus:ring-0' : ''}`}
                                 placeholder="新しいカテゴリーを入力"
                                 defaultValue={
                                   !isUUID(row.original.small.label)
