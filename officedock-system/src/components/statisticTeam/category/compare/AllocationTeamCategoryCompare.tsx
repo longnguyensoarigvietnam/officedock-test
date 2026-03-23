@@ -390,7 +390,7 @@ const AllocationTeamCategoryCompare = memo(
 
     useEffect(() => {
       if (
-        statisticAllTeamCategoryList &&
+        (statisticAllTeamCategoryList?.largeCategories?.length ?? 0) > 0 &&
         selectedOrganization?.value == ALL_TEAM_STATISTIC
       ) {
         const mergeCategories = (
@@ -466,7 +466,7 @@ const AllocationTeamCategoryCompare = memo(
         };
 
         const largePairs = mergeCategories(
-          statisticAllTeamCategoryList.largeCategories || [],
+          statisticAllTeamCategoryList?.largeCategories || [],
           statisticAllTeamCategoryCompareList?.largeCategories || [],
         );
 
@@ -476,8 +476,8 @@ const AllocationTeamCategoryCompare = memo(
         setProgressDataSmall([]);
       }
     }, [
-      statisticAllTeamCategoryList,
-      statisticAllTeamCategoryCompareList,
+      statisticAllTeamCategoryList?.largeCategories,
+      statisticAllTeamCategoryCompareList?.largeCategories,
       selectedOrganization?.value,
     ]);
 
@@ -650,7 +650,9 @@ const AllocationTeamCategoryCompare = memo(
                         </div>
                       ) : (
                           selectedOrganization?.value == ALL_TEAM_STATISTIC
-                            ? progressDataAllTeam.length === 0
+                            ? progressDataAllTeam.length === 0 &&
+                                (statisticAllTeamCategoryList?.largeCategories
+                                  ?.length ?? 0) === 0
                             : progressDataLarge.length === 0
                         ) ? (
                         <div className="flex items-center justify-center h-[100px]">
