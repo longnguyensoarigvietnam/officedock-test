@@ -32,6 +32,8 @@ type Props = {
   selectedOptions?: OptionDropdownType[];
   noDataClass?: string;
   forceClose?: number;
+  /** When true, closes the panel when the pointer leaves the trigger + options area. */
+  closeOnMouseLeave?: boolean;
   onChange?: (value: OptionDropdownType) => void;
 };
 const MultiSelectDropdown = ({
@@ -53,6 +55,7 @@ const MultiSelectDropdown = ({
   selectedOptions,
   noDataClass,
   forceClose,
+  closeOnMouseLeave = false,
   onChange,
 }: Props) => {
   const [selected, setSelected] = useState<OptionDropdownType[] | undefined>(
@@ -150,7 +153,16 @@ const MultiSelectDropdown = ({
     </div>
   );
   return (
-    <div className={`relative h-full ${className}`} ref={dropdownRef}>
+    <div
+      className={`relative h-full ${className}`}
+      ref={dropdownRef}
+      onMouseLeave={
+        closeOnMouseLeave
+          ? () => {
+              if (isOpen) setIsOpen(false);
+            }
+          : undefined
+      }>
       {label && (
         <label className="block text-sm font-medium text-gray-700">
           {label}
