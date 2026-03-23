@@ -114,6 +114,7 @@ class StatisticViewSet(BaseAPIViewSet):
             OpenApiParameter(name="medium_category_id", type=str),
             OpenApiParameter(name="small_category_id", type=str),
             OpenApiParameter(name="user_id", type=int),
+            OpenApiParameter(name="uids", type=str),
             OpenApiParameter(name="tag_ids", type=str),
             OpenApiParameter(name="total_duration", type=str),
             OpenApiParameter(name="ordering", type=str),
@@ -148,6 +149,7 @@ class StatisticViewSet(BaseAPIViewSet):
         medium_category_id = request.query_params.get("medium_category_id")
         small_category_id = request.query_params.get("small_category_id")
         user_id = request.query_params.get("user_id")
+        uids = request.query_params.get("uids")
         tag_ids_param = request.query_params.get("tag_ids")
         tag_ids = []
         ordering = request.query_params.get("ordering")
@@ -163,6 +165,7 @@ class StatisticViewSet(BaseAPIViewSet):
         start_of_day = datetime.combine(from_date, time.min)
         end_of_day = datetime.combine(end_date, time.max)
         calendar_org = user.company.get_calendar_organization()
+        users = [user]
 
         # If it's tag page but no tag ids provided, return empty result directly to avoid unnecessary query
         if is_tag_page and not tag_ids_param:
@@ -171,10 +174,17 @@ class StatisticViewSet(BaseAPIViewSet):
             )
 
         if user_id:
-            user = get_object_or_404(User, id=user_id)
+            users = [get_object_or_404(User, id=user_id)]
+        elif uids := split_id_from_string(uids):
+            users = list(User.objects.filter(company=user.company, id__in=uids))
+            if not users:
+                raise NotFound(
+                    {"detail": "No users found matching the provided IDs."}
+                )
+
         if organization_ids_param == ALL_TEAM:
             organization_ids = get_all_organization_id(
-                [user],
+                users,
                 exclude_team_unassigned=bool(main_organization_id),
             )
             # When main org not in input user orgs (input user unassigned in main organization)
@@ -192,7 +202,7 @@ class StatisticViewSet(BaseAPIViewSet):
         durations = get_list_durations_by_users(
             start_of_day,
             end_of_day,
-            [user],
+            users,
             organization_ids,
             tags=tag_ids,
         )
@@ -216,6 +226,19 @@ class StatisticViewSet(BaseAPIViewSet):
             Task.objects.filter(id__in=task_ids)
             .select_related("organization")
             .prefetch_related(
+                Prefetch(
+                    "people_in_charge",
+                    to_attr="prefetched_users",
+                    queryset=(
+                        User.objects.select_related("profile").only(
+                            "id",
+                            "profile",
+                            "avatar",
+                            "avatar_color",
+                            "deleted_at",
+                        )
+                    ),
+                ),
                 Prefetch("tags", to_attr="prefetched_tags"),
                 Prefetch(
                     "categories",
@@ -233,6 +256,19 @@ class StatisticViewSet(BaseAPIViewSet):
             Schedule.objects.filter(id__in=schedule_ids)
             .select_related("organization")
             .prefetch_related(
+                Prefetch(
+                    "participants",
+                    to_attr="prefetched_users",
+                    queryset=(
+                        User.objects.select_related("profile").only(
+                            "id",
+                            "profile",
+                            "avatar",
+                            "avatar_color",
+                            "deleted_at",
+                        )
+                    ),
+                ),
                 Prefetch("tags", to_attr="prefetched_tags"),
                 Prefetch(
                     "categories",
@@ -371,6 +407,9 @@ class StatisticViewSet(BaseAPIViewSet):
                     "percent": percent_part,
                     "categories": category_formatted,
                     "type": item_type,
+                    "user": BaseUserProfileSerializer(
+                        item.prefetched_users[0]
+                    ).data,
                     "organization": org_map[item.organization_id],
                     "created_at": item.created_at,
                 }
