@@ -1,4 +1,10 @@
-import React, { Fragment, useContext, useEffect, useState } from 'react';
+import React, {
+  Fragment,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import {
   Popover,
   PopoverButton,
@@ -94,7 +100,30 @@ const TaskListStatisticTeamTags = ({
   const [totalPages, setTotalPages] = useState<number>(1);
   const [taskList, setTaskList] = useState<DataTaskListStatisticListType[]>([]);
 
-  const [selectedMember, setSelectedMember] = useState<number | null>(null);
+  const [selectedMembers, setSelectedMembers] = useState<number[]>([]);
+  const memberOptions = useMemo(() => {
+    if (orderingOptions?.user_ids && orderingOptions.user_ids.length > 0) {
+      return orderingOptions.user_ids.map((member) => ({
+        id: Number(member.value),
+        label: member.label,
+        avatarUrl: member?.avatarUrl || '',
+        color: member?.color || '',
+      }));
+    }
+
+    return listMemberTeam.map((member) => ({
+      id: Number(member.id),
+      label: member.fullName,
+      avatarUrl: member?.avatarUrl || '',
+      color: member?.color || '',
+    }));
+  }, [listMemberTeam, orderingOptions]);
+
+  const uids = selectedMembers.join(',');
+  const selectedMember = selectedMembers[0] ?? null;
+  const isAllMembersChecked =
+    memberOptions.length > 0 &&
+    memberOptions.every((member) => selectedMembers.includes(member.id));
 
   // Value Compare
   const [totalPagesCompare, setTotalPagesCompare] = useState<number>(1);
@@ -112,16 +141,8 @@ const TaskListStatisticTeamTags = ({
     useState<string>(DEFAULT_TIME_TEXT);
 
   useEffect(() => {
-    if (
-      orderingOptions &&
-      orderingOptions.user_ids &&
-      orderingOptions.user_ids.length > 0
-    ) {
-      setSelectedMember(orderingOptions.user_ids[0].value as number);
-    } else if (listMemberTeam && listMemberTeam.length > 0) {
-      setSelectedMember(listMemberTeam[0].id);
-    }
-  }, [listMemberTeam, orderingOptions]);
+    setSelectedMembers(memberOptions.map((member) => member.id));
+  }, [memberOptions]);
 
   useStatisticTask({
     isTeam: true,
@@ -142,7 +163,7 @@ const TaskListStatisticTeamTags = ({
       ordering: ordering,
       pageSize: pageSize,
       tagIds: orderingOptions?.tag_ids,
-      user_id: selectedMember as number,
+      uids: uids,
       user_ids: orderingOptions?.user_ids,
       mainOrganizationId:
         selectedOrganization?.value === ALL_TEAMS_OPTION
@@ -182,7 +203,7 @@ const TaskListStatisticTeamTags = ({
       pageSize: pageSize,
       tagIds: orderingOptions?.tag_ids,
       isCompare: isCheckCompare && isShowCompare,
-      user_id: selectedMember as number,
+      uids: uids,
       user_ids: orderingOptions?.user_ids,
       mainOrganizationId:
         selectedOrganization?.value === ALL_TEAMS_OPTION
@@ -224,7 +245,7 @@ const TaskListStatisticTeamTags = ({
       smallCategoryId: selectedSmall?.value as number,
       ordering: ordering,
       tagIds: orderingOptions?.tag_ids,
-      user_id: selectedMember as number,
+      user_id: uids,
       user_ids: orderingOptions?.user_ids,
       isCompare: isCheckCompare && isShowCompare,
     },
@@ -345,69 +366,54 @@ const TaskListStatisticTeamTags = ({
               表示させるメンバー
             </p>
             <div className="flex items-center flex-wrap gap-x-[30px] gap-y-[10px] px-8 mb-[30px]">
-              {orderingOptions?.user_ids.length === 0
-                ? listMemberTeam.map((member) => (
-                    <div
-                      key={member.id}
-                      onClick={() => {
+              <div className="flex items-center gap-2">
+                <div className="w-4">
+                  <Checkbox
+                    isChecked={isAllMembersChecked}
+                    onChange={() => {
+                      setCurrentPage(1);
+                      setSelectedMembers(
+                        isAllMembersChecked
+                          ? []
+                          : memberOptions.map((member) => member.id),
+                      );
+                    }}
+                    classSize="!rounded-full !opacity-100"
+                  />
+                </div>
+                <span className="break-all w-full max-w-[800px] truncate text-sm">
+                  全てのメンバー
+                </span>
+              </div>
+
+              {memberOptions.map((member) => (
+                <div key={member.id} className="flex items-center gap-2">
+                  <div className="w-4">
+                    <Checkbox
+                      isChecked={selectedMembers.includes(member.id)}
+                      onChange={() => {
                         setCurrentPage(1);
-                        setSelectedMember(member.id);
+                        setSelectedMembers((prev) =>
+                          prev.includes(member.id)
+                            ? prev.filter((id) => id !== member.id)
+                            : [...prev, member.id],
+                        );
                       }}
-                      className="flex items-center gap-2 cursor-pointer">
-                      <div className="w-4">
-                        <Checkbox
-                          isChecked={selectedMember === member.id}
-                          disable={selectedMember == member.id}
-                          onChange={() => {
-                            setCurrentPage(1);
-                            setSelectedMember(member.id);
-                          }}
-                          classSize="!rounded-full !opacity-100"
-                        />
-                      </div>
-                      <div className="relative top-[2px]">
-                        <CustomUserAvatar
-                          avatarUrl={member?.avatarUrl || ''}
-                          avatarColor={member?.color || ''}
-                          size={30}
-                        />
-                      </div>
-                      <span className="break-all w-full max-w-[800px] truncate text-sm">
-                        {member.fullName}
-                      </span>
-                    </div>
-                  ))
-                : orderingOptions?.user_ids.map((member) => (
-                    <div
-                      key={member.value}
-                      onClick={() => {
-                        setCurrentPage(1);
-                        setSelectedMember(member.value as number);
-                      }}
-                      className="flex items-center gap-2 cursor-pointer">
-                      <div className="w-4">
-                        <Checkbox
-                          isChecked={selectedMember === member.value}
-                          disable={selectedMember == member.value}
-                          onChange={() => {
-                            setCurrentPage(1);
-                            setSelectedMember(member.value as number);
-                          }}
-                          classSize="!rounded-full !opacity-100"
-                        />
-                      </div>
-                      <div className="relative top-[2px]">
-                        <CustomUserAvatar
-                          avatarUrl={member?.avatarUrl || ''}
-                          avatarColor={member?.color || ''}
-                          size={30}
-                        />
-                      </div>
-                      <span className="break-all w-full max-w-[800px] truncate text-sm">
-                        {member.label}
-                      </span>
-                    </div>
-                  ))}
+                      classSize="!rounded-full !opacity-100"
+                    />
+                  </div>
+                  <div className="relative top-[2px]">
+                    <CustomUserAvatar
+                      avatarUrl={member.avatarUrl}
+                      avatarColor={member.color}
+                      size={30}
+                    />
+                  </div>
+                  <span className="break-all w-full max-w-[800px] truncate text-sm">
+                    {member.label}
+                  </span>
+                </div>
+              ))}
             </div>
 
             <div className="flex items-end justify-between px-[30px] text-sm font-medium">
