@@ -350,19 +350,18 @@ const AllocationTeamCategoryCompare = memo(
     useEffect(() => {
       if (
         statisticTeamCategoryList &&
-        statisticCategoryListTeamCompare &&
         selectedOrganization?.value != ALL_TEAM_STATISTIC
       ) {
         const compareResult = buildProgressDataCompareWithMergedOthers({
           baseData: statisticTeamCategoryList.largeCategories || [],
-          compareData: statisticCategoryListTeamCompare.largeCategories || [],
+          compareData: statisticCategoryListTeamCompare?.largeCategories || [],
           isAllTeam: selectedOrganization?.label === ALL_TEAM_STATISTIC,
         });
         const color =
           statisticTeamCategoryList.largeCategories?.find(
             (item) => item.categoryId === selectedLarge?.value,
           )?.categoryColor ||
-          statisticCategoryListTeamCompare.largeCategories?.find(
+          statisticCategoryListTeamCompare?.largeCategories?.find(
             (item) => item.categoryId === selectedLarge?.value,
           )?.categoryColor;
         const compareResultMedium = buildProgressDataCompareWithMergedOthers({
@@ -392,7 +391,6 @@ const AllocationTeamCategoryCompare = memo(
     useEffect(() => {
       if (
         statisticAllTeamCategoryList &&
-        statisticAllTeamCategoryCompareList &&
         selectedOrganization?.value == ALL_TEAM_STATISTIC
       ) {
         const mergeCategories = (
@@ -469,7 +467,7 @@ const AllocationTeamCategoryCompare = memo(
 
         const largePairs = mergeCategories(
           statisticAllTeamCategoryList.largeCategories || [],
-          statisticAllTeamCategoryCompareList.largeCategories || [],
+          statisticAllTeamCategoryCompareList?.largeCategories || [],
         );
 
         setProgressDataAllTeam(largePairs);
