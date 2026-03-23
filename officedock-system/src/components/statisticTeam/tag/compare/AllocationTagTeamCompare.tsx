@@ -84,7 +84,9 @@ export function buildProgressDataCompareWithMergedOthers({
   threshold?: number;
   isAllTeam?: boolean;
 }): ProgressDataCompareItem[] {
-  const mergeUsers = (users: UserListStatisticType[]): UserListStatisticType[] => {
+  const mergeUsers = (
+    users: UserListStatisticType[],
+  ): UserListStatisticType[] => {
     const byUserId = new Map<number, UserListStatisticType>();
 
     users.forEach((u) => {
@@ -120,7 +122,7 @@ export function buildProgressDataCompareWithMergedOthers({
     fallback: Partial<ProgressDataTypeTeam>,
   ): ProgressDataTypeTeam => {
     const id = (info?.tagId as number | undefined) ?? (fallback.id as any);
-    const percent = info?.percent ?? (fallback.value ?? 0);
+    const percent = info?.percent ?? fallback.value ?? 0;
 
     return {
       id,
@@ -345,26 +347,25 @@ const AllocationTagTeamCompare = memo(
     useEffect(() => {
       if (
         statisticTagsList &&
-        statisticTagsCompareList &&
         selectedOrganization?.value != ALL_TEAM_STATISTIC
       ) {
         const compareResult = buildProgressDataCompareWithMergedOthers({
           baseData: statisticTagsList.largeCategories || [],
-          compareData: statisticTagsCompareList.largeCategories || [],
+          compareData: statisticTagsCompareList?.largeCategories || [],
           isAllTeam: selectedOrganization?.label === ALL_TEAM_STATISTIC,
         });
         const compareResultMedium = buildProgressDataCompareWithMergedOthers({
           baseData: statisticTagsList.mediumCategories || [],
-          compareData: statisticTagsCompareList.mediumCategories || [],
+          compareData: statisticTagsCompareList?.mediumCategories || [],
         });
         const compareResultSmall = buildProgressDataCompareWithMergedOthers({
           baseData: statisticTagsList.smallCategories || [],
-          compareData: statisticTagsCompareList.smallCategories || [],
+          compareData: statisticTagsCompareList?.smallCategories || [],
         });
 
         const compareResultCategory = buildProgressDataCompareWithMergedOthers({
           baseData: statisticTagsList.category || [],
-          compareData: statisticTagsCompareList.category || [],
+          compareData: statisticTagsCompareList?.category || [],
         });
 
         setProgressDataPairsLarge(compareResult);
@@ -382,7 +383,6 @@ const AllocationTagTeamCompare = memo(
     useEffect(() => {
       if (
         statisticAllTeamCategoryList &&
-        statisticAllTeamCategoryCompareList &&
         selectedOrganization?.value == ALL_TEAM_STATISTIC
       ) {
         const mergeCategories = (
@@ -410,11 +410,11 @@ const AllocationTagTeamCompare = memo(
               optionData:
                 item.organizationId == SUB_TEAMS
                   ? item?.subTeams
-                    ?.slice(0, 3)
-                    .map((team) => team?.organizationName || '') || []
+                      ?.slice(0, 3)
+                      .map((team) => team?.organizationName || '') || []
                   : item?.data
-                    ?.slice(0, 3)
-                    .map((category) => category?.tagName || '') || [],
+                      ?.slice(0, 3)
+                      .map((category) => category?.tagName || '') || [],
             };
 
             mergedMap.set(`${item.organizationId}`, {
@@ -436,11 +436,11 @@ const AllocationTagTeamCompare = memo(
               optionData:
                 compareItem.organizationId == SUB_TEAMS
                   ? compareItem?.subTeams
-                    ?.slice(0, 3)
-                    .map((team) => team?.organizationName || '') || []
+                      ?.slice(0, 3)
+                      .map((team) => team?.organizationName || '') || []
                   : compareItem?.data
-                    ?.slice(0, 3)
-                    .map((category) => category?.tagName || '') || [],
+                      ?.slice(0, 3)
+                      .map((category) => category?.tagName || '') || [],
             };
 
             if (mergedMap.has(`${compareItem.organizationId}`)) {
@@ -459,7 +459,7 @@ const AllocationTagTeamCompare = memo(
 
         const largePairs = mergeCategories(
           statisticAllTeamCategoryList.largeCategories || [],
-          statisticAllTeamCategoryCompareList.largeCategories || [],
+          statisticAllTeamCategoryCompareList?.largeCategories || [],
         );
 
         setProgressDataAllTeam(largePairs);
@@ -560,8 +560,9 @@ const AllocationTagTeamCompare = memo(
             <ImageRound
               src="/icons/extend-calendar.svg"
               name="Extend calendar"
-              className={`!w-[14px] !h-[14px] hover:cursor-pointer ${isExtendData ? '-rotate-90' : 'rotate-90'
-                }`}
+              className={`!w-[14px] !h-[14px] hover:cursor-pointer ${
+                isExtendData ? '-rotate-90' : 'rotate-90'
+              }`}
               onClick={() => {
                 setIsExtendData(!isExtendData);
               }}
@@ -617,7 +618,7 @@ const AllocationTagTeamCompare = memo(
                                 ? formatTimeToJapanese(totalDurationLarge)
                                 : '-'
                               : totalDurationLarge &&
-                                progressDataPairsLarge.length > 0
+                                  progressDataPairsLarge.length > 0
                                 ? formatTimeToJapanese(totalDurationLarge)
                                 : '-'}
                           </span>
@@ -648,14 +649,14 @@ const AllocationTagTeamCompare = memo(
                               ? totalDurationLargeCompare &&
                                 progressDataAllTeam.length > 0
                                 ? formatTimeToJapanese(
-                                  totalDurationLargeCompare,
-                                )
+                                    totalDurationLargeCompare,
+                                  )
                                 : '-'
                               : totalDurationLargeCompare &&
-                                progressDataPairsLarge.length > 0
+                                  progressDataPairsLarge.length > 0
                                 ? formatTimeToJapanese(
-                                  totalDurationLargeCompare,
-                                )
+                                    totalDurationLargeCompare,
+                                  )
                                 : '-'}
                           </span>
                         </div>
@@ -669,7 +670,9 @@ const AllocationTagTeamCompare = memo(
                         </div>
                       ) : progressDataPairsLarge.length === 0 ? (
                         <div className="flex items-center justify-center h-[100px]">
-                          <span className="text-sm text-[#77858F]">データがありません</span>
+                          <span className="text-sm text-[#77858F]">
+                            データがありません
+                          </span>
                         </div>
                       ) : (
                         <div className="mt-5 flex flex-col gap-4">
@@ -686,7 +689,7 @@ const AllocationTagTeamCompare = memo(
                                     <span className="text-sm font-medium truncate max-w-24">
                                       {formatTimeToJapanese(
                                         pair.main?.duration ||
-                                        DEFAULT_TIME_TEXT,
+                                          DEFAULT_TIME_TEXT,
                                       )}
                                     </span>
                                   </div>
@@ -708,8 +711,8 @@ const AllocationTagTeamCompare = memo(
                                         setActiveBarLargeId(null);
                                     }}
                                     classProgressClass="h-[20px] rounded-[4px]"
-                                    handleClickTooltip={() => { }}
-                                    handleClickChart={() => { }}
+                                    handleClickTooltip={() => {}}
+                                    handleClickChart={() => {}}
                                     id={pair.main ? pair.main.id : 0}
                                     label={pair.main ? pair.main.label : ''}
                                     value={pair.main ? pair.main.value : 0}
@@ -751,8 +754,8 @@ const AllocationTagTeamCompare = memo(
                                         setActiveBarLargeCompareId(null);
                                     }}
                                     classProgressClass="h-[20px] rounded-[4px]"
-                                    handleClickTooltip={() => { }}
-                                    handleClickChart={() => { }}
+                                    handleClickTooltip={() => {}}
+                                    handleClickChart={() => {}}
                                     id={pair.compare ? pair.compare.id : 0}
                                     label={
                                       pair.compare ? pair.compare.label : ''
@@ -942,9 +945,12 @@ const AllocationTagTeamCompare = memo(
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-[6px]" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                         </div>
-                      ) : progressDataPairsMedium.length === 0 && selectedLarge?.value !== '' ? (
+                      ) : progressDataPairsMedium.length === 0 &&
+                        selectedLarge?.value !== '' ? (
                         <div className="flex items-center justify-center h-[100px]">
-                          <span className="text-sm text-[#77858F]">データがありません</span>
+                          <span className="text-sm text-[#77858F]">
+                            データがありません
+                          </span>
                         </div>
                       ) : (
                         <div className="mt-5 flex flex-col gap-4">
@@ -1078,9 +1084,12 @@ const AllocationTagTeamCompare = memo(
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-[6px]" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                         </div>
-                      ) : progressDataPairsSmall.length === 0 && selectedMedium?.value !== '' ? (
+                      ) : progressDataPairsSmall.length === 0 &&
+                        selectedMedium?.value !== '' ? (
                         <div className="flex items-center justify-center h-[100px]">
-                          <span className="text-sm text-[#77858F]">データがありません</span>
+                          <span className="text-sm text-[#77858F]">
+                            データがありません
+                          </span>
                         </div>
                       ) : (
                         <div className="mt-5 flex flex-col gap-4">
@@ -1232,9 +1241,12 @@ const AllocationTagTeamCompare = memo(
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-[6px]" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                         </div>
-                      ) : progressDataPairsCategory.length === 0 && selectedSmall?.value !== '' ? (
+                      ) : progressDataPairsCategory.length === 0 &&
+                        selectedSmall?.value !== '' ? (
                         <div className="flex items-center justify-center h-[100px]">
-                          <span className="text-sm text-[#77858F]">データがありません</span>
+                          <span className="text-sm text-[#77858F]">
+                            データがありません
+                          </span>
                         </div>
                       ) : (
                         <div className="mt-5 flex flex-col gap-4">
