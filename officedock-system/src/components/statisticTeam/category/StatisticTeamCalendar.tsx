@@ -1027,7 +1027,7 @@ function StatisticTeamCalendar() {
                   <div className="mt-[14px] space-y-2">
                     <DynamicTooltip
                       content="終了日を選択すると比較できます"
-                      placement="right"
+                      placement="top"
                       disabled={!!(dataStartDate && dataEndDate)}>
                       <div className="inline-block">
                         <Checkbox
@@ -1055,7 +1055,7 @@ function StatisticTeamCalendar() {
                     </DynamicTooltip>
                     <DynamicTooltip
                       content="終了日を選択すると比較できます"
-                      placement="right"
+                      placement="top"
                       disabled={!!(dataStartDate && dataEndDate)}>
                       <div className="inline-block">
                         <Checkbox

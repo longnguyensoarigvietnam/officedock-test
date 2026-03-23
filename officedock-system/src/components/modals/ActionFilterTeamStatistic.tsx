@@ -257,8 +257,9 @@ const ActionFilterStatisticTeam = ({
                 className="!h-[34px] !rounded-md"
                 labelClass="!min-h-0 !text-sm font-medium"
                 valueClassName="!border-[1px] !border-[#77858F] !py-0 flex items-center !rounded-md"
-                optionClassName="!border-[1px] !border-[#77858F]"
+                optionClassName="!border-[1px] !border-[#77858F] !mt-0"
                 labelOptionClass="break-words max-w-[300px] line-clamp-3 !text-sm"
+                closeOnMouseLeave
                 options={dataOptionsUserIds}
                 selectedOptions={watch('userIds') ?? []}
                 customLabel="メンバー"
@@ -288,8 +289,9 @@ const ActionFilterStatisticTeam = ({
               className="!h-[34px] !rounded-md"
               labelClass="!min-h-0 !text-sm font-medium"
               valueClassName="!border-[1px] !border-[#77858F] !py-0 flex items-center !rounded-md"
-              optionClassName="!border-[1px] !border-[#77858F] w-full"
+              optionClassName="!border-[1px] !border-[#77858F] w-full !mt-0"
               labelOptionClass="break-words max-w-[300px] line-clamp-2 !text-sm"
+              closeOnMouseLeave
               options={dataOptionsTagIds}
               selectedOptions={watch('tagIds') ?? []}
               customLabel="タグ"
