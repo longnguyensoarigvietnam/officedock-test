@@ -382,7 +382,7 @@ const AllocationTagTeamCompare = memo(
 
     useEffect(() => {
       if (
-        statisticAllTeamCategoryList &&
+        (statisticAllTeamCategoryList?.largeCategories?.length ?? 0) > 0 &&
         selectedOrganization?.value == ALL_TEAM_STATISTIC
       ) {
         const mergeCategories = (
@@ -458,7 +458,7 @@ const AllocationTagTeamCompare = memo(
         };
 
         const largePairs = mergeCategories(
-          statisticAllTeamCategoryList.largeCategories || [],
+          statisticAllTeamCategoryList?.largeCategories || [],
           statisticAllTeamCategoryCompareList?.largeCategories || [],
         );
 
@@ -469,8 +469,8 @@ const AllocationTagTeamCompare = memo(
         setProgressDataPairsCategory([]);
       }
     }, [
-      statisticAllTeamCategoryList,
-      statisticAllTeamCategoryCompareList,
+      statisticAllTeamCategoryList?.largeCategories,
+      statisticAllTeamCategoryCompareList?.largeCategories,
       selectedOrganization?.value,
     ]);
 
@@ -668,7 +668,9 @@ const AllocationTagTeamCompare = memo(
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px] mb-[6px]" />
                           <SkeletonElement className="!w-full !h-[20px] !rounded-[4px]" />
                         </div>
-                      ) : progressDataPairsLarge.length === 0 ? (
+                      ) : (selectedOrganization?.value == ALL_TEAM_STATISTIC
+                            ? progressDataAllTeam.length === 0
+                            : progressDataPairsLarge.length === 0) ? (
                         <div className="flex items-center justify-center h-[100px]">
                           <span className="text-sm text-[#77858F]">
                             データがありません
