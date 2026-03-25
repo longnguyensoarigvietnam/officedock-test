@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 import Button from '@components/common/Button';
 import Checkbox from '@components/common/Checkbox';
@@ -112,6 +112,121 @@ function StatisticTeamCalendar() {
 
   const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
+  const getMonthCompareRange = (
+    baseDate: Date,
+    mode: TimeCompareOptionsType,
+  ) => {
+    const month = baseDate.getMonth();
+    const year = baseDate.getFullYear();
+
+    if (mode === TimeCompareOptionsType.PREVIOUS_PERIOD) {
+      const previousMonthIndexRaw = month - 1;
+      const previousMonthYear = year + Math.floor(previousMonthIndexRaw / 12);
+      const previousMonthIndex = ((previousMonthIndexRaw % 12) + 12) % 12;
+      return {
+        start: new Date(previousMonthYear, previousMonthIndex, 1),
+        end: new Date(previousMonthYear, previousMonthIndex + 1, 0),
+      };
+    }
+
+    const previousYear = year - 1;
+    return {
+      start: new Date(previousYear, month, 1),
+      end: new Date(previousYear, month + 1, 0),
+    };
+  };
+
+  const getHalfYearCompareRange = (
+    baseDate: Date,
+    mode: TimeCompareOptionsType,
+  ) => {
+    const month = baseDate.getMonth();
+    const year = baseDate.getFullYear();
+
+    if (mode === TimeCompareOptionsType.PREVIOUS_PERIOD) {
+      const compareStartMonthRaw = month - 6;
+      const compareStartYear = year + Math.floor(compareStartMonthRaw / 12);
+      const compareStartMonth = ((compareStartMonthRaw % 12) + 12) % 12;
+
+      const compareEndMonthRaw = month - 1;
+      const compareEndYear = year + Math.floor(compareEndMonthRaw / 12);
+      const compareEndMonth = ((compareEndMonthRaw % 12) + 12) % 12;
+
+      return {
+        start: new Date(compareStartYear, compareStartMonth, 1),
+        end: new Date(compareEndYear, compareEndMonth + 1, 0),
+      };
+    }
+
+    const previousYear = year - 1;
+    const compareEndMonthRaw = month + 5;
+    const compareEndYear = previousYear + Math.floor(compareEndMonthRaw / 12);
+    const compareEndMonth = ((compareEndMonthRaw % 12) + 12) % 12;
+
+    return {
+      start: new Date(previousYear, month, 1),
+      end: new Date(compareEndYear, compareEndMonth + 1, 0),
+    };
+  };
+
+  const applyCompareModeToCurrentRange = useCallback(
+    (mode: TimeCompareOptionsType) => {
+      if (!isDataCheckCompare) return;
+      if (!dataStartDate || !dataEndDate) return;
+      if (mode === TimeCompareOptionsType.CUSTOM) return;
+
+      setIsErrorDataCompare({ start: false, end: false });
+
+      if (mode === TimeCompareOptionsType.PREVIOUS_PERIOD) {
+        if (isTypeTime === TimeOptionsType.MORE) {
+          const diffDays =
+            Math.floor(
+              (dataEndDate.getTime() - dataStartDate.getTime()) / MS_PER_DAY,
+            ) + 1;
+
+          const compareStart = new Date(dataStartDate);
+          compareStart.setDate(compareStart.getDate() - diffDays);
+          const compareEnd = new Date(dataEndDate);
+          compareEnd.setDate(compareEnd.getDate() - diffDays);
+
+          setDataStartDateCompare(compareStart);
+          setDataEndDateCompare(compareEnd);
+        } else {
+          const { start: compareStart, end: compareEnd } =
+            isTypeTime === TimeOptionsType.MONTH
+              ? getMonthCompareRange(dataStartDate, mode)
+              : isTypeTime === TimeOptionsType.HALF_YEAR
+                ? getHalfYearCompareRange(dataStartDate, mode)
+                : {
+                    start: handleSetStartDateBefore(
+                      isTypeTime,
+                      dataStartDate,
+                    ) as Date,
+                    end: handleSetStartDateBefore(isTypeTime, dataEndDate) as Date,
+                  };
+          setDataStartDateCompare(compareStart);
+          setDataEndDateCompare(compareEnd);
+        }
+      } else if (mode === TimeCompareOptionsType.PREVIOUS_YEAR) {
+        const { start: compareStart, end: compareEnd } =
+          isTypeTime === TimeOptionsType.MONTH
+            ? getMonthCompareRange(dataStartDate, mode)
+            : isTypeTime === TimeOptionsType.HALF_YEAR
+              ? getHalfYearCompareRange(dataStartDate, mode)
+              : (() => {
+                  const start = new Date(dataStartDate);
+                  start.setFullYear(start.getFullYear() - 1);
+                  const end = new Date(dataEndDate);
+                  end.setFullYear(end.getFullYear() - 1);
+                  return { start, end };
+                })();
+        setDataStartDateCompare(compareStart);
+        setDataEndDateCompare(compareEnd);
+      }
+    },
+    [isDataCheckCompare, dataStartDate, dataEndDate, isTypeTime, MS_PER_DAY],
+  );
+
   useEffect(() => {
     if (startDate) {
       setDataStartDate(startDate);
@@ -120,6 +235,10 @@ function StatisticTeamCalendar() {
       setDataEndDate(endDate);
     }
   }, [endDate, startDate]);
+
+  useEffect(() => {
+    applyCompareModeToCurrentRange(compareMode);
+  }, [compareMode, applyCompareModeToCurrentRange]);
   useEffect(() => {
     if (isCheckCompare) {
       setIsDataCheckCompare(isCheckCompare);
@@ -177,50 +296,7 @@ function StatisticTeamCalendar() {
 
   const handleChangeCompareMode = (mode: TimeCompareOptionsType) => {
     setCompareMode(mode);
-    if (!isDataCheckCompare) return;
-    if (!dataStartDate || !dataEndDate) return;
-
-    if (mode === TimeCompareOptionsType.CUSTOM) {
-      return;
-    }
-
-    setIsErrorDataCompare({ start: false, end: false });
-
-    if (mode === TimeCompareOptionsType.PREVIOUS_PERIOD) {
-      if (isTypeTime === TimeOptionsType.MORE) {
-        if (!dataEndDate) return;
-        const diffDays =
-          Math.floor(
-            (dataEndDate.getTime() - dataStartDate.getTime()) / MS_PER_DAY,
-          ) + 1;
-
-        const compareStart = new Date(dataStartDate);
-        compareStart.setDate(compareStart.getDate() - diffDays);
-        const compareEnd = new Date(dataEndDate);
-        compareEnd.setDate(compareEnd.getDate() - diffDays);
-
-        setDataStartDateCompare(compareStart);
-        setDataEndDateCompare(compareEnd);
-      } else {
-        const compareStart = handleSetStartDateBefore(
-          isTypeTime,
-          dataStartDate,
-        ) as Date;
-        const compareEnd = handleSetStartDateBefore(
-          isTypeTime,
-          dataEndDate,
-        ) as Date;
-        setDataStartDateCompare(compareStart);
-        setDataEndDateCompare(compareEnd);
-      }
-    } else if (mode === TimeCompareOptionsType.PREVIOUS_YEAR) {
-      const compareStart = new Date(dataStartDate);
-      compareStart.setFullYear(compareStart.getFullYear() - 1);
-      const compareEnd = new Date(dataEndDate);
-      compareEnd.setFullYear(compareEnd.getFullYear() - 1);
-      setDataStartDateCompare(compareStart);
-      setDataEndDateCompare(compareEnd);
-    }
+    applyCompareModeToCurrentRange(mode);
   };
 
   // Selection option time
@@ -324,18 +400,30 @@ function StatisticTeamCalendar() {
       setIsErrorDataCompare({ start: false, end: false });
 
       if (compareMode === TimeCompareOptionsType.PREVIOUS_PERIOD) {
-        const compareStart = handleSetStartDateBefore(
-          option,
-          newStartDate,
-        ) as Date;
-        const compareEnd = handleSetStartDateBefore(option, newEndDate) as Date;
+        const { start: compareStart, end: compareEnd } =
+          option === TimeOptionsType.MONTH
+            ? getMonthCompareRange(newStartDate, compareMode)
+            : option === TimeOptionsType.HALF_YEAR
+              ? getHalfYearCompareRange(newStartDate, compareMode)
+              : {
+                  start: handleSetStartDateBefore(option, newStartDate) as Date,
+                  end: handleSetStartDateBefore(option, newEndDate) as Date,
+                };
         setDataStartDateCompare(compareStart);
         setDataEndDateCompare(compareEnd);
       } else if (compareMode === TimeCompareOptionsType.PREVIOUS_YEAR) {
-        const compareStart = new Date(newStartDate);
-        compareStart.setFullYear(compareStart.getFullYear() - 1);
-        const compareEnd = new Date(newEndDate);
-        compareEnd.setFullYear(compareEnd.getFullYear() - 1);
+        const { start: compareStart, end: compareEnd } =
+          option === TimeOptionsType.MONTH
+            ? getMonthCompareRange(newStartDate, compareMode)
+            : option === TimeOptionsType.HALF_YEAR
+              ? getHalfYearCompareRange(newStartDate, compareMode)
+              : (() => {
+                  const start = new Date(newStartDate);
+                  start.setFullYear(start.getFullYear() - 1);
+                  const end = new Date(newEndDate);
+                  end.setFullYear(end.getFullYear() - 1);
+                  return { start, end };
+                })();
         setDataStartDateCompare(compareStart);
         setDataEndDateCompare(compareEnd);
       }
