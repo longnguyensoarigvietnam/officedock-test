@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useRef, useState, useContext } from 'react';
 
 import Button from '@components/common/Button';
 import Checkbox from '@components/common/Checkbox';
@@ -12,9 +12,10 @@ import { isEqualOptions } from '@utils/date';
 type Props = {
   open: boolean;
   close: () => void;
+  onPreviewChange: (tags: OptionDropdownType[]) => void;
 };
 
-const FilterStatisticModal = ({ open, close }: Props) => {
+const FilterStatisticModal = ({ open, close, onPreviewChange }: Props) => {
   const {
     isHasLoading,
     tagsOptions,
@@ -28,17 +29,36 @@ const FilterStatisticModal = ({ open, close }: Props) => {
     setIsLoadingMediumCompare,
     setIsLoadingOrganizationCompare,
   } = useContext(StatisticStateContext);
+
+  const actionRef = useRef<'none' | 'confirm' | 'cancel'>('none');
+  const selectedOptionRef = useRef<OptionDropdownType[]>([]);
+  const tagsOptionsRef = useRef<OptionDropdownType[]>([]);
+  const isCheckCompareRef = useRef(isCheckCompare);
   const [selectedOption, setSelectedOption] = useState<OptionDropdownType[]>(
     [],
   );
   useEffect(() => {
-    if (selectedTags.length) {
-      setSelectedOption(selectedTags);
-    }
-  }, [selectedTags, open]);
+    selectedOptionRef.current = selectedOption;
+  }, [selectedOption]);
+
+  useEffect(() => {
+    tagsOptionsRef.current = tagsOptions;
+  }, [tagsOptions]);
+
+  useEffect(() => {
+    isCheckCompareRef.current = isCheckCompare;
+  }, [isCheckCompare]);
+
+  useEffect(() => {
+    if (!open) return;
+    // Sync modal preview with the currently applied filter.
+    setSelectedOption(selectedTags);
+    onPreviewChange(selectedTags);
+  }, [open, selectedTags, onPreviewChange]);
 
   const handleReset = () => {
     setSelectedOption([]);
+    onPreviewChange([]);
   };
 
   const handleChangeTag = (selected: OptionDropdownType) => {
@@ -46,49 +66,70 @@ const FilterStatisticModal = ({ open, close }: Props) => {
       (tag) => tag.value == selected.value,
     );
     if (foundItemIndex == -1) {
-      setSelectedOption([...selectedOption, selected]);
+      const updated = [...selectedOption, selected];
+      setSelectedOption(updated);
+      onPreviewChange(updated);
     } else {
-      setSelectedOption(
-        selectedOption.filter((op) => op.value != selected.value),
+      const updated = selectedOption.filter(
+        (op) => op.value != selected.value,
       );
+      setSelectedOption(updated);
+      onPreviewChange(updated);
     }
   };
 
-  const handleSearch = () => {
-    // If no available tag options, exit early
-    if (tagsOptions.length === 0) return;
+  const applyFilter = () => {
+    const nextSelected = selectedOptionRef.current;
+
+    // If no available tag options, exit early (keep same behavior).
+    if (tagsOptionsRef.current.length === 0) return;
 
     setSelectedTags((prev) => {
       const prevTags = prev || [];
+      const hasChanged = !isEqualOptions(prevTags, nextSelected);
 
-      // Check if selectedOption is actually different
-      const hasChanged = !isEqualOptions(prevTags, selectedOption);
-
-      // No change → skip loading and do not update state
       if (!hasChanged) {
         return prev;
       }
 
-      // Change detected → trigger loading
       setIsLoadingLarge(true);
       setIsLoadingMedium(true);
       setIsLoadingOrganization(true);
 
-      if (isCheckCompare) {
+      if (isCheckCompareRef.current) {
         setIsLoadingLargeCompare(true);
         setIsLoadingMediumCompare(true);
         setIsLoadingOrganizationCompare(true);
       }
 
-      // Update selected tags
-      return selectedOption;
+      return nextSelected;
     });
+  };
 
+  const handleCancel = () => {
+    actionRef.current = 'cancel';
+    setSelectedOption(selectedTags);
+    onPreviewChange(selectedTags);
+    close();
+  };
+
+  const handleConfirm = () => {
+    actionRef.current = 'confirm';
+    applyFilter();
+    close();
+  };
+
+  const handleMouseLeave = () => {
+    // When leaving the modal, apply filter immediately.
+    actionRef.current = 'confirm';
+    applyFilter();
     close();
   };
 
   return (
-    <div className="w-full pt-[10px]  pb-5 bg-white rounded-[14px] shadow-common p-1 flex flex-col gap-1 text-sm">
+    <div
+      onMouseLeave={handleMouseLeave}
+      className="w-full pt-[10px]  pb-5 bg-white rounded-[14px] shadow-common p-1 flex flex-col gap-1 text-sm">
       <div className="text-xs pl-5 pr-[10px] font-medium text-[#77858F] flex justify-between items-center">
         <span>タグの絞り込み</span>
         <div className="flex items-center gap-x-[10px]">
@@ -99,7 +140,7 @@ const FilterStatisticModal = ({ open, close }: Props) => {
             style={{
               padding: '5px',
             }}
-            onClick={close}
+            onClick={handleCancel}
             className={`rounded-full cursor-pointer w-6 h-6 bg-[#E3EAED]`}>
             <ImageRound
               src={`/icons/close-black.svg`}
@@ -152,11 +193,11 @@ const FilterStatisticModal = ({ open, close }: Props) => {
         </div>
       </div>
       <div className="flex justify-center gap-[10px] mt-4 ">
-        <Button variant="outline" onClick={close} className="h-9">
+        <Button variant="outline" onClick={handleCancel} className="h-9">
           キャンセル
         </Button>
         <Button
-          onClick={handleSearch}
+          onClick={handleConfirm}
           className="h-9"
           disabled={isHasLoading || tagsOptions.length == 0}>
           絞り込む
