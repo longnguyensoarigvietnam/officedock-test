@@ -288,10 +288,26 @@ export const StatisticTagStateProvider = ({
 
   // Data Date calendar
   const [isCheckCompare, setIsCheckCompare] = useState(false);
-  const [endDate, setEndDate] = useState<Date | null>(new Date());
-  const [startDate, setStartDate] = useState<Date>(
-    getAdjustedStartDateDefault(),
-  );
+  const [endDate, setEndDate] = useState<Date | null>(() => {
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    const lastMonthIndexRaw = currentMonth - 1;
+    const lastMonthYear = currentYear + Math.floor(lastMonthIndexRaw / 12);
+    const lastMonthIndex = ((lastMonthIndexRaw % 12) + 12) % 12;
+
+    return new Date(lastMonthYear, lastMonthIndex + 1, 0);
+  });
+  const [startDate, setStartDate] = useState<Date>(() => {
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    const lastMonthIndexRaw = currentMonth - 1;
+    const lastMonthYear = currentYear + Math.floor(lastMonthIndexRaw / 12);
+    const lastMonthIndex = ((lastMonthIndexRaw % 12) + 12) % 12;
+
+    return new Date(lastMonthYear, lastMonthIndex, 1);
+  });
 
   // Data Date calendar compare
   const [endDateCompare, setEndDateCompare] = useState<Date | null>(new Date());
