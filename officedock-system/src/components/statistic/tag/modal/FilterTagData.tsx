@@ -56,6 +56,8 @@ const FilterTagData = ({ open, close, onPreviewChange }: Props) => {
     if (!open) return;
     setSelectedOption(selectedTags);
     onPreviewChange(selectedTags);
+    // Reset action flag so outside-click can apply preview.
+    actionRef.current = 'none';
   }, [open, selectedTags, onPreviewChange]);
 
   const handleChangeTag = (selected: OptionDropdownType) => {
@@ -64,18 +66,21 @@ const FilterTagData = ({ open, close, onPreviewChange }: Props) => {
     );
     if (foundItemIndex == -1) {
       const updated = [...selectedOption, selected];
+      selectedOptionRef.current = updated;
       setSelectedOption(updated);
       onPreviewChange(updated);
     } else {
       const updated = selectedOption.filter(
         (op) => op.value != selected.value,
       );
+      selectedOptionRef.current = updated;
       setSelectedOption(updated);
       onPreviewChange(updated);
     }
   };
 
   const handleReset = () => {
+    selectedOptionRef.current = [];
     setSelectedOption([]);
     onPreviewChange([]);
   };
@@ -109,6 +114,7 @@ const FilterTagData = ({ open, close, onPreviewChange }: Props) => {
 
   const handleCancel = () => {
     actionRef.current = 'cancel';
+    selectedOptionRef.current = selectedTags;
     setSelectedOption(selectedTags);
     onPreviewChange(selectedTags);
     close();
@@ -121,10 +127,19 @@ const FilterTagData = ({ open, close, onPreviewChange }: Props) => {
   };
 
   const handleMouseLeave = () => {
-    actionRef.current = 'confirm';
-    applyFilter();
-    close();
+    // Do nothing on mouse leave.
+    // Only outside-click should apply the preview (handled when open becomes false).
   };
+
+  // When Popover closes (typically by clicking outside), apply the preview.
+  // If user explicitly cancelled/confirmed, we skip applying.
+  useEffect(() => {
+    if (open) return;
+    if (actionRef.current === 'none') {
+      applyFilter();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
   return (
     <div
       onMouseLeave={handleMouseLeave}

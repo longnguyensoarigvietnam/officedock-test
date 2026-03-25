@@ -36,11 +36,11 @@ const FilterTagUserTeam = ({ className, classNameData }: Props) => {
 
   return (
     <div className={`flex items-center  gap-2  ${className}`}>
-      <div className="flex-shrink-0 h-6 relative ">
-        {/* Filter option modal */}
-        <Popover className="relative">
-          {({ open, close }) => (
-            <>
+      <Popover className="relative  flex items-center gap-2 w-full">
+        {({ open, close }) => (
+          <>
+            <div className="flex-shrink-0 h-6 relative ">
+              {/* Filter option modal */}
               <div className="flex items-center gap-2 relative top-[5px]">
                 <PopoverButton className="flex items-center gap-2 text-xs font-medium text-[#77858F] focus-visible:outline-none">
                   <ImageRound
@@ -67,51 +67,55 @@ const FilterTagUserTeam = ({ className, classNameData }: Props) => {
                   <FilterDataUserTeam open={open} close={close} />
                 </PopoverPanel>
               </Transition>
-            </>
-          )}
-        </Popover>
-      </div>
-      <div className=" flex-grow flex">
-        <div className={`flex gap-2 flex-wrap  ${classNameData} `}>
-          <>
-            {previewUserLabels.map((item, index) => {
-              return (
-                <div key={item.value} className="flex gap-[6px] items-center">
-                  {index === 0 && (
-                    <ImageRound
-                      src={`/icons/user-white.svg`}
-                      name="close"
-                      className="w-fit h-fit"
-                    />
-                  )}
-                  <div className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                    <span className="min-w-[32px] max-w-[118px]  truncate">
-                      {item.label}
-                    </span>
-                    {isLoadingOrganization ||
-                    isLoadingLarge ||
-                    isLoadingMedium ||
-                    isLoadingOrganizationCompare ||
-                    isLoadingLargeCompare ||
-                    isLoadingMediumCompare ? (
-                      ''
-                    ) : (
-                      <ImageRound
-                        onClick={() => {
-                          removeUser(item);
-                        }}
-                        src={`/icons/close-white.svg`}
-                        name="close"
-                        className="w-fit h-fit cursor-pointer"
-                      />
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+            </div>
+            <div className=" flex-grow flex">
+              <div className={`flex gap-2 flex-wrap  ${classNameData} `}>
+                <>
+                  {previewUserLabels.map((item, index) => {
+                    return (
+                      <div
+                        key={item.value}
+                        className="flex gap-[6px] items-center">
+                        {index === 0 && (
+                          <ImageRound
+                            src={`/icons/user-white.svg`}
+                            name="close"
+                            className="w-fit h-fit"
+                          />
+                        )}
+                        <div className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                          <span className="min-w-[32px] max-w-[118px]  truncate">
+                            {item.label}
+                          </span>
+                          {open ? (
+                            ''
+                          ) : isLoadingOrganization ||
+                            isLoadingLarge ||
+                            isLoadingMedium ||
+                            isLoadingOrganizationCompare ||
+                            isLoadingLargeCompare ||
+                            isLoadingMediumCompare ? (
+                            ''
+                          ) : (
+                            <ImageRound
+                              onClick={() => {
+                                removeUser(item);
+                              }}
+                              src={`/icons/close-white.svg`}
+                              name="close"
+                              className="w-fit h-fit cursor-pointer"
+                            />
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </>
+              </div>
+            </div>
           </>
-        </div>
-      </div>
+        )}
+      </Popover>
     </div>
   );
 };
