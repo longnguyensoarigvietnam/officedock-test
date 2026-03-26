@@ -711,7 +711,7 @@ export interface ListTaskStatistic {
   organizationName: string;
   organizationType?: string;
   type: string;
-  user: {
+  user?: {
     id: number;
     fullName: string;
     avatarColor: string;
