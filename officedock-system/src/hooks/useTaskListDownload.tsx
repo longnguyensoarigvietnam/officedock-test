@@ -3,7 +3,10 @@
 import { useCallback } from 'react';
 
 import { apiRouters } from '@constants/routers';
-import { ERROR_FILE_DOWNLOAD, SUCCESS_EXPORT_MESSAGE } from '@constants/message';
+import {
+  ERROR_FILE_DOWNLOAD,
+  SUCCESS_EXPORT_MESSAGE,
+} from '@constants/message';
 import { ExportType, PeriodClassification } from '@constants/enums';
 
 import { OptionDropdownType } from '@interfaces/common';
@@ -26,6 +29,7 @@ interface FilterProps {
   tagIds?: OptionDropdownType[];
   totalDuration?: string;
   ordering: string;
+  uids?: string;
   user_id?: number | string;
   user_ids?: OptionDropdownType[];
   isCompare?: boolean;
@@ -77,6 +81,9 @@ export const useTaskListDownload = ({
             'user_ids',
             filter.user_ids.map((item) => item.value).join(','),
           );
+        }
+        if (filter?.uids) {
+          params.append('uids', String(filter.uids));
         }
         if (filter?.isCompare) {
           params.append(

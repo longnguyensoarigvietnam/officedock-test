@@ -400,6 +400,12 @@ export interface DataTaskListStatisticListType {
     startedAt: string;
     pausedAt: string;
   }[];
+  user: {
+    id: number;
+    fullName: string;
+    avatarColor: string;
+    avatar: string;
+  } | null;
   organization: {
     id: number;
     name: string;
@@ -705,6 +711,12 @@ export interface ListTaskStatistic {
   organizationName: string;
   organizationType?: string;
   type: string;
+  user: {
+    id: number;
+    fullName: string;
+    avatarColor: string;
+    avatar: string;
+  } | null;
 }
 
 export interface CategoryLineChartDatasetInfo {
