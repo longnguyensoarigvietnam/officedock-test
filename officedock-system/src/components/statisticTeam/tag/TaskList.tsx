@@ -18,6 +18,7 @@ import Pagination from '@components/common/Pagination';
 import Checkbox from '@components/common/Checkbox';
 import FormSkeleton from '@components/common/SkeletonLoading/FormSkeleton';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import TableChart from './TableChart';
 import FilterTagTeam from './filter/FilterTagTeam';
 
@@ -121,6 +122,7 @@ const TaskListStatisticTeamTags = ({
 
   const uids = selectedMembers.join(',');
   const selectedMember = selectedMembers[0] ?? null;
+  const isMultipleMembersSelected = selectedMembers.length > 1;
   const isAllMembersChecked =
     memberOptions.length > 0 &&
     memberOptions.every((member) => selectedMembers.includes(member.id));
@@ -245,7 +247,7 @@ const TaskListStatisticTeamTags = ({
       smallCategoryId: selectedSmall?.value as number,
       ordering: ordering,
       tagIds: orderingOptions?.tag_ids,
-      user_id: uids,
+      uids: uids,
       user_ids: orderingOptions?.user_ids,
       isCompare: isCheckCompare && isShowCompare,
     },
@@ -315,14 +317,39 @@ const TaskListStatisticTeamTags = ({
                     leaveTo="opacity-0 translate-y-1">
                     <PopoverPanel className="absolute left-0 z-10 min-w-[120px] max-w-[120px] transform">
                       <div className="bg-white !border-[#77858F] border-[1px] text-black rounded-[6px] mt-[6px] p-1 text-sm font-medium">
-                        <p
-                          className="hover:cursor-pointer py-[10px] pl-2 border-b-[1px] border-[#EBF1F7] !leading-none"
-                          onClick={() => {
-                            downloadTaskListFile(ExportType.CSV);
-                            close();
-                          }}>
-                          CSV
-                        </p>
+                        {isMultipleMembersSelected ? (
+                          <DynamicTooltip
+                            content="アーカイブタスクを見る"
+                            placement="bottom">
+                            <p
+                              className={`py-[10px] pl-2 border-b-[1px] border-[#EBF1F7] !leading-none ${
+                                isMultipleMembersSelected
+                                  ? 'cursor-not-allowed text-[#9CA3AF]'
+                                  : 'hover:cursor-pointer'
+                              }`}
+                              onClick={() => {
+                                if (isMultipleMembersSelected) return;
+                                downloadTaskListFile(ExportType.CSV);
+                                close();
+                              }}>
+                              CSV
+                            </p>
+                          </DynamicTooltip>
+                        ) : (
+                          <p
+                            className={`py-[10px] pl-2 border-b-[1px] border-[#EBF1F7] !leading-none ${
+                              isMultipleMembersSelected
+                                ? 'cursor-not-allowed text-[#9CA3AF]'
+                                : 'hover:cursor-pointer'
+                            }`}
+                            onClick={() => {
+                              if (isMultipleMembersSelected) return;
+                              downloadTaskListFile(ExportType.CSV);
+                              close();
+                            }}>
+                            CSV
+                          </p>
+                        )}
                         <p
                           className="hover:cursor-pointer py-[10px] pl-2 !leading-none"
                           onClick={() => {
@@ -378,7 +405,7 @@ const TaskListStatisticTeamTags = ({
                           : memberOptions.map((member) => member.id),
                       );
                     }}
-                    classSize="!rounded-full !opacity-100"
+                    classSize=" !opacity-100"
                   />
                 </div>
                 <span className="break-all w-full max-w-[800px] truncate text-sm">
@@ -399,7 +426,7 @@ const TaskListStatisticTeamTags = ({
                             : [...prev, member.id],
                         );
                       }}
-                      classSize="!rounded-full !opacity-100"
+                      classSize=" !opacity-100"
                     />
                   </div>
                   <div className="relative top-[2px]">

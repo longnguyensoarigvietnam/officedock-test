@@ -363,6 +363,25 @@ const TableChart = ({
       },
     },
     {
+      accessorKey: 'user',
+      size: 30,
+      header: () => {
+        return (
+          <div className="flex gap-1 items-center justify-between px-[14px] cursor-pointer">
+            <p className="!text-xs font-medium !text-[#77858F]">対象メンバー</p>
+          </div>
+        );
+      },
+      cell: (info) => {
+        const value = info.getValue() as ListTaskStatistic['user'];
+        return (
+          <div className="font-medium truncate px-1 flex text-[14px] justify-center text-black">
+            <p className="truncate">{value?.fullName}</p>
+          </div>
+        );
+      },
+    },
+    {
       accessorKey: 'duration',
       size: 30,
       header: () => {
@@ -944,6 +963,7 @@ const TableChart = ({
             organizationName: task.organization?.name,
             organizationType: task.organization?.type,
             ratio: String(task.percent),
+            user: task.user,
             tags: task.tags.map((tag) => {
               return {
                 value: tag.id as number,
