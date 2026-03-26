@@ -29,7 +29,8 @@ interface FilterProps {
   totalDuration?: string;
   ordering: string;
   pageSize: number;
-  user_id?: number;
+  user_id?: number | string;
+  uids?: string;
   user_ids?: OptionDropdownType[];
   mainOrganizationId?: number;
 }
@@ -75,7 +76,7 @@ const useStatisticTask = ({
 
     if (filter?.totalDuration === '') return null;
 
-    if (isTeam && !filter.user_id) return [];
+    if (isTeam && !filter.user_id && !filter.uids) return [];
 
     setIsSkeletonCategoryTask(true);
     setIsSkeletonTagTask(true);
@@ -115,6 +116,9 @@ const useStatisticTask = ({
     if (filter.user_ids) {
       const tagValues = filter.user_ids.map((item) => item.value).join(',');
       params.append('user_ids', tagValues);
+    }
+    if (filter?.uids) {
+      params.append('uids', String(filter.uids));
     }
 
     const apiUrl = `${apiRouters.STATISTICS_TASKS}?${params.toString()}`;

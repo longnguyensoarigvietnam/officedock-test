@@ -26,7 +26,7 @@ interface FilterProps {
   tagIds?: OptionDropdownType[];
   totalDuration?: string;
   ordering: string;
-  user_id?: number;
+  user_id?: number | string;
   user_ids?: OptionDropdownType[];
   isCompare?: boolean;
 }

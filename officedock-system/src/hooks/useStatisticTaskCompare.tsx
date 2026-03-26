@@ -29,7 +29,8 @@ interface FilterProps {
   pageSize: number;
   isCompare: boolean;
   tagIds?: OptionDropdownType[];
-  user_id?: number;
+  user_id?: number | string;
+  uids?: string;
   user_ids?: OptionDropdownType[];
   mainOrganizationId?: number;
 }
@@ -109,6 +110,9 @@ const useStatisticTaskCompare = ({
     if (filter.user_ids) {
       const tagValues = filter.user_ids.map((item) => item.value).join(',');
       params.append('user_ids', tagValues);
+    }
+    if (filter?.uids) {
+      params.append('uids', String(filter.uids));
     }
 
     const apiUrl = `${apiRouters.STATISTICS_TASKS}?${params.toString()}`;
