@@ -1,7 +1,8 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from io import BytesIO, StringIO
 from pathlib import Path
 import csv
+from collections import defaultdict
 
 from django.db.models import Case, When
 from openpyxl import load_workbook
@@ -13,6 +14,8 @@ from tags.models import Tag
 from organizations.models import Organization
 from skills.models import StatisticCategory
 from stat_data.constants import ALL_TEAM
+from stat_data.utils import percentage_calculation_of_duration
+from common.utils import format_duration, time_str_to_timedelta
 
 
 class ExportTaskService:
@@ -190,58 +193,147 @@ class ExportTaskService:
         """
         Export data using an Excel (.xlsx) template.
         """
+        user_groups = defaultdict(list)
+        for item in self.queryset:
+            user_groups[item["user"]["id"]].append(item)
+
+        num_users = len(user_groups)
 
         wb = load_workbook(self.XLSX_TEMPLATE_PATH)
         ws = wb.active
 
-        # Fill header info
-        ws[
-            "B4"
-        ] = f"{self.format_date(self.from_date)} - {self.format_date(self.end_date)}"
-        ws["B5"] = self.period_classification
-        ws["B6"] = self.full_name
-        ws[
-            "B7"
-        ] = f"{self.organization_name} > {self.category_names['large']} > {self.category_names['medium']} > {self.category_names['small']}"
-        ws["B8"] = self.tag_names_filter
-        ws["B9"] = self.sum_total_duration
+        if num_users > 1:
+            # Multiple users, create sheet for each
+            first = True
+            for user_id, items in user_groups.items():
+                user_info = items[0]["user"]
+                total_duration_user = sum(
+                    (
+                        time_str_to_timedelta(item["total_duration"])
+                        or timedelta(0)
+                        for item in items
+                    ),
+                    timedelta(0),
+                )
+                # Recalculate percent for each item based on user's total
+                for item in items:
+                    duration_sec = time_str_to_timedelta(
+                        item["total_duration"]
+                    ).total_seconds()
+                    item["percent"] = percentage_calculation_of_duration(
+                        total_duration_user.total_seconds(), duration_sec
+                    )
+                if first:
+                    current_ws = ws
+                    first = False
+                else:
+                    current_ws = wb.copy_worksheet(ws)
+                current_ws.title = user_info.get("full_name", f"User {user_id}")
+                # Fill header info
+                current_ws[
+                    "B4"
+                ] = f"{self.format_date(self.from_date)} - {self.format_date(self.end_date)}"
+                current_ws["B5"] = self.period_classification
+                current_ws["B6"] = user_info.get("full_name", "")
+                current_ws[
+                    "B7"
+                ] = f"{self.organization_name} > {self.category_names['large']} > {self.category_names['medium']} > {self.category_names['small']}"
+                current_ws["B8"] = self.tag_names_filter
+                current_ws["B9"] = format_duration(total_duration_user)
 
-        # Fill data rows
-        thin_border = Border(
-            left=Side(style="thin", color="000000"),
-            right=Side(style="thin", color="000000"),
-            top=Side(style="thin", color="000000"),
-            bottom=Side(style="thin", color="000000"),
-        )
-        left_align = Alignment(horizontal="left", vertical="center")
-        start_row = 13
-        for idx, task in enumerate(self.queryset, 1):
-            data = self._build_row(idx, task)
-            row_values = [
-                data[6],
-                data[7],
-                data[8],
-                data[9],
-                data[10],
-                data[11],
-                data[12],
-                data[13],
-                data[14],
-            ]
-            for col_idx, value in enumerate(row_values, start=1):
-                cell = ws.cell(row=start_row, column=col_idx, value=value)
-                cell.border = thin_border
+                # Fill data rows
+                thin_border = Border(
+                    left=Side(style="thin", color="000000"),
+                    right=Side(style="thin", color="000000"),
+                    top=Side(style="thin", color="000000"),
+                    bottom=Side(style="thin", color="000000"),
+                )
+                left_align = Alignment(horizontal="left", vertical="center")
+                start_row = 13
+                for idx, task in enumerate(items, 1):
+                    data = self._build_row(
+                        idx, task, user_name=user_info.get("full_name", "")
+                    )
+                    row_values = [
+                        data[6],
+                        data[7],
+                        data[8],
+                        data[9],
+                        data[10],
+                        data[11],
+                        data[12],
+                        data[13],
+                        data[14],
+                    ]
+                    for col_idx, value in enumerate(row_values, start=1):
+                        cell = current_ws.cell(
+                            row=start_row, column=col_idx, value=value
+                        )
+                        cell.border = thin_border
 
-                # No.
-                if col_idx == 1:
-                    cell.alignment = left_align
+                        # No.
+                        if col_idx == 1:
+                            cell.alignment = left_align
 
-                # 割合
-                if col_idx == 4:
-                    cell.number_format = "0.00%"
-                    cell.alignment = left_align
+                        # 割合
+                        if col_idx == 4:
+                            cell.number_format = "0.00%"
+                            cell.alignment = left_align
 
-            start_row += 1
+                    start_row += 1
+        else:
+            # Single user, original logic
+            user_info = self.queryset[0]["user"] if self.queryset else {}
+            user_name = user_info.get("full_name", self.full_name)
+
+            # Fill header info
+            ws[
+                "B4"
+            ] = f"{self.format_date(self.from_date)} - {self.format_date(self.end_date)}"
+            ws["B5"] = self.period_classification
+            ws["B6"] = user_name
+            ws[
+                "B7"
+            ] = f"{self.organization_name} > {self.category_names['large']} > {self.category_names['medium']} > {self.category_names['small']}"
+            ws["B8"] = self.tag_names_filter
+            ws["B9"] = self.sum_total_duration
+
+            # Fill data rows
+            thin_border = Border(
+                left=Side(style="thin", color="000000"),
+                right=Side(style="thin", color="000000"),
+                top=Side(style="thin", color="000000"),
+                bottom=Side(style="thin", color="000000"),
+            )
+            left_align = Alignment(horizontal="left", vertical="center")
+            start_row = 13
+            for idx, task in enumerate(self.queryset, 1):
+                data = self._build_row(idx, task, user_name=user_name)
+                row_values = [
+                    data[6],
+                    data[7],
+                    data[8],
+                    data[9],
+                    data[10],
+                    data[11],
+                    data[12],
+                    data[13],
+                    data[14],
+                ]
+                for col_idx, value in enumerate(row_values, start=1):
+                    cell = ws.cell(row=start_row, column=col_idx, value=value)
+                    cell.border = thin_border
+
+                    # No.
+                    if col_idx == 1:
+                        cell.alignment = left_align
+
+                    # 割合
+                    if col_idx == 4:
+                        cell.number_format = "0.00%"
+                        cell.alignment = left_align
+
+                start_row += 1
 
         # Save to BytesIO
         excel_file = BytesIO()
@@ -252,7 +344,9 @@ class ExportTaskService:
     # ------------------------------------------------------------------ #
     # Shared Row Builder
     # ------------------------------------------------------------------ #
-    def _build_row(self, idx, task):
+    def _build_row(self, idx, task, user_name=None):
+        if user_name is None:
+            user_name = self.full_name
         title = task.get("title", "")
         total_duration = task.get("total_duration", "00:00")
         percent = int(task.get("percent", 0)) / 100
@@ -281,7 +375,7 @@ class ExportTaskService:
             self.from_date,
             self.end_date,
             self.period_classification,
-            self.full_name,
+            user_name,
             f"{self.organization_name} > {self.category_names['large']} > {self.category_names['medium']} > {self.category_names['small']}",
             self.tag_names_filter,
             idx,
