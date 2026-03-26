@@ -38,11 +38,9 @@ const FilterTeamStatistic = ({
     removeUser,
   } = useContext(StatisticTeamStateContext);
 
-  const previewUserLabels =
-    orderingPreviewOptions?.user_ids ?? allLabelUser;
+  const previewUserLabels = orderingPreviewOptions?.user_ids ?? allLabelUser;
 
-  const previewTagLabels =
-    orderingPreviewOptions?.tag_ids ?? allLabelTag;
+  const previewTagLabels = orderingPreviewOptions?.tag_ids ?? allLabelTag;
 
   const previewFirstThreeTag = previewTagLabels.slice(0, 3);
   const previewRemainingCountTag =
@@ -50,11 +48,11 @@ const FilterTeamStatistic = ({
 
   return (
     <div className={`flex items-center gap-2  ${className}`}>
-      <div className="flex-shrink-0 h-6 relative">
-        {/* Filter option modal */}
-        <Popover className="relative">
-          {({ open, close }) => (
-            <>
+      <Popover className="relative  flex items-center gap-2 w-full">
+        {({ open, close }) => (
+          <>
+            <div className="flex-shrink-0 h-6 relative">
+              {/* Filter option modal */}
               <div className="flex items-center gap-2 relative top-[5px]">
                 <PopoverButton className="flex items-center gap-2 text-xs font-medium text-[#77858F] focus-visible:outline-none">
                   <ImageRound
@@ -92,94 +90,105 @@ const FilterTeamStatistic = ({
                   />
                 </PopoverPanel>
               </Transition>
-            </>
-          )}
-        </Popover>
-      </div>
-      <div className=" flex-grow flex-wrap ">
-        <div className={`flex gap-2 flex-wrap  ${classNameData} `}>
-          <>
-            {isFilterMember &&
-              previewUserLabels.map((item, index) => {
-                return (
-                  <div key={item.value} className="flex gap-[6px] items-center">
-                    {index === 0 && (
-                      <ImageRound
-                        src={`/icons/user-white.svg`}
-                        name="close"
-                        className="w-fit h-fit "
-                      />
-                    )}
-                    <div className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                      <span className="min-w-[32px] max-w-[118px]  truncate">
-                        {item.label}
-                      </span>
-                      {isLoadingOrganization ||
-                      isLoadingLarge ||
-                      isLoadingMedium ||
-                      isLoadingOrganizationCompare ||
-                      isLoadingLargeCompare ||
-                      isLoadingMediumCompare ? (
-                        ''
-                      ) : (
-                        <ImageRound
-                          onClick={() => {
-                            removeUser(item);
-                          }}
-                          src={`/icons/close-white.svg`}
-                          name="close"
-                          className="w-fit h-fit cursor-pointer"
-                        />
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-          </>
-          <>
-            {previewFirstThreeTag.map((item, index) => {
-              return (
-                <div key={item.value} className="flex gap-[6px] items-center">
-                  {index === 0 && (
-                    <ImageRound
-                      src={`/icons/tag-white.svg`}
-                      name="close"
-                      className="w-fit h-fit"
-                    />
+            </div>
+
+            <div className=" flex-grow flex-wrap ">
+              <div className={`flex gap-2 flex-wrap  ${classNameData} `}>
+                <>
+                  {isFilterMember &&
+                    previewUserLabels.map((item, index) => {
+                      return (
+                        <div
+                          key={item.value}
+                          className="flex gap-[6px] items-center">
+                          {index === 0 && (
+                            <ImageRound
+                              src={`/icons/user-white.svg`}
+                              name="close"
+                              className="w-fit h-fit "
+                            />
+                          )}
+                          <div className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                            <span className="min-w-[32px] max-w-[118px]  truncate">
+                              {item.label}
+                            </span>
+                            {/* Prevent removing while modal is open */}
+                            {open ? (
+                              ''
+                            ) : isLoadingOrganization ||
+                              isLoadingLarge ||
+                              isLoadingMedium ||
+                              isLoadingOrganizationCompare ||
+                              isLoadingLargeCompare ||
+                              isLoadingMediumCompare ? (
+                              ''
+                            ) : (
+                              <ImageRound
+                                onClick={() => {
+                                  removeUser(item);
+                                }}
+                                src={`/icons/close-white.svg`}
+                                name="close"
+                                className="w-fit h-fit cursor-pointer"
+                              />
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                </>
+                <>
+                  {previewFirstThreeTag.map((item, index) => {
+                    return (
+                      <div
+                        key={item.value}
+                        className="flex gap-[6px] items-center">
+                        {index === 0 && (
+                          <ImageRound
+                            src={`/icons/tag-white.svg`}
+                            name="close"
+                            className="w-fit h-fit"
+                          />
+                        )}
+                        <div className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                          <span className="min-w-[32px] max-w-[118px]  truncate">
+                            {item.label}
+                          </span>
+                          {/* Prevent removing while modal is open */}
+                          {open ? (
+                            ''
+                          ) : isLoadingOrganization ||
+                            isLoadingLarge ||
+                            isLoadingMedium ||
+                            isLoadingOrganizationCompare ||
+                            isLoadingLargeCompare ||
+                            isLoadingMediumCompare ? (
+                            ''
+                          ) : (
+                            <ImageRound
+                              onClick={() => {
+                                removeTag(item);
+                              }}
+                              src={`/icons/close-white.svg`}
+                              name="close"
+                              className="w-fit h-fit cursor-pointer"
+                            />
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {previewTagLabels.length > 3 && (
+                    <p className="pr-[10px] h-6 flex items-center flex-wrap justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
+                      +{previewRemainingCountTag}
+                    </p>
                   )}
-                  <div className="min-w-[66px] w-fit  h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                    <span className="min-w-[32px] max-w-[118px]  truncate">
-                      {item.label}
-                    </span>
-                    {isLoadingOrganization ||
-                    isLoadingLarge ||
-                    isLoadingMedium ||
-                    isLoadingOrganizationCompare ||
-                    isLoadingLargeCompare ||
-                    isLoadingMediumCompare ? (
-                      ''
-                    ) : (
-                      <ImageRound
-                        onClick={() => {
-                          removeTag(item);
-                        }}
-                        src={`/icons/close-white.svg`}
-                        name="close"
-                        className="w-fit h-fit cursor-pointer"
-                      />
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-            {previewTagLabels.length > 3 && (
-              <p className="pr-[10px] h-6 flex items-center flex-wrap justify-center rounded-[20px] bg-[#EBF1F7] text-black text-xs font-medium">
-                +{previewRemainingCountTag}
-              </p>
-            )}
+                </>
+              </div>
+            </div>
           </>
-        </div>
-      </div>
+        )}
+      </Popover>
     </div>
   );
 };

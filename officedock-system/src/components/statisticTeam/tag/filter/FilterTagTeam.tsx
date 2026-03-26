@@ -34,11 +34,11 @@ const FilterTagTeam = ({ className }: Props) => {
     orderingPreviewOptions?.tag_ids ?? orderingOptions?.tag_ids ?? [];
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      <div className="flex-shrink-0 h-fit relative ">
-        {/* Filter option modal */}
-        <Popover className="relative">
-          {({ open, close }) => (
-            <>
+      <Popover className="relative  flex items-center gap-2 w-full">
+        {({ open, close }) => (
+          <>
+            <div className="flex-shrink-0 h-fit relative ">
+              {/* Filter option modal */}
               <div className="flex items-center gap-2 ">
                 <PopoverButton className="flex items-center gap-2 text-xs font-medium text-[#77858F] focus-visible:outline-none">
                   <div className="w-[220px] h-[34px] text-black bg-white flex px-3 items-center justify-between text-sm font-normal border border-[#77858F] rounded-md">
@@ -64,42 +64,46 @@ const FilterTagTeam = ({ className }: Props) => {
                   <FilterDataTeamModal open={open} close={close} />
                 </PopoverPanel>
               </Transition>
-            </>
-          )}
-        </Popover>
-      </div>
-      <div>
-        <div className="flex gap-2 flex-wrap max-w-[450px]">
-          {previewTagLabels.map((item) => {
-            return (
-              <div
-                key={item.value}
-                className="min-w-[66px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                <span className="min-w-[32px] truncate">{item.label}</span>
-                {isLoadingLarge ||
-                isLoadingMedium ||
-                isLoadingOrganization ||
-                isLoadingLargeCompare ||
-                isLoadingMediumCompare ||
-                isLoadingOrganizationCompare ||
-                isLoadingSmall ||
-                isLoadingSmallCompare ? (
-                  ''
-                ) : (
-                  <ImageRound
-                    onClick={() => {
-                      removeTag(item);
-                    }}
-                    src={`/icons/close-white.svg`}
-                    name="close"
-                    className="w-fit h-fit cursor-pointer"
-                  />
-                )}
+            </div>
+            <div className="relative  flex-grow ">
+              <div className="flex gap-2 flex-wrap  w-full flex-shrink-0">
+                {previewTagLabels.map((item) => {
+                  return (
+                    <div
+                      key={item.value}
+                      className="min-w-[66px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
+                      <span className="min-w-[32px] truncate">
+                        {item.label}
+                      </span>
+                      {open ? (
+                        ''
+                      ) : isLoadingLarge ||
+                        isLoadingMedium ||
+                        isLoadingOrganization ||
+                        isLoadingLargeCompare ||
+                        isLoadingMediumCompare ||
+                        isLoadingOrganizationCompare ||
+                        isLoadingSmall ||
+                        isLoadingSmallCompare ? (
+                        ''
+                      ) : (
+                        <ImageRound
+                          onClick={() => {
+                            removeTag(item);
+                          }}
+                          src={`/icons/close-white.svg`}
+                          name="close"
+                          className="w-fit h-fit cursor-pointer"
+                        />
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-            );
-          })}
-        </div>
-      </div>
+            </div>
+          </>
+        )}
+      </Popover>
     </div>
   );
 };
