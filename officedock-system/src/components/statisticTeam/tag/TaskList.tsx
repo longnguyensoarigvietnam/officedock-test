@@ -320,7 +320,9 @@ const TaskListStatisticTeamTags = ({
                         {isMultipleMembersSelected ? (
                           <DynamicTooltip
                             content="複数ユーザー選択時はExcel形式のみ出力可能です"
-                            placement="bottom">
+                            customPlacement={-330}
+                            customClassName="max-w-[350px]"
+                            placement="left">
                             <p
                               className={`py-[10px] pl-2 border-b-[1px] border-[#EBF1F7] !leading-none ${
                                 isMultipleMembersSelected

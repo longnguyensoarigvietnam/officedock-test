@@ -7,6 +7,8 @@ type Props = {
   content: React.ReactNode;
   children: React.ReactElement;
   disabled?: boolean;
+  customPlacement?: number;
+  customClassName?: string;
   placement?: 'top' | 'bottom' | 'left' | 'right';
   customOffset?: { top?: number; left?: number };
 };
@@ -15,6 +17,8 @@ export const DynamicTooltip = ({
   content,
   children,
   disabled = false,
+  customPlacement,
+  customClassName,
   placement = 'right',
   customOffset,
 }: Props) => {
@@ -85,9 +89,13 @@ export const DynamicTooltip = ({
             )}
             style={{
               top: coords.top,
-              left: coords.left,
+              left: customPlacement
+                ? coords.left + customPlacement
+                : coords.left,
             }}>
-            <p className="max-w-[300px] truncate">{content}</p>
+            <p className={`max-w-[300px] truncate ${customClassName}`}>
+              {content}
+            </p>
           </div>,
           document.body,
         )
