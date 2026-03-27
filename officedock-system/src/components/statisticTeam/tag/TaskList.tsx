@@ -319,7 +319,7 @@ const TaskListStatisticTeamTags = ({
                       <div className="bg-white !border-[#77858F] border-[1px] text-black rounded-[6px] mt-[6px] p-1 text-sm font-medium">
                         {isMultipleMembersSelected ? (
                           <DynamicTooltip
-                            content="アーカイブタスクを見る"
+                            content="複数ユーザー選択時はExcel形式のみ出力可能です"
                             placement="bottom">
                             <p
                               className={`py-[10px] pl-2 border-b-[1px] border-[#EBF1F7] !leading-none ${

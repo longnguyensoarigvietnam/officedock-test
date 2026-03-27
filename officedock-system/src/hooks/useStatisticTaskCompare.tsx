@@ -74,7 +74,6 @@ const useStatisticTaskCompare = ({
     if (filter?.totalDuration === '') return null;
 
     if (!filter?.organizationIds) return null;
-    if (isTeam && !filter.user_id) return [];
     setIsSkeletonCategoryTaskCompare(true);
     setIsSkeletonTagTaskCompare(true);
     setIsSkeletonCategoryTeamTaskCompare(true);
