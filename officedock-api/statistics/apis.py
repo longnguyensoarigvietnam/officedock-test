@@ -449,7 +449,7 @@ class StatisticViewSet(BaseAPIViewSet):
         export_type = request.query_params.get("export_type")
         if export_type:
             service = ExportTaskService(
-                request, new_qs, export_type, sum_total_duration
+                request, new_qs, export_type, sum_total_duration, users=users
             )
             excel_file = service.export_task_statistic()
             filename = service.get_filename()
