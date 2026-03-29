@@ -1186,119 +1186,113 @@ def normalize_percentages(items, percent_field="percent", id_field="id"):
     Each item must have a float-like value in the `percent_field`.
     The function rounds down all values and distributes the remaining percentage points
     to the items with the largest remainders.
+    Uses list indexing to avoid issues with non-unique IDs.
     """
     if not items:
         return []
 
-    # Step 1: Sort items in descending order of percent
-    active_items = [item for item in items if item[percent_field] > 0]
-    if not active_items:
+    # Step 1: Identify items with positive percentage
+    active_indices = [
+        i for i, item in enumerate(items) if item.get(percent_field, 0) > 0
+    ]
+    if not active_indices:
         return items
 
-    sorted_items = sorted(
-        active_items, key=lambda x: x[percent_field], reverse=True
-    )
-
-    # Step 2: Floor and collect remainders
-    percent_map = {}  # id -> floored percent
-    remainder_map = {}  # id -> decimal remainder
+    # Step 2: Floor and collect remainders using indices
+    percent_list = [0] * len(items)
+    remainder_list = [0.0] * len(items)
     total_floored = 0
 
-    for item in sorted_items:
-        original = item[percent_field]
+    for i in active_indices:
+        original = items[i][percent_field]
         floored = int(original)
         remainder = original - floored
-        item_id = item[id_field]
-        percent_map[item_id] = floored
-        remainder_map[item_id] = remainder
-        if original == 0:
-            continue
+        percent_list[i] = floored
+        remainder_list[i] = remainder
         total_floored += floored
+
     if total_floored == 0:
-        return items
-    # Step 3: Distribute remaining points to items with largest remainder
+        # If all items are 0, or sum is 0, we can't normalize to 100 easily without context
+        # But if there are active items with very small values, we might still want to reach 100
+        pass
+
+    # Step 3: Distribute remaining points
     remaining = 100 - total_floored
 
     if remaining > 0:
         # Add +1 to items with highest remainder, only if < 100%
         sorted_by_remainder = sorted(
-            remainder_map.items(), key=lambda x: x[1], reverse=True
+            active_indices, key=lambda i: remainder_list[i], reverse=True
         )
         count = 0
-        i = 0
+        idx = 0
         while count < remaining:
-            item_id = sorted_by_remainder[i % len(sorted_by_remainder)][0]
-            if percent_map[item_id] < 100:
-                percent_map[item_id] += 1
+            i = sorted_by_remainder[idx % len(sorted_by_remainder)]
+            if percent_list[i] < 100:
+                percent_list[i] += 1
                 count += 1
-            i += 1
+            idx += 1
     elif remaining < 0:
         # Subtract -1 from items with lowest remainder, only if > 0%
-        sorted_by_remainder = sorted(remainder_map.items(), key=lambda x: x[1])
+        sorted_by_remainder = sorted(
+            active_indices, key=lambda i: remainder_list[i]
+        )
         count = 0
-        i = 0
+        idx = 0
         while count < abs(remaining):
-            item_id = sorted_by_remainder[i % len(sorted_by_remainder)][0]
-            if percent_map[item_id] > 0:
-                percent_map[item_id] -= 1
+            i = sorted_by_remainder[idx % len(sorted_by_remainder)]
+            if percent_list[i] > 0:
+                percent_list[i] -= 1
                 count += 1
-            i += 1
+            idx += 1
 
     # Step 4: Update the original list
-    for item in items:
-        item_id = item[id_field]
-        if item_id in percent_map:
-            item[percent_field] = percent_map[item_id]
-        else:
-            item[percent_field] = 0  # keep 0% unchanged
+    for i in range(len(items)):
+        items[i][percent_field] = percent_list[i]
 
-    # TODO: Handle sorting items by percent
-    # sorted_items = sorted(
-    #     items,
-    #     key=lambda x: x[percent_field],
-    #     reverse=True
-    # )
     return items
 
 
-def get_list_task_with_total_duration(durations, get_by_task=True):
+def get_list_task_with_total_duration(
+    durations, get_by_task=True, group_by_user=False
+):
     """
-    Handle return list tasks map with total duration
+    Handle return list tasks map with total duration.
+    Can optionally group by user to get per-user totals for each task/schedule.
     """
-    if get_by_task:
-        task_durations = (
-            durations.filter(task__isnull=False)
-            .annotate(
-                effective_paused=Case(
-                    When(paused_at__isnull=True, then=Value(now())),
-                    default=F("paused_at"),
-                    output_field=DateTimeField(),
-                ),
-                actual_duration=ExpressionWrapper(
-                    F("effective_paused") - F("started_at"),
-                    output_field=DurationField(),
-                ),
-            )
-            .values("task_id")
-            .annotate(total_duration=Sum("actual_duration"))
-        )
-        return {d["task_id"]: d["total_duration"] for d in task_durations}
-    else:
-        task_durations = (
-            durations.filter(schedule__isnull=False)
-            .annotate(
-                effective_paused=Case(
-                    When(paused_at__isnull=True, then=Value(now())),
-                    default=F("paused_at"),
-                    output_field=DateTimeField(),
-                ),
-                actual_duration=ExpressionWrapper(
-                    F("effective_paused") - F("started_at"),
-                    output_field=DurationField(),
-                ),
-            )
-            .values("schedule_id")
-            .annotate(total_duration=Sum("actual_duration"))
-        )
+    common_fields = ["task_id" if get_by_task else "schedule_id"]
+    if group_by_user:
+        common_fields.append("user_id")
 
-        return {d["schedule_id"]: d["total_duration"] for d in task_durations}
+    task_durations = (
+        durations.filter(
+            **{f"{'task' if get_by_task else 'schedule'}__isnull": False}
+        )
+        .annotate(
+            effective_paused=Case(
+                When(paused_at__isnull=True, then=Value(now())),
+                default=F("paused_at"),
+                output_field=DateTimeField(),
+            ),
+            actual_duration=ExpressionWrapper(
+                F("effective_paused") - F("started_at"),
+                output_field=DurationField(),
+            ),
+        )
+        .values(*common_fields)
+        .annotate(total_duration=Sum("actual_duration"))
+    )
+
+    if group_by_user:
+        return {
+            (
+                d["task_id"] if get_by_task else d["schedule_id"],
+                d["user_id"],
+            ): d["total_duration"]
+            for d in task_durations
+        }
+
+    return {
+        (d["task_id"] if get_by_task else d["schedule_id"]): d["total_duration"]
+        for d in task_durations
+    }

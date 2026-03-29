@@ -207,7 +207,8 @@ class ExportTaskService:
 
         user_groups = defaultdict(list)
         for item in self.queryset:
-            user_groups[item["user"]["id"]].append(item)
+            if item.get("user"):
+                user_groups[item["user"]["id"]].append(item)
 
         num_users = len(target_users)
 
