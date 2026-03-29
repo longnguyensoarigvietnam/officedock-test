@@ -3,7 +3,6 @@ from copy import deepcopy
 import math
 from collections import defaultdict
 from datetime import datetime, time, timedelta
-from itertools import chain
 from urllib.parse import quote
 
 from django.db.models import (
@@ -214,31 +213,21 @@ class StatisticViewSet(BaseAPIViewSet):
         )
         total_duration = get_total_durations(durations, is_tag_page, tag_ids)
         # Get task/schedule duration map
-        task_duration_map = get_list_task_with_total_duration(durations)
+        task_duration_map = get_list_task_with_total_duration(
+            durations, group_by_user=True
+        )
         schedule_duration_map = get_list_task_with_total_duration(
-            durations, get_by_task=False
+            durations, get_by_task=False, group_by_user=True
         )
         # Get task/schedule ids from duration
-        task_ids = list(task_duration_map.keys())
-        schedule_ids = list(schedule_duration_map.keys())
+        task_ids = list(set(k[0] for k in task_duration_map.keys()))
+        schedule_ids = list(set(k[0] for k in schedule_duration_map.keys()))
+
         # Get tasks model
         tasks = (
             Task.objects.filter(id__in=task_ids)
             .select_related("organization")
             .prefetch_related(
-                Prefetch(
-                    "people_in_charge",
-                    to_attr="prefetched_users",
-                    queryset=(
-                        User.objects.select_related("profile").only(
-                            "id",
-                            "profile",
-                            "avatar",
-                            "avatar_color",
-                            "deleted_at",
-                        )
-                    ),
-                ),
                 Prefetch("tags", to_attr="prefetched_tags"),
                 Prefetch(
                     "categories",
@@ -256,19 +245,6 @@ class StatisticViewSet(BaseAPIViewSet):
             Schedule.objects.filter(id__in=schedule_ids)
             .select_related("organization")
             .prefetch_related(
-                Prefetch(
-                    "participants",
-                    to_attr="prefetched_users",
-                    queryset=(
-                        User.objects.select_related("profile").only(
-                            "id",
-                            "profile",
-                            "avatar",
-                            "avatar_color",
-                            "deleted_at",
-                        )
-                    ),
-                ),
                 Prefetch("tags", to_attr="prefetched_tags"),
                 Prefetch(
                     "categories",
@@ -333,13 +309,26 @@ class StatisticViewSet(BaseAPIViewSet):
             for org_id, name, org_type, deleted_at in org_values
         }
         merged_duration = []
-        for item in list(chain(tasks, events)):
+        items_to_process = []
+        user_map = {u.id: u for u in users}
+        task_dict = {t.id: t for t in tasks}
+        event_dict = {e.id: e for e in events}
+        for (tid, uid), duration in task_duration_map.items():
+            if tid in task_dict and uid in user_map:
+                items_to_process.append(
+                    (task_dict[tid], user_map[uid], duration)
+                )
+        for (eid, uid), duration in schedule_duration_map.items():
+            if eid in event_dict and uid in user_map:
+                items_to_process.append(
+                    (event_dict[eid], user_map[uid], duration)
+                )
+
+        for item, specific_user, duration in items_to_process:
             if isinstance(item, Task):
                 item_type = CalendarTypes.TASK.value
-                duration = task_duration_map[item.id]
             else:
                 item_type = CalendarTypes.SCHEDULE.value
-                duration = schedule_duration_map[item.id]
 
             # Format category
             category_formatted = []
@@ -407,9 +396,9 @@ class StatisticViewSet(BaseAPIViewSet):
                     "percent": percent_part,
                     "categories": category_formatted,
                     "type": item_type,
-                    "user": BaseUserProfileSerializer(
-                        item.prefetched_users[0]
-                    ).data,
+                    "user": BaseUserProfileSerializer(specific_user).data
+                    if specific_user
+                    else None,
                     "organization": org_map[item.organization_id],
                     "created_at": item.created_at,
                 }
@@ -422,7 +411,9 @@ class StatisticViewSet(BaseAPIViewSet):
             ),
             reverse=not bool(ordering),
         )
-        new_qs = merged_qs
+        merged_qs = normalize_percentages(merged_qs)
+
+        # Handle cursor pagination
         if cursor and cursor_id:
             new_qs = []
             cursor = time_str_to_timedelta(cursor)
@@ -441,11 +432,14 @@ class StatisticViewSet(BaseAPIViewSet):
                         duration == cursor and x["id"] < cursor_id
                     ):
                         new_qs.append(x)
-        new_qs = normalize_percentages(new_qs)
+        else:
+            new_qs = merged_qs
+
         sum_total_duration = (
             format_duration(total_duration) if new_qs else DEFAULT_TIME
         )
 
+        # Handle export file
         export_type = request.query_params.get("export_type")
         if export_type:
             service = ExportTaskService(
@@ -470,6 +464,7 @@ class StatisticViewSet(BaseAPIViewSet):
 
             return response
 
+        # Handle pagination response
         paginator = self.pagination_class()
         paginated_data = paginator.paginate_queryset(new_qs, request)
         return paginator.get_paginated_response(
