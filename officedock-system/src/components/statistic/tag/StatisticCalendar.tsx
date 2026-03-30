@@ -11,6 +11,7 @@ import {
   formatShowDateJapanese,
   handleSetStartDateAfter,
   handleSetStartDateBefore,
+  isFullCalendarMonthRange,
 } from '@utils/date';
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 import {
@@ -174,8 +175,15 @@ function StatisticTagCalendar() {
 
       setIsErrorDataCompare({ start: false, end: false });
 
+      const moreAsFullMonth =
+        isTypeTime === TimeOptionsType.MORE &&
+        isFullCalendarMonthRange(dataStartDate, dataEndDate);
+
       if (mode === TimeCompareOptionsType.PREVIOUS_PERIOD) {
-        if (isTypeTime === TimeOptionsType.MORE) {
+        if (
+          isTypeTime === TimeOptionsType.MORE &&
+          !moreAsFullMonth
+        ) {
           const diffDays =
             Math.floor(
               (dataEndDate.getTime() - dataStartDate.getTime()) / MS_PER_DAY,
@@ -190,7 +198,7 @@ function StatisticTagCalendar() {
           setDataEndDateCompare(compareEnd);
         } else {
           const { start: compareStart, end: compareEnd } =
-            isTypeTime === TimeOptionsType.MONTH
+            isTypeTime === TimeOptionsType.MONTH || moreAsFullMonth
               ? getMonthCompareRange(dataStartDate, mode)
               : isTypeTime === TimeOptionsType.HALF_YEAR
                 ? getHalfYearCompareRange(dataStartDate, mode)
@@ -206,7 +214,7 @@ function StatisticTagCalendar() {
         }
       } else if (mode === TimeCompareOptionsType.PREVIOUS_YEAR) {
         const { start: compareStart, end: compareEnd } =
-          isTypeTime === TimeOptionsType.MONTH
+          isTypeTime === TimeOptionsType.MONTH || moreAsFullMonth
             ? getMonthCompareRange(dataStartDate, mode)
             : isTypeTime === TimeOptionsType.HALF_YEAR
               ? getHalfYearCompareRange(dataStartDate, mode)
@@ -461,6 +469,10 @@ function StatisticTagCalendar() {
         end: false,
       });
     }
+    if (startDate && endDate) {
+      setIsStartButtonClicked(true);
+      setIsEndButtonClicked(false);
+    }
   };
 
   // Save data time
@@ -538,6 +550,10 @@ function StatisticTagCalendar() {
         ...isErrorData,
         end: false,
       });
+    }
+    if (startDate && endDate) {
+      setIsStartButtonClickedCompare(true);
+      setIsEndButtonClickedCompare(false);
     }
   };
 
@@ -1197,14 +1213,32 @@ function StatisticTagCalendar() {
                           start: false,
                           end: false,
                         });
-                        if (isTypeTime !== TimeOptionsType.MORE) {
+                        const monthLikeMore =
+                          isTypeTime === TimeOptionsType.MORE &&
+                          !!dataEndDate &&
+                          isFullCalendarMonthRange(
+                            dataStartDate,
+                            dataEndDate,
+                          );
+
+                        if (
+                          isTypeTime !== TimeOptionsType.MORE ||
+                          monthLikeMore
+                        ) {
                           setCompareMode(
                             TimeCompareOptionsType.PREVIOUS_PERIOD,
                           );
                         } else {
                           setCompareMode(TimeCompareOptionsType.CUSTOM);
                         }
-                        if (
+                        if (monthLikeMore) {
+                          const { start: cs, end: ce } = getMonthCompareRange(
+                            dataStartDate,
+                            TimeCompareOptionsType.PREVIOUS_PERIOD,
+                          );
+                          setDataStartDateCompare(cs);
+                          setDataEndDateCompare(ce);
+                        } else if (
                           isTypeTime === TimeOptionsType.MORE &&
                           dataEndDate
                         ) {

@@ -11,6 +11,7 @@ import {
   formatShowDateJapanese,
   handleSetStartDateAfter,
   handleSetStartDateBefore,
+  isFullCalendarMonthRange,
 } from '@utils/date';
 import { StatisticStateContext } from '@providers/StatisticProvider';
 import {
@@ -173,8 +174,15 @@ function StatisticCalendar() {
         end: false,
       });
 
+      const moreAsFullMonth =
+        isTypeTime === TimeOptionsType.MORE &&
+        isFullCalendarMonthRange(dataStartDate, dataEndDate);
+
       if (mode === TimeCompareOptionsType.PREVIOUS_PERIOD) {
-        if (isTypeTime === TimeOptionsType.MORE) {
+        if (
+          isTypeTime === TimeOptionsType.MORE &&
+          !moreAsFullMonth
+        ) {
           const diffDays =
             Math.floor(
               (dataEndDate.getTime() - dataStartDate.getTime()) / MS_PER_DAY,
@@ -190,23 +198,23 @@ function StatisticCalendar() {
           setDataEndDateCompare(compareEnd);
         } else {
           const { start: compareStart, end: compareEnd } =
-            isTypeTime === TimeOptionsType.MONTH
+            isTypeTime === TimeOptionsType.MONTH || moreAsFullMonth
               ? getMonthCompareRange(dataStartDate, mode)
               : isTypeTime === TimeOptionsType.HALF_YEAR
                 ? getHalfYearCompareRange(dataStartDate, mode)
-              : {
-                  start: handleSetStartDateBefore(
-                    isTypeTime,
-                    dataStartDate,
-                  ) as Date,
-                  end: handleSetStartDateBefore(isTypeTime, dataEndDate) as Date,
-                };
+                : {
+                    start: handleSetStartDateBefore(
+                      isTypeTime,
+                      dataStartDate,
+                    ) as Date,
+                    end: handleSetStartDateBefore(isTypeTime, dataEndDate) as Date,
+                  };
           setDataStartDateCompare(compareStart);
           setDataEndDateCompare(compareEnd);
         }
       } else if (mode === TimeCompareOptionsType.PREVIOUS_YEAR) {
         const { start: compareStart, end: compareEnd } =
-          isTypeTime === TimeOptionsType.MONTH
+          isTypeTime === TimeOptionsType.MONTH || moreAsFullMonth
             ? getMonthCompareRange(dataStartDate, mode)
             : isTypeTime === TimeOptionsType.HALF_YEAR
               ? getHalfYearCompareRange(dataStartDate, mode)
@@ -451,6 +459,10 @@ function StatisticCalendar() {
         end: false,
       });
     }
+    if (startDate && endDate) {
+      setIsStartButtonClicked(true);
+      setIsEndButtonClicked(false);
+    }
   };
 
   // Save data time
@@ -528,6 +540,14 @@ function StatisticCalendar() {
         ...prev,
         end: false,
       }));
+    }
+    if (
+      compareMode === TimeCompareOptionsType.CUSTOM &&
+      startDate &&
+      endDate
+    ) {
+      setIsStartButtonClickedCompare(true);
+      setIsEndButtonClickedCompare(false);
     }
   };
 
@@ -1198,7 +1218,18 @@ function StatisticCalendar() {
                     isChecked={isDataCheckCompare}
                     onChange={(e) => {
                       if (e) {
-                        if (isTypeTime !== TimeOptionsType.MORE) {
+                        const monthLikeMore =
+                          isTypeTime === TimeOptionsType.MORE &&
+                          !!dataEndDate &&
+                          isFullCalendarMonthRange(
+                            dataStartDate,
+                            dataEndDate,
+                          );
+
+                        if (
+                          isTypeTime !== TimeOptionsType.MORE ||
+                          monthLikeMore
+                        ) {
                           setCompareMode(
                             TimeCompareOptionsType.PREVIOUS_PERIOD,
                           );
@@ -1209,19 +1240,21 @@ function StatisticCalendar() {
                           start: false,
                           end: false,
                         });
-                        const dateStart = handleSetStartDateBefore(
-                          isTypeTime,
-                          dataStartDate,
-                        );
-                        setDataStartDateCompare(dateStart as Date);
-                        if (dataEndDate) {
-                          const dateEnd = handleSetStartDateBefore(
+                        if (!monthLikeMore) {
+                          const dateStart = handleSetStartDateBefore(
                             isTypeTime,
-                            dataEndDate,
+                            dataStartDate,
                           );
-                          setDataEndDateCompare(dateEnd as Date);
-                        } else {
-                          setDataEndDateCompare(null);
+                          setDataStartDateCompare(dateStart as Date);
+                          if (dataEndDate) {
+                            const dateEnd = handleSetStartDateBefore(
+                              isTypeTime,
+                              dataEndDate,
+                            );
+                            setDataEndDateCompare(dateEnd as Date);
+                          } else {
+                            setDataEndDateCompare(null);
+                          }
                         }
                       }
 
