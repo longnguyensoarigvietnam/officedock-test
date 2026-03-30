@@ -407,45 +407,6 @@ const TableChart = ({
       },
     },
     {
-      accessorKey: 'duration',
-      size: 30,
-      header: () => {
-        const isAsc = ordering === OrderingDataType.TOTAL_DURATION;
-
-        return (
-          <div
-            className="flex gap-1 items-center justify-between px-[14px] cursor-pointer"
-            onClick={() => {
-              if (ordering === OrderingDataType.TOTAL_DURATION) {
-                setOrdering('');
-              } else {
-                setOrdering(OrderingDataType.TOTAL_DURATION);
-              }
-            }}>
-            <p className="!text-xs font-medium !text-[#77858F]">計測時間</p>
-            <div>
-              <Image
-                src="/icons/sort-down.svg"
-                alt="Sort down"
-                width={9}
-                height={10}
-                className={`cursor-pointer justify-self-end  ${isAsc && 'rotate-180'}`}
-              />
-            </div>
-          </div>
-        );
-      },
-      cell: (info) => {
-        const value = info.getValue() as string;
-        return (
-          <div className="font-medium flex text-[14px] justify-center text-black">
-            <p>{value.split(':')[0]}時間</p>
-            <p>{value.split(':')[1]}分</p>
-          </div>
-        );
-      },
-    },
-    {
       accessorKey: 'ratio',
       size: 20,
       header: () => {
