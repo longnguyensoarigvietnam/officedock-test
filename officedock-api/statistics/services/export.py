@@ -60,6 +60,13 @@ class ExportTaskService:
         self.tag_ids = [
             t for t in q.get("tag_ids", "").split(",") if t and str(t).isdigit()
         ]
+        self.tag_ids_int = {int(t) for t in self.tag_ids}
+        is_tag_page_raw = q.get("is_tag_page")
+        self.is_tag_page = (
+            str(is_tag_page_raw).lower() in {"1", "true", "yes", "y"}
+            if is_tag_page_raw is not None
+            else False
+        )
         self.user_id = q.get("user_id")
         self.organization_ids = q.get("organization_ids")
         self.period = q.get("period_classification")
@@ -134,6 +141,37 @@ class ExportTaskService:
             "medium": cmap.get(str(self.medium_category_id), "-"),
             "small": cmap.get(str(self.small_category_id), "-"),
         }
+
+    def _matched_tag_multiplier(self, item):
+        """
+        When `is_tag_page` + `tag_ids` are active, backend total duration is
+        multiplied by `related_tag_count` (count of matching tags per task).
+        For export, we approximate the same multiplier from the task's
+        preloaded `tags`.
+        """
+        if not (self.is_tag_page and self.tag_ids_int):
+            return 1
+
+        tags = item.get("tags") or []
+        if not isinstance(tags, list):
+            return 1
+
+        matched_count = 0
+        for t in tags:
+            if not isinstance(t, dict):
+                continue
+            tid = t.get("id")
+            if isinstance(tid, int) and tid in self.tag_ids_int:
+                matched_count += 1
+            elif (
+                isinstance(tid, str)
+                and tid.isdigit()
+                and int(tid) in self.tag_ids_int
+            ):
+                matched_count += 1
+
+        # Keep it aligned with get_total_durations() where default=1.
+        return matched_count or 1
 
     def format_date(self, date_str):
         try:
@@ -222,14 +260,14 @@ class ExportTaskService:
             for user in target_users:
                 items = user_groups.get(user.id, [])
                 user_info = BaseUserProfileSerializer(user).data
-                total_duration_user = sum(
-                    (
-                        time_str_to_timedelta(item["total_duration"])
-                        or timedelta(0)
-                        for item in items
-                    ),
-                    timedelta(0),
-                )
+                total_duration_user = timedelta(0)
+                for item in items:
+                    td = time_str_to_timedelta(
+                        item["total_duration"]
+                    ) or timedelta(0)
+                    total_duration_user += td * self._matched_tag_multiplier(
+                        item
+                    )
 
                 # Calculate raw percent for each item based on user's total
                 for item in items:
