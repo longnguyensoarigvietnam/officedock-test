@@ -17,6 +17,7 @@ from skills.models import StatisticCategory
 from stat_data.constants import ALL_TEAM
 from stat_data.utils import (
     normalize_percentages,
+    percentage_calculation_of_duration,
 )
 from common.utils import format_duration, time_str_to_timedelta
 
@@ -229,14 +230,15 @@ class ExportTaskService:
                     ),
                     timedelta(0),
                 )
+
                 # Calculate raw percent for each item based on user's total
                 for item in items:
                     duration_sec = time_str_to_timedelta(
                         item["total_duration"]
                     ).total_seconds()
-                    total_sec = total_duration_user.total_seconds()
-                    item["percent"] = round(
-                        (duration_sec / total_sec) * 100 if total_sec > 0 else 0
+                    item["percent"] = percentage_calculation_of_duration(
+                        total_duration_user.total_seconds(),
+                        duration_sec,
                     )
 
                 # Normalize percentages to sum to exactly 100%
