@@ -114,16 +114,110 @@ const MultiDatePickerCustom = ({
 
   // End date
   useEffect(() => {
-    if (initialEndDate) {
-      setEndDate(initialEndDate);
-    }
+    // Always sync internal end state with parent.
+    // Parent can intentionally pass null to clear the selection.
+    setEndDate(initialEndDate ?? null);
   }, [initialEndDate]);
 
   const handleChange = (dates: [Date, Date | null]) => {
     const [start, end] = dates;
 
+    // Keep previous selection so we can decide how to interpret
+    // the "second click" when end is not set yet (custom range mode).
+    const prevStart = startDate;
+    const prevEnd = endDate;
+
     if (isTypeTime === TimeOptionsType.MORE) {
+      // Custom range mode rule:
+      // If we only have "start" set (prevEnd === null) and the picker returns both
+      // [start, end] on the next click, interpret the clicked date relative to prevStart:
+      // - clicked date < prevStart => update start, keep end = null
+      // - clicked date > prevStart => update end
+      // Use initialEndDate (from parent) to determine whether "end" was set yet.
+      // Parent may still pass null even if internal state was normalized by the picker.
+      if (
+        initialEndDate == null &&
+        !isEndButtonClicked &&
+        start &&
+        end &&
+        prevStart
+      ) {
+        const prevStartStr = prevStart.toDateString();
+        const startStr = start.toDateString();
+        const endStr = end.toDateString();
+
+        // ReactDatePicker normalizes range order (start <= end)
+        // If end === prevStart => user clicked before prevStart
+        if (endStr === prevStartStr) {
+          setStartDate(start);
+          setEndDate(null);
+          onChange && onChange(start, null);
+          return;
+        }
+
+        // If start === prevStart => user clicked after prevStart
+        if (startStr === prevStartStr) {
+          let adjustedEnd = end;
+          const diffInTime = end.getTime() - start.getTime();
+          const diffInDays = diffInTime / (1000 * 3600 * 24);
+
+          if (diffInDays > 365) {
+            adjustedEnd = new Date(start);
+            adjustedEnd.setDate(adjustedEnd.getDate() + 365);
+          }
+
+          setStartDate(start);
+          setEndDate(adjustedEnd);
+          onChange && onChange(start, adjustedEnd);
+          resetStartClickCustom && resetStartClickCustom();
+          clickEndButton && clickEndButton();
+          return;
+        }
+
+        // Fallback: compare by time when strings didn't match expected normalization.
+        if (start.getTime() < prevStart.getTime()) {
+          setStartDate(start);
+          setEndDate(null);
+          onChange && onChange(start, null);
+          return;
+        }
+
+        setStartDate(prevStart);
+        setEndDate(end);
+        onChange && onChange(prevStart, end);
+        clickEndButton && clickEndButton();
+        return;
+      }
+
       if (start && isEndButtonClicked) {
+        // If the parent hasn't set end yet, interpret "second click" relative
+        // to initialStartDate:
+        // - clicked date < initialStartDate => update start, clear end
+        // - clicked date > initialStartDate => keep start, set end
+        if (initialEndDate == null && initialStartDate) {
+          const initialStartTime = initialStartDate.getTime();
+          const startTime = start.getTime();
+
+          if (startTime < initialStartTime) {
+            setStartDate(start);
+            setEndDate(null);
+            onChange && onChange(start, null);
+            return;
+          }
+
+          if (startTime === initialStartTime) {
+            if (end) {
+              setEndDate(end);
+              onChange && onChange(initialStartDate as Date, end);
+              resetEndClick && resetEndClick();
+            } else {
+              setEndDate(null);
+              onChange && onChange(initialStartDate as Date, null);
+            }
+            return;
+          }
+        }
+
         let adjustedEnd = end;
         if (end) {
           const diffInTime = end.getTime() - start.getTime();
@@ -149,6 +243,45 @@ const MultiDatePickerCustom = ({
           }
         }
       } else {
+        // Custom range selection:
+        // - prevEnd is null means we currently have only "start" set.
+        // - When the user clicks again and the picker returns both start+end,
+        //   decide based on ordering relative to prevStart:
+        //   - clicked date < prevStart => update start, clear end
+        //   - clicked date > prevStart => set end
+        if (prevEnd === null && start && end) {
+          const prevStartStr = prevStart?.toDateString();
+          const startStr = start.toDateString();
+          const endStr = end.toDateString();
+
+          // ReactDatePicker normalizes the range order (start <= end).
+          // If prevStart became the later date, user clicked before prevStart.
+          if (endStr === prevStartStr) {
+            setStartDate(start);
+            setEndDate(null);
+            onChange && onChange(start, null);
+            return;
+          }
+
+          // If prevStart is still the earlier date, user clicked after prevStart.
+          if (startStr === prevStartStr) {
+            let adjustedEnd = end;
+            const diffInTime = end.getTime() - start.getTime();
+            const diffInDays = diffInTime / (1000 * 3600 * 24);
+            if (diffInDays > 365) {
+              adjustedEnd = new Date(start);
+              adjustedEnd.setDate(adjustedEnd.getDate() + 365);
+            }
+
+            setStartDate(start);
+            setEndDate(adjustedEnd);
+            onChange && onChange(start, adjustedEnd);
+            resetStartClickCustom && resetStartClickCustom();
+            clickEndButton && clickEndButton();
+            return;
+          }
+        }
+
         if (start && isStartButtonClicked && end) {
           setStartDate(end);
           setEndDate(null);
@@ -247,10 +380,11 @@ const MultiDatePickerCustom = ({
           endDate={endDate}
           selectsRange
           minDate={
-            isTypeTime === TimeOptionsType.MORE &&
-            endDate &&
-            !isStartButtonClicked
-              ? startDate
+            // In custom mode we don't restrict min date.
+            // This allows choosing a date before the current "start"
+            // (which we interpret as updating the start date).
+            isTypeTime === TimeOptionsType.MORE
+              ? null
               : isEndButtonClicked
                 ? startDate
                 : null
