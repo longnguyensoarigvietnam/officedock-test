@@ -1,4 +1,10 @@
-import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
 import Button from '@components/common/Button';
 import Checkbox from '@components/common/Checkbox';
@@ -12,6 +18,8 @@ import {
   handleSetStartDateAfter,
   handleSetStartDateBefore,
   isFullCalendarMonthRange,
+  isFullCalendarHalfYearRange,
+  isFullCalendarYearRange,
 } from '@utils/date';
 import { StatisticStateContext } from '@providers/StatisticProvider';
 import {
@@ -178,10 +186,20 @@ function StatisticCalendar() {
         isTypeTime === TimeOptionsType.MORE &&
         isFullCalendarMonthRange(dataStartDate, dataEndDate);
 
+      const moreAsFullHalfYear =
+        isTypeTime === TimeOptionsType.MORE &&
+        isFullCalendarHalfYearRange(dataStartDate, dataEndDate);
+
+      const moreAsFullYear =
+        isTypeTime === TimeOptionsType.MORE &&
+        isFullCalendarYearRange(dataStartDate, dataEndDate);
+
       if (mode === TimeCompareOptionsType.PREVIOUS_PERIOD) {
         if (
           isTypeTime === TimeOptionsType.MORE &&
-          !moreAsFullMonth
+          !moreAsFullMonth &&
+          !moreAsFullHalfYear &&
+          !moreAsFullYear
         ) {
           const diffDays =
             Math.floor(
@@ -200,15 +218,26 @@ function StatisticCalendar() {
           const { start: compareStart, end: compareEnd } =
             isTypeTime === TimeOptionsType.MONTH || moreAsFullMonth
               ? getMonthCompareRange(dataStartDate, mode)
-              : isTypeTime === TimeOptionsType.HALF_YEAR
+              : isTypeTime === TimeOptionsType.HALF_YEAR || moreAsFullHalfYear
                 ? getHalfYearCompareRange(dataStartDate, mode)
-                : {
-                    start: handleSetStartDateBefore(
-                      isTypeTime,
-                      dataStartDate,
-                    ) as Date,
-                    end: handleSetStartDateBefore(isTypeTime, dataEndDate) as Date,
-                  };
+                : isTypeTime === TimeOptionsType.YEAR || moreAsFullYear
+                  ? (() => {
+                      const previousYear = dataStartDate.getFullYear() - 1;
+                      return {
+                        start: new Date(previousYear, 0, 1),
+                        end: new Date(previousYear, 11, 31),
+                      };
+                    })()
+                  : {
+                      start: handleSetStartDateBefore(
+                        isTypeTime,
+                        dataStartDate,
+                      ) as Date,
+                      end: handleSetStartDateBefore(
+                        isTypeTime,
+                        dataEndDate,
+                      ) as Date,
+                    };
           setDataStartDateCompare(compareStart);
           setDataEndDateCompare(compareEnd);
         }
@@ -216,15 +245,23 @@ function StatisticCalendar() {
         const { start: compareStart, end: compareEnd } =
           isTypeTime === TimeOptionsType.MONTH || moreAsFullMonth
             ? getMonthCompareRange(dataStartDate, mode)
-            : isTypeTime === TimeOptionsType.HALF_YEAR
+            : isTypeTime === TimeOptionsType.HALF_YEAR || moreAsFullHalfYear
               ? getHalfYearCompareRange(dataStartDate, mode)
-            : (() => {
-                const start = new Date(dataStartDate);
-                start.setFullYear(start.getFullYear() - 1);
-                const end = new Date(dataEndDate);
-                end.setFullYear(end.getFullYear() - 1);
-                return { start, end };
-              })();
+              : isTypeTime === TimeOptionsType.YEAR || moreAsFullYear
+                ? (() => {
+                    const previousYear = dataStartDate.getFullYear() - 1;
+                    return {
+                      start: new Date(previousYear, 0, 1),
+                      end: new Date(previousYear, 11, 31),
+                    };
+                  })()
+                : (() => {
+                    const start = new Date(dataStartDate);
+                    start.setFullYear(start.getFullYear() - 1);
+                    const end = new Date(dataEndDate);
+                    end.setFullYear(end.getFullYear() - 1);
+                    return { start, end };
+                  })();
         setDataStartDateCompare(compareStart);
         setDataEndDateCompare(compareEnd);
       }
@@ -407,10 +444,10 @@ function StatisticCalendar() {
             ? getMonthCompareRange(newStartDate, compareMode)
             : option === TimeOptionsType.HALF_YEAR
               ? getHalfYearCompareRange(newStartDate, compareMode)
-            : {
-                start: handleSetStartDateBefore(option, newStartDate) as Date,
-                end: handleSetStartDateBefore(option, newEndDate) as Date,
-              };
+              : {
+                  start: handleSetStartDateBefore(option, newStartDate) as Date,
+                  end: handleSetStartDateBefore(option, newEndDate) as Date,
+                };
         setIsErrorDataCompare({ start: false, end: false });
         setDataStartDateCompare(compareStart);
         setDataEndDateCompare(compareEnd);
@@ -420,13 +457,13 @@ function StatisticCalendar() {
             ? getMonthCompareRange(newStartDate, compareMode)
             : option === TimeOptionsType.HALF_YEAR
               ? getHalfYearCompareRange(newStartDate, compareMode)
-            : (() => {
-                const start = new Date(newStartDate);
-                start.setFullYear(start.getFullYear() - 1);
-                const end = new Date(newEndDate);
-                end.setFullYear(end.getFullYear() - 1);
-                return { start, end };
-              })();
+              : (() => {
+                  const start = new Date(newStartDate);
+                  start.setFullYear(start.getFullYear() - 1);
+                  const end = new Date(newEndDate);
+                  end.setFullYear(end.getFullYear() - 1);
+                  return { start, end };
+                })();
         setIsErrorDataCompare({ start: false, end: false });
         setDataStartDateCompare(compareStart);
         setDataEndDateCompare(compareEnd);
@@ -541,11 +578,7 @@ function StatisticCalendar() {
         end: false,
       }));
     }
-    if (
-      compareMode === TimeCompareOptionsType.CUSTOM &&
-      startDate &&
-      endDate
-    ) {
+    if (compareMode === TimeCompareOptionsType.CUSTOM && startDate && endDate) {
       setIsStartButtonClickedCompare(true);
       setIsEndButtonClickedCompare(false);
     }
@@ -1183,6 +1216,7 @@ function StatisticCalendar() {
                     if (isTypeTime !== TimeOptionsType.MORE) {
                       return;
                     }
+                    if (!dataEndDate) return;
                     setIsEndButtonClickedCompare(false);
 
                     setIsStartButtonClicked(true);
@@ -1221,14 +1255,27 @@ function StatisticCalendar() {
                         const monthLikeMore =
                           isTypeTime === TimeOptionsType.MORE &&
                           !!dataEndDate &&
-                          isFullCalendarMonthRange(
+                          isFullCalendarMonthRange(dataStartDate, dataEndDate);
+
+                        const halfYearLikeMore =
+                          isTypeTime === TimeOptionsType.MORE &&
+                          !!dataEndDate &&
+                          isFullCalendarHalfYearRange(
                             dataStartDate,
                             dataEndDate,
                           );
 
+                        const yearLikeMore =
+                          isTypeTime === TimeOptionsType.MORE &&
+                          !!dataEndDate &&
+                          isFullCalendarYearRange(dataStartDate, dataEndDate);
+
+                        const periodLikeMore =
+                          monthLikeMore || halfYearLikeMore || yearLikeMore;
+
                         if (
                           isTypeTime !== TimeOptionsType.MORE ||
-                          monthLikeMore
+                          periodLikeMore
                         ) {
                           setCompareMode(
                             TimeCompareOptionsType.PREVIOUS_PERIOD,
@@ -1240,7 +1287,7 @@ function StatisticCalendar() {
                           start: false,
                           end: false,
                         });
-                        if (!monthLikeMore) {
+                        if (!periodLikeMore) {
                           const dateStart = handleSetStartDateBefore(
                             isTypeTime,
                             dataStartDate,
@@ -1330,6 +1377,7 @@ function StatisticCalendar() {
                       if (compareMode !== TimeCompareOptionsType.CUSTOM) {
                         return;
                       }
+                      if (!dataEndDateCompare) return;
                       setIsStartButtonClickedCompare(true);
                     }}
                     className="gap-3 flex items-center mt-[6px]">
@@ -1348,6 +1396,7 @@ function StatisticCalendar() {
                       if (compareMode !== TimeCompareOptionsType.CUSTOM) {
                         return;
                       }
+
                       setIsEndButtonClickedCompare(true);
                     }}
                     className="gap-3 flex items-center mt-[6px]">

@@ -1,4 +1,10 @@
-import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
 import Button from '@components/common/Button';
 import Checkbox from '@components/common/Checkbox';
@@ -12,6 +18,8 @@ import {
   handleSetStartDateAfter,
   handleSetStartDateBefore,
   isFullCalendarMonthRange,
+  isFullCalendarHalfYearRange,
+  isFullCalendarYearRange,
 } from '@utils/date';
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
 import {
@@ -179,10 +187,20 @@ function StatisticTagCalendar() {
         isTypeTime === TimeOptionsType.MORE &&
         isFullCalendarMonthRange(dataStartDate, dataEndDate);
 
+      const moreAsFullHalfYear =
+        isTypeTime === TimeOptionsType.MORE &&
+        isFullCalendarHalfYearRange(dataStartDate, dataEndDate);
+
+      const moreAsFullYear =
+        isTypeTime === TimeOptionsType.MORE &&
+        isFullCalendarYearRange(dataStartDate, dataEndDate);
+
       if (mode === TimeCompareOptionsType.PREVIOUS_PERIOD) {
         if (
           isTypeTime === TimeOptionsType.MORE &&
-          !moreAsFullMonth
+          !moreAsFullMonth &&
+          !moreAsFullHalfYear &&
+          !moreAsFullYear
         ) {
           const diffDays =
             Math.floor(
@@ -200,15 +218,26 @@ function StatisticTagCalendar() {
           const { start: compareStart, end: compareEnd } =
             isTypeTime === TimeOptionsType.MONTH || moreAsFullMonth
               ? getMonthCompareRange(dataStartDate, mode)
-              : isTypeTime === TimeOptionsType.HALF_YEAR
+              : isTypeTime === TimeOptionsType.HALF_YEAR || moreAsFullHalfYear
                 ? getHalfYearCompareRange(dataStartDate, mode)
-                : {
-                    start: handleSetStartDateBefore(
-                      isTypeTime,
-                      dataStartDate,
-                    ) as Date,
-                    end: handleSetStartDateBefore(isTypeTime, dataEndDate) as Date,
-                  };
+                : isTypeTime === TimeOptionsType.YEAR || moreAsFullYear
+                  ? (() => {
+                      const previousYear = dataStartDate.getFullYear() - 1;
+                      return {
+                        start: new Date(previousYear, 0, 1),
+                        end: new Date(previousYear, 11, 31),
+                      };
+                    })()
+                  : {
+                      start: handleSetStartDateBefore(
+                        isTypeTime,
+                        dataStartDate,
+                      ) as Date,
+                      end: handleSetStartDateBefore(
+                        isTypeTime,
+                        dataEndDate,
+                      ) as Date,
+                    };
           setDataStartDateCompare(compareStart);
           setDataEndDateCompare(compareEnd);
         }
@@ -216,15 +245,23 @@ function StatisticTagCalendar() {
         const { start: compareStart, end: compareEnd } =
           isTypeTime === TimeOptionsType.MONTH || moreAsFullMonth
             ? getMonthCompareRange(dataStartDate, mode)
-            : isTypeTime === TimeOptionsType.HALF_YEAR
+            : isTypeTime === TimeOptionsType.HALF_YEAR || moreAsFullHalfYear
               ? getHalfYearCompareRange(dataStartDate, mode)
-              : (() => {
-                  const start = new Date(dataStartDate);
-                  start.setFullYear(start.getFullYear() - 1);
-                  const end = new Date(dataEndDate);
-                  end.setFullYear(end.getFullYear() - 1);
-                  return { start, end };
-                })();
+              : isTypeTime === TimeOptionsType.YEAR || moreAsFullYear
+                ? (() => {
+                    const previousYear = dataStartDate.getFullYear() - 1;
+                    return {
+                      start: new Date(previousYear, 0, 1),
+                      end: new Date(previousYear, 11, 31),
+                    };
+                  })()
+                : (() => {
+                    const start = new Date(dataStartDate);
+                    start.setFullYear(start.getFullYear() - 1);
+                    const end = new Date(dataEndDate);
+                    end.setFullYear(end.getFullYear() - 1);
+                    return { start, end };
+                  })();
         setDataStartDateCompare(compareStart);
         setDataEndDateCompare(compareEnd);
       }
@@ -1179,6 +1216,7 @@ function StatisticTagCalendar() {
               <div>
                 <div
                   onClick={() => {
+                    if (!dataEndDate) return;
                     setIsDisableCalendar(false);
                     setIsStartButtonClicked(true);
                   }}
@@ -1216,14 +1254,27 @@ function StatisticTagCalendar() {
                         const monthLikeMore =
                           isTypeTime === TimeOptionsType.MORE &&
                           !!dataEndDate &&
-                          isFullCalendarMonthRange(
+                          isFullCalendarMonthRange(dataStartDate, dataEndDate);
+
+                        const halfYearLikeMore =
+                          isTypeTime === TimeOptionsType.MORE &&
+                          !!dataEndDate &&
+                          isFullCalendarHalfYearRange(
                             dataStartDate,
                             dataEndDate,
                           );
 
+                        const yearLikeMore =
+                          isTypeTime === TimeOptionsType.MORE &&
+                          !!dataEndDate &&
+                          isFullCalendarYearRange(dataStartDate, dataEndDate);
+
+                        const periodLikeMore =
+                          monthLikeMore || halfYearLikeMore || yearLikeMore;
+
                         if (
                           isTypeTime !== TimeOptionsType.MORE ||
-                          monthLikeMore
+                          periodLikeMore
                         ) {
                           setCompareMode(
                             TimeCompareOptionsType.PREVIOUS_PERIOD,
@@ -1238,6 +1289,18 @@ function StatisticTagCalendar() {
                           );
                           setDataStartDateCompare(cs);
                           setDataEndDateCompare(ce);
+                        } else if (halfYearLikeMore) {
+                          const { start: cs, end: ce } =
+                            getHalfYearCompareRange(
+                              dataStartDate,
+                              TimeCompareOptionsType.PREVIOUS_PERIOD,
+                            );
+                          setDataStartDateCompare(cs);
+                          setDataEndDateCompare(ce);
+                        } else if (yearLikeMore) {
+                          const previousYear = dataStartDate.getFullYear() - 1;
+                          setDataStartDateCompare(new Date(previousYear, 0, 1));
+                          setDataEndDateCompare(new Date(previousYear, 11, 31));
                         } else if (
                           isTypeTime === TimeOptionsType.MORE &&
                           dataEndDate
@@ -1345,6 +1408,8 @@ function StatisticTagCalendar() {
                   <div
                     onClick={() => {
                       if (compareMode !== TimeCompareOptionsType.CUSTOM) return;
+                      if (!dataEndDateCompare) return;
+
                       setIsEndButtonClickedCompare(false);
 
                       setIsStartButtonClickedCompare(true);

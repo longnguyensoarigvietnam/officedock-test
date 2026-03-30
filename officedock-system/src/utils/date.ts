@@ -1283,6 +1283,37 @@ export const isFullCalendarMonthRange = (start: Date, end: Date): boolean => {
   return end.getDate() === lastDayOfMonth;
 };
 
+/** Start is Jan 1 and end is the last day of the same calendar year */
+export const isFullCalendarYearRange = (start: Date, end: Date): boolean => {
+  if (!start || !end) return false;
+  const sy = start.getFullYear();
+  const ey = end.getFullYear();
+
+  if (sy !== ey) return false;
+  if (start.getMonth() !== 0) return false; // Jan
+  if (start.getDate() !== 1) return false;
+  if (end.getMonth() !== 11) return false; // Dec
+
+  const lastDayOfYear = new Date(sy + 1, 0, 0).getDate();
+  return end.getDate() === lastDayOfYear;
+};
+
+/**
+ * Start is the 1st day of a month and end is the last day of the month
+ * exactly 5 months later (total 6 full calendar months).
+ */
+export const isFullCalendarHalfYearRange = (start: Date, end: Date): boolean => {
+  if (!start || !end) return false;
+  if (start.getDate() !== 1) return false;
+
+  const monthDiff =
+    (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+  if (monthDiff !== 5) return false;
+
+  const lastDayOfEndMonth = new Date(end.getFullYear(), end.getMonth() + 1, 0).getDate();
+  return end.getDate() === lastDayOfEndMonth;
+};
+
 // Get time date statistic compare before
 export const handleSetStartDateBefore = (
   option: TimeOptionsType,

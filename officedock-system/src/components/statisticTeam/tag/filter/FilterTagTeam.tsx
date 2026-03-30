@@ -72,7 +72,7 @@ const FilterTagTeam = ({ className }: Props) => {
                     <div
                       key={item.value}
                       className="min-w-[66px] h-6 px-[10px] bg-[#77858F] justify-between gap-[6px] text-xs text-white font-medium flex items-center truncate rounded-[20px] ">
-                      <span className="min-w-[32px] truncate">
+                      <span className="min-w-[32px] max-w-[118px] truncate">
                         {item.label}
                       </span>
                       {open ? (

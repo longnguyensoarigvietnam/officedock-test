@@ -1,4 +1,10 @@
-import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
 import Button from '@components/common/Button';
 import Checkbox from '@components/common/Checkbox';
@@ -13,6 +19,8 @@ import {
   handleSetStartDateAfter,
   handleSetStartDateBefore,
   isFullCalendarMonthRange,
+  isFullCalendarHalfYearRange,
+  isFullCalendarYearRange,
 } from '@utils/date';
 import {
   getCompareLineChartEnableViews,
@@ -177,10 +185,20 @@ function StatisticTeamCalendar() {
         isTypeTime === TimeOptionsType.MORE &&
         isFullCalendarMonthRange(dataStartDate, dataEndDate);
 
+      const moreAsFullHalfYear =
+        isTypeTime === TimeOptionsType.MORE &&
+        isFullCalendarHalfYearRange(dataStartDate, dataEndDate);
+
+      const moreAsFullYear =
+        isTypeTime === TimeOptionsType.MORE &&
+        isFullCalendarYearRange(dataStartDate, dataEndDate);
+
       if (mode === TimeCompareOptionsType.PREVIOUS_PERIOD) {
         if (
           isTypeTime === TimeOptionsType.MORE &&
-          !moreAsFullMonth
+          !moreAsFullMonth &&
+          !moreAsFullHalfYear &&
+          !moreAsFullYear
         ) {
           const msPerDay = 24 * 60 * 60 * 1000;
           const durationDays =
@@ -199,15 +217,26 @@ function StatisticTeamCalendar() {
           const { start: compareStart, end: compareEnd } =
             isTypeTime === TimeOptionsType.MONTH || moreAsFullMonth
               ? getMonthCompareRange(dataStartDate, mode)
-              : isTypeTime === TimeOptionsType.HALF_YEAR
+              : isTypeTime === TimeOptionsType.HALF_YEAR || moreAsFullHalfYear
                 ? getHalfYearCompareRange(dataStartDate, mode)
-                : {
-                    start: handleSetStartDateBefore(
-                      isTypeTime,
-                      dataStartDate,
-                    ) as Date,
-                    end: handleSetStartDateBefore(isTypeTime, dataEndDate) as Date,
-                  };
+                : isTypeTime === TimeOptionsType.YEAR || moreAsFullYear
+                  ? (() => {
+                      const previousYear = dataStartDate.getFullYear() - 1;
+                      return {
+                        start: new Date(previousYear, 0, 1),
+                        end: new Date(previousYear, 11, 31),
+                      };
+                    })()
+                  : {
+                      start: handleSetStartDateBefore(
+                        isTypeTime,
+                        dataStartDate,
+                      ) as Date,
+                      end: handleSetStartDateBefore(
+                        isTypeTime,
+                        dataEndDate,
+                      ) as Date,
+                    };
           setDataStartDateCompare(compareStart);
           setDataEndDateCompare(compareEnd);
         }
@@ -215,15 +244,23 @@ function StatisticTeamCalendar() {
         const { start: compareStart, end: compareEnd } =
           isTypeTime === TimeOptionsType.MONTH || moreAsFullMonth
             ? getMonthCompareRange(dataStartDate, mode)
-            : isTypeTime === TimeOptionsType.HALF_YEAR
+            : isTypeTime === TimeOptionsType.HALF_YEAR || moreAsFullHalfYear
               ? getHalfYearCompareRange(dataStartDate, mode)
-              : (() => {
-                  const start = new Date(dataStartDate);
-                  start.setFullYear(start.getFullYear() - 1);
-                  const end = new Date(dataEndDate);
-                  end.setFullYear(end.getFullYear() - 1);
-                  return { start, end };
-                })();
+              : isTypeTime === TimeOptionsType.YEAR || moreAsFullYear
+                ? (() => {
+                    const previousYear = dataStartDate.getFullYear() - 1;
+                    return {
+                      start: new Date(previousYear, 0, 1),
+                      end: new Date(previousYear, 11, 31),
+                    };
+                  })()
+                : (() => {
+                    const start = new Date(dataStartDate);
+                    start.setFullYear(start.getFullYear() - 1);
+                    const end = new Date(dataEndDate);
+                    end.setFullYear(end.getFullYear() - 1);
+                    return { start, end };
+                  })();
         setDataStartDateCompare(compareStart);
         setDataEndDateCompare(compareEnd);
       }
@@ -466,11 +503,7 @@ function StatisticTeamCalendar() {
         end: false,
       });
     }
-    if (
-      isTypeTime === TimeOptionsType.MORE &&
-      startDate &&
-      endDate
-    ) {
+    if (isTypeTime === TimeOptionsType.MORE && startDate && endDate) {
       setIsStartButtonClicked(true);
       setIsEndButtonClicked(false);
     }
@@ -553,11 +586,7 @@ function StatisticTeamCalendar() {
         end: false,
       }));
     }
-    if (
-      compareMode === TimeCompareOptionsType.CUSTOM &&
-      startDate &&
-      endDate
-    ) {
+    if (compareMode === TimeCompareOptionsType.CUSTOM && startDate && endDate) {
       setIsStartButtonClickedCompare(true);
       setIsEndButtonClickedCompare(false);
     }
@@ -985,6 +1014,8 @@ function StatisticTeamCalendar() {
               <div>
                 <div
                   onClick={() => {
+                    if (isTypeTime !== TimeOptionsType.MORE) return;
+                    if (!dataEndDate) return;
                     setIsEndButtonClicked(false);
                     setIsStartButtonClicked(true);
                   }}
@@ -1019,14 +1050,27 @@ function StatisticTeamCalendar() {
                         const monthLikeMore =
                           isTypeTime === TimeOptionsType.MORE &&
                           !!dataEndDate &&
-                          isFullCalendarMonthRange(
+                          isFullCalendarMonthRange(dataStartDate, dataEndDate);
+
+                        const halfYearLikeMore =
+                          isTypeTime === TimeOptionsType.MORE &&
+                          !!dataEndDate &&
+                          isFullCalendarHalfYearRange(
                             dataStartDate,
                             dataEndDate,
                           );
 
+                        const yearLikeMore =
+                          isTypeTime === TimeOptionsType.MORE &&
+                          !!dataEndDate &&
+                          isFullCalendarYearRange(dataStartDate, dataEndDate);
+
+                        const periodLikeMore =
+                          monthLikeMore || halfYearLikeMore || yearLikeMore;
+
                         if (
                           isTypeTime !== TimeOptionsType.MORE ||
-                          monthLikeMore
+                          periodLikeMore
                         ) {
                           setCompareMode(
                             TimeCompareOptionsType.PREVIOUS_PERIOD,
@@ -1038,7 +1082,7 @@ function StatisticTeamCalendar() {
                           start: false,
                           end: false,
                         });
-                        if (!monthLikeMore) {
+                        if (!periodLikeMore) {
                           const dateStart = handleSetStartDateBefore(
                             isTypeTime,
                             dataStartDate,
@@ -1125,6 +1169,8 @@ function StatisticTeamCalendar() {
                 <div>
                   <div
                     onClick={() => {
+                      if (compareMode !== TimeCompareOptionsType.CUSTOM) return;
+                      if (!dataEndDateCompare) return;
                       setIsStartButtonClickedCompare(true);
                     }}
                     className="gap-3 flex items-center mt-[6px]">
@@ -1140,6 +1186,8 @@ function StatisticTeamCalendar() {
                   </div>
                   <div
                     onClick={() => {
+                      if (compareMode !== TimeCompareOptionsType.CUSTOM) return;
+                      if (!dataEndDateCompare) return;
                       setIsEndButtonClickedCompare(true);
                     }}
                     className="gap-3 flex items-center mt-[6px]">
