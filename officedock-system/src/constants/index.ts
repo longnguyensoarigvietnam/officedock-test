@@ -112,6 +112,11 @@ export const SCREEN_LIST = [
     show: true,
   },
   {
+    name: '権限管理',
+    value: 'role',
+    show: true,
+  },
+  {
     name: 'チーム管理',
     value: 'organization',
     show: true,
@@ -152,11 +157,6 @@ export const SCREEN_LIST = [
     show: false,
   },
   {
-    name: '権限管理',
-    value: 'role',
-    show: true,
-  },
-  {
     name: '実績管理画面',
     value: 'actualDuration',
     show: false,
@@ -165,6 +165,11 @@ export const SCREEN_LIST = [
     name: 'メンバー一覧画面',
     value: 'listMember',
     show: false,
+  },
+  {
+    name: 'スキルマップ設定',
+    value: 'skillMap',
+    show: true,
   },
   {
     name: '日報一覧',
@@ -182,8 +187,8 @@ export const SCREEN_LIST = [
     show: true,
   },
   {
-    name: 'スキルマップ設定',
-    value: 'skillMap',
+    name: 'アンケート',
+    value: 'surveyManagement',
     show: true,
   },
   {
@@ -204,11 +209,6 @@ export const SCREEN_LIST = [
   {
     name: 'お支払い管理',
     value: 'paymentManagement',
-    show: true,
-  },
-  {
-    name: 'アンケート',
-    value: 'surveyManagement',
     show: true,
   },
 ];
