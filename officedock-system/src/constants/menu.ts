@@ -27,76 +27,6 @@ export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
     requiredPermission: PermissionsSystem.VIEW_ALL,
   },
   {
-    ...pageRouters.USERS_MANAGEMENT,
-    name: pageRouters.USERS_MANAGEMENT.name,
-    iconUrl: (active: boolean) => {
-      return active ? '/icons/users.svg' : '/icons/users.svg';
-    },
-    current: false,
-    companyMenu: true,
-    requiredPermission: PermissionsSystem.USER_VIEW,
-  },
-  {
-    ...pageRouters.ROLES_MANAGEMENT,
-    name: pageRouters.ROLES_MANAGEMENT.name,
-    iconUrl: (active: boolean) => {
-      return active ? '/icons/role.svg' : '/icons/role.svg';
-    },
-    current: false,
-    companyMenu: true,
-    requiredPermission: PermissionsSystem.ROLE_VIEW,
-  },
-  {
-    ...pageRouters.ORGANIZATION_MANAGEMENT,
-    name: pageRouters.ORGANIZATION_MANAGEMENT.name,
-    iconUrl: (active: boolean) => {
-      return active ? '/icons/organizations.svg' : '/icons/organizations.svg';
-    },
-    current: false,
-    companyMenu: true,
-    requiredPermission: PermissionsSystem.ORGANIZATION_VIEW,
-  },
-  {
-    ...pageRouters.CATEGORY_MANAGEMENT,
-    name: pageRouters.CATEGORY_MANAGEMENT.name,
-    iconUrl: (active: boolean) => {
-      return active ? '/icons/skill.svg' : '/icons/skill.svg';
-    },
-    current: false,
-    companyMenu: true,
-    requiredPermission: PermissionsSystem.CATEGORY_VIEW,
-  },
-  {
-    ...pageRouters.SKILL_MAPS_MANAGEMENT,
-    name: pageRouters.SKILL_MAPS_MANAGEMENT.name,
-    iconUrl: (active: boolean) => {
-      return active ? '/icons/skills-map.svg' : '/icons/skills-map.svg';
-    },
-    current: false,
-    companyMenu: true,
-    requiredPermission: PermissionsSystem.SKILL_MAP_MANAGEMENT_VIEW,
-  },
-  {
-    ...pageRouters.TAGS_MANAGEMENT,
-    name: pageRouters.TAGS_MANAGEMENT.name,
-    iconUrl: (active: boolean) => {
-      return active ? '/icons/tags.svg' : '/icons/tags.svg';
-    },
-    current: false,
-    companyMenu: true,
-    requiredPermission: PermissionsSystem.TAG_VIEW,
-  },
-  {
-    ...pageRouters.ACTUAL_DURATIONS_MANAGEMENT,
-    name: pageRouters.ACTUAL_DURATIONS_MANAGEMENT.name,
-    iconUrl: (active: boolean) => {
-      return active ? '/icons/measurements.svg' : '/icons/measurements.svg';
-    },
-    current: false,
-    companyMenu: true,
-    requiredPermission: PermissionsSystem.ACTUAL_DURATION_VIEW,
-  },
-  {
     ...pageRouters.TASKS_MANAGEMENT,
     name: pageRouters.TASKS_MANAGEMENT.name,
     iconUrl: (active: boolean) => {
@@ -129,6 +59,7 @@ export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
     companyMenu: false,
     requiredPermission: PermissionsSystem.CHAT_VIEW,
   },
+
   {
     ...pageRouters.STATISTIC_MANAGEMENT,
     name: pageRouters.STATISTIC_MANAGEMENT.name,
@@ -171,6 +102,67 @@ export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
     companyMenu: false,
     requiredPermission: PermissionsSystem.LIST_MEMBER_VIEW,
   },
+  // COMPANY MENU
+  {
+    ...pageRouters.USERS_MANAGEMENT,
+    name: pageRouters.USERS_MANAGEMENT.name,
+    iconUrl: (active: boolean) => {
+      return active ? '/icons/users.svg' : '/icons/users.svg';
+    },
+    current: false,
+    companyMenu: true,
+    requiredPermission: PermissionsSystem.USER_VIEW,
+  },
+  {
+    ...pageRouters.ROLES_MANAGEMENT,
+    name: pageRouters.ROLES_MANAGEMENT.name,
+    iconUrl: (active: boolean) => {
+      return active ? '/icons/role.svg' : '/icons/role.svg';
+    },
+    current: false,
+    companyMenu: true,
+    requiredPermission: PermissionsSystem.ROLE_VIEW,
+  },
+  {
+    ...pageRouters.ORGANIZATION_MANAGEMENT,
+    name: pageRouters.ORGANIZATION_MANAGEMENT.name,
+    iconUrl: (active: boolean) => {
+      return active ? '/icons/organizations.svg' : '/icons/organizations.svg';
+    },
+    current: false,
+    companyMenu: true,
+    requiredPermission: PermissionsSystem.ORGANIZATION_VIEW,
+  },
+  {
+    ...pageRouters.CATEGORY_MANAGEMENT,
+    name: pageRouters.CATEGORY_MANAGEMENT.name,
+    iconUrl: (active: boolean) => {
+      return active ? '/icons/skill.svg' : '/icons/skill.svg';
+    },
+    current: false,
+    companyMenu: true,
+    requiredPermission: PermissionsSystem.CATEGORY_VIEW,
+  },
+  {
+    ...pageRouters.TAGS_MANAGEMENT,
+    name: pageRouters.TAGS_MANAGEMENT.name,
+    iconUrl: (active: boolean) => {
+      return active ? '/icons/tags.svg' : '/icons/tags.svg';
+    },
+    current: false,
+    companyMenu: true,
+    requiredPermission: PermissionsSystem.TAG_VIEW,
+  },
+  {
+    ...pageRouters.SKILL_MAPS_MANAGEMENT,
+    name: pageRouters.SKILL_MAPS_MANAGEMENT.name,
+    iconUrl: (active: boolean) => {
+      return active ? '/icons/skills-map.svg' : '/icons/skills-map.svg';
+    },
+    current: false,
+    companyMenu: true,
+    requiredPermission: PermissionsSystem.SKILL_MAP_MANAGEMENT_VIEW,
+  },
   {
     ...pageRouters.LOCATION_MANAGEMENT,
     name: pageRouters.LOCATION_MANAGEMENT.name,
@@ -191,6 +183,7 @@ export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
     companyMenu: true,
     requiredPermission: PermissionsSystem.THANKS_MESSAGE_MANAGEMENT_VIEW,
   },
+
   {
     ...pageRouters.MVP_MANAGEMENT,
     name: pageRouters.MVP_MANAGEMENT.name,
@@ -211,6 +204,16 @@ export const SYSTEM_PERMISSIONS_MENU: MenuItem[] = [
     current: false,
     companyMenu: true,
     requiredPermission: PermissionsSystem.PAYMENT_MANAGEMENT_VIEW,
+  },
+  {
+    ...pageRouters.ACTUAL_DURATIONS_MANAGEMENT,
+    name: pageRouters.ACTUAL_DURATIONS_MANAGEMENT.name,
+    iconUrl: (active: boolean) => {
+      return active ? '/icons/measurements.svg' : '/icons/measurements.svg';
+    },
+    current: false,
+    companyMenu: true,
+    requiredPermission: PermissionsSystem.ACTUAL_DURATION_VIEW,
   },
 ];
 export const SYSTEM_PERMISSIONS_MENU_TEAM: MenuItem[] = [
