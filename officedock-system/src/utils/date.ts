@@ -1272,6 +1272,17 @@ export const getDaysFromTimeOption = (
   }
 };
 
+/** Start is day 1 and end is the last day of the same calendar month */
+export const isFullCalendarMonthRange = (start: Date, end: Date): boolean => {
+  if (!start || !end) return false;
+  const sy = start.getFullYear();
+  const sm = start.getMonth();
+  if (start.getDate() !== 1) return false;
+  if (end.getFullYear() !== sy || end.getMonth() !== sm) return false;
+  const lastDayOfMonth = new Date(sy, sm + 1, 0).getDate();
+  return end.getDate() === lastDayOfMonth;
+};
+
 // Get time date statistic compare before
 export const handleSetStartDateBefore = (
   option: TimeOptionsType,

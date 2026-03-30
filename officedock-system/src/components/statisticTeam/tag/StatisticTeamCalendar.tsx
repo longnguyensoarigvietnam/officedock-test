@@ -12,6 +12,7 @@ import {
   formatShowDateJapanese,
   handleSetStartDateAfter,
   handleSetStartDateBefore,
+  isFullCalendarMonthRange,
 } from '@utils/date';
 import {
   getCompareLineChartEnableViews,
@@ -93,12 +94,11 @@ function StatisticTeamCalendar() {
     start: false,
     end: false,
   });
-
-  // Compare
-
   const [compareMode, setCompareMode] = useState<TimeCompareOptionsType>(
     TimeCompareOptionsType.PREVIOUS_PERIOD,
   );
+
+  // Compare
 
   const [dataStartDateCompare, setDataStartDateCompare] = useState(new Date());
   const [dataEndDateCompare, setDataEndDateCompare] = useState<Date | null>(
@@ -109,8 +109,6 @@ function StatisticTeamCalendar() {
     useState(false);
   const [isStartButtonClickedCompare, setIsStartButtonClickedCompare] =
     useState(false);
-
-  const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
   const getMonthCompareRange = (
     baseDate: Date,
@@ -175,25 +173,36 @@ function StatisticTeamCalendar() {
       if (!dataStartDate || !dataEndDate) return;
       if (mode === TimeCompareOptionsType.CUSTOM) return;
 
-      setIsErrorDataCompare({ start: false, end: false });
+      setIsErrorDataCompare({
+        start: false,
+        end: false,
+      });
+
+      const moreAsFullMonth =
+        isTypeTime === TimeOptionsType.MORE &&
+        isFullCalendarMonthRange(dataStartDate, dataEndDate);
 
       if (mode === TimeCompareOptionsType.PREVIOUS_PERIOD) {
-        if (isTypeTime === TimeOptionsType.MORE) {
-          const diffDays =
+        if (
+          isTypeTime === TimeOptionsType.MORE &&
+          !moreAsFullMonth
+        ) {
+          const msPerDay = 24 * 60 * 60 * 1000;
+          const durationDays =
             Math.floor(
-              (dataEndDate.getTime() - dataStartDate.getTime()) / MS_PER_DAY,
+              (dataEndDate.getTime() - dataStartDate.getTime()) / msPerDay,
             ) + 1;
 
           const compareStart = new Date(dataStartDate);
-          compareStart.setDate(compareStart.getDate() - diffDays);
+          compareStart.setDate(compareStart.getDate() - durationDays);
           const compareEnd = new Date(dataEndDate);
-          compareEnd.setDate(compareEnd.getDate() - diffDays);
+          compareEnd.setDate(compareEnd.getDate() - durationDays);
 
           setDataStartDateCompare(compareStart);
           setDataEndDateCompare(compareEnd);
         } else {
           const { start: compareStart, end: compareEnd } =
-            isTypeTime === TimeOptionsType.MONTH
+            isTypeTime === TimeOptionsType.MONTH || moreAsFullMonth
               ? getMonthCompareRange(dataStartDate, mode)
               : isTypeTime === TimeOptionsType.HALF_YEAR
                 ? getHalfYearCompareRange(dataStartDate, mode)
@@ -209,7 +218,7 @@ function StatisticTeamCalendar() {
         }
       } else if (mode === TimeCompareOptionsType.PREVIOUS_YEAR) {
         const { start: compareStart, end: compareEnd } =
-          isTypeTime === TimeOptionsType.MONTH
+          isTypeTime === TimeOptionsType.MONTH || moreAsFullMonth
             ? getMonthCompareRange(dataStartDate, mode)
             : isTypeTime === TimeOptionsType.HALF_YEAR
               ? getHalfYearCompareRange(dataStartDate, mode)
@@ -224,7 +233,7 @@ function StatisticTeamCalendar() {
         setDataEndDateCompare(compareEnd);
       }
     },
-    [isDataCheckCompare, dataStartDate, dataEndDate, isTypeTime, MS_PER_DAY],
+    [isDataCheckCompare, dataStartDate, dataEndDate, isTypeTime],
   );
 
   useEffect(() => {
@@ -239,6 +248,7 @@ function StatisticTeamCalendar() {
   useEffect(() => {
     applyCompareModeToCurrentRange(compareMode);
   }, [compareMode, applyCompareModeToCurrentRange]);
+
   useEffect(() => {
     if (isCheckCompare) {
       setIsDataCheckCompare(isCheckCompare);
@@ -294,11 +304,6 @@ function StatisticTeamCalendar() {
     setLineChartTableData([]);
   };
 
-  const handleChangeCompareMode = (mode: TimeCompareOptionsType) => {
-    setCompareMode(mode);
-    applyCompareModeToCurrentRange(mode);
-  };
-
   // Selection option time
   const handleSelectTimeOption = (option: TimeOptionsType) => {
     setIsTypeTime(option);
@@ -306,6 +311,7 @@ function StatisticTeamCalendar() {
       start: false,
       end: false,
     });
+
     const today = new Date();
     let newStartDate: Date;
     let newEndDate: Date;
@@ -319,6 +325,7 @@ function StatisticTeamCalendar() {
         );
         newStartDate = yesterday;
         newEndDate = yesterday;
+        // Compare calendar stays interactive; keep flags only
         break;
       }
       case TimeOptionsType.WEEK: {
@@ -340,24 +347,27 @@ function StatisticTeamCalendar() {
 
         newStartDate = startOfLastWeek;
         newEndDate = endOfLastWeek;
+
+        // Compare calendar stays interactive; keep flags only
         break;
       }
       case TimeOptionsType.MONTH: {
-        // Previous month: from the 1st to the last day
-        const currentMonth = today.getMonth(); // 0-11
+        // Full previous month
+        const currentMonth = today.getMonth();
         const currentYear = today.getFullYear();
-        const lastMonthIndex = currentMonth - 1;
-        const lastMonthYear =
-          lastMonthIndex < 0 ? currentYear - 1 : currentYear;
-        const normalizedLastMonthIndex =
-          lastMonthIndex < 0 ? 11 : lastMonthIndex;
+        const lastMonthIndexRaw = currentMonth - 1;
+        const lastMonthYear = currentYear + Math.floor(lastMonthIndexRaw / 12);
+        const lastMonthIndex = ((lastMonthIndexRaw % 12) + 12) % 12;
 
-        newStartDate = new Date(lastMonthYear, normalizedLastMonthIndex, 1);
-        newEndDate = new Date(lastMonthYear, normalizedLastMonthIndex + 1, 0);
+        newStartDate = new Date(lastMonthYear, lastMonthIndex, 1);
+        newEndDate = new Date(lastMonthYear, lastMonthIndex + 1, 0);
+
+        // Compare calendar stays interactive; keep flags only
         break;
       }
       case TimeOptionsType.HALF_YEAR: {
-        const currentMonth = today.getMonth(); // 0-11
+        // Last 6 full months ending at previous month
+        const currentMonth = today.getMonth();
         const currentYear = today.getFullYear();
 
         const endMonthIndexRaw = currentMonth - 1;
@@ -371,12 +381,17 @@ function StatisticTeamCalendar() {
 
         newStartDate = new Date(startMonthYear, startMonthIndex, 1);
         newEndDate = new Date(endMonthYear, endMonthIndex + 1, 0);
+
+        // Compare calendar stays interactive; keep flags only
         break;
       }
       case TimeOptionsType.YEAR: {
+        // Full previous year
         const lastYear = today.getFullYear() - 1;
         newStartDate = new Date(lastYear, 0, 1);
         newEndDate = new Date(lastYear, 11, 31);
+
+        // Compare calendar stays interactive; keep flags only
         break;
       }
       case TimeOptionsType.MORE: {
@@ -396,8 +411,13 @@ function StatisticTeamCalendar() {
     setDataEndDate(newEndDate);
 
     if (isDataCheckCompare) {
+      // Update compare dates based on compare mode
       if (compareMode === TimeCompareOptionsType.CUSTOM) return;
-      setIsErrorDataCompare({ start: false, end: false });
+
+      setIsErrorDataCompare({
+        start: false,
+        end: false,
+      });
 
       if (compareMode === TimeCompareOptionsType.PREVIOUS_PERIOD) {
         const { start: compareStart, end: compareEnd } =
@@ -432,8 +452,11 @@ function StatisticTeamCalendar() {
 
   // Change data time calendar
   const handleChangeCalendar = (startDate: Date, endDate: Date | null) => {
-    if (isTypeTime !== TimeOptionsType.MORE) {
+    const wasNotMore = isTypeTime !== TimeOptionsType.MORE;
+    if (wasNotMore) {
       setIsTypeTime(TimeOptionsType.MORE);
+      setIsEndButtonClicked(true);
+      setIsStartButtonClicked(false);
     }
 
     setDataStartDate(startDate);
@@ -449,6 +472,14 @@ function StatisticTeamCalendar() {
         ...isErrorData,
         end: false,
       });
+    }
+    if (
+      isTypeTime === TimeOptionsType.MORE &&
+      startDate &&
+      endDate
+    ) {
+      setIsStartButtonClicked(true);
+      setIsEndButtonClicked(false);
     }
   };
 
@@ -504,10 +535,14 @@ function StatisticTeamCalendar() {
     startDate: Date,
     endDate: Date | null,
   ) => {
-    if (compareMode !== TimeCompareOptionsType.CUSTOM) {
+    const wasNotCustom = compareMode !== TimeCompareOptionsType.CUSTOM;
+    // If user edits compare dates while not in CUSTOM, switch to CUSTOM and clear end date
+    if (wasNotCustom) {
       setCompareMode(TimeCompareOptionsType.CUSTOM);
       setDataStartDateCompare(startDate);
       setDataEndDateCompare(null);
+      setIsEndButtonClickedCompare(true);
+      setIsStartButtonClickedCompare(false);
     } else {
       setDataStartDateCompare(startDate);
       setDataEndDateCompare(endDate);
@@ -524,6 +559,14 @@ function StatisticTeamCalendar() {
         ...prev,
         end: false,
       }));
+    }
+    if (
+      compareMode === TimeCompareOptionsType.CUSTOM &&
+      startDate &&
+      endDate
+    ) {
+      setIsStartButtonClickedCompare(true);
+      setIsEndButtonClickedCompare(false);
     }
   };
 
@@ -599,6 +642,11 @@ function StatisticTeamCalendar() {
   };
   const handleReset = () => {
     setIsOpenModal(false);
+  };
+
+  const handleChangeCompareMode = (mode: TimeCompareOptionsType) => {
+    setCompareMode(mode);
+    applyCompareModeToCurrentRange(mode);
   };
 
   const handlePrevCalendar = () => {
@@ -975,7 +1023,18 @@ function StatisticTeamCalendar() {
                     isChecked={isDataCheckCompare}
                     onChange={(e) => {
                       if (e) {
-                        if (isTypeTime !== TimeOptionsType.MORE) {
+                        const monthLikeMore =
+                          isTypeTime === TimeOptionsType.MORE &&
+                          !!dataEndDate &&
+                          isFullCalendarMonthRange(
+                            dataStartDate,
+                            dataEndDate,
+                          );
+
+                        if (
+                          isTypeTime !== TimeOptionsType.MORE ||
+                          monthLikeMore
+                        ) {
                           setCompareMode(
                             TimeCompareOptionsType.PREVIOUS_PERIOD,
                           );
@@ -987,19 +1046,21 @@ function StatisticTeamCalendar() {
                           start: false,
                           end: false,
                         });
-                        const dateStart = handleSetStartDateBefore(
-                          isTypeTime,
-                          dataStartDate,
-                        );
-                        setDataStartDateCompare(dateStart as Date);
-                        if (dataEndDate) {
-                          const dateEnd = handleSetStartDateBefore(
+                        if (!monthLikeMore) {
+                          const dateStart = handleSetStartDateBefore(
                             isTypeTime,
-                            dataEndDate,
+                            dataStartDate,
                           );
-                          setDataEndDateCompare(dateEnd as Date);
-                        } else {
-                          setDataEndDateCompare(null);
+                          setDataStartDateCompare(dateStart as Date);
+                          if (dataEndDate) {
+                            const dateEnd = handleSetStartDateBefore(
+                              isTypeTime,
+                              dataEndDate,
+                            );
+                            setDataEndDateCompare(dateEnd as Date);
+                          } else {
+                            setDataEndDateCompare(null);
+                          }
                         }
                       }
 
@@ -1070,7 +1131,7 @@ function StatisticTeamCalendar() {
                     className="gap-3 flex items-center mt-[6px]">
                     <span>開始日</span>
                     <div
-                      className={` w-[135px] h-[34px] flex items-center justify-center cursor-pointer rounded-md border ${isStartButtonClickedCompare ? 'border-primary' : 'border-[#77858F]'} ${isErrorDataCompare.start && '!border-red-500'}`}>
+                      className={`w-[135px] h-[34px] flex items-center justify-center cursor-pointer rounded-md border ${isStartButtonClickedCompare ? 'border-primary' : 'border-[#77858F]'} ${isErrorDataCompare.start && '!border-red-500'}`}>
                       {dataStartDateCompare &&
                         formatShowDateJapanese(dataStartDateCompare)}
                     </div>
