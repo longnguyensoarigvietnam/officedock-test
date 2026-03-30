@@ -235,7 +235,7 @@ class ExportTaskService:
                         item["total_duration"]
                     ).total_seconds()
                     total_sec = total_duration_user.total_seconds()
-                    item["percent"] = (
+                    item["percent"] = round(
                         (duration_sec / total_sec) * 100 if total_sec > 0 else 0
                     )
 

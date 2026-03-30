@@ -174,8 +174,11 @@ class StatisticViewSet(BaseAPIViewSet):
 
         if user_id:
             users = [get_object_or_404(User, id=user_id)]
-        elif uids := split_id_from_string(uids):
-            users = list(User.objects.filter(company=user.company, id__in=uids))
+        elif uids_list := split_id_from_string(uids):
+            users = list(
+                User.objects.filter(company=user.company, id__in=uids_list)
+            )
+            users.sort(key=lambda u: uids_list.index(u.id))
             if not users:
                 raise NotFound(
                     {"detail": "No users found matching the provided IDs."}
