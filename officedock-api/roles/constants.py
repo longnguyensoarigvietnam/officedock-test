@@ -5,40 +5,65 @@ from users.constants import RoleTypes
 class Screens(EnumChoices):
     """Enum for defining screen names."""
 
-    MY_TASK = "my_task"
-    CALENDAR = "calendar"
-    CHAT = "chat"
+    # 1. ユーザー管理
     USER = "user"
-    ORGANIZATION = "organization"
-    CATEGORY = "category"
-    CATEGORY_HIERARCHY = "category_hierarchy"
-    SKILL = "skill"
-    ORGANIZATION_SKILL = "organization_skill"
-    TAG = "tag"
-    SUBMIT_LEVEL = "submit_level"
+
+    # 2. 権限管理
     ROLE = "role"
-    STATISTIC = "statistic"
-    DAILY_REPORT = "daily_report"
-    TEAM_DAILY_REPORT = "team_daily_report"
-    TEAMDOCK = "teamdock"
-    ACTUAL_DURATION = "actual_duration"
+
+    # 3. チーム管理
+    ORGANIZATION = "organization"
     ORGANIZATION_HIERARCHY = "organization_hierarchy"
     LIST_MEMBER = "list_member"
-    CALENDAR_MANAGEMENT = "calendar_management"
-    SKILL_MAP = "skill_map"
 
-    # Define screens for role skill-map
+    # 4. 業務カテゴリー設定
+    CATEGORY = "category"
+    CATEGORY_HIERARCHY = "category_hierarchy"
+
+    # 5. 集計タグ管理
+    TAG = "tag"
+
+    # 6. スキルマップ設定
+    SKILL = "skill"
+    SKILL_MAP = "skill_map"
+    ORGANIZATION_SKILL = "organization_skill"
     MY_TASK_SKILL_MAP = "my_task_skill_map"
     TEAM_DOCK_SKILL_MAP = "team_dock_skill_map"
     SKILL_MAP_MANAGEMENT = "skill_map_management"
     SKILL_MAP_OTHER = "skill_map_other"
 
-    # Define screens for new UI
-    THANKS_MESSAGE_MANAGEMENT = "thanks_message_management"
-    MVP_VOTING_MANAGEMENT = "mvp_voting_management"
-    POINT_MANAGEMENT = "point_management"
-    PAYMENT_MANAGEMENT = "payment_management"
+    # 7. 日報一覧
+    DAILY_REPORT = "daily_report"
+    TEAM_DAILY_REPORT = "team_daily_report"
+
+    # 8. チームドック
+    TEAMDOCK = "teamdock"
+
+    # 9. カレンダー設定
+    CALENDAR_MANAGEMENT = "calendar_management"
+
+    # 10. アンケート
     SURVEY_MANAGEMENT = "survey_management"
+
+    # 11. サンクスメッセージ管理
+    THANKS_MESSAGE_MANAGEMENT = "thanks_message_management"
+
+    # 12. MVP投票管理
+    MVP_VOTING_MANAGEMENT = "mvp_voting_management"
+
+    # 13. コイン設定
+    POINT_MANAGEMENT = "point_management"
+
+    # 14. お支払い管理
+    PAYMENT_MANAGEMENT = "payment_management"
+
+    # Others
+    MY_TASK = "my_task"
+    CALENDAR = "calendar"
+    CHAT = "chat"
+    STATISTIC = "statistic"
+    ACTUAL_DURATION = "actual_duration"
+    SUBMIT_LEVEL = "submit_level"
 
 
 class Actions(EnumChoices):
