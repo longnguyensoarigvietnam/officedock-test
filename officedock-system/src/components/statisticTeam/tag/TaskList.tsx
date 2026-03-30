@@ -121,8 +121,11 @@ const TaskListStatisticTeamTags = ({
   }, [listMemberTeam, orderingOptions]);
 
   const uids = selectedMembers.join(',');
+  const hasSelectedMembers = selectedMembers.length > 0;
   const selectedMember = selectedMembers[0] ?? null;
   const isMultipleMembersSelected = selectedMembers.length > 1;
+  const isCsvRowDisabled = isMultipleMembersSelected || !hasSelectedMembers;
+  const isExcelRowDisabled = !hasSelectedMembers;
   const isAllMembersChecked =
     memberOptions.length > 0 &&
     memberOptions.every((member) => selectedMembers.includes(member.id));
@@ -172,7 +175,7 @@ const TaskListStatisticTeamTags = ({
           ? (selectedOrganizationTeamList?.value as number)
           : undefined,
     },
-    conditions: [listMemberTeam.length !== 0],
+    conditions: [listMemberTeam.length !== 0, hasSelectedMembers],
     onSuccess: (data) => {
       if (data) {
         setTotalDuration(data.totalDuration || DEFAULT_TIME_TEXT);
@@ -212,7 +215,7 @@ const TaskListStatisticTeamTags = ({
           ? (selectedOrganizationTeamList?.value as number)
           : undefined,
     },
-    conditions: [listMemberTeam.length !== 0],
+    conditions: [listMemberTeam.length !== 0, hasSelectedMembers],
 
     onSuccess: (data) => {
       if (data) {
@@ -252,6 +255,17 @@ const TaskListStatisticTeamTags = ({
       isCompare: isCheckCompare && isShowCompare,
     },
   });
+
+  useEffect(() => {
+    if (!hasSelectedMembers) {
+      setTaskList([]);
+      setTaskListCompare([]);
+      setTotalDuration(DEFAULT_TIME_TEXT);
+      setTotalDurationCompare(DEFAULT_TIME_TEXT);
+      setTotalPages(1);
+      setTotalPagesCompare(1);
+    }
+  }, [hasSelectedMembers]);
 
   const optionList = [
     {
@@ -325,12 +339,12 @@ const TaskListStatisticTeamTags = ({
                             placement="left">
                             <p
                               className={`py-[10px] pl-2 border-b-[1px] border-[#EBF1F7] !leading-none ${
-                                isMultipleMembersSelected
+                                isCsvRowDisabled
                                   ? 'cursor-not-allowed text-[#9CA3AF]'
                                   : 'hover:cursor-pointer'
                               }`}
                               onClick={() => {
-                                if (isMultipleMembersSelected) return;
+                                if (isCsvRowDisabled) return;
                                 downloadTaskListFile(ExportType.CSV);
                                 close();
                               }}>
@@ -340,12 +354,12 @@ const TaskListStatisticTeamTags = ({
                         ) : (
                           <p
                             className={`py-[10px] pl-2 border-b-[1px] border-[#EBF1F7] !leading-none ${
-                              isMultipleMembersSelected
+                              isCsvRowDisabled
                                 ? 'cursor-not-allowed text-[#9CA3AF]'
                                 : 'hover:cursor-pointer'
                             }`}
                             onClick={() => {
-                              if (isMultipleMembersSelected) return;
+                              if (isCsvRowDisabled) return;
                               downloadTaskListFile(ExportType.CSV);
                               close();
                             }}>
@@ -353,8 +367,13 @@ const TaskListStatisticTeamTags = ({
                           </p>
                         )}
                         <p
-                          className="hover:cursor-pointer py-[10px] pl-2 !leading-none"
+                          className={`py-[10px] pl-2 !leading-none ${
+                            isExcelRowDisabled
+                              ? 'cursor-not-allowed text-[#9CA3AF]'
+                              : 'hover:cursor-pointer'
+                          }`}
                           onClick={() => {
+                            if (isExcelRowDisabled) return;
                             downloadTaskListFile(ExportType.XLSX);
                             close();
                           }}>
