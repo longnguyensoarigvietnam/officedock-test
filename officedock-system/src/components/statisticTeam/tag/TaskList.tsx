@@ -120,9 +120,15 @@ const TaskListStatisticTeamTags = ({
     }));
   }, [listMemberTeam, orderingOptions]);
 
-  const uids = selectedMembers.join(',');
+  const uids = memberOptions
+    .filter((member) => selectedMembers.includes(member.id))
+    .map((member) => member.id)
+    .join(',');
   const hasSelectedMembers = selectedMembers.length > 0;
-  const selectedMember = selectedMembers[0] ?? null;
+  // When multiple members are selected, pick the first one by UI order
+  const selectedMember =
+    memberOptions.find((member) => selectedMembers.includes(member.id))?.id ??
+    null;
   const isMultipleMembersSelected = selectedMembers.length > 1;
   const isCsvRowDisabled = isMultipleMembersSelected || !hasSelectedMembers;
   const isExcelRowDisabled = !hasSelectedMembers;
