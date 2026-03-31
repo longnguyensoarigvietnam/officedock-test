@@ -135,7 +135,9 @@ export const useTaskListDownload = ({
           ? filter?.singleUserLabel
           : undefined;
 
-        const nonTeamFileName = `${dateText}_タスク一覧集計_${session?.user?.profile.fullName}`;
+        const nonTeamFileName = `${dateText}_タスク一覧集計_${sanitizeFilePart(
+          String(session?.user?.profile.fullName ?? ''),
+        )}`;
 
         const defaultFileName = isTeam
           ? isSingleUserSelected
@@ -153,7 +155,7 @@ export const useTaskListDownload = ({
           response,
           defaultFileName || `${dateText}_タスク一覧集計`,
           exportType,
-          !isTeam,
+          false,
         );
 
         showToast({
