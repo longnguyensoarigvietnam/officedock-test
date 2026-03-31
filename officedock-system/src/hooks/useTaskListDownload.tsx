@@ -17,7 +17,6 @@ import { useToast } from '@providers/ToastProvider';
 import { handleFileDownload } from '@utils/download';
 
 import api from '@base/api';
-import { formatShowDateJapanese } from '@utils/date';
 
 interface FilterProps {
   endDate: string | Date;
@@ -61,10 +60,9 @@ export const useTaskListDownload = ({
     async (exportType: ExportType) => {
       try {
         const now = new Date();
-        const dateText = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(
-          2,
-          '0',
-        )}${String(now.getDate()).padStart(2, '0')}`;
+        const dateText = `${now.getFullYear()}${String(
+          now.getMonth() + 1,
+        ).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
         const sanitizeFilePart = (value: string): string =>
           value.replace(/[\\/:*?"<>|]+/g, '_');
 
@@ -137,7 +135,7 @@ export const useTaskListDownload = ({
           ? filter?.singleUserLabel
           : undefined;
 
-        const nonTeamFileName = `${formatShowDateJapanese(now)}_タスク一覧集計_${session?.user?.profile.fullName}`;
+        const nonTeamFileName = `${dateText}_タスク一覧集計_${session?.user?.profile.fullName}`;
 
         const defaultFileName = isTeam
           ? isSingleUserSelected
