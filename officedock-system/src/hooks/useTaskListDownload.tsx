@@ -17,6 +17,7 @@ import { useToast } from '@providers/ToastProvider';
 import { handleFileDownload } from '@utils/download';
 
 import api from '@base/api';
+import { formatShowDateJapanese } from '@utils/date';
 
 interface FilterProps {
   endDate: string | Date;
@@ -26,6 +27,16 @@ interface FilterProps {
   smallCategoryId?: number | string | null;
   organizationIds?: string;
   organizationId?: string;
+  /**
+   * Display name used only for generating downloaded filename.
+   * (e.g. organization/team label in teamdock UI)
+   */
+  organizationLabel?: string;
+  /**
+   * When teamdock selection is a single user, this is the label used
+   * to generate the downloaded filename (from checkbox selection).
+   */
+  singleUserLabel?: string;
   tagIds?: OptionDropdownType[];
   totalDuration?: string;
   ordering: string;
@@ -49,6 +60,14 @@ export const useTaskListDownload = ({
   const downloadTaskListFile = useCallback(
     async (exportType: ExportType) => {
       try {
+        const now = new Date();
+        const dateText = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(
+          2,
+          '0',
+        )}${String(now.getDate()).padStart(2, '0')}`;
+        const sanitizeFilePart = (value: string): string =>
+          value.replace(/[\\/:*?"<>|]+/g, '_');
+
         const params = new URLSearchParams();
 
         if (filter?.fromDate)
@@ -105,7 +124,39 @@ export const useTaskListDownload = ({
           responseType: 'blob',
         });
 
-        handleFileDownload(response, 'タスク一覧集計', exportType);
+        const selectedUserIdsFromUids = filter?.uids
+          ? filter.uids
+              .split(',')
+              .map((id) => String(id).trim())
+              .filter(Boolean)
+          : [];
+
+        const isSingleUserSelected =
+          isTeam && selectedUserIdsFromUids.length === 1;
+        const singleUserLabel = isSingleUserSelected
+          ? filter?.singleUserLabel
+          : undefined;
+
+        const nonTeamFileName = `${formatShowDateJapanese(now)}_タスク一覧集計_${session?.user?.profile.fullName}`;
+
+        const defaultFileName = isTeam
+          ? isSingleUserSelected
+            ? `${dateText}_タスク一覧集計_${sanitizeFilePart(
+                String(
+                  singleUserLabel ?? filter?.organizationLabel ?? 'チーム',
+                ),
+              )}`
+            : `${dateText}_タスク一覧集計_${sanitizeFilePart(
+                String(filter?.organizationLabel ?? 'チーム'),
+              )}`
+          : nonTeamFileName;
+
+        handleFileDownload(
+          response,
+          defaultFileName || `${dateText}_タスク一覧集計`,
+          exportType,
+          !isTeam,
+        );
 
         showToast({
           description: SUCCESS_EXPORT_MESSAGE,
@@ -119,7 +170,7 @@ export const useTaskListDownload = ({
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [filter, isTeam, is_tag_page, session?.accessToken],
+    [filter, isTeam, is_tag_page, session?.accessToken, session?.user?.profile],
   );
 
   return { downloadTaskListFile };

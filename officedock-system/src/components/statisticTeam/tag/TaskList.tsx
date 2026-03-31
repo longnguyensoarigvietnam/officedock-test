@@ -129,6 +129,9 @@ const TaskListStatisticTeamTags = ({
   const selectedMember =
     memberOptions.find((member) => selectedMembers.includes(member.id))?.id ??
     null;
+  const selectedMemberLabel =
+    memberOptions.find((member) => selectedMembers.includes(member.id))?.label ??
+    '';
   const isMultipleMembersSelected = selectedMembers.length > 1;
   const isCsvRowDisabled = isMultipleMembersSelected || !hasSelectedMembers;
   const isExcelRowDisabled = !hasSelectedMembers;
@@ -258,6 +261,8 @@ const TaskListStatisticTeamTags = ({
       tagIds: orderingOptions?.tag_ids,
       uids: uids,
       user_ids: orderingOptions?.user_ids,
+      organizationLabel: selectedOrganization?.label,
+      singleUserLabel: selectedMemberLabel,
       isCompare: isCheckCompare && isShowCompare,
     },
   });
