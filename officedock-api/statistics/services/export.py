@@ -10,6 +10,7 @@ from openpyxl import load_workbook
 from openpyxl.styles import Alignment, Border, Side
 
 from users.models import User
+from users.serializers import BaseUserProfileSerializer
 from statistics.constants import ExportType, PeriodClassification
 from tags.models import Tag
 from organizations.models import Organization
@@ -216,15 +217,56 @@ class ExportTaskService:
         Export data using a CSV template.
         The template provides the header row and structure.
         """
-
         # Load header template
         with open(self.CSV_TEMPLATE_PATH, "r", encoding="utf-8") as f:
             reader = csv.reader(f)
             rows = list(reader)
 
-        # Build data rows
-        for idx, task in enumerate(self.queryset, 1):
-            rows.append(self._build_row(idx, task))
+        target_users = self.users
+        if not target_users:
+            target_users = [self.user] if self.user else []
+
+        num_users = len(target_users)
+
+        if num_users > 1:
+            user_groups = defaultdict(list)
+            for item in self.queryset:
+                if item.get("user"):
+                    user_groups[item["user"]["id"]].append(item)
+
+            for user in target_users:
+                items = user_groups.get(user.id, [])
+                user_info = BaseUserProfileSerializer(user).data
+                user_name = user_info.get("full_name", "")
+
+                total_duration_user = timedelta(0)
+                for item in items:
+                    td = time_str_to_timedelta(
+                        item["total_duration"]
+                    ) or timedelta(0)
+                    total_duration_user += td * self._matched_tag_multiplier(
+                        item
+                    )
+
+                # Calculate raw percent for each item based on user's total
+                for item in items:
+                    duration_sec = time_str_to_timedelta(
+                        item["total_duration"]
+                    ).total_seconds()
+                    item["percent"] = percentage_calculation_of_duration(
+                        total_duration_user.total_seconds(),
+                        duration_sec,
+                    )
+
+                # Normalize percentages to sum to exactly 100%
+                normalize_percentages(items)
+
+                for idx, task in enumerate(items, 1):
+                    rows.append(self._build_row(idx, task, user_name=user_name))
+        else:
+            # Build data rows
+            for idx, task in enumerate(self.queryset, 1):
+                rows.append(self._build_row(idx, task))
 
         # Write CSV to memory
         output = StringIO()
@@ -242,8 +284,6 @@ class ExportTaskService:
         """
         Export data using an Excel (.xlsx) template.
         """
-        from users.serializers import BaseUserProfileSerializer
-
         target_users = self.users
         if not target_users:
             target_users = [self.user] if self.user else []
