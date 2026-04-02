@@ -18,7 +18,6 @@ import Pagination from '@components/common/Pagination';
 import Checkbox from '@components/common/Checkbox';
 import FormSkeleton from '@components/common/SkeletonLoading/FormSkeleton';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
-import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
 import TableChart from './TableChart';
 import FilterTagTeam from './filter/FilterTagTeam';
 
@@ -132,8 +131,7 @@ const TaskListStatisticTeamTags = ({
   const selectedMemberLabel =
     memberOptions.find((member) => selectedMembers.includes(member.id))?.label ??
     '';
-  const isMultipleMembersSelected = selectedMembers.length > 1;
-  const isCsvRowDisabled = isMultipleMembersSelected || !hasSelectedMembers;
+  const isCsvRowDisabled = !hasSelectedMembers;
   const isExcelRowDisabled = !hasSelectedMembers;
   const isAllMembersChecked =
     memberOptions.length > 0 &&
@@ -342,27 +340,6 @@ const TaskListStatisticTeamTags = ({
                     leaveTo="opacity-0 translate-y-1">
                     <PopoverPanel className="absolute left-0 z-10 min-w-[120px] max-w-[120px] transform">
                       <div className="bg-white !border-[#77858F] border-[1px] text-black rounded-[6px] mt-[6px] p-1 text-sm font-medium">
-                        {isMultipleMembersSelected ? (
-                          <DynamicTooltip
-                            content="複数ユーザー選択時はExcel形式のみ出力可能です"
-                            customPlacement={-330}
-                            customClassName="max-w-[350px]"
-                            placement="left">
-                            <p
-                              className={`py-[10px] pl-2 border-b-[1px] border-[#EBF1F7] !leading-none ${
-                                isCsvRowDisabled
-                                  ? 'cursor-not-allowed text-[#9CA3AF]'
-                                  : 'hover:cursor-pointer'
-                              }`}
-                              onClick={() => {
-                                if (isCsvRowDisabled) return;
-                                downloadTaskListFile(ExportType.CSV);
-                                close();
-                              }}>
-                              CSV
-                            </p>
-                          </DynamicTooltip>
-                        ) : (
                           <p
                             className={`py-[10px] pl-2 border-b-[1px] border-[#EBF1F7] !leading-none ${
                               isCsvRowDisabled
@@ -376,7 +353,6 @@ const TaskListStatisticTeamTags = ({
                             }}>
                             CSV
                           </p>
-                        )}
                         <p
                           className={`py-[10px] pl-2 !leading-none ${
                             isExcelRowDisabled
@@ -717,7 +693,7 @@ const TaskListStatisticTeamTags = ({
                       setPageSize(e.value as number);
                     }
                   }}
-                  className="h-[34px]  
+                  className="h-[34px]
                   !text-sm !py-0 !pl-[7px] !pr-0 !text-[#6B7280] mt-1 !bg-white !border-[#77858F]"
                   classNameOption="[&>li]:!pl-0 [&>li]:!pr-0 [&>li]:!text-sm text-sm [&>li]:!text-black top-[-115px]"
                 />
