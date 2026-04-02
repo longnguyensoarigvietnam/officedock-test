@@ -98,10 +98,14 @@ class ExportTaskService:
 
     def _get_user(self):
         if self.user_id and str(self.user_id).isdigit():
-            return (
-                User.objects.filter(id=self.user_id).first()
-                or self.request.user
-            )
+            user = User.objects.filter(id=self.user_id).first()
+            if user:
+                return user
+
+        # If no user_id, check if we have a single user in self.users
+        if self.users and len(self.users) == 1:
+            return self.users[0]
+
         return self.request.user
 
     def _get_tag_filter_names(self):
@@ -436,7 +440,9 @@ class ExportTaskService:
     # ------------------------------------------------------------------ #
     def _build_row(self, idx, task, user_name=None):
         if user_name is None:
-            user_name = self.full_name
+            user_data = task.get("user") or {}
+            user_name = user_data.get("full_name") or self.full_name
+
         title = task.get("title", "")
         total_duration = task.get("total_duration", "00:00")
         percent = int(task.get("percent", 0)) / 100
