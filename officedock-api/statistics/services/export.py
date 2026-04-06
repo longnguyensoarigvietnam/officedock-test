@@ -238,29 +238,6 @@ class ExportTaskService:
                 items = user_groups.get(user.id, [])
                 user_info = BaseUserProfileSerializer(user).data
                 user_name = user_info.get("full_name", "")
-
-                total_duration_user = timedelta(0)
-                for item in items:
-                    td = time_str_to_timedelta(
-                        item["total_duration"]
-                    ) or timedelta(0)
-                    total_duration_user += td * self._matched_tag_multiplier(
-                        item
-                    )
-
-                # Calculate raw percent for each item based on user's total
-                for item in items:
-                    duration_sec = time_str_to_timedelta(
-                        item["total_duration"]
-                    ).total_seconds()
-                    item["percent"] = percentage_calculation_of_duration(
-                        total_duration_user.total_seconds(),
-                        duration_sec,
-                    )
-
-                # Normalize percentages to sum to exactly 100%
-                normalize_percentages(items)
-
                 for idx, task in enumerate(items, 1):
                     rows.append(self._build_row(idx, task, user_name=user_name))
         else:
