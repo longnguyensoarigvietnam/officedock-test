@@ -10,17 +10,14 @@ import { SYSTEM_PERMISSIONS_MENU } from '@constants/menu';
 
 const MainRootLayout = async ({ children }: { children: React.ReactNode }) => {
   const session = await getServerSession(options);
-  if (session && session.user.permissions.length > 0) {
-    setTimeout(() => {
-      const firstViewPath = SYSTEM_PERMISSIONS_MENU.filter((menu) =>
-        session.user.permissions.includes(menu.requiredPermission),
-      ).map((menu) => menu.href)[0];
-      if (firstViewPath) {
-        redirect(firstViewPath);
-      } else {
-        redirect(pageRouters.DEFAULT.href);
-      }
-    }, 500);
+  const isSessionValid =
+    !!session?.expires && new Date(session.expires).getTime() > Date.now();
+
+  if (isSessionValid && session?.user?.permissions?.length) {
+    const firstViewPath = SYSTEM_PERMISSIONS_MENU.find((menu) =>
+      session.user.permissions.includes(menu.requiredPermission),
+    )?.href;
+    redirect(firstViewPath ?? pageRouters.DEFAULT.href);
   }
   return (
     <main
