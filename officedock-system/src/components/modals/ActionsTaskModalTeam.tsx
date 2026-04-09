@@ -37,7 +37,7 @@ import Switch from '@components/common/Switch';
 import TextAreaLink from '@components/common/TextAreaLink';
 import Drawer from '@components/common/Drawers';
 import DatePickerCustom from '@components/common/DatePicker/DatePickerCustom';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
+import MultiSelectDropdownSearch from '@components/common/MultiSelectDropdown/MultiSelectDropdownSearch';
 
 import {
   DEFAULT_VALUE_TODO_LIST,
@@ -558,7 +558,7 @@ const ActionsTaskModalTeam = ({
     const selectedMediumCategoryOption =
       selectedLargeCategoryOption?.MEDIUM.find(
         (category) => category.MEDIUM.id == watch('categories.MEDIUM.value'),
-      );    
+      );
 
     const initialSmallCategory: OptionDropdownType[] = [];
     if (selectedMediumCategoryOption) {
@@ -731,6 +731,7 @@ const ActionsTaskModalTeam = ({
         data?.tags?.map((tag) => ({
           label: tag.name,
           value: tag.id,
+          furigana: tag.furigana,
         })) || [];
 
       setDataOptionsTagIds(listTag);
@@ -1501,7 +1502,8 @@ const ActionsTaskModalTeam = ({
             <div className="w-full max-w-[518px]">
               <div className="flex gap-2 max-w-[518px]">
                 <div className="w-[463px]">
-                  <MultiSelectDropdown
+                  <MultiSelectDropdownSearch
+                    searchOption
                     className="!h-[34px]"
                     labelClass="!min-h-0 !text-sm"
                     valueClassName="!border-[1px] !border-[#77858F] !py-0 flex items-center"

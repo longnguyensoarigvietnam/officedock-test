@@ -14,7 +14,6 @@ import { AxiosError } from 'axios';
 import { useMutation } from 'react-query';
 
 import DatePickerCustom from '@components/common/DatePicker/DatePickerCustom';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
 import Button from '@components/common/Button';
 import Dropdown from '@components/common/Dropdown';
@@ -25,6 +24,7 @@ import ImageRound from '@components/common/ImageRound';
 import ErrorMessage from '@components/common/ErrorMessage';
 import Checkbox from '@components/common/Checkbox';
 import Drawer from '@components/common/Drawers';
+import MultiSelectDropdownSearch from '@components/common/MultiSelectDropdown/MultiSelectDropdownSearch';
 
 import { CreationDataCommon, OptionDropdownType } from '@interfaces/common';
 import {
@@ -191,13 +191,13 @@ const ActionsEventModal = ({
       if (data.organizationUsers) {
         eventOrganizations = data.organizationUsers
           ? data.organizationUsers.map((org) => ({
-            id: `${EventParticipantType.ORGANIZATION}-${org.id}`,
-            fullName: org.name,
-            type: EventParticipantType.ORGANIZATION,
-            userIds: org.users ? org.users.map((user) => user.id) : [],
-            color: org.iconColor || '#228CDB',
-            avatarUrl: org.icon || '',
-          }))
+              id: `${EventParticipantType.ORGANIZATION}-${org.id}`,
+              fullName: org.name,
+              type: EventParticipantType.ORGANIZATION,
+              userIds: org.users ? org.users.map((user) => user.id) : [],
+              color: org.iconColor || '#228CDB',
+              avatarUrl: org.icon || '',
+            }))
           : [];
         setDataOptionsOrganizations([
           ...data.organizationUsers.map((org) => ({
@@ -230,6 +230,7 @@ const ActionsEventModal = ({
           data?.tags.map((org) => ({
             label: org.name as string,
             value: org.id || '',
+            furigana: org.furigana,
           })),
         );
       }
@@ -344,11 +345,11 @@ const ActionsEventModal = ({
         newSelectedOrganizations = dataEvent.selectOrganizations || [];
         value.tagIds = dataEvent.tagIds
           ? dataEvent.tagIds.map((tag) => {
-            return {
-              value: tag.value,
-              label: tag.label,
-            };
-          })
+              return {
+                value: tag.value,
+                label: tag.label,
+              };
+            })
           : [];
       } else {
         if (dataEvent.participants) {
@@ -359,11 +360,11 @@ const ActionsEventModal = ({
         }
         value.tagIds = dataEvent.tags
           ? dataEvent.tags.map((tag) => {
-            return {
-              value: String(tag.id),
-              label: String(tag.name),
-            };
-          })
+              return {
+                value: String(tag.id),
+                label: String(tag.name),
+              };
+            })
           : [];
       }
       let newLargeCategory: OptionDropdownType = { label: '', value: '' };
@@ -403,9 +404,9 @@ const ActionsEventModal = ({
           ? backToEditing
             ? dataEvent.location
             : {
-              label: (dataEvent.location as LocationEventType).name,
-              value: (dataEvent.location as LocationEventType).id as number,
-            }
+                label: (dataEvent.location as LocationEventType).name,
+                value: (dataEvent.location as LocationEventType).id as number,
+              }
           : { label: '', value: '' }),
         (value.type = {
           label: backToEditing
@@ -417,17 +418,17 @@ const ActionsEventModal = ({
         }),
         (value.startDate = dataEvent.startDate
           ? new Date(
-            convertDateToStartDate(
-              new Date(`${dataEvent.startDate}`).toISOString(),
-            ),
-          )
+              convertDateToStartDate(
+                new Date(`${dataEvent.startDate}`).toISOString(),
+              ),
+            )
           : null),
         (value.endDate = dataEvent.endDate
           ? new Date(
-            convertDateToStartDate(
-              new Date(`${dataEvent.endDate}`).toISOString(),
-            ),
-          )
+              convertDateToStartDate(
+                new Date(`${dataEvent.endDate}`).toISOString(),
+              ),
+            )
           : null),
         (value.startTime = backToEditing
           ? dataEvent.startTime
@@ -442,71 +443,71 @@ const ActionsEventModal = ({
       value.repeatInterval = dataEvent.repeatInterval
         ? typeof dataEvent.repeatInterval == 'object'
           ? {
-            label: `${dataEvent.repeatInterval.label}`,
-            value: dataEvent.repeatInterval.value,
-          }
+              label: `${dataEvent.repeatInterval.label}`,
+              value: dataEvent.repeatInterval.value,
+            }
           : {
-            label: `${dataEvent.repeatInterval}`,
-            value: dataEvent.repeatInterval as number,
-          }
+              label: `${dataEvent.repeatInterval}`,
+              value: dataEvent.repeatInterval as number,
+            }
         : undefined;
       value.repeatType = dataEvent.repeatType
         ? typeof dataEvent.repeatType == 'object'
           ? {
-            label:
-              TASK_REPETITIVE_OPTIONS.find(
-                (option) =>
-                  option.value ==
-                  (dataEvent.repeatType as OptionDropdownType).value,
-              )?.label || '',
-            value: dataEvent.repeatType.value,
-          }
+              label:
+                TASK_REPETITIVE_OPTIONS.find(
+                  (option) =>
+                    option.value ==
+                    (dataEvent.repeatType as OptionDropdownType).value,
+                )?.label || '',
+              value: dataEvent.repeatType.value,
+            }
           : {
-            label:
-              TASK_REPETITIVE_OPTIONS.find(
-                (option) =>
-                  option.value == (dataEvent.repeatType as unknown as string),
-              )?.label || '',
-            value: dataEvent.repeatType,
-          }
+              label:
+                TASK_REPETITIVE_OPTIONS.find(
+                  (option) =>
+                    option.value == (dataEvent.repeatType as unknown as string),
+                )?.label || '',
+              value: dataEvent.repeatType,
+            }
         : undefined;
       value.month = dataEvent.month
         ? typeof dataEvent.month == 'object'
           ? {
-            label: `${dataEvent.month.label}`,
-            value: dataEvent.month.value,
-          }
+              label: `${dataEvent.month.label}`,
+              value: dataEvent.month.value,
+            }
           : {
-            label: `${dataEvent.month}`,
-            value: dataEvent.month,
-          }
+              label: `${dataEvent.month}`,
+              value: dataEvent.month,
+            }
         : undefined;
 
       value.monthDay = dataEvent.monthDay
         ? typeof dataEvent.monthDay == 'object'
           ? {
-            label: `${dataEvent.monthDay.label}`,
-            value: dataEvent.monthDay.value,
-          }
+              label: `${dataEvent.monthDay.label}`,
+              value: dataEvent.monthDay.value,
+            }
           : {
-            label: `${dataEvent.monthDay}`,
-            value: dataEvent.monthDay,
-          }
+              label: `${dataEvent.monthDay}`,
+              value: dataEvent.monthDay,
+            }
         : undefined;
       value.weekDay =
         typeof dataEvent.weekDay == 'object'
           ? dataEvent.weekDay?.value != undefined &&
             dataEvent.weekDay?.value != null
             ? {
-              label: `${dataEvent.weekDay.label}`,
-              value: dataEvent.weekDay.value,
-            }
+                label: `${dataEvent.weekDay.label}`,
+                value: dataEvent.weekDay.value,
+              }
             : undefined
           : dataEvent.weekDay != undefined && dataEvent.weekDay != null
             ? {
-              label: `${dataEvent.weekDay}`,
-              value: dataEvent.weekDay,
-            }
+                label: `${dataEvent.weekDay}`,
+                value: dataEvent.weekDay,
+              }
             : undefined;
 
       if (dataEvent.startDate) {
@@ -515,24 +516,24 @@ const ActionsEventModal = ({
     } else {
       (value.startDate = defaultStartDate
         ? new Date(
-          convertDateToStartDate(new Date(defaultStartDate).toISOString()),
-        )
+            convertDateToStartDate(new Date(defaultStartDate).toISOString()),
+          )
         : null),
         (value.endDate = defaultStartDate
           ? new Date(
-            convertDateToStartDate(addHoursToDate(`${defaultStartDate}`)),
-          )
+              convertDateToStartDate(addHoursToDate(`${defaultStartDate}`)),
+            )
           : null),
         (value.startTime =
           (calendarView == ViewOptions.WEEK ||
             calendarView == ViewOptions.DAY) &&
-            defaultStartDate
+          defaultStartDate
             ? convertToTimeString(`${defaultStartDate}`)
             : null),
         (value.endTime =
           (calendarView == ViewOptions.WEEK ||
             calendarView == ViewOptions.DAY) &&
-            defaultStartDate
+          defaultStartDate
             ? convertToTimeString(`${addHoursToDate(`${defaultStartDate}`)}`)
             : null);
       setMinDatePlan(defaultStartDate);
@@ -555,10 +556,10 @@ const ActionsEventModal = ({
     const isMissingRequiredFields = watch('isAllDay')
       ? !watch('startDate') || !watch('endDate') || !watch('location.value')
       : !watch('startDate') ||
-      !watch('endDate') ||
-      !watch('startTime') ||
-      !watch('endTime') ||
-      !watch('location.value');
+        !watch('endDate') ||
+        !watch('startTime') ||
+        !watch('endTime') ||
+        !watch('location.value');
     if (isMissingRequiredFields) return;
     let planStartDate = '';
     let planEndDate = '';
@@ -1183,7 +1184,7 @@ const ActionsEventModal = ({
             <div className="flex flex-col w-full">
               {watch('repeatType') &&
                 (watch('repeatType') as OptionDropdownType)?.label ==
-                TaskRepetitiveType.ONCE && (
+                  TaskRepetitiveType.ONCE && (
                   <div className="flex">
                     <div className="w-full max-w-[424px] flex gap-1 items-start">
                       <div
@@ -1385,15 +1386,15 @@ const ActionsEventModal = ({
                                   validate: (value) => {
                                     if (
                                       watch('endDate')?.getTime() ===
-                                      watch('startDate')?.getTime() &&
+                                        watch('startDate')?.getTime() &&
                                       watch('endDate') !== null
                                     ) {
                                       return (
                                         (value &&
                                           convertToMinutes(value) >
-                                          convertToMinutes(
-                                            watch('startTime') as string,
-                                          )) ||
+                                            convertToMinutes(
+                                              watch('startTime') as string,
+                                            )) ||
                                         END_DATE_WRONG_SELECTED
                                       );
                                     }
@@ -1435,15 +1436,15 @@ const ActionsEventModal = ({
 
                                     if (
                                       watch('endDate')?.getTime() ===
-                                      watch('startDate')?.getTime() &&
+                                        watch('startDate')?.getTime() &&
                                       watch('endDate') !== null
                                     ) {
                                       if (
                                         e.target.value &&
                                         convertToMinutes(e.target.value) >
-                                        convertToMinutes(
-                                          watch('startTime') as string,
-                                        )
+                                          convertToMinutes(
+                                            watch('startTime') as string,
+                                          )
                                       ) {
                                         setError('endTime', {
                                           message: '',
@@ -1544,12 +1545,13 @@ const ActionsEventModal = ({
                 )}
 
               <div
-                className={`flex gap-2 items-center !w-full ${(watch('repeatType') as OptionDropdownType)?.label ==
-                  TaskRepetitiveType.ONCE && 'mt-4'
-                  }`}>
+                className={`flex gap-2 items-center !w-full ${
+                  (watch('repeatType') as OptionDropdownType)?.label ==
+                    TaskRepetitiveType.ONCE && 'mt-4'
+                }`}>
                 {watch('repeatType') &&
                   (watch('repeatType') as OptionDropdownType)?.label ==
-                  TaskRepetitiveType.ONCE && (
+                    TaskRepetitiveType.ONCE && (
                     <div className="!w-[68px] mr-[22px]">
                       <Checkbox
                         label="終日"
@@ -1620,7 +1622,7 @@ const ActionsEventModal = ({
                       </div>
                       {watch('repeatType') &&
                         (watch('repeatType') as OptionDropdownType)?.label ==
-                        TaskRepetitiveType.DAILY && (
+                          TaskRepetitiveType.DAILY && (
                           <div className="flex gap-2 z-[30] items-center">
                             <Controller
                               control={control}
@@ -1665,7 +1667,7 @@ const ActionsEventModal = ({
                         )}
                       {watch('repeatType') &&
                         (watch('repeatType') as OptionDropdownType)?.label ==
-                        TaskRepetitiveType.WEEKLY && (
+                          TaskRepetitiveType.WEEKLY && (
                           <div className="flex gap-2 z-[30] items-center">
                             <Controller
                               control={control}
@@ -1685,17 +1687,17 @@ const ActionsEventModal = ({
                                   selectedOption={
                                     (watch('weekDay') as OptionDropdownType)
                                       ?.value != null &&
-                                      (watch('weekDay') as OptionDropdownType)
-                                        ?.value != undefined
+                                    (watch('weekDay') as OptionDropdownType)
+                                      ?.value != undefined
                                       ? WEEKDAY_OPTIONS.find(
-                                        (element) =>
-                                          element.value ===
-                                          (
-                                            watch(
-                                              'weekDay',
-                                            ) as OptionDropdownType
-                                          )?.value,
-                                      )
+                                          (element) =>
+                                            element.value ===
+                                            (
+                                              watch(
+                                                'weekDay',
+                                              ) as OptionDropdownType
+                                            )?.value,
+                                        )
                                       : undefined
                                   }
                                   onChange={(e) => {
@@ -1748,7 +1750,7 @@ const ActionsEventModal = ({
                         )}
                       {watch('repeatType') &&
                         (watch('repeatType') as OptionDropdownType)?.label ==
-                        TaskRepetitiveType.MONTHLY && (
+                          TaskRepetitiveType.MONTHLY && (
                           <div className="flex gap-2 z-[30] items-center">
                             <Controller
                               control={control}
@@ -1821,7 +1823,7 @@ const ActionsEventModal = ({
                         )}
                       {watch('repeatType') &&
                         (watch('repeatType') as OptionDropdownType)?.label ==
-                        TaskRepetitiveType.YEARLY && (
+                          TaskRepetitiveType.YEARLY && (
                           <div className="flex gap-2 z-[30] items-center">
                             <Controller
                               control={control}
@@ -1931,119 +1933,119 @@ const ActionsEventModal = ({
               {!(
                 watch('repeatType') &&
                 (watch('repeatType') as OptionDropdownType)?.label ==
-                TaskRepetitiveType.ONCE
+                  TaskRepetitiveType.ONCE
               ) && (
-                  <div className="!w-full flex justify-between mt-2">
-                    <div className="flex gap-2">
-                      <div className="z-[20] relative">
-                        <div className="w-[72px]">
-                          <Input
-                            isShowClockIcon={true}
-                            autoFocus={false}
-                            disabled={isDisabled}
-                            type="text"
-                            options={optionTimeInput}
-                            valueInput={watch(`startTime`)}
-                            register={register('startTime', {
-                              required: true,
-                              onChange: (e) => {
-                                handleChange(e, 'startTime');
-                              },
-                              onBlur: () => {
-                                if (time) {
-                                  setValue('startTime', formatTimeInput(time), {
-                                    shouldDirty: true,
-                                  });
-                                }
-                                setTime('');
-                              },
-                            })}
-                            className={`h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] ${errors.startTime ? '!border-error' : '!border-[#77858F]'} rounded-md`}
-                            onChangeDropdown={(e) => {
-                              setValue('startTime', e.label, {
-                                shouldDirty: true,
-                              });
-                            }}
-                          />
-                        </div>
-
-                        {errors.startTime?.message ? (
-                          <ErrorMessage
-                            error={errors.startTime?.message}
-                            className="mt-[5px] mb-[5px] text-xs"
-                          />
-                        ) : (
-                          <></>
-                        )}
+                <div className="!w-full flex justify-between mt-2">
+                  <div className="flex gap-2">
+                    <div className="z-[20] relative">
+                      <div className="w-[72px]">
+                        <Input
+                          isShowClockIcon={true}
+                          autoFocus={false}
+                          disabled={isDisabled}
+                          type="text"
+                          options={optionTimeInput}
+                          valueInput={watch(`startTime`)}
+                          register={register('startTime', {
+                            required: true,
+                            onChange: (e) => {
+                              handleChange(e, 'startTime');
+                            },
+                            onBlur: () => {
+                              if (time) {
+                                setValue('startTime', formatTimeInput(time), {
+                                  shouldDirty: true,
+                                });
+                              }
+                              setTime('');
+                            },
+                          })}
+                          className={`h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] ${errors.startTime ? '!border-error' : '!border-[#77858F]'} rounded-md`}
+                          onChangeDropdown={(e) => {
+                            setValue('startTime', e.label, {
+                              shouldDirty: true,
+                            });
+                          }}
+                        />
                       </div>
-                      <div className="h-[34px] flex items-center">〜</div>
-                      <div className="z-[20] relative">
-                        <div className="w-[72px]">
-                          <Input
-                            isShowClockIcon={true}
-                            autoFocus={false}
-                            disabled={isDisabled}
-                            type="text"
-                            options={optionTimeInput}
-                            valueInput={watch(`endTime`)}
-                            register={register('endTime', {
-                              required: true,
-                              onChange: (e) => {
-                                handleChange(e, 'endTime');
-                              },
-                              onBlur: () => {
-                                if (time) {
-                                  setValue('endTime', formatTimeInput(time), {
-                                    shouldDirty: true,
-                                  });
-                                }
-                                setTime('');
-                              },
-                              validate: (value) => {
-                                if (!watch('repeatType')) return true;
-                                return (
-                                  convertToMinutes(String(value)) >
-                                  convertToMinutes(`${watch('startTime')}`) ||
-                                  END_DATE_WRONG_SELECTED
-                                );
-                              },
-                            })}
-                            className={`h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] ${errors.endTime?.message ? '!border-error' : '!border-[#77858F]'} rounded-md`}
-                            onChangeDropdown={(e) => {
-                              setValue('endTime', e.label, { shouldDirty: true });
-                            }}
-                          />
-                        </div>
 
-                        {errors.endTime?.message ? (
-                          <ErrorMessage
-                            error={errors.endTime?.message}
-                            className="mt-[5px] mb-[5px] text-xs"
-                          />
-                        ) : (
-                          <></>
-                        )}
-                      </div>
+                      {errors.startTime?.message ? (
+                        <ErrorMessage
+                          error={errors.startTime?.message}
+                          className="mt-[5px] mb-[5px] text-xs"
+                        />
+                      ) : (
+                        <></>
+                      )}
                     </div>
+                    <div className="h-[34px] flex items-center">〜</div>
+                    <div className="z-[20] relative">
+                      <div className="w-[72px]">
+                        <Input
+                          isShowClockIcon={true}
+                          autoFocus={false}
+                          disabled={isDisabled}
+                          type="text"
+                          options={optionTimeInput}
+                          valueInput={watch(`endTime`)}
+                          register={register('endTime', {
+                            required: true,
+                            onChange: (e) => {
+                              handleChange(e, 'endTime');
+                            },
+                            onBlur: () => {
+                              if (time) {
+                                setValue('endTime', formatTimeInput(time), {
+                                  shouldDirty: true,
+                                });
+                              }
+                              setTime('');
+                            },
+                            validate: (value) => {
+                              if (!watch('repeatType')) return true;
+                              return (
+                                convertToMinutes(String(value)) >
+                                  convertToMinutes(`${watch('startTime')}`) ||
+                                END_DATE_WRONG_SELECTED
+                              );
+                            },
+                          })}
+                          className={`h-[34px] !text-xs !pr-1 !pl-7 !border-[1px] ${errors.endTime?.message ? '!border-error' : '!border-[#77858F]'} rounded-md`}
+                          onChangeDropdown={(e) => {
+                            setValue('endTime', e.label, { shouldDirty: true });
+                          }}
+                        />
+                      </div>
 
-                    <div className="mb-[2.5px] w-12">
-                      {!isDisabled && (
-                        <Button
-                          sz="sm"
-                          variant="outline"
-                          className="w-12 h-[34px] hover:opacity-70 !border-none !px-0 !rounded-md text-[13px] !bg-[#EBF1F7]"
-                          type="button"
-                          name="Remove TagId"
-                          onClick={() => {
-                            setValue('startTime', '', { shouldDirty: true });
-                            setValue('endTime', '', { shouldDirty: true });
-                          }}>
-                          削除
-                        </Button>
+                      {errors.endTime?.message ? (
+                        <ErrorMessage
+                          error={errors.endTime?.message}
+                          className="mt-[5px] mb-[5px] text-xs"
+                        />
+                      ) : (
+                        <></>
                       )}
                     </div>
                   </div>
-                )}
+
+                  <div className="mb-[2.5px] w-12">
+                    {!isDisabled && (
+                      <Button
+                        sz="sm"
+                        variant="outline"
+                        className="w-12 h-[34px] hover:opacity-70 !border-none !px-0 !rounded-md text-[13px] !bg-[#EBF1F7]"
+                        type="button"
+                        name="Remove TagId"
+                        onClick={() => {
+                          setValue('startTime', '', { shouldDirty: true });
+                          setValue('endTime', '', { shouldDirty: true });
+                        }}>
+                        削除
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           {/* Event category */}
@@ -2068,10 +2070,10 @@ const ActionsEventModal = ({
                       selectedOption={
                         (value as OptionDropdownType)?.value
                           ? [...dataOptionsCategoryLarge].find(
-                            (element) =>
-                              element.value ==
-                              (value as OptionDropdownType)?.value,
-                          ) || value
+                              (element) =>
+                                element.value ==
+                                (value as OptionDropdownType)?.value,
+                            ) || value
                           : undefined
                       }
                       placeholder={'大カテゴリ'}
@@ -2104,10 +2106,10 @@ const ActionsEventModal = ({
                             selectedOption={
                               (value as OptionDropdownType)?.value
                                 ? [...dataOptionsCategoryMedium].find(
-                                  (element) =>
-                                    element.value ==
-                                    (value as OptionDropdownType)?.value,
-                                ) || value
+                                    (element) =>
+                                      element.value ==
+                                      (value as OptionDropdownType)?.value,
+                                  ) || value
                                 : undefined
                             }
                             placeholder={'中カテゴリ'}
@@ -2130,8 +2132,9 @@ const ActionsEventModal = ({
               <div className="w-fit font-medium text-[14px]">タグ</div>
               <div className="w-full max-w-[504px]">
                 <div className="w-[504px]">
-                  <MultiSelectDropdown
+                  <MultiSelectDropdownSearch
                     className="!h-[34px]"
+                    searchOption
                     disabled={isDisabled}
                     valueClassName="!border-[1px] !border-[#77858F]"
                     options={dataOptionsTags}
@@ -2166,9 +2169,10 @@ const ActionsEventModal = ({
               </div>
             </div>
             <div
-              className={`flex flex-wrap gap-[10px] ml-[114px] ${watch('tagIds')?.filter((tag) => !!tag.value)?.length &&
+              className={`flex flex-wrap gap-[10px] ml-[114px] ${
+                watch('tagIds')?.filter((tag) => !!tag.value)?.length &&
                 'mt-[14px]'
-                }`}>
+              }`}>
               {watch('tagIds')
                 ?.filter((tag) => !!tag.value)
                 ?.map((tag) => {
@@ -2289,10 +2293,10 @@ const ActionsEventModal = ({
                       .toLowerCase()
                       .includes(searchName.toLowerCase()),
                   ).length === 0 && (
-                      <p className="text-gray-500 text-center text-sm">
-                        {NO_OPTIONS}
-                      </p>
-                    )}
+                    <p className="text-gray-500 text-center text-sm">
+                      {NO_OPTIONS}
+                    </p>
+                  )}
                   <div className="flex flex-col">
                     {dataOptionsParticipants
                       ?.filter((member) =>
@@ -2312,9 +2316,10 @@ const ActionsEventModal = ({
                       .map((member) => {
                         return (
                           <div
-                            className={`flex items-center px-5 py-2 hover:bg-[#EBF1F7] hover:cursor-pointer ${checkIsParticipantSelected(member) &&
+                            className={`flex items-center px-5 py-2 hover:bg-[#EBF1F7] hover:cursor-pointer ${
+                              checkIsParticipantSelected(member) &&
                               'bg-[#EBF1F7]'
-                              }`}
+                            }`}
                             style={{
                               order: checkIsParticipantSelected(member) ? 0 : 1, // Sort checked user/org first
                             }}
@@ -2334,21 +2339,21 @@ const ActionsEventModal = ({
                             )}
                             {member.type ==
                               EventParticipantType.ORGANIZATION && (
-                                <>
-                                  {member.avatarUrl ? (
-                                    <CustomUserAvatar
-                                      avatarUrl={member?.avatarUrl || ''}
-                                      avatarColor={member?.color || ''}
-                                      size={30}
-                                    />
-                                  ) : (
-                                    <GroupIconWithDynamicColor
-                                      color={member.color || '#228CDB'}
-                                      size={30}
-                                    />
-                                  )}
-                                </>
-                              )}
+                              <>
+                                {member.avatarUrl ? (
+                                  <CustomUserAvatar
+                                    avatarUrl={member?.avatarUrl || ''}
+                                    avatarColor={member?.color || ''}
+                                    size={30}
+                                  />
+                                ) : (
+                                  <GroupIconWithDynamicColor
+                                    color={member.color || '#228CDB'}
+                                    size={30}
+                                  />
+                                )}
+                              </>
+                            )}
                             <p
                               className={`text-[15px] truncate max-w-[385px] text-black leading-normal ml-[10px]`}>
                               {member.fullName}
@@ -2386,7 +2391,7 @@ const ActionsEventModal = ({
                         .filter(
                           (participant) =>
                             participant.type ==
-                            EventParticipantType.ORGANIZATION &&
+                              EventParticipantType.ORGANIZATION &&
                             participant.userIds?.includes(
                               Number(session?.user.id),
                             ),

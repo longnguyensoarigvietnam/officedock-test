@@ -360,6 +360,7 @@ const StatisticTagBoard = () => {
           const optionsTagList = mainItem.tags.map((item) => ({
             label: item.name,
             value: item.id,
+            furigana: item.furigana,
           }));
           if (mainItem.statisticCategories.length > 0) {
             setSelectedLarge({
@@ -462,6 +463,7 @@ const StatisticTagBoard = () => {
       const optionsTagList = organization.tags.map((item) => ({
         label: item.name,
         value: item.id,
+        furigana: item.furigana,
       }));
       setCurrentPage(1);
       if (largeCategories.length > 0) {

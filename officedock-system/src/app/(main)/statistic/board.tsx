@@ -379,6 +379,7 @@ const StatisticBoard = () => {
           const optionsTagList = mainItem.tags.map((item) => ({
             label: item.name,
             value: item.id,
+            furigana: item.furigana,
           }));
           setTagsOptions(optionsTagList);
           return {
@@ -450,6 +451,7 @@ const StatisticBoard = () => {
       const optionsTagList = organization.tags.map((item) => ({
         label: item.name,
         value: item.id,
+        furigana: item.furigana,
       }));
 
       setCurrentPage(1);
@@ -503,6 +505,7 @@ const StatisticBoard = () => {
       const optionsTagList = organization.tags.map((item) => ({
         label: item.name,
         value: item.id,
+        furigana: item.furigana,
       }));
       setCurrentPage(1);
 

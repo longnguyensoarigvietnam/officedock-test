@@ -5,7 +5,6 @@ import Image from 'next/image';
 import Checkbox from '@components/common/Checkbox';
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 
 import { Team } from '@interfaces/task';
 import { OptionDropdownType } from '@interfaces/common';
@@ -14,6 +13,7 @@ import { UseMutateFunction } from 'react-query';
 import { AxiosError } from 'axios';
 import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
 import RowSkeleton from '@components/skeleton/RowSkeleton';
+import MultiSelectDropdownSearch from '@components/common/MultiSelectDropdown/MultiSelectDropdownSearch';
 
 type ActionTaskFilterProp = {
   isLoadingDataTask?: boolean;
@@ -387,7 +387,7 @@ const ActionFilterTask = ({
 
           {/* TagIds */}
           <div>
-            <MultiSelectDropdown
+            <MultiSelectDropdownSearch
               className="!h-[34px] !rounded-md"
               labelClass="!min-h-0 !text-sm font-medium"
               valueClassName="!border-[1px] !border-[#77858F] !py-0 flex items-center !rounded-md"
@@ -395,6 +395,7 @@ const ActionFilterTask = ({
               labelOptionClass="break-words max-w-[300px] line-clamp-2 !text-sm"
               options={dataOptionsTagIds}
               selectedOptions={watch('tagIds') ?? []}
+              searchOption
               customLabel="タグ"
               onChange={(selected) => {
                 let updatedTagIds = [];

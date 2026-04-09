@@ -25,8 +25,10 @@ import {
 import { formatShowDateJapanese } from '@utils/date';
 import {
   hasPermissionInArray,
+  isFuriganaOnly,
   showModalHeaderBackgroundColorByTime,
 } from '@utils';
+import ErrorMessage from '@components/common/ErrorMessage';
 
 export type ActionsTagModalProps = {
   open: boolean;
@@ -58,6 +60,7 @@ const ActionsTagModal = ({
     getValues,
     handleSubmit,
     reset,
+    clearErrors,
     formState: { errors, isDirty },
   } = useForm<TagFormData>({
     mode: 'onSubmit',
@@ -70,6 +73,7 @@ const ActionsTagModal = ({
     };
     if (dataTag) {
       (value.name = `${dataTag.name}`),
+        (value.furigana = `${dataTag.furigana || ''}`),
         (value.organizations = dataTag.organizations
           ? dataTag.organizations.map((org) => {
               return {
@@ -237,6 +241,34 @@ const ActionsTagModal = ({
           </div>
         </header>
         <div className="font-normal flex flex-col gap-[35px]">
+          <div className="flex gap-[10px]">
+            <div className="w-full max-w-[110px] text-[14px] mt-1 font-medium">
+              ふりがな
+            </div>
+            <div className="flex flex-col w-full h-fit">
+              <Input
+                name="furigana"
+                placeholder="ふりがな"
+                register={register('furigana', {
+                  maxLength: {
+                    value: 255,
+                    message: ERROR_LONG_FIELD_MESSAGE,
+                  },
+                  validate: (value) =>
+                    isFuriganaOnly(value) ||
+                    'ふりがなと半角スペースのみで入力してください。',
+                  onChange: () => {
+                    clearErrors('furigana');
+                  },
+                })}
+                className={`h-[34px] !border-[#77858F] !font-normal !w-full rounded-md !text-sm !px-[10px] !py-0 ${errors?.furigana?.message ? '!border-error' : '!border-[#77858F]'}`}
+              />
+              <ErrorMessage
+                error={errors?.furigana?.message}
+                className="mt-[5px] mb-[5px] text-xs"
+              />
+            </div>
+          </div>
           <div className="flex gap-2 items-center">
             <p className="!w-[112px] font-medium text-[14px] whitespace-nowrap">
               表示するチーム

@@ -3,6 +3,7 @@ import React, { useState, useContext, useEffect, useRef } from 'react';
 import Button from '@components/common/Button';
 import ImageRound from '@components/common/ImageRound';
 import Checkbox from '@components/common/Checkbox';
+import InputSearch from '@components/common/InputSearch';
 
 import { StatisticTeamTagsStateContext } from '@providers/StatisticTeamProviderTag';
 import { OptionDropdownType } from '@interfaces/common';
@@ -36,6 +37,7 @@ const FilterDataTeamModal = ({ open, close }: Props) => {
   const [selectedOption, setSelectedOption] = useState<OptionDropdownType[]>(
     [],
   );
+  const [searchInput, setSearchInput] = useState('');
   const modalRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -47,6 +49,22 @@ const FilterDataTeamModal = ({ open, close }: Props) => {
       setSelectedOption([]);
     }
   }, [orderingOptions, orderingPreviewOptions, open]);
+
+  useEffect(() => {
+    if (!open) return;
+    setSearchInput('');
+  }, [open]);
+
+  const normalizedSearchInput = searchInput.toLowerCase().trim();
+  const filteredTagsOptions = tagsOptions.filter((option) => {
+    if (!normalizedSearchInput) return true;
+    const label = option.label?.toLowerCase() || '';
+    const furigana = option.furigana?.toLowerCase() || '';
+    return (
+      label.includes(normalizedSearchInput) ||
+      furigana.includes(normalizedSearchInput)
+    );
+  });
 
   const handleChangeTag = (selected: OptionDropdownType) => {
     const foundItemIndex = selectedOption.findIndex(
@@ -158,11 +176,24 @@ const FilterDataTeamModal = ({ open, close }: Props) => {
           </div>
         </div>
       </div>
+      <div className="px-5 mt-2">
+        <InputSearch
+          value={searchInput}
+          placeholder="検索"
+          onChange={(e) => setSearchInput(e.target.value)}
+          inputClassName="!h-9 !rounded-md"
+          onKeyDown={(e) => {
+            if (e.key === ' ') {
+              e.stopPropagation();
+            }
+          }}
+        />
+      </div>
       <div className="px-5">
         <div className="mt-[10px] flex max-h-64 overflow-y-auto   px-1 border border-[#77858F] rounded-md  flex-col  ">
           {/*  tag */}
-          {tagsOptions.length ? (
-            tagsOptions.map((option) => (
+          {filteredTagsOptions.length ? (
+            filteredTagsOptions.map((option) => (
               <>
                 <div
                   key={option.value}

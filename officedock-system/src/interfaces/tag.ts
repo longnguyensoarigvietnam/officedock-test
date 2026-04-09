@@ -4,6 +4,7 @@ import { Organizations } from './organization';
 export interface Tags {
   id?: number;
   name?: string;
+  furigana?: string;
   organizations?: Organizations[];
   deletedAt?: Date | string | null;
   createdAt?: Date | string | null;
@@ -28,12 +29,14 @@ export interface TagId {
 }
 export interface TagRequest {
   name: string;
+  furigana?: string;
   organizationIds: number[];
   calendarOrganizationCheck: boolean;
 }
 
 export interface TagFormData {
   name: string;
+  furigana?: string;
   organizations: OptionDropdownType[];
   isHidden?: boolean;
   calendarOrganizationCheck: boolean;
@@ -41,5 +44,6 @@ export interface TagFormData {
 export interface TagCreationStatisticType {
   id: number;
   name: string;
+  furigana?: string | null;
   deletedAt?: string | null;
 }

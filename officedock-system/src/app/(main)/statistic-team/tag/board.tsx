@@ -124,6 +124,7 @@ const StatisticTeamTagBoard = () => {
           const optionsTagList = mainItem.tags.map((item) => ({
             label: item.name,
             value: item.id,
+            furigana: item.furigana,
           }));
 
           if (mainItem.statisticCategories.length > 0) {
@@ -478,6 +479,7 @@ const StatisticTeamTagBoard = () => {
       const optionsTagList = organization.tags.map((item) => ({
         label: item.name,
         value: item.id,
+        furigana: item.furigana,
       }));
       setTagsOptions(optionsTagList);
       setListMemberTeam(

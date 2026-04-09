@@ -24,7 +24,6 @@ import Input from '@components/common/Input';
 import TextAreaLink from '@components/common/TextAreaLink';
 import ImageRound from '@components/common/ImageRound';
 import Drawer from '@components/common/Drawers';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 
 import { useSessionCache } from '@providers/SessionCacheProvider';
 
@@ -56,6 +55,7 @@ import {
   removeDuplicateOptions,
   showModalHeaderBackgroundColorByTime,
 } from '@utils';
+import MultiSelectDropdownSearch from '@components/common/MultiSelectDropdown/MultiSelectDropdownSearch';
 
 export type ActionTemplateModalProps = {
   open: boolean;
@@ -210,9 +210,9 @@ const ActionsTemplateModal = ({
         }),
         (value.organization = dataTemplate.organization
           ? {
-            label: dataTemplate.organization.name,
-            value: dataTemplate.organization.id as number,
-          }
+              label: dataTemplate.organization.name,
+              value: dataTemplate.organization.id as number,
+            }
           : undefined);
 
       if (dataTemplate.tags) {
@@ -273,12 +273,12 @@ const ActionsTemplateModal = ({
         (organization) => organization.isMain,
       )
         ? {
-          label:
-            orgUserList.find((organization) => organization.isMain)?.name ||
-            '',
-          value:
-            orgUserList.find((organization) => organization.isMain)?.id || '',
-        }
+            label:
+              orgUserList.find((organization) => organization.isMain)?.name ||
+              '',
+            value:
+              orgUserList.find((organization) => organization.isMain)?.id || '',
+          }
         : null;
     }
     return value;
@@ -299,7 +299,7 @@ const ActionsTemplateModal = ({
     organizationId: organizationValue
       ? String(organizationValue)
       : orgUserList &&
-        orgUserList?.find((organization) => organization.isMain)?.id
+          orgUserList?.find((organization) => organization.isMain)?.id
         ? String(orgUserList?.find((organization) => organization.isMain)?.id)
         : '',
     options: {
@@ -311,6 +311,7 @@ const ActionsTemplateModal = ({
         data?.tags?.map((tag) => ({
           label: tag.name,
           value: tag.id,
+          furigana: tag.furigana,
         })) || [];
 
       setDataOptionsTagIds(listTag);
@@ -605,11 +606,11 @@ const ActionsTemplateModal = ({
         !isFormTouched
           ? onClose()
           : onEdit &&
-          onEdit({
-            ...data,
-            todoList: todoList,
-            tagIds: filteredTagIds,
-          });
+            onEdit({
+              ...data,
+              todoList: todoList,
+              tagIds: filteredTagIds,
+            });
       }
       if (action === ActionTask.CREATE) {
         onSubmit &&
@@ -750,13 +751,13 @@ const ActionsTemplateModal = ({
           <div className="flex gap-2 items-center">
             {((isPermissionAdd && action === TemplateAction.CREATE) ||
               (isPermissionUpdate && action === TemplateAction.EDIT)) && (
-                <Button
-                  type="submit"
-                  disabled={action === TemplateAction.EDIT && !isFormTouched}
-                  className="w-[86px] h-[36px] !text-sm !px-0">
-                  保存
-                </Button>
-              )}
+              <Button
+                type="submit"
+                disabled={action === TemplateAction.EDIT && !isFormTouched}
+                className="w-[86px] h-[36px] !text-sm !px-0">
+                保存
+              </Button>
+            )}
             <Button
               variant="outline"
               type="button"
@@ -932,7 +933,7 @@ const ActionsTemplateModal = ({
             <div className="w-full max-w-[518px]">
               <div className="flex gap-2 max-w-[518px]">
                 <div className="w-[454px]">
-                  <MultiSelectDropdown
+                  <MultiSelectDropdownSearch
                     className="!h-[34px]"
                     labelClass="!min-h-0 !text-sm"
                     valueClassName="!border-[#77858F]"
@@ -944,6 +945,7 @@ const ActionsTemplateModal = ({
                         ? `${(watch('tagIds') ?? []).filter((tag) => tag.value).length}件選択中`
                         : UNREGISTERED
                     }
+                    searchOption
                     labelOptionClass="break-words w-[410px]"
                     selectedOptions={watch('tagIds') ?? []}
                     noDataClass="w-[454px]"
@@ -1117,7 +1119,7 @@ const ActionsTemplateModal = ({
                                       </div>
                                       <div className="w-5">
                                         {!isCheckActionPermission &&
-                                          todo.isChecked ? (
+                                        todo.isChecked ? (
                                           <ImageRound
                                             className="w-fit h-fit cursor-grab hover:cursor-pointer"
                                             src="/icons/complete-blue.svg"
@@ -1195,10 +1197,10 @@ const ActionsTemplateModal = ({
                                 );
                                 return snapshot.isDragging
                                   ? // eslint-disable-next-line import/no-named-as-default-member
-                                  ReactDOM.createPortal(
-                                    draggableElement,
-                                    document.body,
-                                  )
+                                    ReactDOM.createPortal(
+                                      draggableElement,
+                                      document.body,
+                                    )
                                   : draggableElement;
                               }}
                             </Draggable>
@@ -1226,15 +1228,15 @@ const ActionsTemplateModal = ({
           {((isPermissionAdd &&
             (action === ActionTask.COPY || action === ActionTask.CREATE)) ||
             (isPermissionUpdate && action === ActionTask.EDIT)) && (
-              <div className="flex justify-center">
-                <Button
-                  type="submit"
-                  disabled={action === ActionTask.EDIT && !isFormTouched}
-                  className="w-[200px] !rounded-md h-[46px] !text-sm !px-2">
-                  保存
-                </Button>
-              </div>
-            )}
+            <div className="flex justify-center">
+              <Button
+                type="submit"
+                disabled={action === ActionTask.EDIT && !isFormTouched}
+                className="w-[200px] !rounded-md h-[46px] !text-sm !px-2">
+                保存
+              </Button>
+            </div>
+          )}
         </div>
       </form>
     </Drawer>

@@ -26,6 +26,7 @@ export interface OptionDropdownType {
   avatarUrl?: string;
   color?: string;
   isHidden?: boolean;
+  furigana?: string | null;
   deletedAt?: string | Date | null;
 }
 
