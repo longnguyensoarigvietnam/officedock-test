@@ -8,6 +8,12 @@ class Tag(BaseModel):
     """
 
     name = models.CharField(max_length=255)
+    furigana = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="Furigana or phonetic reading of the tag name (e.g., ふりがな)",
+    )
     organizations = models.ManyToManyField(
         "organizations.Organization",
         through="OrganizationsTags",
