@@ -146,6 +146,8 @@ interface ContextValue {
   >;
   idTaskArchiveAt: string;
   setIdTaskArchiveAt: Dispatch<SetStateAction<string>>;
+  scheduleCardPopupOwnerKey: string | null;
+  setScheduleCardPopupOwnerKey: Dispatch<SetStateAction<string | null>>;
 }
 
 const defaultValue: ContextValue = {
@@ -269,6 +271,8 @@ const defaultValue: ContextValue = {
   setDataActualEdit: () => {},
   idTaskArchiveAt: '',
   setIdTaskArchiveAt: () => {},
+  scheduleCardPopupOwnerKey: null,
+  setScheduleCardPopupOwnerKey: () => {},
 };
 
 export const TaskContext = createContext<ContextValue>(defaultValue);
@@ -347,6 +351,10 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   });
 
   const [isInteracting, setIsInteracting] = useState(false);
+
+  const [scheduleCardPopupOwnerKey, setScheduleCardPopupOwnerKey] = useState<
+    string | null
+  >(null);
 
   const [idEventDelete, setIdEventDelete] = useState<string>('');
   const [idTaskDelete, setIdTaskDelete] = useState<string>('');
@@ -499,6 +507,8 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     setDataActualEdit,
     idTaskArchiveAt,
     setIdTaskArchiveAt,
+    scheduleCardPopupOwnerKey,
+    setScheduleCardPopupOwnerKey,
   };
 
   return (
