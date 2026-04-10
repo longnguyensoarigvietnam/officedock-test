@@ -170,6 +170,7 @@ const CreateActualDurationsForm = () => {
           data?.tags.map((org) => ({
             label: org.name as string,
             value: org.id || '',
+            furigana: org.furigana || '',
           })),
         );
       }
@@ -890,6 +891,8 @@ const CreateActualDurationsForm = () => {
                           className="!py-1 !h-[46px] text-sm border-[#77858F] rounded-md"
                           classNameOption="!text-sm"
                           classNameTextData="!text-sm"
+                          searchOption
+                          searchFurigana
                           options={unSelectedTagIdsOptions}
                           selectedOption={
                             value?.value

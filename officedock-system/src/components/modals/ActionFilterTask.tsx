@@ -76,6 +76,7 @@ const ActionFilterTask = ({
           return {
             value: tag.value,
             label: tag.label,
+            furigana: tag.furigana,
           };
         });
       }
@@ -102,6 +103,7 @@ const ActionFilterTask = ({
         data?.tags?.map((org) => ({
           label: String(org.name),
           value: String(org.id),
+          furigana: org.furigana,
         })) || [],
       );
     },

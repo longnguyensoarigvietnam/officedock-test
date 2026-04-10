@@ -191,6 +191,7 @@ const ListActualDurations = () => {
         data.tags?.map((org) => ({
           label: org.name,
           value: org.id,
+          furigana: org.furigana,
         })) || [],
       );
       if (data.statisticCategories) {
@@ -253,13 +254,10 @@ const ListActualDurations = () => {
           };
         },
       );
-      setActualDurationsByStaff(prevList => {
+      setActualDurationsByStaff((prevList) => {
         // If pageNumber === 1, overwrite instead of append
         if (pageNumber === 1) return newActualDurationList;
-        return [
-          ...(prevList || []),
-          ...newActualDurationList,
-        ];
+        return [...(prevList || []), ...newActualDurationList];
       });
       setHasMore(data?.hasNext || false);
     },
@@ -407,9 +405,9 @@ const ListActualDurations = () => {
           const small =
             element.type === ItemStartType.TASK
               ? element.categories.find(
-                (cat: { id?: number; name?: string; type?: string }) =>
-                  cat.type === EventWorkCategory.SMALL,
-              )
+                  (cat: { id?: number; name?: string; type?: string }) =>
+                    cat.type === EventWorkCategory.SMALL,
+                )
               : undefined;
 
           if (!large && !medium && !small) return NO_SETTING;
@@ -466,9 +464,9 @@ const ListActualDurations = () => {
           const e = row.original;
           return e.pausedAt
             ? calculateActualDuration(
-              String(e.startedAt),
-              e.pausedAt ? String(e.pausedAt) : '',
-            )
+                String(e.startedAt),
+                e.pausedAt ? String(e.pausedAt) : '',
+              )
             : '計測中';
         },
       },
@@ -514,11 +512,11 @@ const ListActualDurations = () => {
               </Link>
 
               {session?.user.permissions &&
-                hasPermissionInArray(
-                  session.user.permissions,
-                  PermissionsSystem.ACTUAL_DURATION_UPDATE,
-                ) &&
-                element.pausedAt ? (
+              hasPermissionInArray(
+                session.user.permissions,
+                PermissionsSystem.ACTUAL_DURATION_UPDATE,
+              ) &&
+              element.pausedAt ? (
                 <Link
                   href={pageRouters.EDIT_ACTUAL_DURATIONS.href(
                     `${element.id}`,
@@ -535,11 +533,11 @@ const ListActualDurations = () => {
               )}
 
               {session?.user.permissions &&
-                hasPermissionInArray(
-                  session.user.permissions,
-                  PermissionsSystem.ACTUAL_DURATION_DELETE,
-                ) &&
-                element.pausedAt ? (
+              hasPermissionInArray(
+                session.user.permissions,
+                PermissionsSystem.ACTUAL_DURATION_DELETE,
+              ) &&
+              element.pausedAt ? (
                 <ImageRound
                   name="Delete"
                   src="/icons/delete-gray.svg"
@@ -653,6 +651,8 @@ const ListActualDurations = () => {
                             { label: '選択', value: '' },
                             ...dataOptionsTags,
                           ]}
+                          searchOption
+                          searchFurigana
                           placeholder="選択してください"
                           className=""
                           onChange={onChange}
@@ -824,8 +824,8 @@ const ListActualDurations = () => {
                   value: selectedStaff.value,
                 }}
                 onChange={(e: OptionDropdownType) => {
-                  setHasMore(true)
-                  setPageNumber(1)
+                  setHasMore(true);
+                  setPageNumber(1);
                   setIsActualDurationsByStaffLoading(true);
                   setSelectedStaff(e);
                 }}
@@ -845,8 +845,8 @@ const ListActualDurations = () => {
                 selectedOption={
                   selectedActualDurationId
                     ? actualDurationsByStaff.find(
-                      (opt) => opt.value === selectedActualDurationId,
-                    )
+                        (opt) => opt.value === selectedActualDurationId,
+                      )
                     : undefined
                 }
                 onScrollEnd={() => {
@@ -869,10 +869,10 @@ const ListActualDurations = () => {
               href={
                 selectedActualDurationId && selectedActualDurationId
                   ? pageRouters.CREATE_ACTUAL_DURATIONS.href(
-                    `${selectedActualDurationId}`,
-                    `${chosenTaskSchedule?.type}`,
-                    `${selectedStaff.value}`,
-                  )
+                      `${selectedActualDurationId}`,
+                      `${chosenTaskSchedule?.type}`,
+                      `${selectedStaff.value}`,
+                    )
                   : ''
               }
               className={'flex'}>
