@@ -44,6 +44,7 @@ type Props = {
   classTextOption?: string;
   placeholder?: string;
   searchOption?: boolean;
+  searchFurigana?: boolean;
   openByDefault?: boolean;
   isShowIconDrop?: boolean;
   labelClass?: string;
@@ -83,6 +84,7 @@ const Dropdown = ({
   classActive,
   selectedOption,
   searchOption = false,
+  searchFurigana = false,
   addInput = false,
   openByDefault,
   styleClass,
@@ -162,8 +164,11 @@ const Dropdown = ({
     options &&
     options.filter((option) =>
       option.label
-        ? option.label.toLowerCase().includes(searchInput.toLowerCase())
-        : ' ',
+        ? option.label.toLowerCase().includes(searchInput.toLowerCase()) ||
+          (searchFurigana &&
+            Boolean(option.furigana) &&
+            option.furigana!.toLowerCase().includes(searchInput.toLowerCase()))
+        : false,
     );
 
   const handleScroll = useDebounce(() => {
