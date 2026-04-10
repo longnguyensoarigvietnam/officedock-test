@@ -1,6 +1,7 @@
 import Button from '@components/common/Button';
 import Checkbox from '@components/common/Checkbox';
 import ImageRound from '@components/common/ImageRound';
+import InputSearch from '@components/common/InputSearch';
 import { NO_DATA_AVAILABLE } from '@constants';
 import { OptionDropdownType } from '@interfaces/common';
 import { StatisticTagStateContext } from '@providers/StatisticProviderTag';
@@ -34,6 +35,7 @@ const FilterTagData = ({ open, close, onPreviewChange }: Props) => {
   const [selectedOption, setSelectedOption] = useState<OptionDropdownType[]>(
     [],
   );
+  const [searchInput, setSearchInput] = useState('');
 
   const actionRef = useRef<'none' | 'confirm' | 'cancel'>('none');
   const selectedOptionRef = useRef<OptionDropdownType[]>([]);
@@ -54,11 +56,24 @@ const FilterTagData = ({ open, close, onPreviewChange }: Props) => {
 
   useEffect(() => {
     if (!open) return;
+    selectedOptionRef.current = selectedTags;
     setSelectedOption(selectedTags);
+    setSearchInput('');
     onPreviewChange(selectedTags);
     // Reset action flag so outside-click can apply preview.
     actionRef.current = 'none';
   }, [open, selectedTags, onPreviewChange]);
+
+  const normalizedSearchInput = searchInput.toLowerCase().trim();
+  const filteredTagsOptions = tagsOptions.filter((option) => {
+    if (!normalizedSearchInput) return true;
+    const label = option.label?.toLowerCase() || '';
+    const furigana = option.furigana?.toLowerCase() || '';
+    return (
+      label.includes(normalizedSearchInput) ||
+      furigana.includes(normalizedSearchInput)
+    );
+  });
 
   const handleChangeTag = (selected: OptionDropdownType) => {
     const foundItemIndex = selectedOption.findIndex(
@@ -164,11 +179,24 @@ const FilterTagData = ({ open, close, onPreviewChange }: Props) => {
           </div>
         </div>
       </div>
+      <div className="px-5 mt-2">
+        <InputSearch
+          value={searchInput}
+          placeholder="検索"
+          onChange={(e) => setSearchInput(e.target.value)}
+          inputClassName="!h-9 !rounded-md"
+          onKeyDown={(e) => {
+            if (e.key === ' ') {
+              e.stopPropagation();
+            }
+          }}
+        />
+      </div>
       <div className="px-5">
         <div className="mt-[10px] flex max-h-64 overflow-y-auto   px-1 border border-[#77858F] rounded-md  flex-col  ">
           {/*  tag */}
-          {tagsOptions.length ? (
-            tagsOptions.map((option) => (
+          {filteredTagsOptions.length ? (
+            filteredTagsOptions.map((option) => (
               <>
                 <div
                   key={option.value}
@@ -213,7 +241,7 @@ const FilterTagData = ({ open, close, onPreviewChange }: Props) => {
         <Button
           onClick={handleConfirm}
           className="h-9"
-          disabled={isHasLoading || tagsOptions.length == 0}>
+          disabled={isHasLoading || filteredTagsOptions.length == 0}>
           絞り込む
         </Button>
       </div>

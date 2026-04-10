@@ -36,7 +36,6 @@ import ErrorMessage from '@components/common/ErrorMessage';
 import Switch from '@components/common/Switch';
 import Drawer from '@components/common/Drawers';
 import DatePickerCustom from '@components/common/DatePicker/DatePickerCustom';
-import MultiSelectDropdown from '@components/common/MultiSelectDropdown';
 import TextAreaLink from '@components/common/TextAreaLink';
 
 import {
@@ -97,6 +96,7 @@ import {
 } from '@utils';
 
 import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
+import MultiSelectDropdownSearch from '@components/common/MultiSelectDropdown/MultiSelectDropdownSearch';
 
 export type ActionTaskModalProps = {
   open: boolean;
@@ -557,6 +557,7 @@ const ActionsTaskModal = ({
         data?.tags?.map((tag) => ({
           label: tag.name,
           value: tag.id,
+          furigana: tag.furigana,
         })) || [];
 
       setDataOptionsTagIds(listTag);
@@ -1395,13 +1396,14 @@ const ActionsTaskModal = ({
             <div className="w-full max-w-[518px]">
               <div className="flex gap-2 max-w-[518px]">
                 <div className="w-[454px]">
-                  <MultiSelectDropdown
+                  <MultiSelectDropdownSearch
                     className="!h-[34px] hover:cursor-pointer"
                     labelClass="!min-h-0 !text-sm"
                     valueClassName="!border-[1px] !text-sm !border-[#77858F] !py-0 flex items-center"
                     optionClassName="!border-[1px] !text-sm !border-[#77858F] z-[998]"
                     disabled={isCheckActionPermission}
                     options={dataOptionsTagIds}
+                    searchOption
                     isLoading={isFetchingCreationDataCommon}
                     customLabel={
                       (watch('tagIds') ?? []).filter((tag) => tag.value)

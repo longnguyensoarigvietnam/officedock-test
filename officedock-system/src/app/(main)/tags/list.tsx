@@ -263,6 +263,7 @@ const ListTags = () => {
     createTag({
       name: data.name || '',
       organizationIds,
+      furigana: data.furigana || '',
       calendarOrganizationCheck: data.calendarOrganizationCheck,
     });
   };
@@ -302,6 +303,7 @@ const ListTags = () => {
     editTag({
       name: data.name || '',
       organizationIds,
+      furigana: data.furigana || '',
       calendarOrganizationCheck: data.calendarOrganizationCheck,
     });
   };
