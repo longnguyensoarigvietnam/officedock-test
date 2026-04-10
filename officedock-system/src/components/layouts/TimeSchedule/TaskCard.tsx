@@ -1,7 +1,15 @@
 'use client';
 import { createPortal } from 'react-dom';
 import { useSearchParams } from 'next/navigation';
-import { ChangeEvent, useContext, useEffect, useRef, useState } from 'react';
+import {
+  ChangeEvent,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useQueryClient } from 'react-query';
 import { EventContentArg } from '@fullcalendar/core/index.js';
 
@@ -90,8 +98,11 @@ const TaskCard = ({
 }: TaskCardProps) => {
   const {
     isInteracting,
+    setIsInteracting,
     idTaskStarting,
     taskSelectedToStart,
+    scheduleCardPopupOwnerKey,
+    setScheduleCardPopupOwnerKey,
     setIdTaskEditSelected,
     setDataRunning,
     setDataClickTask,
@@ -315,7 +326,24 @@ const TaskCard = ({
 
   const [isHovering, setIsHovering] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
-  const timeoutId = useRef<NodeJS.Timeout | null>(null);
+  const showTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const pointerOverCardRef = useRef(false);
+  const pointerOverPopupRef = useRef(false);
+  const lastPointerClientRef = useRef({ x: 0, y: 0 });
+  const isInteractingRef = useRef(isInteracting);
+  isInteractingRef.current = isInteracting;
+
+  const hoverOwnerKey = useMemo(() => {
+    const id = String(event.event.id ?? '');
+    const start =
+      typeof event.event.startStr === 'string'
+        ? event.event.startStr
+        : event.event.start != null
+          ? String(event.event.start)
+          : '';
+    const lane = resourcePlan ? 'plan' : 'actual';
+    return `${id}\u0001${start}\u0001${lane}`;
+  }, [event.event.id, event.event.start, event.event.startStr, resourcePlan]);
 
   const POPUP_WIDTH = 250; //  w-[250px]
   const GAP = 10;
@@ -337,48 +365,191 @@ const TaskCard = ({
     return Math.min(rightSide, vw - POPUP_WIDTH - GAP);
   }
 
-  const handleMouseEnter = (e: any) => {
-    const viewportHeight = window.innerHeight;
-    const cursorY = e.clientY;
-    const isNearBottom = viewportHeight - cursorY < 150;
-    const nextTop = isNearBottom ? e.clientY - 150 : e.clientY;
-    // --- ONLY CALCULATE LEFT BY EVENT ---
-    // Get the host event FullCalendar (sure to get many views)
-    const host =
-      (containerRef.current?.closest(
-        '.fc-timegrid-event, .fc-event, .fc-timeline-event',
-      ) as HTMLElement | null) ?? (e.currentTarget as HTMLElement | null);
-
-    // If event is found → track event; if not → fallback to mouse (same as before)
-    const nextLeft = host ? computePopupLeftByEvent(host) : e.clientX - 100;
-
-    // Update state: only change left according to event, top remains the same according to old logic
-    setLocal({ clientX: nextLeft, clientY: nextTop });
-    setIsHovering(true);
-  };
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleMouseLeave = () => {
-    // If there is an old timeout → clear it
-    if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
+  const clearScheduledHide = () => {
+    if (hideTimeoutRef.current) {
+      clearTimeout(hideTimeoutRef.current);
+      hideTimeoutRef.current = null;
+    }
+  };
 
-    // Set new timeout, but only hide if no hover event or popup
+  const closeScheduleHoverPopup = useCallback(() => {
+    pointerOverCardRef.current = false;
+    pointerOverPopupRef.current = false;
+    clearScheduledHide();
+    setIsHovering(false);
+    setIsShowAction(false);
+    setScheduleCardPopupOwnerKey((prev) =>
+      prev === hoverOwnerKey ? null : prev,
+    );
+  }, [hoverOwnerKey, setScheduleCardPopupOwnerKey]);
+
+  const closeScheduleHoverPopupRef = useRef(closeScheduleHoverPopup);
+  closeScheduleHoverPopupRef.current = closeScheduleHoverPopup;
+
+  const isHoveringRef = useRef(isHovering);
+  isHoveringRef.current = isHovering;
+
+  const clearPendingShow = useCallback(() => {
+    if (showTimeoutRef.current) {
+      clearTimeout(showTimeoutRef.current);
+      showTimeoutRef.current = null;
+    }
+  }, []);
+
+  const queueShowPopup = useCallback(
+    (e: {
+      clientX: number;
+      clientY: number;
+      currentTarget: EventTarget | null;
+      buttons?: number;
+    }) => {
+      if (isShiftPressed) return;
+      const isDraggingPointer =
+        typeof e.buttons === 'number' && e.buttons !== 0;
+      if (isInteractingRef.current && isDraggingPointer) return;
+      if (isInteractingRef.current && !isDraggingPointer) {
+        setIsInteracting(false);
+      }
+      pointerOverCardRef.current = true;
+      clearScheduledHide();
+      clearPendingShow();
+      const delay = getDelay();
+      showTimeoutRef.current = setTimeout(() => {
+        showTimeoutRef.current = null;
+        const viewportHeight = window.innerHeight;
+        const cursorY = e.clientY;
+        const isNearBottom = viewportHeight - cursorY < 150;
+        const nextTop = isNearBottom ? e.clientY - 150 : e.clientY;
+        const host =
+          (containerRef.current?.closest(
+            '.fc-timegrid-event, .fc-event, .fc-timeline-event',
+          ) as HTMLElement | null) ?? (e.currentTarget as HTMLElement | null);
+        const nextLeft = host ? computePopupLeftByEvent(host) : e.clientX - 100;
+        lastPointerClientRef.current = { x: e.clientX, y: e.clientY };
+        setLocal({ clientX: nextLeft, clientY: nextTop });
+        setIsHovering(true);
+        setScheduleCardPopupOwnerKey(hoverOwnerKey);
+        recordHover();
+      }, delay);
+    },
+    [
+      clearPendingShow,
+      getDelay,
+      hoverOwnerKey,
+      isShiftPressed,
+      recordHover,
+      setIsInteracting,
+      setScheduleCardPopupOwnerKey,
+    ],
+  );
+
+  const scheduleHideIfPointerLeft = () => {
+    clearScheduledHide();
     hideTimeoutRef.current = setTimeout(() => {
-      const isOverPopup = popupRef.current?.matches(':hover');
-      const isOverEvent = containerRef.current?.matches(':hover');
-      if (!isOverPopup && !isOverEvent) {
-        setIsHovering(false);
-        setIsShowAction(false);
+      hideTimeoutRef.current = null;
+      if (!pointerOverCardRef.current && !pointerOverPopupRef.current) {
+        closeScheduleHoverPopup();
       }
     }, 500);
   };
+
+  const pointerStillInsideCard = (relatedTarget: EventTarget | null) =>
+    relatedTarget instanceof Node &&
+    Boolean(containerRef.current?.contains(relatedTarget));
+
+  const pointerStillInsidePopup = (relatedTarget: EventTarget | null) =>
+    relatedTarget instanceof Node &&
+    Boolean(popupRef.current?.contains(relatedTarget));
+
+  useEffect(() => {
+    if (!isHovering) return;
+    if (
+      scheduleCardPopupOwnerKey != null &&
+      scheduleCardPopupOwnerKey !== hoverOwnerKey
+    ) {
+      closeScheduleHoverPopup();
+    }
+  }, [
+    scheduleCardPopupOwnerKey,
+    hoverOwnerKey,
+    isHovering,
+    closeScheduleHoverPopup,
+  ]);
+
+  useEffect(() => {
+    if (!isHovering) return;
+    const track = (e: PointerEvent) => {
+      lastPointerClientRef.current = { x: e.clientX, y: e.clientY };
+    };
+    window.addEventListener('pointermove', track, { passive: true });
+    return () => window.removeEventListener('pointermove', track);
+  }, [isHovering]);
+
+  useEffect(() => {
+    const onViewportChange = () => {
+      if (!isHoveringRef.current) return;
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (!isHoveringRef.current) return;
+          const { x, y } = lastPointerClientRef.current;
+          const w = window.innerWidth;
+          const h = window.innerHeight;
+          if (x < 0 || y < 0 || x > w || y > h) {
+            closeScheduleHoverPopupRef.current();
+            return;
+          }
+          const el = document.elementFromPoint(x, y);
+          const card = containerRef.current;
+          const popup = popupRef.current;
+          const hit =
+            !!el &&
+            ((!!card && (card === el || card.contains(el))) ||
+              (!!popup && (popup === el || popup.contains(el))));
+          if (!hit) {
+            closeScheduleHoverPopupRef.current();
+          }
+        });
+      });
+    };
+    window.addEventListener('resize', onViewportChange);
+    document.addEventListener('fullscreenchange', onViewportChange);
+    return () => {
+      window.removeEventListener('resize', onViewportChange);
+      document.removeEventListener('fullscreenchange', onViewportChange);
+    };
+  }, []);
+
   useEffect(() => {
     if (isModalShow) {
       setTimeout(() => {
-        setIsHovering(false);
+        clearPendingShow();
+        closeScheduleHoverPopup();
       }, 500);
     }
-  }, [isModalShow]);
+  }, [isModalShow, clearPendingShow, closeScheduleHoverPopup]);
+
+  useEffect(() => {
+    if (!isInteracting) return;
+    clearPendingShow();
+    closeScheduleHoverPopup();
+  }, [isInteracting, clearPendingShow, closeScheduleHoverPopup]);
+
+  useEffect(() => {
+    if (isInteracting || isShiftPressed || isHovering) return;
+    const card = containerRef.current;
+    if (!card || !card.matches(':hover')) return;
+    const { x, y } = lastPointerClientRef.current;
+    if (x <= 0 && y <= 0) return;
+    queueShowPopup({
+      clientX: x,
+      clientY: y,
+      currentTarget: card,
+    });
+  }, [isInteracting, isShiftPressed, isHovering, queueShowPopup]);
+
+  useEffect(() => () => clearPendingShow(), [clearPendingShow]);
 
   const renderModal = () => {
     if (isShiftPressed) return;
@@ -387,8 +558,17 @@ const TaskCard = ({
       <div
         className={`w-[250px]    fixed top-0 left-0 z-[999]  h-fit rounded-[14px] pl-5 pr-[10px] pt-[10px] pb-5 bg-white`}
         ref={popupRef}
-        onMouseLeave={handleMouseLeave}
-        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={(e) => {
+          if (pointerStillInsidePopup(e.relatedTarget)) return;
+          pointerOverPopupRef.current = false;
+          scheduleHideIfPointerLeft();
+        }}
+        onMouseEnter={() => {
+          pointerOverPopupRef.current = true;
+          clearScheduledHide();
+          setScheduleCardPopupOwnerKey(hoverOwnerKey);
+          setIsHovering(true);
+        }}
         style={{
           top: local.clientY,
           left:
@@ -423,8 +603,7 @@ const TaskCard = ({
             }}
             creationDataCommonData={creationDataCommonData}
             onDelete={(values: EventEditFormData) => {
-              setIsHovering(false);
-              setIsShowAction(false);
+              closeScheduleHoverPopup();
               onDeleteEvent && onDeleteEvent(values);
             }}
           />
@@ -454,7 +633,14 @@ const TaskCard = ({
             deadline={event.event?.extendedProps.deadline}
             isImportant={event.event?.extendedProps.isImportant}
             setIsHovering={(show: boolean) => {
-              setIsHovering(show);
+              if (!show) {
+                closeScheduleHoverPopup();
+              } else {
+                pointerOverPopupRef.current = true;
+                clearScheduledHide();
+                setScheduleCardPopupOwnerKey(hoverOwnerKey);
+                setIsHovering(true);
+              }
             }}
             statusId={
               resourcePlan
@@ -485,9 +671,9 @@ const TaskCard = ({
 
   useEffect(() => {
     if (isShiftPressed) {
-      setIsHovering(false);
+      closeScheduleHoverPopup();
     }
-  }, [isShiftPressed]);
+  }, [isShiftPressed, closeScheduleHoverPopup]);
 
   const [isTooSmall, setIsTooSmall] = useState(false);
   const [isShowSmallData, setIsShowSmallData] = useState(false);
@@ -541,10 +727,9 @@ const TaskCard = ({
         }}
         ref={containerRef}
         onMouseEnter={(e) => {
+          lastPointerClientRef.current = { x: e.clientX, y: e.clientY };
+          queueShowPopup(e);
           if (isSmallItem) {
-            if (isShiftPressed || isInteracting) return;
-            const delay = getDelay();
-
             const fcEvent = containerRef.current?.closest(
               '.fc-event',
             ) as HTMLElement | null;
@@ -554,14 +739,21 @@ const TaskCard = ({
             if (resizer) {
               resizer.style.setProperty('opacity', '0', 'important');
             }
-            timeoutId.current = setTimeout(() => {
-              handleMouseEnter(e);
-              recordHover();
-            }, delay);
           }
         }}
-        onMouseLeave={() => {
-          if (timeoutId.current) clearTimeout(timeoutId.current);
+        onMouseMove={(e) => {
+          lastPointerClientRef.current = { x: e.clientX, y: e.clientY };
+          if (isHovering || showTimeoutRef.current) {
+            return;
+          }
+          queueShowPopup(e);
+        }}
+        onMouseLeave={(e) => {
+          clearPendingShow();
+          if (!pointerStillInsideCard(e.relatedTarget)) {
+            pointerOverCardRef.current = false;
+            scheduleHideIfPointerLeft();
+          }
           const fcEvent = containerRef.current?.closest(
             '.fc-event',
           ) as HTMLElement | null;
@@ -571,12 +763,13 @@ const TaskCard = ({
           if (resizer) {
             resizer.style.setProperty('opacity', '1', 'important');
           }
-          handleMouseLeave();
         }}
         className={`h-full event-bottom  ${isSelect && '!opacity-30'} ${isStart && resourcePlan && '!border !border-[#3CABF3]'} flex relative z-30  bg-white card-schedule item-schedule-shadow ${isCalculation && '!bg-custom-gradient'} ${!resourcePlan && ' !text-white'} ${isEvent && '!text-primary'}    text-black rounded-[14px]   justify-between  border`}>
         <div className="flex w-full relative  h-full justify-between ">
           <div
             onMouseEnter={(e) => {
+              lastPointerClientRef.current = { x: e.clientX, y: e.clientY };
+              queueShowPopup(e);
               if (isShiftPressed || isInteracting) return;
               const fcEvent = containerRef.current?.closest(
                 '.fc-event',
@@ -587,16 +780,20 @@ const TaskCard = ({
               if (resizer) {
                 resizer.style.setProperty('opacity', '0', 'important');
               }
-              const delay = getDelay();
-
-              timeoutId.current = setTimeout(() => {
-                handleMouseEnter(e);
-
-                recordHover();
-              }, delay);
             }}
-            onMouseLeave={() => {
-              if (timeoutId.current) clearTimeout(timeoutId.current);
+            onMouseMove={(e) => {
+              lastPointerClientRef.current = { x: e.clientX, y: e.clientY };
+              if (isHovering || showTimeoutRef.current) {
+                return;
+              }
+              queueShowPopup(e);
+            }}
+            onMouseLeave={(e) => {
+              clearPendingShow();
+              if (!pointerStillInsideCard(e.relatedTarget)) {
+                pointerOverCardRef.current = false;
+                scheduleHideIfPointerLeft();
+              }
 
               const fcEvent = containerRef.current?.closest(
                 '.fc-event',
@@ -607,7 +804,6 @@ const TaskCard = ({
               if (resizer) {
                 resizer.style.setProperty('opacity', '1', 'important');
               }
-              handleMouseLeave();
             }}
             className={`group  flex flex-col ${isTooSmallHeight && '!flex-row'} relative flex-shrink-0 items-end justify-between h-full bg-transparent z-[20] w-full ${resourcePlan ? 'h-[calc(100%_-_27px)]' : 'h-[calc(100%_-_10px)]'} ${isSmallItem && '!h-full overflow-hidden'}`}>
             <div
