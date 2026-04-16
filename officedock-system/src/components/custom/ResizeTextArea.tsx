@@ -6,7 +6,6 @@ import { useMutation } from 'react-query';
 import ImageRound from '@components/common/ImageRound';
 import TextArea from '@components/common/TextArea';
 
-import { PermissionsSystem } from '@constants/enums';
 import { ERROR_UPDATE_MESSAGE } from '@constants/message';
 import { apiRouters } from '@constants/routers';
 
@@ -16,7 +15,6 @@ import { useSessionCache } from '@providers/SessionCacheProvider';
 import { useToast } from '@providers/ToastProvider';
 
 import api from '@base/api';
-import { hasPermissionInArray } from '@utils';
 import { formatDateServer } from '@utils/date';
 
 interface ResizeType {
@@ -126,13 +124,7 @@ const ResizeTextArea = ({
       className="py-3 pr-3 ">
       <TextArea
         value={remarkData}
-        disabled={ isDisabled || 
-          session?.user.permissions &&
-          !hasPermissionInArray(
-            session?.user.permissions,
-            PermissionsSystem.STATISTIC_UPDATE,
-          )
-        }
+        disabled={isDisabled}
         onChange={(e) => {
           setRemarkData((e.target as HTMLTextAreaElement).value);
         }}
