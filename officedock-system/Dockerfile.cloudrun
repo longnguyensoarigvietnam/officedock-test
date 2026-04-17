@@ -16,7 +16,8 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install all dependencies (including devDependencies for build)
-RUN npm ci
+RUN npm ci --ignore-scripts --allow-git=none \
+    && npx allow-scripts run
 
 # ==============================================================================
 # Build stage
@@ -54,7 +55,10 @@ COPY package*.json ./
 
 # Install production dependencies only
 # Remove prepare script to skip husky install (husky is devDependency)
-RUN npm pkg delete scripts.prepare && npm ci --omit=dev
+RUN npm pkg delete scripts.prepare \
+    && npm ci --omit=dev --ignore-scripts --allow-git=none \
+    && npx allow-scripts run \
+    && npm audit --omit=dev --audit-level=high
 
 # ==============================================================================
 # Runtime stage

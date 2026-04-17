@@ -16,7 +16,9 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies with ci for reproducibility
-RUN npm ci
+RUN npm ci --ignore-scripts --allow-git=none \
+    && npx allow-scripts run \
+    && npm audit --omit=dev --audit-level=high
 
 # ==============================================================================
 # Build stage

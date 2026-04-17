@@ -1,0 +1,69 @@
+name: CI Pipeline
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  security-and-build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        project: [officedock-admin, officedock-system]
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b # v4.0.3
+        with:
+          node-version: "22"
+
+      - name: Update to npm v11.10.0+ for min-release-age support
+        run: npm install -g npm@11.10.0
+
+      - name: Verify package-lock.json changes policy
+        run: |
+          # Fetch changes
+          git diff --name-status origin/${{ github.base_ref }}...HEAD > diff.txt
+          cat diff.txt
+
+          LOCKFILE_CHANGED=$(grep -q "package-lock.json" diff.txt && echo "yes" || echo "no")
+          PACKAGE_CHANGED=$(grep -q "package.json" diff.txt && echo "yes" || echo "no")
+
+          if [ "$LOCKFILE_CHANGED" = "yes" ] && [ "$PACKAGE_CHANGED" = "no" ]; then
+            echo "::error::package-lock.json cannot be modified without accompanying package.json changes."
+            exit 1
+          fi
+
+      - name: Setup Dependency Review Action
+        if: github.event_name == 'pull_request'
+        uses: actions/dependency-review-action@5a2ce3f5b92ee19cbb1541a4984c76d92160ae3f # v4.3.4
+        with:
+          fail-on-severity: high
+
+      - name: Install dependencies
+        working-directory: ./${{ matrix.project }}
+        run: npm ci --ignore-scripts --allow-git=none
+
+      - name: Run valid lifecycle scripts
+        working-directory: ./${{ matrix.project }}
+        run: npx allow-scripts run
+
+      - name: NPM Audit
+        working-directory: ./${{ matrix.project }}
+        run: npm audit --audit-level=high
+
+      - name: NPM Signature Verification
+        working-directory: ./${{ matrix.project }}
+        run: npm audit signatures
+
+      - name: Run Lockfile Lint
+        working-directory: ./${{ matrix.project }}
+        run: npx lockfile-lint --path package-lock.json --allowed-hosts npm --validate-https --validate-checksum

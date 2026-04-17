@@ -88,6 +88,8 @@
     "uuid": "^10.0.0"
   },
   "devDependencies": {
+    "@lavamoat/allow-scripts": "2.5.1",
+    "@lavamoat/preinstall-always-fail": "1.0.3",
     "@tailwindcss/forms": "^0.5.7",
     "@types/express": "^5.0.0",
     "@types/http-proxy": "^1.17.16",
@@ -124,5 +126,12 @@
     ],
     "*.js": "eslint --cache --fix",
     "*.{js,css,md}": "prettier --write"
+  },
+  "lavamoat": {
+    "allowScripts": {
+      "@lavamoat/preinstall-always-fail": false,
+      "jspdf>core-js": true,
+      "sharp": true
+    }
   }
 }
