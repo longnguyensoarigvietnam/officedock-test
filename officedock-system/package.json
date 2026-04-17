@@ -41,7 +41,7 @@
     "@tiptap/suggestion": "^3.4.4",
     "@types/react-chartjs-2": "^2.5.7",
     "@uiw/react-color-circle": "^2.4.1",
-    "axios": "^1.7.1",
+    "axios": "^1.15.0",
     "chart.js": "^4.4.8",
     "chartjs-plugin-datalabels": "^2.2.0",
     "clsx": "^2.1.1",
