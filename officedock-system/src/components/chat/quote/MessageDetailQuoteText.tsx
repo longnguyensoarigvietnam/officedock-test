@@ -1,0 +1,94 @@
+import React, { useContext } from 'react';
+
+import ImageRound from '@components/common/ImageRound';
+import CustomUserAvatar from '@components/common/AvatarIcon/CustomUserAvatar';
+
+import {
+  convertToCurrentTimezone,
+  formatCheckDate,
+  getFormattedDateTime,
+} from '@utils/date';
+
+import { Profile } from '@interfaces/user';
+import { ChatMessageResponse } from '@interfaces/chat';
+import { ChatContext } from '@providers/ChatProvider';
+import { getUserNameById } from '@utils';
+
+type Props = {
+  messageDetail: ChatMessageResponse;
+  dashboardMemberList: Omit<Profile, 'birthday' | 'gender'>[];
+  title: string;
+  uuidQuote: string;
+};
+
+const MessageDetailQuoteText = ({
+  messageDetail,
+  dashboardMemberList,
+  title,
+  uuidQuote,
+}: Props) => {
+  // Render avatar
+  const { listAllMember } = useContext(ChatContext);
+
+  const renderAvatar = (senderId: number) => {
+    const memberInfo = dashboardMemberList.find(
+      (member) => member.id === senderId,
+    );
+
+    return (
+      <div className="h-6 flex items-center gap-2">
+        <ImageRound
+          className="w-fit h-fit"
+          name="Quote icon"
+          src="/icons/quotation.svg"
+        />
+        <CustomUserAvatar
+          avatarUrl={memberInfo?.avatar || ''}
+          avatarColor={memberInfo?.avatarColor || ''}
+          size={22}
+        />
+      </div>
+    );
+  };
+
+  return (
+    <div
+      className={`flex flex-col border border-[#D2DBE1] p-5 bg-white rounded-md !box-border group-hover:bg-[#FFFFFF] py-3 ml-5 mr-3 group-hover:rounded-md`}>
+      {renderAvatar(messageDetail.sender.id)}
+      <div className={`ml-3 !w-full`}>
+        <div className="flex w-full gap-2 items-baseline pb-2">
+          <div className="flex w-fit  gap-2 items-baseline font-semibold text-[15px] pr-2">
+            <div className="w-fit min-w-0 break-all text-[13px] text-[#77858F] whitespace-normal line-clamp-3">
+              {messageDetail.sender.id &&
+                getUserNameById({
+                  users: listAllMember,
+                  id: messageDetail.sender.id,
+                })}
+              <span className="font-medium text-xs text-[#77858F] ml-2">
+                {' '}
+                {messageDetail.sender?.organizations?.name}
+              </span>
+            </div>
+          </div>
+          <div className={`flex items-start w-fit flex-shrink-0`}>
+            <p className="font-medium text-xs text-[#77858F] text-right min-w-[90px]">
+              {messageDetail.createdAt &&
+                formatCheckDate(
+                  getFormattedDateTime(
+                    convertToCurrentTimezone(messageDetail.createdAt),
+                  ),
+                )}
+            </p>
+          </div>
+        </div>
+      </div>
+      <p
+        data-id={uuidQuote}
+        className={`text-chat-box font-normal text-sm  max-w-full -ml-1 p-1 rounded-[5px]  `}>
+        {title}
+      </p>
+    </div>
+  );
+};
+
+export default MessageDetailQuoteText;

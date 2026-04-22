@@ -1,0 +1,68 @@
+'use client';
+import { useQuery } from 'react-query';
+import { AxiosError } from 'axios';
+
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
+import { OrganizationSkillMapDetail } from '@interfaces/skills';
+
+import { apiRouters } from '@constants/routers';
+
+import api from '@base/api';
+
+interface UseOrganizationSkillMapDetailHooksProps {
+  skillId: number;
+  onSuccess?: (success: OrganizationSkillMapDetail[]) => void;
+  onError?: (error: AxiosError) => void;
+  onSettled?: () => void;
+}
+
+const useSkillMapUserDetail = ({
+  skillId,
+  onSuccess,
+  onError,
+  onSettled,
+}: UseOrganizationSkillMapDetailHooksProps) => {
+  const { data: session } = useSessionCache();
+  const token = session?.accessToken;
+
+  // Handle call API get organization skill detail
+  const getOrganizationSkillMapDetail = async () => {
+    if (!skillId) return;
+    const apiUrl = `${apiRouters.SKILL_MAPS_DETAIL_SKILL}?skill_id=${skillId}`;
+
+    const { data } = await api.get<OrganizationSkillMapDetail[]>(apiUrl);
+    return data;
+  };
+
+  // Handle API get organization skill detail
+  const {
+    data: skillMapUserDetail,
+    refetch: refetchSkillMapUserDetail,
+    isFetched: isFetchedSkillMapUserDetail,
+  } = useQuery({
+    queryKey: ['getSkillMapUserDetail', skillId],
+    queryFn: getOrganizationSkillMapDetail,
+    retry: 0,
+    enabled: !!token && !!skillId,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+    onSuccess: (response: OrganizationSkillMapDetail[]) => {
+      onSuccess && onSuccess(response);
+    },
+    onError: (error: AxiosError) => {
+      onError && onError(error);
+    },
+    onSettled: () => {
+      onSettled && onSettled();
+    },
+  });
+
+  return {
+    skillMapUserDetail,
+    refetchSkillMapUserDetail,
+    isFetchedSkillMapUserDetail,
+  };
+};
+
+export default useSkillMapUserDetail;

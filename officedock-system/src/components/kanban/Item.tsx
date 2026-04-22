@@ -1,0 +1,694 @@
+'use client';
+import { Draggable } from '@hello-pangea/dnd';
+import { Controller, useForm } from 'react-hook-form';
+import { formatISO } from 'date-fns';
+import { useQueryClient } from 'react-query';
+import { useContext, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
+import ImageRound from '@components/common/ImageRound';
+import Dropdown from '@components/common/Dropdown';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
+import ClockIconColor from '@components/custom/ClockIconColor';
+
+import {
+  EventWorkCategory,
+  ItemScheduleType,
+  ItemStartType,
+  PermissionsSystem,
+  StatusValueTask,
+} from '@constants/enums';
+import { DataStatusChangeInline, Task, TaskFormData } from '@interfaces/task';
+import { CreationDataCommon, OptionDropdownType } from '@interfaces/common';
+
+import { useErrorToast } from '@hooks/useErrorToast';
+import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
+
+import { TaskContext } from '@providers/TaskProvider';
+
+import {
+  addMinutesToDate,
+  compareWithCurrentDate,
+  formatShowDeadlineTask,
+} from '@utils/date';
+import { hasPermissionInArray } from '@utils';
+import { AxiosError } from 'axios';
+import { ERROR_COMMON_MESSAGE } from '@constants/message';
+
+interface ItemProps {
+  id: string;
+  index: number;
+  content: Task;
+  creationDataCommonData: CreationDataCommon | undefined;
+  handleActionEditTask: (id: number, type?: string) => void;
+  handleConfirmCopyTask: (id: number, type?: string) => void;
+  handleUpdateItemInline: (data: Task) => void;
+  editTask: (data: DataStatusChangeInline) => void;
+
+  handlePinItem: (id: string) => void;
+  disableDraggable?: boolean;
+}
+const Item = ({
+  id,
+  index,
+  content,
+  creationDataCommonData,
+  editTask,
+  handlePinItem,
+  handleUpdateItemInline,
+  handleConfirmCopyTask,
+  handleActionEditTask,
+  disableDraggable = false,
+}: ItemProps) => {
+  const queryClient = useQueryClient();
+
+  const {
+    columnWidth,
+    selectedOptionZoom,
+    setTaskSelectedToStart,
+    setDataClickTask,
+    setDataRunning,
+    setIdTaskStarting,
+    setShowWarningStartTaskModal,
+    setDataActualAddSchedule,
+  } = useContext(TaskContext);
+
+  const [dataOptionsStatus, setDataOptionsStatus] = useState<
+    OptionDropdownType[]
+  >([]);
+
+  let statusStyle = '';
+
+  // TODO: Because the number of states can change.
+  // So, determining the color code from the enum is unreasonable.
+  // This is a temporary solution as there is no defined color code, this will be changed and updated
+  switch (content.status && content.status.id) {
+    case StatusValueTask.NOT_STARTED:
+      statusStyle = '!bg-[#A3EBF0]';
+      break;
+    case StatusValueTask.IN_PROGRESS:
+      statusStyle = '!bg-[#92E9AF]';
+      break;
+    case StatusValueTask.CONFIRMING:
+      statusStyle = '!bg-[#FCCF79]';
+      break;
+    case StatusValueTask.COMPLETED:
+      statusStyle = '!bg-[#F58383]';
+      break;
+    case StatusValueTask.MY_ROUTINE:
+      statusStyle = '!bg-[#EBF1F7]';
+      break;
+    default:
+      break;
+  }
+  const {
+    watch,
+    control,
+    reset,
+    formState: { errors },
+  } = useForm<TaskFormData>({
+    mode: 'onSubmit',
+  });
+
+  const { data: session } = useSessionCache();
+  const showErrorToast = useErrorToast();
+
+  const searchParams = useSearchParams();
+
+  const taskDetailId = searchParams.get('task');
+
+  const [checkDeadline, setCheckDeadline] = useState<boolean>(false);
+
+  const defaultValues = useMemo<TaskFormData>(() => {
+    const value: TaskFormData = {
+      title: '',
+      statusId: {
+        label: '',
+        value: '',
+      },
+      priority: {
+        label: '',
+        value: '',
+      },
+      peopleInChargeIds: [],
+      categories: {
+        LARGE: {
+          label: '',
+          value: '',
+        },
+        MEDIUM: {
+          label: '',
+          value: '',
+        },
+        SMALL: {
+          label: '',
+          value: '',
+        },
+      },
+      isImportant: false,
+      plans: null,
+    };
+    if (content) {
+      (value.title = content.title),
+        (value.statusId = {
+          label: (content.status && content.status.name) || '',
+          value: (content.status && content.status.id) || '',
+        });
+    }
+    return value;
+  }, [content]);
+
+  useEffect(() => {
+    reset(defaultValues);
+  }, [defaultValues, reset]);
+
+  useEffect(() => {
+    if (content && content.deadline) {
+      setCheckDeadline(compareWithCurrentDate(content.deadline));
+    }
+  }, [content]);
+
+  // Save data from create task
+  useEffect(() => {
+    if (creationDataCommonData) {
+      setDataOptionsStatus(
+        creationDataCommonData.taskStatus?.map((org) => ({
+          label: org.name,
+          value: org.id || '',
+        })) || [],
+      );
+    }
+  }, [creationDataCommonData]);
+  //  Handle call api delete task
+  const { calculateDurationTask } = useCalculateDurationTask({
+    onSuccess: (response, task) => {
+      const data = response.data;
+      if (data.isAnotherTaskStarted) {
+        setIdTaskStarting({
+          id: data.id,
+          type: data.type,
+        });
+        setDataClickTask({
+          id: task.id,
+          type: task.type,
+        });
+        setShowWarningStartTaskModal(true);
+        return;
+      }
+
+      setDataRunning({
+        id: `${content.id}`,
+        type: ItemStartType.TASK,
+      });
+
+      handleUpdateItemInline({
+        ...content,
+        id: content.id,
+        isStart: !content.isStart,
+        status: content.status,
+      });
+      queryClient.refetchQueries(['getDataTaskHeaderList']);
+      queryClient.refetchQueries([
+        'getTaskDurationDetail',
+        {
+          id: `${content.id}`,
+          type: ItemStartType.TASK,
+        },
+      ]);
+      queryClient.refetchQueries(['getTaskHeaderStart']);
+      if (data) {
+        const startDateActual = new Date(`${data.planStartDate}`);
+        const endDateActual = new Date(`${data.planEndDate}`);
+        setDataActualAddSchedule({
+          ...data,
+          start: startDateActual,
+          end: endDateActual,
+          id: data.id.toString(),
+          startEditable: false,
+          resourceId: ItemScheduleType.ACTUAL,
+          type: ItemStartType.TASK,
+          isMyTask: false,
+        });
+
+        if (!data.isStart) {
+          queryClient.refetchQueries(['getDataTaskHeaderList']);
+        }
+      }
+    },
+    onError: (error: AxiosError<any>) => {
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
+    },
+  });
+  // Action call API check start task
+  const handleConfirmCheckStartTask = (id: string) => {
+    calculateDurationTask({
+      id: id,
+      type: ItemStartType.TASK,
+    });
+  };
+  const isShowSchedule = content.isScheduleInToday || false;
+  const now = new Date();
+
+  const [isClicked, setIsClicked] = useState(false);
+
+  const handleClick = () => {
+    if (isClicked) return;
+
+    setIsClicked(true);
+    handleActionEditTask(parseInt(`${content.id}`));
+
+    setTimeout(() => setIsClicked(false), 2000);
+  };
+
+  const isPermissionUpdate =
+    session?.user.permissions &&
+    hasPermissionInArray(
+      session?.user.permissions,
+      PermissionsSystem.MY_TASK_UPDATE,
+    );
+
+  const isPermissionAdd =
+    session?.user.permissions &&
+    hasPermissionInArray(
+      session?.user.permissions,
+      PermissionsSystem.MY_TASK_ADD,
+    );
+  const largeColor =
+    content.categories &&
+    content.categories.find((item) => item.type === EventWorkCategory.LARGE)
+      ?.color;
+
+  return (
+    <>
+      {selectedOptionZoom.value !== 25 ? (
+        <Draggable
+          draggableId={id}
+          index={index}
+          isDragDisabled={disableDraggable || !isPermissionUpdate}>
+          {(provided, snapshot) => (
+            <div
+              ref={provided.innerRef}
+              data-event={JSON.stringify({
+                ...content,
+                title: content.title ? content.title : '',
+                start: formatISO(now),
+                end: formatISO(addMinutesToDate(`${now}`)),
+                startEditable: true,
+                itemKanban: true,
+                largeColor: largeColor,
+              })}
+              {...provided.draggableProps}
+              {...provided.dragHandleProps}
+              style={{
+                ...provided.draggableProps.style,
+              }}
+              className={`relative  ${selectedOptionZoom.value !== 50 && 'gap-2'} ${isPermissionUpdate ? 'ex-event-draggable' : ''}   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid   ${content.isStart && ' !border-primary'} bg-white shadow-common rounded-[20px] text-xs flex flex-col  mb-[14px] ${snapshot.isDragging && 'opacity-100'}`}>
+              <div className="relative w-[100%] h-full">
+                {isPermissionUpdate && (
+                  <>
+                    <div
+                      className={`absolute ${isPermissionUpdate ? '' : 'opacity-75'}  ${content.pinAt ? '' : 'opacity-0 group-hover:opacity-100'} `}
+                      style={{
+                        top: `${(columnWidth / 247) * 12}px`,
+                        right: `${(columnWidth / 247) * 12}px`,
+                      }}
+                      onClick={() => {
+                        if (isPermissionUpdate) {
+                          handlePinItem(`${content.id}`);
+                        }
+                      }}>
+                      <DynamicTooltip
+                        content={content.pinAt ? 'ピンを外す' : 'ピン留め'}
+                        placement="right">
+                        <ImageRound
+                          src={
+                            content.pinAt
+                              ? `/icons/pin-task.svg`
+                              : `/icons/unpin-task.svg`
+                          }
+                          name="Pin icon"
+                          style={{
+                            width:
+                              (selectedOptionZoom.value as number) > 75
+                                ? '14px'
+                                : (selectedOptionZoom.value as number) === 75
+                                  ? '12px'
+                                  : `10px`,
+                            height:
+                              (selectedOptionZoom.value as number) > 75
+                                ? '14px'
+                                : (selectedOptionZoom.value as number) === 75
+                                  ? '12px'
+                                  : `10px`,
+                          }}
+                          className=" text-gray-400 cursor-pointer"
+                        />
+                      </DynamicTooltip>
+                    </div>
+                  </>
+                )}
+                {isPermissionAdd && (
+                  <div
+                    style={{
+                      top:
+                        (selectedOptionZoom.value as number) > 75
+                          ? `${(columnWidth / 247) * 32}px`
+                          : `${(columnWidth / 247) * 38}px`,
+                      right: `${(columnWidth / 247) * 12}px`,
+                    }}
+                    className="absolute opacity-0 group-hover:opacity-100">
+                    <DynamicTooltip content="タスクを複製" placement="right">
+                      <ImageRound
+                        src="/icons/copy.svg"
+                        name="Copy icon"
+                        style={{
+                          width:
+                            (selectedOptionZoom.value as number) > 75
+                              ? '14px'
+                              : (selectedOptionZoom.value as number) === 75
+                                ? '12px'
+                                : `10px`,
+                          height:
+                            (selectedOptionZoom.value as number) > 75
+                              ? '14px'
+                              : (selectedOptionZoom.value as number) === 75
+                                ? '12px'
+                                : `10px`,
+                        }}
+                        className="text-gray-400 cursor-pointer"
+                        onClick={() => {
+                          handleConfirmCopyTask(parseInt(`${content.id}`));
+                        }}
+                      />
+                    </DynamicTooltip>
+                  </div>
+                )}
+              </div>
+              <div
+                style={{
+                  paddingTop: `${(columnWidth / 247) * 12}px`,
+                  paddingBottom: `${(columnWidth / 247) * 12}px`,
+                  paddingLeft: `${(columnWidth / 247) * 18}px`,
+                  paddingRight: `${(columnWidth / 247) * 12}px`,
+                }}
+                className={`flex flex-col gap-2`}
+                onClick={() => {
+                  if (!taskDetailId) {
+                    handleClick();
+                  }
+                }}>
+                <div className="flex gap-2 items-start">
+                  {isShowSchedule ? (
+                    <div className="w-fit flex-shrink-0">
+                      <ClockIconColor color={largeColor} />
+                    </div>
+                  ) : (
+                    <div
+                      style={{ backgroundColor: largeColor || '#BFBFBF' }}
+                      className="w-2 h-2 rounded-full mt-[5px] flex-shrink-0"></div>
+                  )}
+                  <p
+                    style={{
+                      width:
+                        selectedOptionZoom.value !== 50
+                          ? `${(columnWidth / 247) * 175}px`
+                          : '85px',
+                      fontSize:
+                        (selectedOptionZoom.value as number) > 75
+                          ? '14px'
+                          : '12px',
+                      minHeight:
+                        (selectedOptionZoom.value as number) > 75
+                          ? '20px'
+                          : '18px',
+                      marginRight: `${(columnWidth / 247) * 12}px`,
+                    }}
+                    className={`!border-none leading-[1.4] break-all line-clamp-2 cursor-pointer rounded-none bg-transparent !p-0 font-semibold  resize-none overflow-hidden focus:border-none focus:!rounded-none focus:shadow-none focus:!ring-offset-0 focus:!ring-0 focus:!ring-white`}>
+                    {content.title}
+                  </p>
+                </div>
+
+                {content.status?.id !== StatusValueTask.MY_ROUTINE && (
+                  <div className="flex items-center justify-between">
+                    <div
+                      style={{
+                        paddingTop:
+                          selectedOptionZoom.value !== 50
+                            ? `${(columnWidth / 247) * 10}px`
+                            : 0,
+                        gap: `${(columnWidth / 247) * 10}px`,
+                      }}
+                      className="flex items-center">
+                      {content.isImportant ? (
+                        <div
+                          style={{
+                            width:
+                              (selectedOptionZoom.value as number) > 75
+                                ? '36px'
+                                : '26px',
+                            height:
+                              (selectedOptionZoom.value as number) > 75
+                                ? '20px'
+                                : '15px',
+                            fontSize:
+                              (selectedOptionZoom.value as number) > 75
+                                ? '12px'
+                                : '9px',
+                          }}
+                          className="flex items-center justify-center font-medium text-primary bg-[#DFE6EA] rounded">
+                          重要
+                        </div>
+                      ) : null}
+                      <p
+                        style={{
+                          fontSize:
+                            (selectedOptionZoom.value as number) > 75
+                              ? '13px'
+                              : '10px',
+                        }}
+                        className="flex gap-1 items-center">
+                        締切
+                        <span
+                          className={`hover:cursor-pointer ${checkDeadline && 'text-primary'}`}>
+                          {content.deadline &&
+                            formatShowDeadlineTask(content.deadline)}
+                        </span>
+                      </p>
+                    </div>
+                    {/* TODO: PLAY / PAUSE TASK */}
+                    <div className="">
+                      {selectedOptionZoom.value === 50 && (
+                        <DynamicTooltip
+                          content={content.isStart ? '計測停止' : '計測開始'}
+                          placement="top">
+                          <div
+                            className="!w-[30px] !h-[30px] flex items-center justify-center"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                            }}>
+                            <ImageRound
+                              src={`/icons/${content.isStart ? 'pause-task' : 'play-task'}.svg`}
+                              name="Start task"
+                              className={`hover:cursor-pointer relative top-[3px] ${content.isStart ? '!w-[20px] !h-[20px]' : '!w-[20px] !h-[20px]'}  ${snapshot.isDragging ? 'opacity-100' : 'opacity-0'} group-hover:opacity-100`}
+                              onClick={async () => {
+                                await new Promise<void>((resolve) => {
+                                  setTaskSelectedToStart(content);
+                                  resolve();
+                                });
+                                handleConfirmCheckStartTask(`${content.id}`);
+                              }}
+                            />
+                          </div>
+                        </DynamicTooltip>
+                      )}
+                    </div>
+                  </div>
+                )}
+                {selectedOptionZoom.value !== 50 && (
+                  <div className="flex justify-between items-center mt-[6px]">
+                    <DynamicTooltip content="ステータスを変更" placement="top">
+                      <div
+                        className="w-20 max-w-20 h-[21px] rounded"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}>
+                        <Controller
+                          control={control}
+                          name={'statusId'}
+                          render={({ field: { value, onChange } }) => (
+                            <Dropdown
+                              openByDefault
+                              isStatusDropdown={true}
+                              disabled={
+                                !isPermissionUpdate ||
+                                content.status?.id ===
+                                  StatusValueTask.MY_ROUTINE
+                              }
+                              className={`!py-1 border-none disabled:opacity-100  !shadow-none ${statusStyle}`}
+                              styleClass={{
+                                fontSize:
+                                  (selectedOptionZoom.value as number) > 75
+                                    ? '12px'
+                                    : '9px',
+                                width:
+                                  (selectedOptionZoom.value as number) > 75
+                                    ? '70px'
+                                    : '50px',
+                                height:
+                                  (selectedOptionZoom.value as number) > 75
+                                    ? '22px'
+                                    : '16px',
+                                padding: `${(columnWidth / 247) * 6}px`,
+                                gap: `${(columnWidth / 247) * 10}px`,
+                                borderRadius: `${(columnWidth / 247) * 4}px`,
+                              }}
+                              classNameTextData={`!text-xs`}
+                              classNameOption={`!text-xs !w-[120px]`}
+                              classNameError={`!text-xs`}
+                              styleClassOption={{
+                                fontSize: '12px',
+                              }}
+                              options={
+                                content.status?.id ===
+                                StatusValueTask.MY_ROUTINE
+                                  ? dataOptionsStatus
+                                  : dataOptionsStatus.filter(
+                                      (item) =>
+                                        item.value !==
+                                        StatusValueTask.MY_ROUTINE,
+                                    )
+                              }
+                              selectedOption={dataOptionsStatus.find(
+                                (element) => element.value === value?.value,
+                              )}
+                              onChange={(e) => {
+                                onChange(e);
+                                editTask({
+                                  id: `${content.id}`,
+                                  oldIdStatus: `${content.status?.id}`,
+                                  statusId: watch('statusId')?.value as number,
+                                });
+                              }}
+                              error={errors.statusId?.message}
+                            />
+                          )}
+                        />
+                      </div>
+                    </DynamicTooltip>
+                    {/* TODO: PLAY / PAUSE TASK */}
+                    <DynamicTooltip
+                      content={content.isStart ? '計測停止' : '計測開始'}
+                      placement="top">
+                      <div
+                        className="!w-[30px] !h-[30px] flex items-center justify-center"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}>
+                        <ImageRound
+                          src={`/icons/${content.isStart ? 'pause-task' : 'play-task'}.svg`}
+                          name="Start task"
+                          className={`hover:cursor-pointer relative top-[3px] ${content.isStart ? '!w-[20px] !h-[20px]' : '!w-[20px] !h-[20px]'} ${snapshot.isDragging ? 'opacity-100' : 'opacity-0'} group-hover:opacity-100`}
+                          onClick={async () => {
+                            await new Promise<void>((resolve) => {
+                              setTaskSelectedToStart(content);
+                              resolve();
+                            });
+                            handleConfirmCheckStartTask(`${content.id}`);
+                          }}
+                        />
+                      </div>
+                    </DynamicTooltip>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </Draggable>
+      ) : (
+        <Draggable
+          draggableId={id}
+          index={index}
+          isDragDisabled={disableDraggable || !isPermissionUpdate}>
+          {(provided, snapshot) => (
+            <div
+              ref={provided.innerRef}
+              data-event={JSON.stringify({
+                ...content,
+                title: content.title ? content.title : '',
+                start: formatISO(now),
+                end: formatISO(addMinutesToDate(`${now}`)),
+                startEditable: true,
+                itemKanban: true,
+              })}
+              {...provided.draggableProps}
+              {...provided.dragHandleProps}
+              className={`relative ${isPermissionUpdate ? 'ex-event-draggable' : ''}   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid   ${content.isStart && ' !border-primary'} bg-white shadow-common rounded-md text-xs flex flex-col gap-2 mb-2 ${snapshot.isDragging && 'opacity-100'}`}>
+              <div
+                style={{
+                  paddingTop: `${(columnWidth / 247) * 12}px`,
+                  paddingBottom: `${(columnWidth / 247) * 12}px`,
+                  paddingLeft: `${(columnWidth / 247) * 18}px`,
+                  paddingRight: `${(columnWidth / 247) * 12}px`,
+                }}
+                className={`flex flex-col gap-2`}
+                onClick={() => {
+                  if (!taskDetailId) {
+                    handleClick();
+                  }
+                }}>
+                <div className="flex gap-1 items-start">
+                  {isShowSchedule ? (
+                    <div className="w-fit flex-shrink-0">
+                      <ClockIconColor color={largeColor} />
+                    </div>
+                  ) : (
+                    <div
+                      style={{ backgroundColor: largeColor || '#BFBFBF' }}
+                      className="w-2 h-2 rounded-full mt-[5px] flex-shrink-0"></div>
+                  )}
+                  <p
+                    style={{
+                      width: isShowSchedule
+                        ? `${(columnWidth / 247) * 130}px`
+                        : `${(columnWidth / 247) * 160}px`,
+                      fontSize: '12px',
+                      marginRight: `${(columnWidth / 247) * 12}px`,
+                    }}
+                    className={`!border-none leading-[1.4] break-all line-clamp-2 cursor-pointer rounded-none bg-transparent !p-0 font-semibold  resize-none overflow-hidden focus:border-none focus:!rounded-none focus:shadow-none focus:!ring-offset-0 focus:!ring-0 focus:!ring-white`}>
+                    {content.title}
+                  </p>
+                  {/* TODO: PLAY / PAUSE TASK */}
+                  <DynamicTooltip
+                    content={content.isStart ? '計測停止' : '計測開始'}
+                    placement="top">
+                    <div
+                      className="!w-[30px] !h-[30px] flex items-center justify-center"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}>
+                      <ImageRound
+                        src={`/icons/${content.isStart ? 'pause-task' : 'play-task'}.svg`}
+                        name="Start task"
+                        className={`hover:cursor-pointer relative top-[3px] ${content.isStart ? '!w-[20px] !h-[20px]' : '!w-[20px] !h-[20px]'} ${snapshot.isDragging ? 'opacity-100' : 'opacity-0'} group-hover:opacity-100`}
+                        onClick={async () => {
+                          await new Promise<void>((resolve) => {
+                            setTaskSelectedToStart(content);
+                            resolve();
+                          });
+                          handleConfirmCheckStartTask(`${content.id}`);
+                        }}
+                      />
+                    </div>
+                  </DynamicTooltip>
+                </div>
+              </div>
+            </div>
+          )}
+        </Draggable>
+      )}
+    </>
+  );
+};
+
+export default Item;

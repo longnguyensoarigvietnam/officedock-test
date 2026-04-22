@@ -1,0 +1,44 @@
+'use client';
+
+import React from 'react';
+import { useRouter } from 'next/navigation';
+
+import MainLayout from '@components/layouts/MainLayout';
+import Button from '@components/common/Button';
+import { VotingStatus } from './voting-status';
+
+import { PermissionsSystem } from '@constants/enums';
+import { pageRouters } from '@constants/routers';
+
+const VotingStatusPage = () => {
+  const router = useRouter();
+  return (
+    <MainLayout
+      title={pageRouters.MVP_MANAGEMENT.name}
+      className="!px-10 !py-[30px]"
+      showFooter={false}
+      permission={PermissionsSystem.MVP_VOTING_MANAGEMENT_VIEW}>
+      <div className="flex gap-4 items-center mb-[30px]">
+        <p className="text-black font-medium text-[26px] leading-[1]">MVP投票管理</p>
+        <div className="flex gap-2 bg-white w-fit p-[6px] rounded-[20px]">
+          <Button
+            variant="outline"
+            className={`w-[100px] !p-0 text-xs h-[28px] !font-bold !text-[#77858F] !bg-[#EBF1F7] border-none !rounded-[20px]`}
+            onClick={() => router.push(pageRouters.MVP_MANAGEMENT.href)}>
+            管理一覧
+          </Button>
+          <Button
+            variant="primary"
+            className={`w-[100px] !p-0 text-xs h-[28px] !font-bold text-white border-none !rounded-[20px]`}>
+            投票状況
+          </Button>
+        </div>
+      </div>
+      <div className="flex flex-col gap-6">
+        <VotingStatus />
+      </div>
+    </MainLayout>
+  );
+};
+
+export default VotingStatusPage;

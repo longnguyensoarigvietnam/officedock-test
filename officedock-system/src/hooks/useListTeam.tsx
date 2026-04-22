@@ -1,0 +1,62 @@
+'use client';
+import { useQuery } from 'react-query';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
+import { apiRouters } from '@constants/routers';
+import { Organizations } from '@interfaces/organization';
+import api from '@base/api';
+import { AxiosError } from 'axios';
+
+interface useTeamListProps {
+  condition?: boolean[];
+  screenName?: string;
+  onSuccess?: (success: Organizations[]) => void;
+  onError?: (error: AxiosError) => void;
+  onSettled?: () => void;
+}
+
+const useTeamList = ({
+  onSuccess,
+  onError,
+  onSettled,
+  condition,
+  screenName,
+}: useTeamListProps) => {
+  const { data: session } = useSessionCache();
+  const token = session?.accessToken;
+  // Handle call API get User list
+  const getTeamList = async () => {
+    const apiUrl = apiRouters.TEAM_LIST;
+    const { data } = await api.get<Organizations[]>(
+      `${apiUrl}${screenName ? `?screen_name=${screenName}` : ''}`,
+    );
+    return data;
+  };
+
+  // Handle API get User list
+  const {
+    data: teamList,
+    refetch: refetchTeamList,
+    isFetched: isFetchedTeams,
+  } = useQuery({
+    queryKey: ['getTeamList', screenName],
+    queryFn: getTeamList,
+    retry: 0,
+    enabled: !!token && condition?.every(Boolean),
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+    onSuccess: (response: Organizations[]) => {
+      onSuccess && onSuccess(response);
+    },
+    onError: (error: AxiosError) => {
+      onError && onError(error);
+    },
+    onSettled: () => {
+      onSettled && onSettled();
+    },
+  });
+
+  return { teamList, refetchTeamList, isFetchedTeams };
+};
+
+export default useTeamList;

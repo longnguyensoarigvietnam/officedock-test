@@ -1,0 +1,156 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+html *::-webkit-scrollbar {
+  border-radius: 0;
+  width: 8px;
+  height: 8px;
+}
+html *::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.15);
+}
+html *::-webkit-scrollbar-track {
+  border-radius: 0;
+  background-color: rgba(0, 0, 0, 0);
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Hide arrows from input number
+/* Works for Chrome, Safari, Edge, Opera */
+.no-number-arrows::-webkit-outer-spin-button,
+.no-number-arrows::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Works for Firefox */
+.no-number-arrows {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* Change color of element when using autofill */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px white inset !important;
+}
+
+.ql-editor {
+  height: 425px !important;
+  font-size: 14px;
+  box-sizing: border-box;
+  padding: 1rem;
+}
+
+.ql-toolbar {
+  border-radius: 10px 10px 0 0;
+  border-color: rgb(229 231 235) !important;
+}
+
+.ql-container {
+  border-radius: 0 0 10px 10px !important;
+  border-color: rgb(229 231 235) !important;
+}
+
+.custom-quill-text.ql-editor {
+  height: 350px !important;
+}
+
+.custom-quill-text h1 {
+  font-size: 2em;
+}
+
+.custom-quill-text h2 {
+  font-size: 1.7em;
+}
+
+.custom-quill-text h3 {
+  font-size: 1.4em;
+}
+
+.custom-quill-text h4 {
+  font-size: 1em;
+}
+
+.custom-quill-text h5 {
+  font-size: 0.9em;
+}
+
+.custom-quill-text h6 {
+  font-size: 0.75em;
+}
+
+@font-face {
+  font-family: 'Noto Sans JP';
+  src: url('/fonts/NotoSansJP-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Noto Sans JP';
+  src: url('/fonts/NotoSansJP-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Noto Sans JP';
+  src: url('/fonts/NotoSansJP-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+.ql-editor {
+  font-family: 'Noto Sans JP', sans-serif;
+}
+.ql-font-noto-sans-jp {
+  font-family: 'Noto Sans JP', sans-serif;
+}
+.ql-font {
+  display: none !important;
+}
+.quill-editor {
+  width: 100%;
+}
+
+.quill-editor .ql-container {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.quill-editor .ql-editor {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-wrap: break-word;  /* handles long words */
+  word-break: break-word;     /* fallback */
+}

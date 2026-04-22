@@ -1,0 +1,714 @@
+.schedule-custom .fc-resourceTimeGridDay-view .fc-scroller-harness {
+  overflow: visible;
+}
+.schedule-custom .scroll-container {
+  position: relative;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+}
+.schedule-custom .scroll-container::-webkit-scrollbar {
+  height: 8px;
+}
+.schedule-custom .scroll-container::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 10px;
+}
+.schedule-custom .scroll-container::-webkit-scrollbar-thumb:hover {
+  background-color: #555;
+}
+
+/* Main */
+.schedule-custom .fc-timeGridDay-view .td[role='presentation'],
+.schedule-custom .fc .fc-timeGridDay-view td {
+  border: 0 !important;
+}
+
+.schedule-custom .fc .fc-timeGridDay-view .fc-scrollgrid {
+  border: 0 solid #ddd;
+  padding: 10px;
+}
+
+.schedule-custom .fc .fc-timeGridDay-view .fc-timegrid-slot-minor {
+  border-top: 0;
+}
+
+.schedule-custom
+  .fc
+  .fc-timeGridDay-view
+  .fc-timegrid-slot.fc-timegrid-slot-lane.fc-timegrid-slot-minor::after {
+  display: none;
+}
+
+.schedule-custom
+  .fc
+  .fc-timeGridDay-view
+  .fc-timegrid-slot.fc-timegrid-slot-lane {
+  position: relative;
+  background-color: transparent !important;
+  height: 32px;
+}
+
+.schedule-custom .fc .fc-daygrid-event-harness {
+  min-height: 70px;
+  overflow-x: hidden;
+}
+.schedule-custom
+  .fc
+  .fc-timeGridDay-view
+  .fc-timegrid-slot.fc-timegrid-slot-lane::after {
+  content: '';
+  position: absolute;
+  height: 1px;
+  width: 100%;
+  background-color: #d2dbe1;
+  top: 0%;
+  transform: -translateX(50%);
+  opacity: 0.7;
+}
+
+.schedule-custom .fc-timeGridDay-view .fc-day-today {
+  background-color: transparent !important;
+}
+
+.schedule-custom
+  .fc-timeGridDay-view
+  .fc-daygrid-day-frame.fc-scrollgrid-sync-inner
+  .fc-daygrid-day-events {
+  margin-bottom: 0;
+  min-height: unset;
+}
+
+.schedule-custom
+  .fc-scroller-harness
+  .fc-daygrid-body.fc-daygrid-body-unbalanced.fc-daygrid-body-natural
+  .fc-scrollgrid-sync-table {
+  padding-bottom: 20px;
+}
+/* All Day */
+.schedule-custom
+  .fc-timegrid-axis.fc-scrollgrid-shrink
+  .fc-timegrid-axis-frame.fc-scrollgrid-shrink-frame.fc-timegrid-axis-frame-liquid {
+  display: none;
+}
+
+.schedule-custom
+  .fc-timeGridDay-view
+  .fc-scrollgrid-section
+  .fc-timegrid-divider.fc-cell-shaded,
+.schedule-custom .fc-timeGridDay-view .fc-col-header {
+  display: none !important;
+}
+.schedule-custom .fc-col-header {
+  background-color: '#E6F3FB' !important;
+}
+
+.schedule-custom
+  .fc
+  .fc-timeGridDay-view
+  .fc-scrollgrid-section.fc-scrollgrid-section-header.fc-scrollgrid-section-sticky {
+  height: 0;
+}
+
+.schedule-custom
+  .fc
+  .fc-timeGridDay-view
+  .fc-timegrid-slot-label-cushion.fc-scrollgrid-shrink-cushion {
+  font-weight: 600;
+  color: rgb(148 163 184);
+}
+/* Header */
+.schedule-custom .fc-col-header-cell-cushion {
+  font-weight: 500 !important;
+  font-size: 12px;
+  color: #77858f;
+}
+.schedule-custom .fc-col-header-cell.fc-day-today {
+  position: relative;
+}
+.schedule-custom .fc-col-header-cell.fc-day-today::after {
+  content: '今日';
+  position: absolute;
+  color: white;
+  padding: 1px 2px 1px 2px;
+  background-color: #3cabf3;
+  border-radius: 20px;
+  font-size: 11px;
+  top: 9px;
+  right: 17px;
+  width: 32px;
+}
+
+.schedule-custom .fc-timegrid-event-harness-inset .fc-timegrid-event,
+.schedule-custom .fc-timegrid-event.fc-event-mirror,
+.schedule-custom .fc-timegrid-more-link {
+  box-shadow: none !important;
+}
+.schedule-custom .fc-v-event {
+  border: none !important;
+  background-color: transparent !important;
+}
+.schedule-custom .fc-timegrid-event .fc-event-main {
+  padding: 0 !important;
+}
+.schedule-custom
+  .fc
+  .fc-event.fc-event-draggable.fc-event-start.fc-event-today.fc-daygrid-event.fc-daygrid-block-event.fc-h-event {
+  box-shadow: none !important;
+}
+.schedule-custom .fc-h-event {
+  border: none !important;
+  background-color: transparent !important;
+}
+.schedule-custom
+  .fc-scrollgrid-section.fc-scrollgrid-section-header.fc-scrollgrid-section-sticky {
+  z-index: 3;
+  position: relative;
+}
+/* Custom conflict calendar */
+.schedule-custom th .fc-scrollgrid-sync-inner {
+  border-bottom: none !important;
+  background-color: '#E6F3FB' !important;
+  background: '#E6F3FB' !important;
+}
+.schedule-custom .fc-col-header-cell.fc-resource {
+  background-color: #e6f3fb !important;
+}
+.schedule-custom .fc-col-header-cell.fc-day {
+  background: #e6f3fb !important;
+}
+
+.schedule-custom .item-schedule-shadow {
+  box-shadow: 0px 2px 8px 0px rgba(0, 0, 0, 0.1);
+}
+.schedule-custom .fc-timegrid-col-frame {
+  overflow: visible !important;
+}
+.schedule-custom .fc-scrollgrid-section .fc-timegrid-divider.fc-cell-shaded {
+  background: transparent !important;
+}
+.schedule-custom .fc .fc-timegrid-now-indicator-arrow {
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 8px solid #64bbf3;
+  width: 0;
+  height: 0;
+  position: relative;
+}
+.schedule-custom .fc .fc-timegrid-now-indicator-arrow::after {
+  content: '';
+  display: block;
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 70px;
+  height: 2px;
+  background-color: #64bbf3;
+  margin-left: -3px;
+}
+.schedule-custom .fc-timegrid-now-indicator-line {
+  border: 1px solid #64bbf3 !important;
+}
+.schedule-custom .fc-timeGridWeek-view .fc-timegrid-now-indicator-line {
+  margin-top: -6px;
+}
+.schedule-custom .fc-resourceTimeGridDay-view .fc-timegrid-now-indicator-line {
+  margin-top: -1px;
+}
+.schedule-custom
+  .fc-col-header
+  th.fc-col-header-cell.fc-resource:last-child
+  .fc-col-header-cell-cushion {
+  color: #0068b6;
+  font-size: 12px;
+  font-weight: 500;
+}
+.schedule-custom .overlapping-event {
+  width: 48% !important;
+  display: inline-block;
+}
+.schedule-custom .fc-event-dragging {
+  opacity: 1 !important;
+}
+.schedule-custom .fc-event-dragging .fc-event-main .card-schedule {
+  background-color: rgba(167, 185, 193, 0.3) !important;
+}
+.schedule-page .react-datepicker-popper {
+  top: 55px !important;
+  left: 71% !important;
+  transform: translate(-50%, 0) !important;
+}
+
+.schedule-custom .today-divided {
+  position: relative;
+}
+.schedule-custom .today-divided::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  height: 100%;
+  width: 1px;
+  background-color: red;
+  z-index: 1;
+}
+.schedule-custom .fc-event.event-type-a {
+  position: absolute;
+  width: 48%;
+  left: 0%;
+}
+.schedule-custom .fc-event.event-type-b {
+  position: absolute;
+  width: 48%;
+  left: 52%;
+}
+/* Ensure events don't overlap */
+.schedule-custom .fc-event {
+  z-index: 2;
+}
+/* Header */
+.schedule-custom .fc-col-header-cell-cushion {
+  font-weight: 500 !important;
+  font-size: 12px;
+  color: #77858f;
+}
+.schedule-custom .fc-col-header-cell.fc-day-today {
+  position: relative;
+}
+
+.schedule-custom .fc-timegrid-event-harness-inset .fc-timegrid-event,
+.schedule-custom .fc-timegrid-event.fc-event-mirror,
+.schedule-custom .fc-timegrid-more-link {
+  box-shadow: none !important;
+}
+.schedule-custom .fc-v-event {
+  border: none !important;
+  background-color: transparent !important;
+}
+.schedule-custom .fc-timegrid-event .fc-event-main {
+  padding: 0 !important;
+}
+
+.schedule-custom
+  .fc
+  .fc-event.fc-event-draggable.fc-event-start.fc-event-today.fc-daygrid-event.fc-daygrid-block-event.fc-h-event {
+  box-shadow: none !important;
+}
+.schedule-custom .fc-h-event {
+  border: none !important;
+  background-color: transparent !important;
+}
+.schedule-custom
+  .fc-scrollgrid-section.fc-scrollgrid-section-header.fc-scrollgrid-section-sticky {
+  z-index: 3;
+  position: relative;
+}
+/* Custom conflict calendar */
+.schedule-custom th .fc-scrollgrid-sync-inner {
+  border-bottom: none !important;
+}
+.schedule-custom .item-schedule-shadow {
+  box-shadow: 0px 2px 8px 0px rgba(0, 0, 0, 0.1);
+}
+.schedule-custom .fc-timegrid-col-frame {
+  overflow: visible !important;
+}
+.schedule-custom .fc-scrollgrid-section .fc-timegrid-divider.fc-cell-shaded {
+  background: transparent !important;
+}
+.schedule-custom
+  .fc-col-header
+  th.fc-col-header-cell.fc-resource:last-child
+  .fc-col-header-cell-cushion {
+  color: #0068b6;
+  font-size: 12px;
+  font-weight: 500;
+}
+.schedule-custom .overlapping-event {
+  width: 48% !important;
+  display: inline-block;
+}
+.schedule-custom .fc-event-dragging {
+  opacity: 1 !important;
+}
+.schedule-custom .fc-event-dragging .fc-event-main .card-schedule {
+  background-color: rgba(167, 185, 193, 0.3) !important;
+}
+.schedule-custom .schedule-page .react-datepicker-popper {
+  top: 55px !important;
+  left: 71% !important;
+  transform: translate(-50%, 0) !important;
+}
+
+.schedule-custom .today-divided {
+  position: relative;
+}
+.schedule-custom .today-divided::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  height: 100%;
+  width: 1px;
+  background-color: red;
+  z-index: 1;
+}
+.schedule-custom .fc-event.event-type-a {
+  position: absolute;
+  width: 48%;
+  left: 0%; /* Always aligned to the left */
+}
+.schedule-custom .fc-event.event-type-b {
+  position: absolute;
+  width: 48%;
+  left: 52%; /* Always aligned to the right */
+}
+/* Ensure events don't overlap */
+.schedule-custom .fc-timegrid-event-harness {
+  transform: scaleX(0.97);
+  transform-origin: center;
+}
+.schedule-custom .fc-resourceTimeGridDay-view .fc-timegrid-col-events {
+  left: 21px !important;
+}
+.schedule-custom .fc-event {
+  z-index: 2; /* Ensure event sits above the divider */
+  /* padding: 0 12px 0 !important; */
+}
+.schedule-custom .fc-timeGridWeek-view .fc-event {
+  z-index: 2; /* Ensure event sits above the divider */
+  /* padding: 0 18px 0 !important; */
+  left: 0 !important;
+}
+.schedule-custom .hour-line::after {
+  background-color: #d2dbe1 !important;
+  height: 2px !important;
+  opacity: 1 !important;
+}
+
+.schedule-custom .half-hour-line::after {
+  background-color: #d2dbe1 !important;
+}
+
+/* Day */
+
+.schedule-custom
+  .fc
+  .fc-event.fc-event-draggable.fc-event-resizable.fc-event-start.fc-event-end.fc-event-past.fc-timegrid-event.fc-v-event,
+.schedule-custom
+  .fc
+  .fc-event.fc-event-draggable.fc-event-resizable.fc-event-end.fc-event-today.fc-event-future.fc-timegrid-event.fc-v-event,
+.schedule-custom
+  .fc
+  .fc-event.fc-event-draggable.fc-event-start.fc-daygrid-event.fc-daygrid-block-event.fc-h-event,
+.schedule-custom
+  .fc
+  .fc-event.fc-event-draggable.fc-event-today.fc-daygrid-event.fc-daygrid-block-event.fc-h-event,
+.schedule-custom
+  .fc
+  .fc-event.fc-event-draggable.fc-event-future.fc-daygrid-event.fc-daygrid-block-event.fc-h-event,
+.schedule-custom
+  .fc
+  .fc-event.fc-event-draggable.fc-event-resizable.fc-event-start.fc-event-end.fc-event-today.fc-event-future.fc-timegrid-event.fc-v-event,
+.schedule-custom
+  .fc
+  .fc-event.fc-event-draggable.fc-event-start.fc-event-today.fc-daygrid-event.fc-daygrid-block-event.fc-h-event {
+  border: 1px solid #dfe6ea;
+  width: 100%;
+
+  background-color: transparent !important;
+}
+.schedule-custom .fc .fc-timegrid-slot-label {
+  vertical-align: unset !important;
+}
+.schedule-custom .fc-timegrid-slots table colgroup col {
+  width: 41px !important;
+}
+.schedule-custom .fc-timegrid-cols table colgroup col {
+  width: 41px !important;
+}
+.schedule-custom .fc-direction-ltr .fc-timegrid-col-events {
+  margin: 0 !important;
+}
+
+.schedule-custom
+  .fc-timegrid-slot.fc-timegrid-slot-label.fc-timegrid-slot-minor {
+  height: 30px;
+}
+.schedule-custom
+  .fc-resourceTimeGridDay-view
+  .fc-timegrid-slot-label-frame.fc-scrollgrid-shrink-frame {
+  height: 100%;
+}
+.schedule-custom
+  .fc-timeGridWeek-view
+  .fc-timegrid-slot-label-frame.fc-scrollgrid-shrink-frame {
+  height: 100%;
+}
+
+/* Week */
+.schedule-custom .fc .fc-timegrid-col.fc-day-today {
+  background-color: transparent !important;
+}
+.schedule-custom .fc .fc-daygrid-day.fc-day-today {
+  background-color: transparent !important;
+}
+.schedule-custom .fc-timegrid-slots colgroup col {
+  border: none !important;
+}
+.schedule-custom .fc .fc-timegrid-axis-frame {
+  opacity: 0;
+}
+
+.schedule-custom .fc-theme-standard td:nth-child(1),
+.schedule-custom .fc-theme-standard th:nth-child(1) {
+  border-top: none !important;
+}
+.schedule-custom .fc-theme-standard td:last-child,
+.schedule-custom .fc-theme-standard th:last-child {
+  border-right: none !important;
+}
+.schedule-custom .fc-theme-standard td:nth-child(2) {
+  border-top: none !important;
+  border-bottom: none !important;
+}
+.schedule-custom .fc-timegrid-body {
+  overflow: hidden;
+  overflow-x: clip;
+}
+.schedule-custom .fc-timegrid-divider.fc-cell-shaded {
+  border: none !important;
+}
+.schedule-custom
+  .fc-resourceTimeGridDay-view
+  .fc-timegrid-cols
+  td:not(:first-child) {
+  border-left: none !important;
+  border-bottom: none !important;
+}
+.schedule-custom .fc-timeGridWeek-view .fc-timegrid-cols td {
+  border-left: none !important;
+  border-bottom: none !important;
+  border: 1px solid #d2dbe1;
+}
+.schedule-custom .fc-theme-standard td {
+  border-bottom: none !important;
+}
+.schedule-custom .fc .fc-timegrid-divider {
+  padding: 0 !important;
+}
+.schedule-custom
+  .fc-resourceTimeGridDay-view
+  .fc-timegrid-slot.fc-timegrid-slot-lane::after {
+  content: '';
+  position: absolute;
+  height: 1px;
+  width: 100%;
+  top: 8px;
+  background-color: #d2dbe1;
+  transform: -translateX(50%);
+  opacity: 0.7;
+  left: 20px;
+}
+
+.schedule-custom
+  .fc-resourceTimeGridDay-view
+  .fc-timegrid-slot-label-cushion.fc-scrollgrid-shrink-cushion {
+  position: relative;
+  top: -9px;
+  left: 3px;
+}
+.schedule-custom
+  .fc-timeGridWeek-view
+  .fc-timegrid-slot-label-cushion.fc-scrollgrid-shrink-cushion {
+  position: relative;
+  top: -9px;
+}
+.schedule-custom
+  .fc-timeGridWeek-view
+  .fc-timegrid-slot-label-cushion.fc-scrollgrid-shrink-cushion {
+  position: relative;
+  top: 3px;
+}
+
+.schedule-custom
+  .fc-timeGridWeek-view
+  .fc-timegrid-slot.fc-timegrid-slot-lane::after {
+  content: '';
+  position: absolute;
+  height: 1px;
+  width: 100%;
+  background-color: #d2dbe1;
+  transform: -translateX(50%);
+  top: 5px;
+  opacity: 0.7;
+}
+
+.schedule-custom
+  .fc-resourceTimeGridDay-view
+  .fc-timegrid-slot-label-cushion.fc-scrollgrid-shrink-cushion {
+  position: relative;
+  top: -5px;
+}
+.schedule-custom
+  .fc-timeGridWeek-view
+  .fc-timegrid-slot-label-cushion.fc-scrollgrid-shrink-cushion {
+  position: relative;
+  top: -10px;
+}
+.schedule-custom
+  .fc-timeGridWeek-view
+  .fc-timegrid-slot-label-cushion.fc-scrollgrid-shrink-cushion {
+  position: relative;
+  top: -4px;
+}
+.schedule-custom .fc-resourceTimeGridDay-view .fc-timegrid-col-frame {
+  position: relative;
+  top: 4px;
+}
+.schedule-custom .fc-timeGridWeek-view .fc-timegrid-col-frame {
+  position: relative;
+  top: 0px;
+}
+
+.schedule-custom
+  .fc-timegrid-slot.fc-timegrid-slot-lane.fc-timegrid-slot-minor::after {
+  display: none;
+}
+.schedule-custom .fc .fc-timegrid-slot-minor {
+  border-top-style: none;
+  border: none;
+}
+.schedule-custom
+  .fc-resourceTimeGridDay-view
+  .fc-timegrid-slot.fc-timegrid-slot-lane {
+  position: relative;
+}
+.schedule-custom .fc-timeGridWeek-view .fc-timegrid-slot.fc-timegrid-slot-lane {
+  position: relative;
+}
+.schedule-custom .fc .fc-timegrid-axis-chunk {
+  top: -5px;
+}
+.schedule-custom .fc-theme-standard .fc-scrollgrid {
+  border: none !important;
+}
+.schedule-custom .fc.fc-timegrid-axis-frame {
+  opacity: 0 !important;
+}
+.schedule-custom .fc-timegrid-axis.fc-scrollgrid-shrink {
+  border: none !important;
+}
+.schedule-custom .fc-scrollgrid-sync-table .fc-daygrid-day.fc-resource {
+  border: none !important;
+}
+.schedule-custom .fc-theme-standard td {
+  border: none;
+}
+.schedule-custom .fc .fc-scrollgrid-section-sticky > * {
+  background-color: #ebf1f7 !important;
+  z-index: 2;
+}
+.schedule-custom .fc-theme-standard th {
+  border: none !important;
+}
+
+.schedule-custom .fc .fc-timegrid-axis-cushion,
+.schedule-custom .fc .fc-timegrid-slot-label-cushion {
+  color: #77858f;
+  font-size: 12px !important;
+  width: 41px;
+}
+
+.schedule-custom .fc-day.fc-day-sun.fc-day-today.fc-daygrid-day.fc-resource {
+  border-bottom: none !important;
+}
+.schedule-custom
+  .fc-resourceTimeGridDay-view
+  .fc-v-event:not(.fc-event-selected)
+  .fc-event-resizer-end {
+  width: 40px;
+  height: 40px;
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(calc(-50% + 12px));
+  background: url('/icons/resize-task.svg') no-repeat center;
+  background-size: contain;
+  cursor: pointer !important;
+  opacity: 1;
+}
+.schedule-custom
+  .fc-timeGridWeek-view
+  .fc-v-event:not(.fc-event-selected)
+  .fc-event-resizer-end {
+  width: 40px;
+  height: 40px;
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: url('/icons/resize-task.svg') no-repeat center;
+  background-size: contain;
+  cursor: pointer !important;
+  opacity: 1;
+}
+.schedule-custom .fc-event.overlap-event .fc-event-resizer-end {
+  left: 42% !important;
+}
+.schedule-custom .fc-scroller-harness .fc-scroller-harness-liquid {
+  margin-left: -5px;
+}
+.schedule-custom .fc-timeGridWeek-view .fc-timegrid-slot-label {
+  padding-left: 22px;
+}
+.schedule-custom .fc-timegrid-slot-label {
+  padding-left: 12px;
+}
+.schedule-custom .fc-resourceTimeGridDay-view .fc-event-main {
+  /* left: 10px !important; */
+  top: 5px;
+}
+.schedule-custom .fc-daygrid-day-frame .fc-event-main {
+  left: 0 !important;
+}
+.schedule-custom .fc-resource:nth-of-type(1) .fc-event {
+  left: 10px !important;
+}
+.schedule-custom .fc-timeGridWeek-view .fc-timegrid-col-events {
+  top: 4px !important;
+}
+.schedule-custom .fc-event .fc-event-resizer-end {
+  display: none !important;
+}
+.schedule-custom .fc-event.resizable-disabled .fc-event-resizer-end {
+  display: block !important;
+}
+.schedule-custom .fc-scroller-harness {
+  background: #e6f3fb !important;
+}
+.schedule-custom.fc-timeGridWeek-view.fc-day-header {
+  font-size: 20px !important;
+}
+.schedule-custom .fc-day-header {
+  font-size: 20px !important;
+}
+
+.schedule-custom .fc-timeGridWeek-view .fc-timegrid-event-harness {
+  transform: scaleX(0.85);
+  transform-origin: center;
+}
+.schedule-custom .fc-timeGridWeek-view .fc-event .icon-circle {
+  transform: scaleX(1.1765);
+  transform-origin: center;
+}
+
+.schedule-custom .fc-resourceTimeGridDay-view .fc-timegrid-event-harness {
+  transform: scaleX(0.96);
+  transform-origin: center;
+}
+.schedule-custom .fc-resourceTimeGridDay-view .fc-event .icon-circle {
+  transform: scaleX(1.04);
+  transform-origin: center;
+}

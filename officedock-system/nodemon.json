@@ -1,0 +1,7 @@
+{
+  "watch": [
+    "server"
+  ],
+  "exec": "ts-node --transpile-only --project tsconfig.server.json server/index.ts",
+  "ext": "ts"
+}

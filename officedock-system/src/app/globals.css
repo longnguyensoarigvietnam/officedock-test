@@ -1,0 +1,406 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  overflow: auto;
+}
+body {
+  height: 100vh;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .scrollbar-gutter-stable {
+    scrollbar-gutter: stable;
+  }
+}
+
+p:has(.inline-msg-quote) {
+  margin: 0; /* leave default margin */
+  line-height: 1; /* matches span */
+  display: flex; /* if you want the height to be exactly equal to the span */
+  height: fit-content;
+  width: 100%;
+}
+
+textarea::placeholder {
+  font-family: 'Noto Sans JP', sans-serif !important;
+  font-weight: 400 !important;
+  color: #77858f !important;
+}
+
+.truncate-oneline {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+  word-break: keep-all;
+}
+.custom-editor-content .ProseMirror {
+  height: 160px;
+}
+
+/* Hide arrows from input number
+/* Works for Chrome, Safari, Edge, Opera */
+.no-number-arrows::-webkit-outer-spin-button,
+.no-number-arrows::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+/* Change the color of element when using autofill*/
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px white inset !important;
+}
+
+/* Works for Firefox */
+.no-number-arrows {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* Scrollbar custom UI */
+html *::-webkit-scrollbar {
+  border-radius: 0;
+  width: 8px;
+  height: 8px;
+}
+
+html *::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.15);
+}
+
+html *::-webkit-scrollbar-track {
+  border-radius: 0;
+  background-color: rgba(0, 0, 0, 0);
+}
+
+html *::-webkit-scrollbar-thumb:hover, html *::-webkit-scrollbar-track:hover {
+  cursor: pointer;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.infinite-scroll-component__outerdiv {
+  height: 100%;
+  overflow-y: hidden;
+}
+
+/* Chat */
+.text-chat-box p {
+  width: 100%;
+  display: block;
+  word-break: break-all;
+}
+.no-show {
+  visibility: inherit !important;
+}
+.wavy-line {
+  --s: 4.5px;
+  --b: 1.8px;
+  --m: 1.9;
+
+  background: #228cdb;
+  --R: calc(var(--s) * sqrt(var(--m) * var(--m) + 1) + var(--b) / 2);
+  height: calc(2 * var(--R));
+  width: 44%;
+  --_g: #0000 calc(99% - var(--b)), #000 calc(101% - var(--b)) 99%, #0000 101%;
+  mask:
+    radial-gradient(
+        var(--R) at left 50% bottom calc(-1 * var(--m) * var(--s)),
+        var(--_g)
+      )
+      calc(50% - 2 * var(--s)) calc(50% - var(--s) / 2 - var(--b) / 2) /
+      calc(4 * var(--s)) calc(var(--s) + var(--b)) repeat-x,
+    radial-gradient(
+        var(--R) at left 50% top calc(-1 * var(--m) * var(--s)),
+        var(--_g)
+      )
+      50% calc(50% + var(--s) / 2 + var(--b) / 2) / calc(4 * var(--s))
+      calc(var(--s) + var(--b)) repeat-x;
+}
+@media (max-width: 1440px) {
+  .wavy-line {
+    --s: 5.2px;
+    --b: 1.7px;
+    --m: 1.5;
+    width: 41%;
+  }
+}
+.fc-license-message {
+  display: none !important;
+}
+.custom-quill-text h1 {
+  font-size: 2em;
+}
+
+.custom-quill-text h2 {
+  font-size: 1.7em;
+}
+
+.custom-quill-text h3 {
+  font-size: 1.4em;
+}
+
+.custom-quill-text h4 {
+  font-size: 1em;
+}
+
+.custom-quill-text h5 {
+  font-size: 0.9em;
+}
+
+.custom-quill-text h6 {
+  font-size: 0.75em;
+}
+
+/*  Side bar */
+.tab-panel {
+  height: 100%;
+}
+
+.menu-item::before {
+  content: '';
+  position: absolute;
+  top: -15px;
+  right: 0;
+  height: 15px;
+  width: 15px;
+  border-bottom-right-radius: 50%;
+  background-color: transparent;
+  box-shadow: 0 8px 0 0 #ebf1f7;
+}
+
+.menu-item::after {
+  content: '';
+  position: absolute;
+  bottom: -15px;
+  right: 0;
+  height: 15px;
+  width: 15px;
+  border-top-right-radius: 50%;
+  background-color: transparent;
+  box-shadow: 0 -8px 0 0 #ebf1f7;
+}
+
+.tippy-box {
+  background-color: #5b6770 !important;
+  border-radius: 6px !important;
+}
+
+.animated-border-box-glow.animate,
+.animated-border-box.animate {
+  max-height: 44px;
+  max-width: 44px;
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  overflow: hidden;
+  z-index: 0;
+  border-radius: 50%;
+}
+
+.animated-border-box.animate:before,
+.animated-border-box-glow.animate:before {
+  content: '';
+  z-index: -2;
+  text-align: center;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(0deg);
+  position: absolute;
+  width: 99999px;
+  height: 99999px;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-image: conic-gradient(
+    from 180deg at 50% 50%,
+    #a6e0db 0deg,
+    #63b8ef 180deg,
+    rgba(0, 136, 195, 0) 180deg,
+    #a6e0db 360deg
+  );
+}
+
+.animated-border-box.animate:before,
+.animated-border-box-glow.animate:before {
+  animation: rotate 60s linear infinite;
+}
+
+.animated-border-box.animate:after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  left: 5px;
+  top: 5px;
+  width: calc(100% - 10px);
+  height: calc(100% - 10px);
+  background: #fff;
+  border-radius: 50%;
+}
+
+@keyframes rotate {
+  100% {
+    transform: translate(-50%, -50%) rotate(1turn);
+  }
+}
+
+.ProseMirror {
+  height: fit-content;
+  border: 1px solid #77858f !important;
+  border-radius: 6px !important;
+  padding: 11px 14px 11px 14px;
+  overflow-y: auto;
+  max-height: 150px !important;
+}
+
+.ProseMirror-focused {
+  outline: none !important;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  color: #77858f !important;
+  content: attr(data-placeholder);
+  float: left;
+  pointer-events: none;
+  height: 0;
+  font-size: 14px !important;
+}
+
+.tweet-form .ProseMirror {
+  height: 130px;
+}
+
+.chat .ProseMirror {
+  height: 150px;
+}
+
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  .custom-password-mask[type='password'] {
+    -webkit-text-stroke-width: 0.5em;
+    letter-spacing: 0.5em;
+    padding-left: 14px;
+    box-sizing: border-box;
+    overflow: hidden;
+    text-indent: 4px;
+  }
+}
+
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type='checkbox']:checked {
+  background-color: none;
+  background-image: url('/icons/radio.svg');
+  color: #228cdb;
+}
+
+input[type='checkbox']:focus {
+  box-shadow: none;
+}
+
+.clip-left {
+  clip-path: polygon(0% 0%, 97% 0%, 100% 50%, 97% 100%, 0 100%);
+}
+
+.clip-middle {
+  clip-path: polygon(97% 0%, 100% 50%, 97% 100%, 0% 100%, 3% 50%, 0% 0%);
+}
+
+.clip-right {
+  clip-path: polygon(100% 0%, 100% 50%, 100% 100%, 0% 100%, 3.2% 50%, 0% 0%);
+}
+/* Preview file */
+.transform-component-module_wrapper__SPB86 {
+  width: 100% !important;
+}
+
+.clip-diagonal-left {
+  clip-path: polygon(100% 0, 0 0, 0 100%);
+}
+
+/* Customized scrollbar */
+.customized-scrollbar {
+  padding-right: 12px; /* creates space between content and scrollbar */
+  box-sizing: content-box; /* ensures padding doesn’t shrink content */
+}
+
+.customized-scrollbar::-webkit-scrollbar-track {
+  border-radius: 10px;
+  background-color: transparent;
+}
+
+.customized-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  background-color: transparent;
+}
+
+.customized-scrollbar::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background-color: #dfe6ea;
+}
+
+.customized-scrollbar::-webkit-scrollbar-thumb:hover, .customized-scrollbar::-webkit-scrollbar-track:hover {
+  cursor: pointer;
+}
+
+.clip-envelope-left-front {
+  clip-path: polygon(0 0, 0% 100%, 100% 50%);
+}
+
+.clip-envelope-right-front {
+  clip-path: polygon(100% 0, 0 50%, 100% 100%);
+}
+.clip-envelope-front {
+  clip-path: polygon(100% 100%, 50% 0, 0 100%);
+}
+.mvp-bg {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.mvp-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('/images/mvp-background.jpg') top/cover no-repeat;
+  transform: scale(1);
+  transform-origin: center;
+}
+.custom-tiptap-editor {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-wrap: break-word; /* handles long words */
+  word-break: break-word; /* fallback */
+}
+.css-czlyiw-control {
+  cursor: pointer;
+}
+.css-czlyiw-control:hover {
+  cursor: pointer;
+}
+.css-1dimb5e-singleValue {
+  padding-right: 8px;
+}

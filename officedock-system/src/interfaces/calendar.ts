@@ -1,0 +1,227 @@
+import { Tags } from './tag';
+import { Organizations } from './organization';
+import { OptionDropdownType } from './common';
+import { LocationEventType } from './location';
+import { CategoryStructure } from './skills';
+
+import { EventCalendarType, EventParticipantType } from '@constants/enums';
+
+export interface EventCalendarDetail {
+  id?: string;
+  title: string;
+  start: Date | string;
+  end?: Date | string;
+  allDay?: boolean;
+  type?: string;
+  isMyEvent?: boolean;
+  participants?: EventParticipant[];
+  selectOrganizations?: number[];
+  resourceIds?: string[];
+  location?: LocationEventType;
+  largeColor?: string;
+  isStart?: boolean;
+  planStartDate?: string;
+  planEndDate?: string;
+  scheduleId?: number | null;
+  taskId?: number | null;
+  eventId?: string;
+  repeatType?: string | null;
+  repeatInterval?: number | null;
+  weekDay?: number | null;
+  monthDay?: number | null;
+  month?: number | null;
+  isEventOverlapping?: boolean;
+  categories?: EventCategoryOption[];
+}
+
+export interface EventCalendarDayRange {
+  start: string | Date;
+  end: string | Date;
+}
+
+export interface EventFormData {
+  title?: string;
+  startDate?: Date | null;
+  startTime?: string | null;
+  endDate?: Date | null;
+  endTime?: string | null;
+  isAllDay?: boolean;
+  tagIds?: OptionDropdownType[];
+  participantIds?: number[];
+  selectOrganizations?: number[];
+  location?: OptionDropdownType;
+  memo?: string;
+  type?: OptionDropdownType;
+  largeCategory?: OptionDropdownType;
+  mediumCategory?: OptionDropdownType;
+  repeatType?: OptionDropdownType | null;
+  repeatInterval?: OptionDropdownType | null;
+  weekDay?: OptionDropdownType | null;
+  monthDay?: OptionDropdownType | null;
+  month?: OptionDropdownType | null;
+}
+
+export interface EventEditFormData {
+  id?: string | number;
+  title?: string;
+  startDate?: Date | null;
+  endDate?: Date | null;
+  endTime?: string | null;
+  startTime?: string | null;
+  isAllDay?: boolean;
+  tags?: Omit<Tags, 'peopleInCharge' | 'responsiblePerson'>[];
+  tagIds?: OptionDropdownType[];
+  participants?: EventParticipant[];
+  participantIds?: number[];
+  selectOrganizations?: number[];
+  location?: OptionDropdownType | LocationEventType | null;
+  memo?: string;
+  type?: string | OptionDropdownType;
+  largeCategory?: OptionDropdownType;
+  mediumCategory?: OptionDropdownType;
+  categories?: EventCategoryOption[];
+  createdAt?: Date;
+  repeatType?: OptionDropdownType | string | null;
+  repeatInterval?: OptionDropdownType | number | null;
+  weekDay?: OptionDropdownType | number | null;
+  monthDay?: OptionDropdownType | number | null;
+  month?: OptionDropdownType | number | null;
+  scheduleId?: string; // id event delete with popup detail event in kanban schedule
+  eventSchedule?: string; // id repeat event delete with popup detail event in kanban schedule
+  isEventOverlapping?: boolean;
+}
+
+export interface EventRequest {
+  id?: string | number;
+  title?: string;
+  startDate?: string | null;
+  endDate?: string | null;
+  isAllDay?: boolean;
+  tagIds?: number[];
+  participantIds?: number[];
+  locationId?: string;
+  memo?: string;
+  type?: string;
+  sendToChat?: boolean;
+  message?: string;
+  categories?: EventCategoryOption[];
+  categoryIds?:
+    | {
+        categoryId: string | null;
+        type: string;
+      }[]
+    | null;
+  selectOrganizations?: number[];
+  repeatType?: string | null;
+  repeatInterval?: number | null;
+  weekDay?: number | null;
+  monthDay?: number | null;
+  month?: number | null;
+  recurringEventOption?: string;
+  repeatScheduleId?: number;
+}
+
+export interface CreationDataEventCalendar {
+  tags: Omit<Tags, 'responsiblePerson'>[];
+  types: string[];
+  members: EventParticipant[];
+  categories: CategoryStructure[];
+  organizations: {
+    id: number;
+    name: string;
+    superior: { id: number; name: string } | null;
+    tags: { id: number; name: string }[];
+  }[];
+  eventLocations: LocationEventType[];
+  organization: {
+    id: number;
+    name: string;
+    uuid: string;
+    icon: string | null;
+    iconColor: string;
+  };
+}
+
+export interface EventParticipant {
+  fullName: string;
+  id: number | string;
+  organizations?: Organizations[];
+  type?: EventParticipantType;
+  userIds?: number[];
+  mainOrganization?: string;
+  color?: string;
+  avatarUrl?: string;
+  deletedAt?: string | null;
+}
+
+export interface CalendarDashboardMember {
+  fullName: string;
+  id: number | string;
+  avatarColor: string;
+  mainOrganization: string;
+  avatar?: string;
+}
+
+export interface EventCalendarProps {
+  isAllDay: boolean;
+  id: number | string;
+  endDate: Date | null;
+  startDate: Date | null;
+  title: string;
+  type?: EventCalendarType;
+  isMySchedule?: boolean;
+  isStart: boolean;
+  participants?: EventParticipant[];
+  selectOrganizations?: number[];
+  location?: LocationEventType;
+  categories?: {
+    name: string;
+    type: string;
+    id: number;
+    color: string;
+  }[];
+  taskId: number | null;
+  scheduleId: number | null;
+  repeatSchedules?: {
+    id: number;
+    planEndDate: Date | null;
+    planStartDate: Date | null;
+    schedule: number;
+    uuid: string;
+  }[];
+  isCrossTeamTask?: boolean;
+  repeatType?: string | null;
+  repeatInterval?: number | null;
+  weekDay?: number | null;
+  monthDay?: number | null;
+  month?: number | null;
+  isEventOverlapping?: boolean;
+}
+
+export interface TaskCalendarProps {
+  id: number;
+  deadline: Date | null;
+  planEndDate: Date | null;
+  planStartDate: Date | null;
+  title: string;
+  taskSchedules: {
+    id?: number | null;
+    planStartDate: string | null;
+    planEndDate?: string | null;
+  }[];
+  participants?: EventParticipant[];
+  resourceId?: number;
+}
+
+export interface EventCategoryOption {
+  name: string;
+  type: string;
+  id?: number;
+}
+
+export interface CalendarPopoverInfo {
+  date: Date;
+  events: Array<EventCalendarDetail>;
+  left?: number;
+  top?: number;
+}

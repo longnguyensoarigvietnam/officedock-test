@@ -1,0 +1,312 @@
+'use client';
+
+import React, { useContext, useState } from 'react';
+import { AxiosError } from 'axios';
+import { useMutation } from 'react-query';
+
+import Button from '@components/common/Button';
+import ImageRound from '@components/common/ImageRound';
+import RadioButtonSingle from '@components/common/RadioButton/CustomRadioButton';
+import ActionAddCreditCardModal from '@components/modals/credit-card/ActionAddCreditCardModal';
+import ConfirmDeletePaymentModal from '@components/modals/credit-card/ConfirmDeletePaymentModal';
+
+import { useUpdatePaymentCardCache } from '@hooks/CacheQuery/useUpdatePaymentCardCache';
+import useGetListPaymentCard from '@hooks/useGetListPaymentCard';
+import { useErrorToast } from '@hooks/useErrorToast';
+import useCreationDataCommon from '@hooks/common/useCreationDataCommon';
+import {
+  ERROR_DELETE_MESSAGE,
+  ERROR_UPDATE_MESSAGE,
+  SUCCESS_DELETE_MESSAGE,
+  SUCCESS_UPDATE_MESSAGE,
+} from '@constants/message';
+import { apiRouters } from '@constants/routers';
+
+import api from '@base/api';
+import { LoadingContext } from '@providers/LoadingProvider';
+import { useToast } from '@providers/ToastProvider';
+import { PaymentMethod } from '@interfaces/payment';
+import { formatShowDateJapanese } from '@utils/date';
+
+const PaymentDetail = () => {
+  const { showToast } = useToast();
+  const showErrorToast = useErrorToast();
+
+  const { setIsLoading } = useContext(LoadingContext);
+
+  // STATE
+  const [openAddCard, setOpenAddCard] = useState(false);
+  const [openDeleteCardModal, setOpenDeleteCardModal] = useState(false);
+  const [selectedCardId, setSelectedCardId] = useState<{
+    id: number;
+    name: string;
+  } | null>(null);
+
+  const { paymentList } = useGetListPaymentCard();
+  const { removePaymentCard, updateDefaultCard, addCardPayment } =
+    useUpdatePaymentCardCache();
+
+  const { creationDataCommonData, refetchCreationDataCommon } =
+    useCreationDataCommon({
+      options: {
+        get_company: true,
+      },
+    });
+
+  const handleRemovePaymentCard = async (id: number) => {
+    setIsLoading(true);
+    return await api.delete(apiRouters.REMOVE_CARD(id));
+  };
+
+  // Handle remove card
+  const { mutate: removeCard } = useMutation(
+    'handleRemovePaymentCard',
+    handleRemovePaymentCard,
+    {
+      onSuccess: async () => {
+        removePaymentCard(selectedCardId?.id as number);
+        setOpenDeleteCardModal(false);
+        setSelectedCardId(null);
+        showToast({
+          description: SUCCESS_DELETE_MESSAGE,
+        });
+      },
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_DELETE_MESSAGE);
+      },
+
+      onSettled: () => {
+        setIsLoading(false);
+      },
+    },
+  );
+
+  const handleConfirmDeleteCard = () => {
+    removeCard(selectedCardId?.id as number);
+  };
+
+  const handleChangePaymentCardDefault = async (id: number) => {
+    setIsLoading(true);
+    return await api.post(apiRouters.SET_DEFAULT_CARD(id));
+  };
+
+  // Handle change card default
+  const { mutate: changeCardDefault } = useMutation(
+    'handleChangePaymentCardDefault',
+    handleChangePaymentCardDefault,
+    {
+      onSuccess: async (card, id) => {
+        updateDefaultCard(id);
+        showToast({
+          description: SUCCESS_UPDATE_MESSAGE,
+        });
+      },
+      onError: (error: AxiosError<any>) => {
+        showErrorToast(error, ERROR_UPDATE_MESSAGE);
+      },
+      onSettled: () => {
+        setIsLoading(false);
+      },
+    },
+  );
+
+  return (
+    <>
+      <div>
+        <p className="font-medium text-[26px] leading-[1]">お支払い管理</p>
+        {/* History payment */}
+        <div className="mt-[30px] bg-[#F8FAFC] rounded-[30px] p-[30px]">
+          <div className="flex items-center gap-5">
+            <p className="text-[18px] font-medium">契約履歴</p>
+            {creationDataCommonData?.company?.isPaymentFailed && (
+              <div className="p-[14px] bg-[#F75356] rounded-md flex items-center gap-2">
+                <ImageRound
+                  src={`/icons/warning-payment.svg`}
+                  name="delete"
+                  className="w-fit h-fit hover:opacity-70 cursor-pointer !rounded-none"
+                />
+                <p className="text-white font-bold text-sm">
+                  クレジットカード決済に失敗しました
+                </p>
+              </div>
+            )}
+          </div>
+          <div className="mt-10 flex flex-col gap-8">
+            <div className="flex items-center gap-5 ">
+              <p className="w-[100px] text-[#77858F] font-medium text-sm">
+                契約プラン
+              </p>
+              <p className="text-black font-medium text-base">
+                {creationDataCommonData?.company?.plan?.name}
+              </p>
+            </div>
+            <div className="h-[1px] bg-[#D2DBE1]"> </div>
+            {/* Date start */}
+            <div className="flex items-center gap-5 ">
+              <p className="w-[100px] text-[#77858F] font-medium text-sm">
+                契約期間
+              </p>
+              <p className="text-black font-medium text-base">
+                {' '}
+                {creationDataCommonData?.company?.contract.startDate &&
+                  formatShowDateJapanese(
+                    creationDataCommonData?.company?.contract.startDate,
+                  )}{' '}
+                -{' '}
+                {creationDataCommonData?.company?.contract.endDate &&
+                  formatShowDateJapanese(
+                    creationDataCommonData?.company?.contract.endDate,
+                  )}
+              </p>
+            </div>
+            <div className="h-[1px] bg-[#D2DBE1]"> </div>
+            {/* Date end */}
+            <div className="flex items-center gap-5 ">
+              <p className="w-[100px] text-[#77858F] font-medium text-sm">
+                契約更新予定日
+              </p>
+              <p className="text-black font-medium text-base">
+                {' '}
+                {creationDataCommonData?.company?.contract.nextRenewalAt &&
+                  formatShowDateJapanese(
+                    creationDataCommonData?.company?.contract.nextRenewalAt,
+                  )}
+              </p>
+            </div>
+          </div>
+        </div>
+        {/* Payment method */}
+        <div className="mt-5 bg-[#F8FAFC] rounded-[30px] p-[30px]">
+          <div className="flex items-center justify-between">
+            <p className="text-[18px] font-medium">お支払い方法</p>
+            {creationDataCommonData?.company?.paymentType ==
+              'クレジットカード' && (
+              <Button
+                onClick={() => setOpenAddCard(true)}
+                className="flex gap-2 !p-[10px] h-[34px]">
+                <div
+                  className={`rounded-full cursor-pointer w-4 h-4 flex items-center justify-center  bg-white `}>
+                  <ImageRound
+                    src={`/icons/add.svg`}
+                    name="Add"
+                    style={{
+                      width: `8px`,
+                      height: `8px`,
+                    }}
+                  />
+                </div>
+                <p> 新規カード情報登録</p>
+              </Button>
+            )}
+          </div>
+          <div className="flex items-center gap-5 mt-10 ">
+            <p className="w-[100px] text-[#77858F] font-medium text-sm">
+              お支払い方法
+            </p>
+            <p className="text-black font-medium text-base">
+              {creationDataCommonData?.company?.paymentType}
+            </p>
+          </div>
+          {/* List card */}
+          {creationDataCommonData?.company?.paymentType ==
+            'クレジットカード' && (
+            <div className="mt-10 flex flex-col gap-5">
+              {paymentList?.results.map((card, index) => (
+                <div
+                  key={card.id}
+                  className={`rounded-[10px] border ${card.isRetryFailed ? 'border-[#F75356]' : 'border-[#D2DBE1]'}  overflow-hidden`}>
+                  <div className="border-b border-[#D2DBE1] flex items-center gap-4 p-[18px]">
+                    <p className="text-xs font-medium text-[#77858F]">
+                      クレジットカード情報 {index + 1}
+                    </p>
+                    {paymentList?.results.length > 1 && !card.isDefault && (
+                      <ImageRound
+                        onClick={() => {
+                          setOpenDeleteCardModal(true);
+                          setSelectedCardId({
+                            id: card.id,
+                            name: card.last4,
+                          });
+                        }}
+                        src={`/icons/delete-gray-bold.svg`}
+                        name="delete"
+                        className="w-fit h-fit hover:opacity-70 cursor-pointer"
+                      />
+                    )}
+                    {card.isRetryFailed && (
+                      <div className="p-[14px] bg-[#F75356] rounded-md flex items-center gap-2">
+                        <ImageRound
+                          src={`/icons/warning-payment.svg`}
+                          name="delete"
+                          className="w-fit h-fit hover:opacity-70 cursor-pointer !rounded-none"
+                        />
+                        <p className="text-white font-bold text-sm">
+                          決済でエラーが発生しました。このカードでは決済ができません。{' '}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center bg-white border-b border-[#D2DBE1]">
+                    <div className="w-[319px] border-r border-[#D2DBE1] py-9 px-[18px]">
+                      カード会社
+                    </div>
+                    <div className="flex-grow py-9 px-[18px] break-all capitalize">
+                      {card.brand}
+                    </div>
+                  </div>
+                  <div className="flex items-center bg-white border-b border-[#D2DBE1]">
+                    <div className="w-[319px] border-r border-[#D2DBE1] py-9 px-[18px]">
+                      カード番号
+                    </div>
+                    <div className="flex-grow py-9 px-[18px] break-all">
+                      ************{card.last4}
+                    </div>
+                  </div>
+                  <div className="flex items-center bg-white ">
+                    <div className="w-[319px] border-r border-[#D2DBE1] py-9 px-[18px]">
+                      メイン設定
+                    </div>
+                    <div className="flex-grow py-9 px-[18px] break-all">
+                      <RadioButtonSingle
+                        option={{
+                          label:
+                            '選択したカードが、次回以降の決済時に優先して使用される',
+                          value: 'experience',
+                        }}
+                        checked={card.isDefault}
+                        onChange={() => {
+                          changeCardDefault(card.id);
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+      <ActionAddCreditCardModal
+        open={openAddCard}
+        onClose={() => setOpenAddCard(false)}
+        onCreate={(newCard: PaymentMethod) => {
+          addCardPayment(newCard);
+          refetchCreationDataCommon();
+        }}
+      />
+      {openDeleteCardModal && selectedCardId && (
+        <ConfirmDeletePaymentModal
+          name={selectedCardId.name}
+          open={openDeleteCardModal}
+          onConfirm={handleConfirmDeleteCard}
+          onClose={() => {
+            setOpenDeleteCardModal(false);
+            setSelectedCardId(null);
+          }}
+        />
+      )}
+    </>
+  );
+};
+
+export default PaymentDetail;

@@ -1,0 +1,103 @@
+steps:
+  # Build Docker Image on Cloud Build
+  - id: "Build Docker Image"
+    name: "gcr.io/cloud-builders/docker"
+    entrypoint: "bash"
+    secretEnv: ["_SYSTEM_ARTIFACT_REGISTRY_PATH", "_BUILD_ENV"]
+    args:
+    - "-c"
+    - |
+      # Extract value from .env format
+      extract_env() {
+        echo "$$_BUILD_ENV" | grep "^$1=" | cut -d '=' -f2-
+      }
+
+      docker build --platform linux/amd64 \
+        --build-arg NEXT_PUBLIC_API_URL="$$(extract_env NEXT_PUBLIC_API_URL)" \
+        --build-arg NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="$$(extract_env NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)" \
+        --build-arg NEXT_PUBLIC_HELP_PAGE_URL="$$(extract_env NEXT_PUBLIC_HELP_PAGE_URL)" \
+        --build-arg NEXT_PUBLIC_SHOW_ACTUAL_DURATION_PAGE="$$(extract_env NEXT_PUBLIC_SHOW_ACTUAL_DURATION_PAGE)" \
+        --build-arg API_INTERNAL_URL="$$(extract_env API_INTERNAL_URL)" \
+        --build-arg RUNTIME_ENV_PATH=$_RUNTIME_ENV_PATH \
+        -t $$_SYSTEM_ARTIFACT_REGISTRY_PATH:$COMMIT_SHA \
+        -f Dockerfile.cloudrun .
+
+  # Push built Docker Image on Artifact Registry
+  - id: "Push Docker Image"
+    name: "gcr.io/cloud-builders/docker"
+    entrypoint: "bash"
+    secretEnv: ["_SYSTEM_ARTIFACT_REGISTRY_PATH"]
+    args: ["-c", "docker push $$_SYSTEM_ARTIFACT_REGISTRY_PATH:$COMMIT_SHA"]
+
+  # Deploy built Docker Image on Cloud Run
+  - id: "Deploy Docker Image"
+    name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: "bash"
+    secretEnv:
+      [
+        "_SYSTEM_ARTIFACT_REGISTRY_PATH",
+        "_SYSTEM_REGION",
+        "_SYSTEM_SERVICE_NAME",
+      ]
+    args:
+      - "-c"
+      - |
+        set -eux
+
+        # Replace dot with hyphen. (e.g. v1.0.0 -> v1-0-0)
+        NORMALIZED_TAG_NAME="$(echo "$TAG_NAME" | sed 's/\./-/g')"
+
+        gcloud run deploy $$_SYSTEM_SERVICE_NAME \
+          --image $$_SYSTEM_ARTIFACT_REGISTRY_PATH:$COMMIT_SHA \
+          --region $$_SYSTEM_REGION \
+          --tag "$$NORMALIZED_TAG_NAME" \
+          --service-account $_CR_SERVICE_ACCOUNT \
+          --port 3000 \
+          --network $_NETWORK \
+          --subnet $_CR_EGRESS_SUBNET \
+          --ingress $_CR_INGRESS  \
+          --vpc-egress $_CR_VPC_EGRESS \
+          --allow-unauthenticated \
+          --cpu=$_CR_CPU \
+          --memory=$_CR_MEMORY \
+          --concurrency $_CR_CONCURRENCY \
+          --min $_CR_MIN_INSTANCES \
+          --min-instances 0 \
+          --max-instances $_CR_MAX_INSTANCES \
+          --set-env-vars=RUNTIME_ENV_PATH=$_RUNTIME_ENV_PATH \
+          --update-secrets=$_RUNTIME_ENV_PATH=$_SECRET_ENV_NAME:latest
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+# Please configure these substitutions in Cloud Build trigger.
+substitutions:
+  # They should match the name of VPC and subnet
+  _NETWORK:
+  _CR_EGRESS_SUBNET:
+  _CR_SERVICE_ACCOUNT:
+
+  # Cloud Run settings
+  _CR_INGRESS: internal-and-cloud-load-balancing # all / internal / internal-and-cloud-load-balancing
+  _CR_VPC_EGRESS: all-traffic # all / all-traffic / private-ranges-only
+  _CR_CPU: "1"
+  _CR_MEMORY: "512Mi"
+  _CR_CONCURRENCY: "50"
+  _CR_MIN_INSTANCES: "0" # "0" means cold start
+  _CR_MAX_INSTANCES: "50"
+
+  # Secret Manager settings
+  _SECRET_ENV_NAME: PROD_SYSTEM_ENV
+  _RUNTIME_ENV_PATH: /secrets/.env
+
+# Settings SecretManager
+availableSecrets:
+  secretManager:
+    - versionName: projects/${PROJECT_NUMBER}/secrets/PROD_SYSTEM_ARTIFACT_REGISTRY_PATH/versions/latest
+      env: _SYSTEM_ARTIFACT_REGISTRY_PATH
+    - versionName: projects/${PROJECT_NUMBER}/secrets/PROD_SYSTEM_REGION/versions/latest
+      env: _SYSTEM_REGION
+    - versionName: projects/${PROJECT_NUMBER}/secrets/PROD_SYSTEM_SERVICE_NAME/versions/latest
+      env: _SYSTEM_SERVICE_NAME
+    - versionName: projects/${PROJECT_NUMBER}/secrets/${_SECRET_ENV_NAME}/versions/latest
+      env: _BUILD_ENV

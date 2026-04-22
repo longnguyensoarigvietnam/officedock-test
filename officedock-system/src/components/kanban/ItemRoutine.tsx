@@ -1,0 +1,583 @@
+'use client';
+import { Draggable } from '@hello-pangea/dnd';
+import { useForm } from 'react-hook-form';
+import { formatISO } from 'date-fns';
+import { AxiosError } from 'axios';
+import { useQueryClient } from 'react-query';
+import { useContext, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useSessionCache } from '@providers/SessionCacheProvider';
+
+import ImageRound from '@components/common/ImageRound';
+import { DynamicTooltip } from '@components/tooltip/DynamicTooltip';
+import ClockIconColor from '@components/custom/ClockIconColor';
+
+import {
+  EventWorkCategory,
+  ItemScheduleType,
+  ItemStartType,
+  PermissionsSystem,
+  TaskRepetitiveType,
+  TaskRepetitiveValue,
+} from '@constants/enums';
+import { ERROR_COMMON_MESSAGE } from '@constants/message';
+import { TASK_REPETITIVE_OPTIONS } from '@constants';
+
+import { DataStatusChangeInline, Task, TaskFormData } from '@interfaces/task';
+
+import { useErrorToast } from '@hooks/useErrorToast';
+import useCalculateDurationTask from '@hooks/useCalculateDurationTask';
+
+import { TaskContext } from '@providers/TaskProvider';
+
+import {
+  addMinutesToDate,
+  convertToCurrentTimezone,
+  convertToTimeString,
+  getJapaneseWeekDay,
+} from '@utils/date';
+import { hasPermissionInArray } from '@utils';
+
+interface ItemProps {
+  id: string;
+  index: number;
+  content: Task;
+  handleActionEditTask: (id: number, type?: string) => void;
+  handleConfirmCopyTask: (id: number, type?: string) => void;
+  handleUpdateItemInline: (data: Task) => void;
+  editTask: (data: DataStatusChangeInline) => void;
+
+  handlePinItem: (id: string) => void;
+  disableDraggable?: boolean;
+}
+const ItemRoutine = ({
+  id,
+  index,
+  content,
+  handlePinItem,
+  handleUpdateItemInline,
+  handleConfirmCopyTask,
+  handleActionEditTask,
+  disableDraggable = false,
+}: ItemProps) => {
+  const queryClient = useQueryClient();
+
+  const {
+    columnWidth,
+    setTaskSelectedToStart,
+    selectedOptionZoom,
+    setDataClickTask,
+    setDataRunning,
+    setIdTaskStarting,
+    setShowWarningStartTaskModal,
+    setDataActualAddSchedule,
+  } = useContext(TaskContext);
+  const showErrorToast = useErrorToast();
+
+  const { reset } = useForm<TaskFormData>({
+    mode: 'onSubmit',
+  });
+
+  const { data: session } = useSessionCache();
+
+  const searchParams = useSearchParams();
+
+  const taskDetailId = searchParams.get('task');
+
+  const defaultValues = useMemo<TaskFormData>(() => {
+    const value: TaskFormData = {
+      title: '',
+      statusId: {
+        label: '',
+        value: '',
+      },
+      priority: {
+        label: '',
+        value: '',
+      },
+      peopleInChargeIds: [],
+      categories: {
+        LARGE: {
+          label: '',
+          value: '',
+        },
+        MEDIUM: {
+          label: '',
+          value: '',
+        },
+        SMALL: {
+          label: '',
+          value: '',
+        },
+      },
+      isImportant: false,
+      plans: null,
+      repeatType: {
+        label: TaskRepetitiveType.ONCE,
+        value: 'ONCE',
+      },
+      repeatInterval: {
+        label: '',
+        value: '',
+      },
+      repeatStartTime: '',
+      repeatEndTime: '',
+      month: {
+        label: '',
+        value: '',
+      },
+      monthDay: {
+        label: '',
+        value: '',
+      },
+      weekDay: {
+        label: '',
+        value: '',
+      },
+    };
+    if (content) {
+      (value.title = content.title),
+        (value.statusId = {
+          label: (content.status && content.status.name) || '',
+          value: (content.status && content.status.id) || '',
+        });
+      value.repeatType = content.repeatType
+        ? {
+            label:
+              TASK_REPETITIVE_OPTIONS.find(
+                (option) => option.value == content.repeatType,
+              )?.label || '',
+            value: content.repeatType,
+          }
+        : {
+            label: '',
+            value: '',
+          };
+    }
+    return value;
+  }, [content]);
+
+  useEffect(() => {
+    reset(defaultValues);
+  }, [defaultValues, reset]);
+
+  //  Handle call api delete task
+  const { calculateDurationTask } = useCalculateDurationTask({
+    onSuccess: (response, task) => {
+      const data = response.data;
+      if (data.isAnotherTaskStarted) {
+        setIdTaskStarting({
+          id: data.id,
+          type: data.type,
+        });
+        setDataClickTask({
+          id: task.id,
+          type: task.type,
+        });
+        setShowWarningStartTaskModal(true);
+        return;
+      }
+      setDataRunning({
+        id: `${content.id}`,
+        type: ItemStartType.TASK,
+      });
+
+      handleUpdateItemInline({
+        ...content,
+        id: content.id,
+        isStart: !content.isStart,
+        status: content.status,
+      });
+      queryClient.refetchQueries(['getDataTaskHeaderList']);
+      queryClient.refetchQueries([
+        'getTaskDurationDetail',
+        {
+          id: `${content.id}`,
+          type: ItemStartType.TASK,
+        },
+      ]);
+      queryClient.refetchQueries(['getTaskHeaderStart']);
+      if (data) {
+        const startDateActual = new Date(
+          convertToCurrentTimezone(`${data.planStartDate}`),
+        );
+        const endDateActual = new Date(
+          convertToCurrentTimezone(`${data.planEndDate}`),
+        );
+        setDataActualAddSchedule({
+          ...data,
+          start: startDateActual,
+          end: endDateActual,
+          id: data.id.toString(),
+          startEditable: false,
+          resourceId: ItemScheduleType.ACTUAL,
+          type: ItemStartType.TASK,
+          isMyTask: false,
+        });
+        if (!data.isStart) {
+          queryClient.refetchQueries(['getDataTaskHeaderList']);
+        }
+      }
+    },
+    onError: (error: AxiosError<any>) => {
+      showErrorToast(error, ERROR_COMMON_MESSAGE);
+    },
+  });
+
+  // Action call API check start task
+  const handleConfirmCheckStartTask = (id: string) => {
+    calculateDurationTask({
+      id: id,
+      type: ItemStartType.TASK,
+    });
+  };
+  const isShowSchedule = content.isScheduleInToday || false;
+  const now = new Date();
+
+  const [isClicked, setIsClicked] = useState(false);
+
+  const handleClick = () => {
+    if (isClicked) return;
+
+    setIsClicked(true);
+    handleActionEditTask(parseInt(`${content.id}`), ItemStartType.FIXED_TASK);
+
+    setTimeout(() => setIsClicked(false), 2000);
+  };
+
+  const isPermissionUpdate =
+    session?.user.permissions &&
+    hasPermissionInArray(
+      session?.user.permissions,
+      PermissionsSystem.MY_TASK_UPDATE,
+    );
+
+  const isPermissionAdd =
+    session?.user.permissions &&
+    hasPermissionInArray(
+      session?.user.permissions,
+      PermissionsSystem.MY_TASK_ADD,
+    );
+
+  const largeColor =
+    content.categories &&
+    content.categories.find((item) => item.type === EventWorkCategory.LARGE)
+      ?.color;
+
+  const displayRoutineTaskScheduleTitle = (item: Task) => {
+    let title = '';
+    const repeatStartTime = item.planStartDate
+      ? convertToTimeString(item.planStartDate)
+      : '';
+    const repeatEndTime = item.planEndDate
+      ? convertToTimeString(item.planEndDate)
+      : '';
+    switch (item.repeatType) {
+      case TaskRepetitiveValue.ONCE:
+        title = '';
+        break;
+      case TaskRepetitiveValue.DAILY:
+        title = '毎日' + repeatStartTime + '~' + repeatEndTime;
+        break;
+      case TaskRepetitiveValue.WEEKLY:
+        title =
+          '毎週' +
+          getJapaneseWeekDay(Number(item.weekDay || 0)) +
+          '曜日' +
+          repeatStartTime +
+          '~' +
+          repeatEndTime;
+        break;
+      case TaskRepetitiveValue.MONTHLY:
+        title =
+          '毎月' + item.monthDay + '日' + repeatStartTime + '~' + repeatEndTime;
+        break;
+      case TaskRepetitiveValue.YEARLY:
+        title =
+          '毎年' +
+          item.month +
+          '月' +
+          item.monthDay +
+          '日' +
+          repeatStartTime +
+          '~' +
+          repeatEndTime;
+        break;
+    }
+    return title;
+  };
+
+  return (
+    <>
+      {selectedOptionZoom.value !== 25 ? (
+        <Draggable
+          draggableId={id}
+          index={index}
+          isDragDisabled={disableDraggable || !isPermissionUpdate}>
+          {(provided, snapshot) => (
+            <div
+              ref={provided.innerRef}
+              data-event={JSON.stringify({
+                ...content,
+                title: content.title ? content.title : '',
+                start: formatISO(now),
+                end: formatISO(addMinutesToDate(`${now}`)),
+                startEditable: true,
+                itemKanban: true,
+                largeColor: largeColor,
+              })}
+              {...provided.draggableProps}
+              {...provided.dragHandleProps}
+              style={{
+                ...provided.draggableProps.style,
+              }}
+              className={`relative ${isPermissionUpdate ? 'ex-event-draggable' : ''}   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid   ${content.isStart && ' !border-primary'} bg-white shadow-common rounded-[20px] text-xs flex flex-col gap-2 mb-[10px] ${snapshot.isDragging && 'opacity-100'}`}>
+              <div className="relative w-[100%]   h-full">
+                {isPermissionUpdate && (
+                  <>
+                    <div
+                      style={{
+                        top: `${(columnWidth / 247) * 12}px`,
+                        right: `${(columnWidth / 247) * 12}px`,
+                      }}
+                      onClick={() => {
+                        if (isPermissionUpdate) {
+                          handlePinItem(`${content.id}`);
+                        }
+                      }}
+                      className={`absolute ${isPermissionUpdate ? '' : 'opacity-75'}  ${content.pinAt ? '' : 'opacity-0 group-hover:opacity-100'} `}>
+                      <DynamicTooltip
+                        content={content.pinAt ? 'ピン留めを外す' : 'ピン留め'}
+                        placement="right">
+                        <ImageRound
+                          src={
+                            content.pinAt
+                              ? `/icons/pin-task.svg`
+                              : `/icons/unpin-task.svg`
+                          }
+                          name="Pin icon"
+                          style={{
+                            width:
+                              (selectedOptionZoom.value as number) > 75
+                                ? '14px'
+                                : (selectedOptionZoom.value as number) === 75
+                                  ? '12px'
+                                  : `10px`,
+                            height:
+                              (selectedOptionZoom.value as number) > 75
+                                ? '14px'
+                                : (selectedOptionZoom.value as number) === 75
+                                  ? '12px'
+                                  : `10px`,
+                          }}
+                          className=" text-gray-400 cursor-pointer"
+                        />
+                      </DynamicTooltip>
+                    </div>
+                  </>
+                )}
+                {isPermissionAdd && (
+                  <div
+                    style={{
+                      top:
+                        (selectedOptionZoom.value as number) > 75
+                          ? `${(columnWidth / 247) * 32}px`
+                          : `${(columnWidth / 247) * 38}px`,
+                      right: `${(columnWidth / 247) * 12}px`,
+                    }}
+                    className="absolute opacity-0 group-hover:opacity-100">
+                    <DynamicTooltip content="タスクを複製" placement="right">
+                      <ImageRound
+                        src="/icons/copy.svg"
+                        name="Copy icon"
+                        style={{
+                          width:
+                            (selectedOptionZoom.value as number) > 75
+                              ? '14px'
+                              : (selectedOptionZoom.value as number) === 75
+                                ? '12px'
+                                : `10px`,
+                          height:
+                            (selectedOptionZoom.value as number) > 75
+                              ? '14px'
+                              : (selectedOptionZoom.value as number) === 75
+                                ? '12px'
+                                : `10px`,
+                        }}
+                        className="text-gray-400 cursor-pointer"
+                        onClick={() => {
+                          handleConfirmCopyTask(
+                            parseInt(`${content.id}`),
+                            ItemStartType.FIXED_TASK,
+                          );
+                        }}
+                      />
+                    </DynamicTooltip>
+                  </div>
+                )}
+              </div>
+              <div
+                style={{
+                  paddingTop: `${(columnWidth / 247) * 12}px`,
+                  paddingBottom: `${(columnWidth / 247) * 12}px`,
+                  paddingLeft: `${(columnWidth / 247) * 18}px`,
+                  paddingRight: `${(columnWidth / 247) * 12}px`,
+                }}
+                className={`flex flex-col gap-3`}
+                onClick={() => {
+                  if (!taskDetailId) {
+                    handleClick();
+                  }
+                }}>
+                <div className="flex gap-2 items-start">
+                  {isShowSchedule ? (
+                    <div className="w-fit flex-shrink-0">
+                      <ClockIconColor color={largeColor} />
+                    </div>
+                  ) : (
+                    <div
+                      style={{ backgroundColor: largeColor || '#BFBFBF' }}
+                      className="w-2 h-2 rounded-full mt-[5px]"></div>
+                  )}
+                  <p
+                    style={{
+                      width: `${(columnWidth / 247) * 186}px`,
+                      fontSize:
+                        (selectedOptionZoom.value as number) > 75
+                          ? '14px'
+                          : '12px',
+                      marginRight: `${(columnWidth / 247) * 12}px`,
+                    }}
+                    className={`!border-none leading-[1.4] break-all line-clamp-2 cursor-pointer rounded-none bg-transparent !p-0 font-semibold  resize-none overflow-hidden focus:border-none focus:!rounded-none focus:shadow-none focus:!ring-offset-0 focus:!ring-0 focus:!ring-white`}>
+                    {content.title}
+                  </p>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <div
+                    style={{
+                      fontSize:
+                        (selectedOptionZoom.value as number) !== 100
+                          ? (selectedOptionZoom.value as number) === 90
+                            ? '12px'
+                            : '10px'
+                          : '13px',
+                    }}
+                    className="font-normal ">
+                    {displayRoutineTaskScheduleTitle(content)}
+                  </div>
+                  {/* TODO: PLAY / PAUSE task */}
+                  <DynamicTooltip
+                    content={content.isStart ? '計測停止' : '計測開始'}
+                    placement="top">
+                    <div
+                      className="!w-[30px] !h-[30px] flex items-center justify-center"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}>
+                      <ImageRound
+                        src={`/icons/${content.isStart ? 'pause-task' : 'play-task'}.svg`}
+                        name="Start task"
+                        className={`hover:cursor-pointer relative top-[3px] ${content.isStart ? '!w-[20px] !h-[20px]' : '!w-[20px] !h-[20px]'} ${snapshot.isDragging ? 'opacity-100' : 'opacity-0'} group-hover:opacity-100`}
+                        onClick={async () => {
+                          await new Promise<void>((resolve) => {
+                            setTaskSelectedToStart(content);
+                            resolve();
+                          });
+                          handleConfirmCheckStartTask(`${content.id}`);
+                        }}
+                      />
+                    </div>
+                  </DynamicTooltip>
+                </div>
+              </div>
+            </div>
+          )}
+        </Draggable>
+      ) : (
+        <Draggable
+          draggableId={id}
+          index={index}
+          isDragDisabled={disableDraggable || !isPermissionUpdate}>
+          {(provided, snapshot) => (
+            <div
+              ref={provided.innerRef}
+              data-event={JSON.stringify({
+                ...content,
+                title: content.title ? content.title : '',
+                start: formatISO(now),
+                end: formatISO(addMinutesToDate(`${now}`)),
+                startEditable: true,
+                itemKanban: true,
+              })}
+              {...provided.draggableProps}
+              {...provided.dragHandleProps}
+              className={`relative ${isPermissionUpdate ? 'ex-event-draggable' : ''}   group border border-transparent no-show hover:border hover:border-[#BEC9CE] active:bg-[#EBF1F7]  hover:border-solid   ${content.isStart && ' !border-primary'} bg-white shadow-common rounded-md text-xs flex flex-col gap-2 mb-2 ${snapshot.isDragging && 'opacity-100'}`}>
+              <div
+                style={{
+                  paddingTop: `${(columnWidth / 247) * 12}px`,
+                  paddingBottom: `${(columnWidth / 247) * 12}px`,
+                  paddingLeft: `${(columnWidth / 247) * 18}px`,
+                  paddingRight: `${(columnWidth / 247) * 12}px`,
+                }}
+                className={`flex flex-col gap-2`}
+                onClick={() => {
+                  if (!taskDetailId) {
+                    handleClick();
+                  }
+                }}>
+                <div className="flex gap-1 items-start">
+                  {isShowSchedule ? (
+                    <div className="w-fit flex-shrink-0">
+                      <ClockIconColor color={largeColor} />
+                    </div>
+                  ) : (
+                    <div
+                      style={{ backgroundColor: largeColor || '#BFBFBF' }}
+                      className="w-2 h-2 rounded-full mt-[5px] flex-shrink-0"></div>
+                  )}
+                  <p
+                    style={{
+                      width: isShowSchedule
+                        ? `${(columnWidth / 247) * 150}px`
+                        : `${(columnWidth / 247) * 180}px`,
+                      fontSize: '12px',
+                      marginRight: `${(columnWidth / 247) * 12}px`,
+                    }}
+                    className={`!border-none leading-[1.4] break-all line-clamp-2 cursor-pointer rounded-none bg-transparent !p-0 font-semibold  resize-none overflow-hidden focus:border-none focus:!rounded-none focus:shadow-none focus:!ring-offset-0 focus:!ring-0 focus:!ring-white`}>
+                    {content.title}
+                  </p>
+                  {/* TODO: PLAY / PAUSE task */}
+                  <DynamicTooltip
+                    content={content.isStart ? '計測停止' : '計測開始'}
+                    placement="top">
+                    <div
+                      className="!w-[30px] !h-[30px] flex items-center justify-center"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}>
+                      <ImageRound
+                        src={`/icons/${content.isStart ? 'pause-task' : 'play-task'}.svg`}
+                        name="Start task"
+                        className={`hover:cursor-pointer relative top-[3px] ${content.isStart ? '!w-[20px] !h-[20px]' : '!w-[20px] !h-[20px]'} ${snapshot.isDragging ? 'opacity-100' : 'opacity-0'} group-hover:opacity-100`}
+                        onClick={async () => {
+                          await new Promise<void>((resolve) => {
+                            setTaskSelectedToStart(content);
+                            resolve();
+                          });
+                          handleConfirmCheckStartTask(`${content.id}`);
+                        }}
+                      />
+                    </div>
+                  </DynamicTooltip>
+                </div>
+              </div>
+            </div>
+          )}
+        </Draggable>
+      )}
+    </>
+  );
+};
+
+export default ItemRoutine;

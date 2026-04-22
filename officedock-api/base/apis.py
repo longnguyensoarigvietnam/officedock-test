@@ -1,0 +1,85 @@
+from typing import Dict
+
+from rest_framework import viewsets
+from rest_framework.response import Response
+from rest_framework import status
+
+from base.paginations import BasePagination
+
+
+class BaseAPIViewSet(viewsets.GenericViewSet):
+    """
+    The BaseAPIViewSet class does not provide any actions by default,
+    but does include the base set of generic view behavior, such as
+    the `get_object` and `get_queryset` methods.
+    """
+
+    @staticmethod
+    def response(data: Dict = None, status_code=status.HTTP_200_OK) -> Response:
+        """
+        Custom response for ViewSet.
+        """
+
+        return Response(data=data, status=status_code)
+
+    @staticmethod
+    def response_ok(data: Dict = None) -> Response:
+        """
+        Custom default response OK for ViewSet.
+        """
+
+        return Response(data=data, status=status.HTTP_200_OK)
+
+    @staticmethod
+    def response_created(data: Dict = None) -> Response:
+        """
+        Custom default response created for ViewSet.
+        """
+
+        return Response(data=data, status=status.HTTP_201_CREATED)
+
+    @staticmethod
+    def response_deleted(data: Dict = None) -> Response:
+        """
+        Custom default response created for ViewSet.
+        """
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def response_pagination(
+        self,
+        request,
+        queryset,
+        serializer,
+        pagination_class=BasePagination,
+        extra_context: dict = None,
+    ):
+        """
+        Custom paginated response
+
+        Args:
+            request (Request): The HTTP request
+            queryset (Queryset): The queryset
+            serializer (Serializer): The serializer
+            pagination_class (BasePagination, optional): The pagination class.
+            Defaults to BasePagination.
+            extra_context (dict, optional): The extra context params
+
+        Returns:
+            Any: The response after paginated based on class
+        """
+
+        # Config pagination
+        self.pagination_class = pagination_class
+        page = self.paginate_queryset(queryset)
+
+        if extra_context is None:
+            extra_context = {}
+
+        context = {"request": request, **extra_context}
+
+        serializer = serializer(page, many=True, context=context)
+        response = self.get_paginated_response(serializer.data)
+        # Inject total at the top level
+        response.data["total"] = queryset.count()
+        return response
