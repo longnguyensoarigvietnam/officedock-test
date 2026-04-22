@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup Node.js
-        uses: actions/setup-node@1d1121627393d0f1f19f2d01f5d4717491ce9313 # v4.2.0
+        uses: actions/setup-node@3963b36332eb3439227c6225a072c4ed7b8db69c # v4.1.0
         with:
           node-version: '22'
 
